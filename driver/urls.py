@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.conf.urls import url
 from django.urls import include, path, re_path
-
 from django.contrib import admin
 
 from rest_framework import routers
@@ -40,11 +39,12 @@ urlpatterns = [
     # get token for given username/password
     url(r'^api-token-auth/', auth_views.obtain_auth_token),
     url(r'^api/sso-token-auth/', auth_views.sso_auth_token),
-    # url(r'^openid/clientlist/', auth_views.get_oidc_client_list, name='openid_client_list'),
+    url(r'^openid/clientlist/', auth_views.get_oidc_client_list, name='openid_client_list'),
     # override openid login callback endpoint by adding url here before djangooidc include
-    # url(r'^openid/callback/login/?$', auth_views.authz_cb, name='openid_login_cb'),
+    url(r'^openid/callback/login/?$', auth_views.authz_cb, name='openid_login_cb'),
     # OIDC
-    # url(r'openid/', include('djangooidc.urls')),
+    #url(r'^openid/', include('djangooidc.urls')),
+    #url(r'openid/', include('djangooidc.urls')),
 ]
 
 # Allow login to the browseable API
@@ -56,3 +56,4 @@ if settings.DEBUG:
     urlpatterns = [
         url(r'^api/__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
+
