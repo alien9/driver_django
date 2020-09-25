@@ -1,4 +1,5 @@
-/usr/bin/docker run \
+docker rm $(docker ps -aqf "name=windshaft")
+usr/bin/docker run \
   --name windshaft \
   --publish 5000:5000 \
   --volume /opt/windshaft/driver.js:/opt/windshaft/driver.js \

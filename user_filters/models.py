@@ -2,7 +2,7 @@ import uuid as uuidlib
 
 from django.contrib.auth.models import User
 from django.db import models
-from djsonb import fields as jfields
+from django.contrib.postgres.fields import JSONField
 
 
 class SavedFilter(models.Model):
@@ -10,4 +10,4 @@ class SavedFilter(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuidlib.uuid4, editable=False)
     label = models.CharField(max_length=255)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    filter_json = jfields.JsonField()
+    filter_json = JSONField()
