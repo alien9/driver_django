@@ -15,8 +15,8 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-DEVELOP = True #if os.environ.get('DJANGO_ENV', 'development') == 'development' else False
-#STAGING = True if os.environ.get('DJANGO_ENV', 'staging') == 'staging' else False
+DEVELOP = True if os.environ.get('DJANGO_ENV', 'development') == 'development' else False
+STAGING = True if os.environ.get('DJANGO_ENV', 'staging') == 'staging' else False
 PRODUCTION = not DEVELOP and not STAGING
 
 # Quick-start development settings - unsuitable for production
@@ -166,7 +166,7 @@ BLACKSPOT_RECORD_TYPE_LABEL = os.environ.get('BLACKSPOT_RECORD_TYPE_LABEL', 'Inc
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
-STATIC_URL = os.environ.get('STATIC_URL', 'static/')
+STATIC_URL = os.environ.get('STATIC_URL', '/static/')
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/static/')
 
 # Media files (uploaded via API)
