@@ -166,13 +166,13 @@ BLACKSPOT_RECORD_TYPE_LABEL = os.environ.get('BLACKSPOT_RECORD_TYPE_LABEL', 'Inc
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = '/static/'
+STATIC_URL = os.environ.get('STATIC_URL', 'static/')
+STATIC_ROOT = os.environ.get('STATIC_ROOT', '/static/')
 
 # Media files (uploaded via API)
 # https://docs.djangoproject.com/en/1.8/topics/files/
 
-MEDIA_ROOT = 'static/'
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT', 'static/')
 MEDIA_URL = '/media/'
 
 # use cookie-based sessions
