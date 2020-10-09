@@ -10,19 +10,19 @@ class RecordSchemaAdmin(admin.ModelAdmin):
     formfield_overrides = {
         JSONField: {'widget': GroutEditorWidget}
     }
-class RecordSchemaInline(admin.StackedInline):
-    model = RecordSchema
-    formfield_overrides = {
-        JSONField: {'widget': GroutEditorWidget}
-    }
+#class RecordSchemaInline(admin.StackedInline):
+#    model = RecordSchema
+#    formfield_overrides = {
+#        JSONField: {'widget': GroutEditorWidget}
+#    }
 
 class RecordTypeAdmin(admin.ModelAdmin):
     formfield_overrides = {
         JSONField: {'widget': JSONEditorWidget}
     }
-    inlines = [
-        RecordSchemaInline,
-    ]
+#    inlines = [
+#        RecordSchemaInline,
+#    ]
 class BoundaryAdmin(admin.ModelAdmin):
     class Meta:
         verbose_name_plural = "Boundaries"

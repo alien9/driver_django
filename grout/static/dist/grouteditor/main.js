@@ -473,24 +473,24 @@ __webpack_require__.r(__webpack_exports__);
 function JSONEditorComponent_div_0_div_11_div_1_a_8_Template(rf, ctx) { if (rf & 1) {
     const _r11 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "a", 8);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function JSONEditorComponent_div_0_div_11_div_1_a_8_Template_a_click_0_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r11); const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r10 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r10.setActive(ctx_r10.dict.schema.definitions[item_r3.key], "title"); });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function JSONEditorComponent_div_0_div_11_div_1_a_8_Template_a_click_0_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r11); const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r10 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r10.setActive(ctx_r10.dict.definitions[item_r3.key], "title"); });
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } if (rf & 2) {
     const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit;
     const ctx_r4 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](ctx_r4.dict.schema.definitions[item_r3.key].title);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](ctx_r4.dict.definitions[item_r3.key].title);
 } }
 function JSONEditorComponent_div_0_div_11_div_1_input_9_Template(rf, ctx) { if (rf & 1) {
     const _r15 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "input", 21);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function JSONEditorComponent_div_0_div_11_div_1_input_9_Template_input_ngModelChange_0_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r15); const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r14 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r14.dict.schema.definitions[item_r3.key].title = $event; })("change", function JSONEditorComponent_div_0_div_11_div_1_input_9_Template_input_change_0_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r15); const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r17 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r17.renameModel(item_r3.key, $event); });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function JSONEditorComponent_div_0_div_11_div_1_input_9_Template_input_ngModelChange_0_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r15); const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r14 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r14.dict.definitions[item_r3.key].title = $event; })("change", function JSONEditorComponent_div_0_div_11_div_1_input_9_Template_input_change_0_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r15); const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r17 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r17.renameModel(item_r3.key, $event); });
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } if (rf & 2) {
     const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit;
     const ctx_r5 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx_r5.dict.schema.definitions[item_r3.key].title);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx_r5.dict.definitions[item_r3.key].title);
 } }
 function JSONEditorComponent_div_0_div_11_div_1_div_10_a_2_Template(rf, ctx) { if (rf & 1) {
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "a", 22);
@@ -500,22 +500,22 @@ function JSONEditorComponent_div_0_div_11_div_1_div_10_a_2_Template(rf, ctx) { i
     const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](2).$implicit;
     const ctx_r20 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](ctx_r20.dict.schema.definitions[item_r3.key].plural_title);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](ctx_r20.dict.definitions[item_r3.key].plural_title);
 } }
 function JSONEditorComponent_div_0_div_11_div_1_div_10_input_3_Template(rf, ctx) { if (rf & 1) {
     const _r24 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "input", 21);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function JSONEditorComponent_div_0_div_11_div_1_div_10_input_3_Template_input_ngModelChange_0_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r24); const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](2).$implicit; const ctx_r23 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r23.dict.schema.definitions[item_r3.key].plural_title = $event; })("change", function JSONEditorComponent_div_0_div_11_div_1_div_10_input_3_Template_input_change_0_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r24); const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](2).$implicit; const ctx_r26 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r26.setPluralTitle(ctx_r26.dict.schema.properties[item_r3.key], $event); });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function JSONEditorComponent_div_0_div_11_div_1_div_10_input_3_Template_input_ngModelChange_0_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r24); const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](2).$implicit; const ctx_r23 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r23.dict.definitions[item_r3.key].plural_title = $event; })("change", function JSONEditorComponent_div_0_div_11_div_1_div_10_input_3_Template_input_change_0_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r24); const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](2).$implicit; const ctx_r26 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r26.setPluralTitle(ctx_r26.dict.properties[item_r3.key], $event); });
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } if (rf & 2) {
     const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](2).$implicit;
     const ctx_r21 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx_r21.dict.schema.definitions[item_r3.key].plural_title);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx_r21.dict.definitions[item_r3.key].plural_title);
 } }
 function JSONEditorComponent_div_0_div_11_div_1_div_10_Template(rf, ctx) { if (rf & 1) {
     const _r30 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 10);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function JSONEditorComponent_div_0_div_11_div_1_div_10_Template_div_click_0_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r30); const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r29 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r29.setActive(ctx_r29.dict.schema.definitions[item_r3.key], "plural_title"); });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function JSONEditorComponent_div_0_div_11_div_1_div_10_Template_div_click_0_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r30); const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r29 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r29.setActive(ctx_r29.dict.definitions[item_r3.key], "plural_title"); });
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Plural Title: ");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](2, JSONEditorComponent_div_0_div_11_div_1_div_10_a_2_Template, 2, 1, "a", 14);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](3, JSONEditorComponent_div_0_div_11_div_1_div_10_input_3_Template, 1, 1, "input", 12);
@@ -524,9 +524,9 @@ function JSONEditorComponent_div_0_div_11_div_1_div_10_Template(rf, ctx) { if (r
     const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit;
     const ctx_r6 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r6.isActive(ctx_r6.dict.schema.definitions[item_r3.key], "plural_title") == false);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r6.isActive(ctx_r6.dict.definitions[item_r3.key], "plural_title") == false);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r6.isActive(ctx_r6.dict.schema.definitions[item_r3.key], "plural_title"));
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r6.isActive(ctx_r6.dict.definitions[item_r3.key], "plural_title"));
 } }
 function JSONEditorComponent_div_0_div_11_div_1_a_13_Template(rf, ctx) { if (rf & 1) {
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "a", 22);
@@ -536,17 +536,17 @@ function JSONEditorComponent_div_0_div_11_div_1_a_13_Template(rf, ctx) { if (rf 
     const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit;
     const ctx_r7 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](ctx_r7.dict.schema.definitions[item_r3.key].description);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](ctx_r7.dict.definitions[item_r3.key].description);
 } }
 function JSONEditorComponent_div_0_div_11_div_1_textarea_14_Template(rf, ctx) { if (rf & 1) {
     const _r35 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "textarea", 23);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function JSONEditorComponent_div_0_div_11_div_1_textarea_14_Template_textarea_ngModelChange_0_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r35); const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r34 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r34.dict.schema.definitions[item_r3.key].description = $event; });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function JSONEditorComponent_div_0_div_11_div_1_textarea_14_Template_textarea_ngModelChange_0_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r35); const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r34 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r34.dict.definitions[item_r3.key].description = $event; });
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } if (rf & 2) {
     const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit;
     const ctx_r8 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx_r8.dict.schema.definitions[item_r3.key].description);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx_r8.dict.definitions[item_r3.key].description);
 } }
 function JSONEditorComponent_div_0_div_11_div_1_div_20_div_1_Template(rf, ctx) { if (rf & 1) {
     const _r46 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
@@ -565,7 +565,7 @@ function JSONEditorComponent_div_0_div_11_div_1_div_20_div_2_Template(rf, ctx) {
     const _r51 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "input", 30);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("change", function JSONEditorComponent_div_0_div_11_div_1_div_20_div_2_Template_input_change_1_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r51); const pair_r38 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r50 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r50.renamekey(ctx_r50.dict.schema.definitions[item_r3.key], pair_r38.key, $event); });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("change", function JSONEditorComponent_div_0_div_11_div_1_div_20_div_2_Template_input_change_1_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r51); const pair_r38 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r50 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r50.renamekey(ctx_r50.dict.definitions[item_r3.key], pair_r38.key, $event); });
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } if (rf & 2) {
@@ -629,7 +629,7 @@ function JSONEditorComponent_div_0_div_11_div_1_div_20_div_19_div_2_input_2_Temp
     const pair_r38 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](2).$implicit;
     const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit;
     const ctx_r68 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("value", ctx_r68.dict.schema.definitions[item_r3.key].properties[pair_r38.key].enum[i_r66]);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("value", ctx_r68.dict.definitions[item_r3.key].properties[pair_r38.key].enum[i_r66]);
 } }
 function JSONEditorComponent_div_0_div_11_div_1_div_20_div_19_div_2_Template(rf, ctx) { if (rf & 1) {
     const _r83 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
@@ -689,7 +689,7 @@ function JSONEditorComponent_div_0_div_11_div_1_div_20_Template(rf, ctx) { if (r
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](2, JSONEditorComponent_div_0_div_11_div_1_div_20_div_2_Template, 2, 1, "div", 24);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "div", 9);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "a", 10);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function JSONEditorComponent_div_0_div_11_div_1_div_20_Template_a_click_4_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r93); const pair_r38 = ctx.$implicit; const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r92 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r92.deleteField(ctx_r92.dict.schema.definitions[item_r3.key], pair_r38.key); });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function JSONEditorComponent_div_0_div_11_div_1_div_20_Template_a_click_4_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r93); const pair_r38 = ctx.$implicit; const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r92 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r92.deleteField(ctx_r92.dict.definitions[item_r3.key], pair_r38.key); });
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](5, "\u2A2F");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
@@ -705,14 +705,14 @@ function JSONEditorComponent_div_0_div_11_div_1_div_20_Template(rf, ctx) { if (r
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "label");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](12, "Required ");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "input", 26);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("focus", function JSONEditorComponent_div_0_div_11_div_1_div_20_Template_input_focus_13_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r93); const ctx_r97 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](4); return ctx_r97.setActive(null); })("change", function JSONEditorComponent_div_0_div_11_div_1_div_20_Template_input_change_13_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r93); const pair_r38 = ctx.$implicit; const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r98 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r98.setRequired(ctx_r98.dict.schema.definitions[item_r3.key].required, pair_r38.key, $event); });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("focus", function JSONEditorComponent_div_0_div_11_div_1_div_20_Template_input_focus_13_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r93); const ctx_r97 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](4); return ctx_r97.setActive(null); })("change", function JSONEditorComponent_div_0_div_11_div_1_div_20_Template_input_change_13_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r93); const pair_r38 = ctx.$implicit; const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r98 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r98.setRequired(pair_r38.key, item_r3.key, $event); });
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](14, "div");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](15);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](16, "select", 27);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function JSONEditorComponent_div_0_div_11_div_1_div_20_Template_select_ngModelChange_16_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r93); const pair_r38 = ctx.$implicit; const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r100 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r100.dict.schema.definitions[item_r3.key].properties[pair_r38.key].fieldType = $event; })("focus", function JSONEditorComponent_div_0_div_11_div_1_div_20_Template_select_focus_16_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r93); const ctx_r102 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](4); return ctx_r102.setActive(null); })("ngModelChange", function JSONEditorComponent_div_0_div_11_div_1_div_20_Template_select_ngModelChange_16_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r93); const pair_r38 = ctx.$implicit; const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r103 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r103.setTarget(ctx_r103.dict.schema.definitions[item_r3.key].properties[pair_r38.key], $event); });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function JSONEditorComponent_div_0_div_11_div_1_div_20_Template_select_ngModelChange_16_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r93); const pair_r38 = ctx.$implicit; const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r100 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r100.dict.definitions[item_r3.key].properties[pair_r38.key].fieldType = $event; })("focus", function JSONEditorComponent_div_0_div_11_div_1_div_20_Template_select_focus_16_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r93); const ctx_r102 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](4); return ctx_r102.setActive(null); })("ngModelChange", function JSONEditorComponent_div_0_div_11_div_1_div_20_Template_select_ngModelChange_16_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r93); const pair_r38 = ctx.$implicit; const item_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]().$implicit; const ctx_r103 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r103.setTarget(ctx_r103.dict.definitions[item_r3.key].properties[pair_r38.key], $event); });
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](17, JSONEditorComponent_div_0_div_11_div_1_div_20_option_17_Template, 2, 3, "option", 28);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](18, JSONEditorComponent_div_0_div_11_div_1_div_20_select_18_Template, 2, 2, "select", 15);
@@ -730,11 +730,11 @@ function JSONEditorComponent_div_0_div_11_div_1_div_20_Template(rf, ctx) { if (r
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](7);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", pair_r38.value.isSearchable);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx_r9.contains(ctx_r9.dict.schema.definitions[item_r3.key].required, pair_r38.key));
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx_r9.contains(ctx_r9.dict.definitions[item_r3.key].required, pair_r38.key));
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate1"]("Type:", pair_r38.value.options, " ");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx_r9.dict.schema.definitions[item_r3.key].properties[pair_r38.key].fieldType)("compareWith", ctx_r9.compareByOptionId);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx_r9.dict.definitions[item_r3.key].properties[pair_r38.key].fieldType)("compareWith", ctx_r9.compareByOptionId);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", ctx_r9.fieldtypes);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
@@ -761,7 +761,7 @@ function JSONEditorComponent_div_0_div_11_div_1_Template(rf, ctx) { if (rf & 1) 
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](10, JSONEditorComponent_div_0_div_11_div_1_div_10_Template, 4, 2, "div", 13);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "div", 10);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function JSONEditorComponent_div_0_div_11_div_1_Template_div_click_11_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r107); const item_r3 = ctx.$implicit; const ctx_r108 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r108.setActive(ctx_r108.dict.schema.definitions[item_r3.key], "description"); });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function JSONEditorComponent_div_0_div_11_div_1_Template_div_click_11_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r107); const item_r3 = ctx.$implicit; const ctx_r108 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r108.setActive(ctx_r108.dict.definitions[item_r3.key], "description"); });
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](12, " Description: ");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](13, JSONEditorComponent_div_0_div_11_div_1_a_13_Template, 2, 1, "a", 14);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](14, JSONEditorComponent_div_0_div_11_div_1_textarea_14_Template, 1, 1, "textarea", 15);
@@ -770,7 +770,7 @@ function JSONEditorComponent_div_0_div_11_div_1_Template(rf, ctx) { if (rf & 1) 
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](16, "label", 16);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](17, "Multiple ");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](18, "input", 17);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function JSONEditorComponent_div_0_div_11_div_1_Template_input_ngModelChange_18_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r107); const item_r3 = ctx.$implicit; const ctx_r109 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r109.dict.schema.definitions[item_r3.key].multiple = $event; })("focus", function JSONEditorComponent_div_0_div_11_div_1_Template_input_focus_18_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r107); const ctx_r110 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r110.setActive(null); })("change", function JSONEditorComponent_div_0_div_11_div_1_Template_input_change_18_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r107); const ctx_r111 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r111.setReferables(); });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function JSONEditorComponent_div_0_div_11_div_1_Template_input_ngModelChange_18_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r107); const item_r3 = ctx.$implicit; const ctx_r109 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r109.dict.definitions[item_r3.key].multiple = $event; })("focus", function JSONEditorComponent_div_0_div_11_div_1_Template_input_focus_18_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r107); const ctx_r110 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r110.setActive(null); })("change", function JSONEditorComponent_div_0_div_11_div_1_Template_input_change_18_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r107); const ctx_r111 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r111.setReferables(); });
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
@@ -779,7 +779,7 @@ function JSONEditorComponent_div_0_div_11_div_1_Template(rf, ctx) { if (rf & 1) 
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipe"](21, "sortedhash");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](22, "div", 20);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](23, "a", 8);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function JSONEditorComponent_div_0_div_11_div_1_Template_a_click_23_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r107); const item_r3 = ctx.$implicit; const ctx_r112 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r112.newField(ctx_r112.dict.schema.definitions[item_r3.key]); });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function JSONEditorComponent_div_0_div_11_div_1_Template_a_click_23_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r107); const item_r3 = ctx.$implicit; const ctx_r112 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](3); return ctx_r112.newField(ctx_r112.dict.definitions[item_r3.key]); });
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](24, "New...");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
@@ -791,19 +791,19 @@ function JSONEditorComponent_div_0_div_11_div_1_Template(rf, ctx) { if (rf & 1) 
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](item_r3.key);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](6);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r2.isActive(ctx_r2.dict.schema.definitions[item_r3.key], "title") == false);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r2.isActive(ctx_r2.dict.definitions[item_r3.key], "title") == false);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r2.isActive(ctx_r2.dict.schema.definitions[item_r3.key], "title"));
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r2.isActive(ctx_r2.dict.definitions[item_r3.key], "title"));
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r2.dict.schema.definitions[item_r3.key].multiple);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r2.dict.definitions[item_r3.key].multiple);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](3);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r2.isActive(ctx_r2.dict.schema.definitions[item_r3.key], "description") == false);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r2.isActive(ctx_r2.dict.definitions[item_r3.key], "description") == false);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r2.isActive(ctx_r2.dict.schema.definitions[item_r3.key], "description"));
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r2.isActive(ctx_r2.dict.definitions[item_r3.key], "description"));
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx_r2.dict.schema.definitions[item_r3.key].multiple);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx_r2.dict.definitions[item_r3.key].multiple);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipeBind1"](21, 8, ctx_r2.dict.schema.definitions[item_r3.key].properties));
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipeBind1"](21, 8, ctx_r2.dict.definitions[item_r3.key].properties));
 } }
 function JSONEditorComponent_div_0_div_11_Template(rf, ctx) { if (rf & 1) {
     const _r114 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
@@ -822,7 +822,7 @@ function JSONEditorComponent_div_0_div_11_Template(rf, ctx) { if (rf & 1) {
 } if (rf & 2) {
     const ctx_r1 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](2);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipeBind1"](2, 1, ctx_r1.dict.schema.properties));
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipeBind1"](2, 1, ctx_r1.dict.properties));
 } }
 function JSONEditorComponent_div_0_Template(rf, ctx) { if (rf & 1) {
     const _r116 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
@@ -880,11 +880,11 @@ class JSONEditorComponent {
                 this.set(JSON.parse(window.document.getElementById(this.textarea).value));
             }
             catch (e) {
-                this.set({ "schema": { "properties": {} } });
+                this.set({ "properties": {} });
             }
         }
         else {
-            this.set({ "schema": { "properties": {} } });
+            this.set({ "properties": {} });
         }
     }
     load(event) {
@@ -898,10 +898,9 @@ class JSONEditorComponent {
     set(v) {
         this.dict = v;
         this.value = JSON.stringify(this.dict);
-        this.referables = Object.keys(this.dict.schema.properties).filter(key => this.dict.schema.definitions[key].multiple).map(k => ({ "key": k, "value": this.dict.schema.definitions[k] }));
+        this.referables = Object.keys(this.dict.properties).filter(key => this.dict.definitions[key].multiple).map(k => ({ "key": k, "value": this.dict.definitions[k] }));
     }
     onclick() {
-        alert(this.teste);
         this.value = JSON.stringify(this.dict);
     }
     compareByOptionId(idFist, idSecond) {
@@ -936,27 +935,31 @@ class JSONEditorComponent {
                 h[k] = o.properties[k];
             }
         }
+        if (o.required && (o.required.indexOf(oldkey) >= 0)) {
+            o.required.splice(o.required.indexOf(oldkey), 1);
+            o.required.push(event.srcElement.value);
+        }
         o.properties = h;
     }
     newTable(tablename) {
         let propertyOrder = 0;
-        for (var j in this.dict.schema.properties) {
+        for (var j in this.dict.properties) {
             if (j == tablename) {
                 var version = 0;
-                while (this.dict.schema.properties[tablename]) {
+                while (this.dict.properties[tablename]) {
                     version++;
                     tablename = (tablename + "0").replace(/\d+$/, "" + version);
                 }
             }
-            if (this.dict.schema.properties[j].propertyOrder >= propertyOrder) {
-                propertyOrder = 1 + this.dict.schema.properties[j].propertyOrder;
+            if (this.dict.properties[j].propertyOrder >= propertyOrder) {
+                propertyOrder = 1 + this.dict.properties[j].propertyOrder;
             }
         }
         var properties = {};
         var definitions = {};
-        for (var k in this.dict.schema.properties) {
-            properties[k] = this.dict.schema.properties[k];
-            definitions[k] = this.dict.schema.definitions[k];
+        for (var k in this.dict.properties) {
+            properties[k] = this.dict.properties[k];
+            definitions[k] = this.dict.definitions[k];
         }
         properties[tablename] = {
             "type": "array",
@@ -979,8 +982,8 @@ class JSONEditorComponent {
             "plural_title": "Plural title",
             "propertyOrder": propertyOrder
         };
-        this.dict.schema.definitions = definitions;
-        this.dict.schema.properties = properties;
+        this.dict.definitions = definitions;
+        this.dict.properties = properties;
         this.set(this.dict);
     }
     setMode(s) {
@@ -994,33 +997,33 @@ class JSONEditorComponent {
         title = 'driver' + title[0].toUpperCase() + title.slice(1);
         let h = {};
         let hc = {};
-        for (var k in this.dict.schema.properties) {
+        for (var k in this.dict.properties) {
             if (k == title) {
                 var version = 0;
-                while (this.dict.schema.properties[title]) {
+                while (this.dict.properties[title]) {
                     version++;
                     title = (title + "0").replace(/\d+$/, "" + version);
                 }
             }
         }
-        for (var k in this.dict.schema.properties) {
+        for (var k in this.dict.properties) {
             if (k == model) {
-                h[title] = this.dict.schema.properties[k];
-                hc[title] = this.dict.schema.definitions[k];
+                h[title] = this.dict.properties[k];
+                hc[title] = this.dict.definitions[k];
             }
             else {
-                h[k] = this.dict.schema.properties[k];
-                hc[k] = this.dict.schema.definitions[k];
+                h[k] = this.dict.properties[k];
+                hc[k] = this.dict.definitions[k];
             }
         }
         h[title]["items"] = {
             "$ref": "#/definitions/" + title
         };
         h[title]["title"] = event.srcElement.value;
-        this.dict.schema.properties = h;
-        this.dict.schema.definitions = hc;
+        this.dict.properties = h;
+        this.dict.definitions = hc;
         let res = { "properties": h, "definitions": hc };
-        this.set({ "schema": res });
+        this.set(res);
     }
     newOption(f) {
         f.enum.push("New Option");
@@ -1059,15 +1062,15 @@ class JSONEditorComponent {
     contains(array, o) {
         return array.includes(o);
     }
-    setRequired(array, o, event) {
+    setRequired(o, t, event) {
         if (event.srcElement.checked) {
-            if (!array.includes(o))
-                array.push(o);
+            if (!this.dict.definitions[t].required.includes(o))
+                this.dict.definitions[t].required.push(o);
         }
         else {
-            for (var i = 0; i < array.length; i++) {
-                if (array[i] == o)
-                    array.splice(i, 1);
+            for (var i = 0; i < this.dict.definitions[t].required.length; i++) {
+                if (this.dict.definitions[t].required[i] == o)
+                    this.dict.definitions[t].required.splice(i, 1);
             }
         }
     }
@@ -1097,25 +1100,38 @@ class JSONEditorComponent {
                 }
             }
             definition.properties = h;
+            if (definition.required && (definition.required.indexOf(fieldname) >= 0))
+                definition.required.splice(definition.required.indexOf(fieldname), 1);
         }
     }
     deleteObject(o) {
         if (!confirm("Delete " + o.key + " permanently?"))
             return;
         let res = { "properties": {}, "definitions": {} };
-        for (let key in this.dict.schema.properties) {
+        for (let key in this.dict.properties) {
             if (key != o.key) {
-                res.properties[key] = this.dict.schema.properties[key];
-                res.definitions[key] = this.dict.schema.definitions[key];
+                res.properties[key] = this.dict.properties[key];
+                res.definitions[key] = this.dict.definitions[key];
             }
         }
-        this.set({ "schema": res });
+        this.set(res);
     }
     setPluralTitle(t, event) {
         t.plural_title = event.srcElement.value;
     }
     setReferables(event) {
-        this.referables = Object.keys(this.dict.schema.properties).filter(key => this.dict.schema.definitions[key].multiple).map(k => ({ "key": k, "value": this.dict.schema.definitions[k] }));
+        this.referables = Object.keys(this.dict.properties).filter(key => this.dict.definitions[key].multiple).map(k => ({ "key": k, "value": this.dict.definitions[k] }));
+        for (let key in this.dict.properties) {
+            if (!this.dict.definitions[key].multiple) {
+                delete (this.dict.properties[key].items);
+                this.dict.properties[key]["$ref"] = "#/definitions/" + key;
+            }
+            else {
+                delete (this.dict.properties[key]["$ref"]);
+                this.dict.properties[key].items = { "$ref": "#/definitions/" + key };
+            }
+        }
+        this.set(JSON.parse(JSON.stringify(this.dict)));
     }
 }
 JSONEditorComponent.ɵfac = function JSONEditorComponent_Factory(t) { return new (t || JSONEditorComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_core__WEBPACK_IMPORTED_MODULE_0__["ElementRef"])); };

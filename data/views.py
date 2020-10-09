@@ -222,7 +222,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         # since the stored sql will be parsed by Windshaft / Postgres, we need
         # to store the data exactly as it is.
         redis_conn = get_redis_connection('default')
-        redis_conn.set(token, sql.encode('utf-8'))
+        redis_conn.set(str(token), sql)
 
     @action(methods=['get'], detail=False)
     def stepwise(self, request):
@@ -249,7 +249,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         queryset = self.get_filtered_queryset(request)
 
         # Build SQL `case` statement to annotate with the year
-        isoyear_case = Case(*[When(occurred_from__isoyear=year, then=Value(year))
+        isoyear_case = Case(*[When(occurred_from__iso_year=year, then=Value(year))
                               for year in range(start_date.year, end_date.year + 1)],
                             output_field=IntegerField())
         # Build SQL `case` statement to annotate with the day of week
@@ -1028,13 +1028,14 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
 
     def _is_multiple(self, schema, path):
         """Determines whether this related object type has a multiple item configuration
-
+        
         Args:
             schema (RecordSchema): A RecordSchema to get properties from
             path (list): A list of path fragments to navigate to the desired property
         Returns:
             True if this related object type has a multiple item configuration
         """
+        print(schema.schema)
         # The related key is always the first item appearing in the path
         try:
             if 'multiple' not in schema.schema['definitions'][path[0]]:
