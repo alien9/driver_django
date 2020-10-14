@@ -1061,9 +1061,7 @@ class JSONEditorComponent {
         }
         properties[tablename] = {
             "$ref": "#/definitions/" + tablename,
-            "title": "Insert title",
             "options": { "collapsed": true },
-            "plural_title": "Plural title",
             "propertyOrder": propertyOrder
         };
         definitions[tablename] = {
@@ -1188,6 +1186,7 @@ class JSONEditorComponent {
         }
         else {
             delete o["enum"];
+            delete o["items"];
         }
     }
     contains(array, o) {

@@ -301,14 +301,14 @@ class ModelAndDetailsWriter(BaseRecordWriter):
         output = io.StringIO()
         self.model_writer.write_header(output)
         self.details_writer.write_header(output)
-        csv_file.write(self.merge_lines(output.getvalue()))
+        csv_file.write(self.merge_lines(output.getvalue()).encode())
 
     def write_record(self, record, csv_file):
         """Pull data from a record, send to appropriate writers, and then combine output"""
         output = io.StringIO()
         self.model_writer.write_record(record, output)
         self.details_writer.write_related(record.pk, record.data[self.details_key], output)
-        csv_file.write(self.merge_lines(output.getvalue()))
+        csv_file.write(self.merge_lines(output.getvalue()).encode())
 
 
 class RecordModelWriter(BaseRecordWriter):
