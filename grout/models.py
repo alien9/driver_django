@@ -250,11 +250,11 @@ class Record(GroutModel):
         self.clean()
         return super(Record, self).save(*args, **kwargs)
 
+class Imported(GroutModel):
+    class Meta(object):
+        abstract = True
 
-class Boundary(GroutModel):
-    """ MultiPolygon objects which contain related geometries for filtering/querying """
-    class Meta:
-            verbose_name_plural = "Boundaries"
+
     class StatusTypes(object):
         PENDING = 'PENDING'
         PROCESSING = 'PROCESSING'
@@ -285,7 +285,11 @@ class Boundary(GroutModel):
     def __str__(self):
         return self.label
 
-
+            
+class Boundary(Imported):
+    """ MultiPolygon objects which contain related geometries for filtering/querying """
+    class Meta:
+            verbose_name_plural = "Boundaries"
     def load_shapefile(self):
         """ Validate the shapefile saved on disk and load into db """
         self.status = self.StatusTypes.PROCESSING
@@ -295,7 +299,6 @@ class Boundary(GroutModel):
             logging.info("extracting the shapefile")
             temp_dir = extract_zip_to_temp_dir(self.source_file)
             shapefiles = get_shapefiles_in_dir(temp_dir)
-
             if len(shapefiles) != 1:
                 raise ValueError('Exactly one shapefile (.shp) required')
 

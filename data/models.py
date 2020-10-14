@@ -151,3 +151,4 @@ class RecordCostConfig(GroutModel):
     #                                                       'Serious injury': 50000, ...})
     # This should be auto-populated by the front-end once a property_key is selected.
     enum_costs = HStoreField()
+

@@ -173,7 +173,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                     Record.objects.get(pk=instance.record_ptr_id)
                 ]
             )
-            signature = hashlib.md5(log).hexdigest()
+            signature = hashlib.md5(log.encode('utf-8')).hexdigest()
         RecordAuditLogEntry.objects.create(
             user=request.user,
             username=request.user.username,
@@ -1035,7 +1035,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         Returns:
             True if this related object type has a multiple item configuration
         """
-        print(schema.schema)
         # The related key is always the first item appearing in the path
         try:
             if 'multiple' not in schema.schema['definitions'][path[0]]:

@@ -1,8 +1,15 @@
 from django.conf import settings
 from django.contrib.gis.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
-from grout.models import GroutModel
-
+from grout.models import GroutModel, Imported
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.contrib.postgres.fields import JSONField
+from grout.imports.shapefile import (extract_zip_to_temp_dir,
+                                     get_shapefiles_in_dir,
+                                     make_linestring)
+from django.contrib.gis.gdal import DataSource as GDALDataSource
+import logging,shutil,uuid,os
 
 class BlackSpot(GroutModel):
     """A black spot -- an area where there is an historical/statistical
@@ -84,3 +91,62 @@ class LoadForecastTrainingCsv(GroutModel):
     """Model to track forecast training csvs"""
     #: Path to csvs
     csv = models.FileField(upload_to='training/forecast')
+
+class RoadMap(Imported):
+    def load_shapefile(self):
+        """ Validate the shapefile saved on disk and load into db """
+        self.status = self.StatusTypes.PROCESSING
+        self.save()
+        logging.info("starting")
+        try:
+            logging.info("extracting the shapefile")
+            temp_dir = extract_zip_to_temp_dir(self.source_file)
+            shapefiles = get_shapefiles_in_dir(temp_dir)
+            if len(shapefiles) != 1:
+                raise ValueError('Exactly one shapefile (.shp) required')
+
+            shapefile_path = os.path.join(temp_dir, shapefiles[0])
+            shape_datasource = GDALDataSource(shapefile_path)
+            if len(shape_datasource) > 1:
+                raise ValueError('Shapefile must have exactly one layer')
+
+            boundary_layer = shape_datasource[0]
+            if boundary_layer.srs is None:
+                raise ValueError('Shapefile must include a .prj file')
+            self.data_fields = boundary_layer.fields
+            for feature in boundary_layer:
+                feature.geom.transform(settings.GROUT['SRID'])
+                geometry = make_linestring(feature.geom)
+                data = {field: feature.get(field) for field in self.data_fields}
+                self.roads.create(geom=geometry, data=data)
+
+            self.status = self.StatusTypes.COMPLETE
+            self.save()
+        except Exception as e:
+            print(str(e))
+            if self.errors is None:
+                self.errors = {}
+            self.errors['message'] = str(e)
+            # Relabel geography to allow saving a valid shapefile in this namespace
+            self.label = self.label + '_' + str(uuid.uuid4())
+            self.status = self.StatusTypes.ERROR
+            self.save()
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+
+@receiver(post_save, sender=RoadMap, dispatch_uid="create_roadmap")
+def post_create(sender, instance, created, **kwargs):
+    if created:
+        instance.load_shapefile()
+
+
+class Road(GroutModel):
+    roadmap = models.ForeignKey('RoadMap',
+                                    related_name='roads',
+                                    null=True,
+                                    on_delete=models.CASCADE)
+    data = JSONField()
+    geom = models.LineStringField(srid=settings.GROUT['SRID'])
+
+
+    

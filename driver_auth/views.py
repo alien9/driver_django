@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 
 from oauth2client import client, crypt
+from django.urls import reverse
 
 from rest_framework import status, viewsets
 from rest_framework.authtoken.models import Token
@@ -16,10 +17,11 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.shortcuts import render 
 
-from djangooidc.oidc import OIDCError
+#from mozilla_django_oidc import OIDCError
+#from djangooidc.oidc import OIDCError
 #from djangooidc.views import CLIENTS
-CLIENTS=[]
 from grout.pagination import OptionalLimitOffsetPagination
 
 from django.conf import settings
@@ -35,6 +37,8 @@ ADMIN_COOKIE = 'AuthService.isAdmin'
 
 logger = logging.getLogger(__name__)
 
+def get_oidc_endpoint(request):
+    return render(request, "oidc.html") 
 
 def authz_cb(request):
     """
@@ -44,7 +48,7 @@ def authz_cb(request):
     Overriden to set auth token cookie for client; still logs in session as well.
     """
 
-    oauth_client = CLIENTS[request.session["op"]]
+    oauth_client = "google.com"
     query = None
 
     try:
@@ -69,13 +73,15 @@ def authz_cb(request):
             # return 403 here instead of raising error
             return JsonResponse({'error': 'This login is not valid in this application'},
                             status=status.HTTP_403_FORBIDDEN)
-    except OIDCError as err:
-        return JsonResponse({'error': err, 'callback': query}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as err:
+        return JsonResponse({'error': str(err), 'callback': query}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # helper to return list of available SSO clients
 def get_oidc_client_list(request):
-    return JsonResponse({'clients': list(CLIENTS.keys())})
+    url = reverse('oidc_authentication_init')
+    print(url)
+    return JsonResponse({'clients': ["google.com"]})
 
 
 class DriverSsoAuthToken(APIView):
@@ -147,6 +153,7 @@ class DriverObtainAuthToken(ObtainAuthToken):
     def post(self, request):
         serializer = self.serializer_class(data=request.data,
                                            context={'request': request})
+        print("instanced serializer")   
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)

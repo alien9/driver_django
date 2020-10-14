@@ -76,7 +76,7 @@ class DetailsReadOnlyRecordSchemaSerializer(serializers.RecordSchemaSerializer):
 
         # If we're looking at properties/definitions, remove everything that isn't read-only
         new_value = {}
-        for k in value.viewkeys():
+        for k in value.keys():
             if re.search(settings.READ_ONLY_FIELDS_REGEX, k):
                 new_value[k] = value[k]
         return key, new_value

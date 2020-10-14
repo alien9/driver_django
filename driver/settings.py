@@ -47,7 +47,7 @@ INSTALLED_APPS = (
     'storages',
 
     'django_extensions',
-    'djangooidc',
+
     'django_filters',
     'rest_framework_gis',
 
@@ -60,6 +60,7 @@ INSTALLED_APPS = (
     'black_spots',
     'django_json_widget',
     'django_verbatim',
+    'mozilla_django_oidc',  # Load after auth
 )
 
 MIDDLEWARE = (
@@ -70,15 +71,8 @@ MIDDLEWARE = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    #'django.contrib.sessions.middleware.SessionMiddleware',
-    #'django.middleware.common.CommonMiddleware',
-    #'django.middleware.csrf.CsrfViewMiddleware',
-    #'django.contrib.auth.middleware.AuthenticationMiddleware',
     #'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-    #'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    #'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 )
 
@@ -134,7 +128,7 @@ DATABASES = {
         'PASSWORD': os.environ.get('DRIVER_DB_PASSWORD', 'driver'),
         'CONN_MAX_AGE': 3600,  # in seconds
         'OPTIONS': {
-            'sslmode': 'require'
+        #    'sslmode': 'require'
         }
     }
 }
@@ -151,7 +145,7 @@ POSTGIS_VERSION = tuple(
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = os.environ.get("DRIVER_LOCAL_TIME_ZONE", 'Asia/Manila')
+TIME_ZONE = os.environ.get("DRIVER_LOCAL_TIME_ZONE", 'America/Sao_Paulo')
 
 USE_I18N = True
 
@@ -179,6 +173,7 @@ MEDIA_URL = '/media/'
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 SESSION_COOKIE_HTTPONLY = True
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 LOGGING = {
     'version': 1,
@@ -233,12 +228,7 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True,
-        },
-        'djangooidc': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
+        }
     }
 }
 
@@ -364,20 +354,34 @@ GROUT = {
 }
 
 ## django-oidc settings
-HOST_URL = 'localhost'
+HOST_URL = os.environ.get('HOST_URL', 'https://titopop.com')
 
 # TODO: conditionally set for GLUU in production
-GOOGLE_OAUTH_CLIENT_ID = os.environ.get('OAUTH_CLIENT_ID', '')
-GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('OAUTH_CLIENT_SECRET', '')
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get('OAUTH_CLIENT_ID', '418431456233-i69dc0paqp9ujj40gha8ru5a1tflbjl2.apps.googleusercontent.com')
+GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('OAUTH_CLIENT_SECRET', 'E_8AybgrjZ5LdegXBENy0u83')
+OIDC_RP_CLIENT_ID = os.environ.get('OAUTH_CLIENT_ID', '418431456233-i69dc0paqp9ujj40gha8ru5a1tflbjl2.apps.googleusercontent.com')
+OIDC_RP_CLIENT_SECRET = os.environ.get('OAUTH_CLIENT_SECRET', 'fqN1UoPadvcoTLSSH98WzIRF')
 
 # Forecast.io settings
 FORECAST_IO_API_KEY = os.environ.get('FORECAST_IO_API_KEY', '')
 
+
 AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
 
 if GOOGLE_OAUTH_CLIENT_ID:
-    AUTHENTICATION_BACKENDS += ('djangooidc.backends.OpenIdConnectBackend',)
-
+    AUTHENTICATION_BACKENDS += ('mozilla_django_oidc.auth.OIDCAuthenticationBackend',)
+    #AUTHENTICATION_BACKENDS += ('driver_auth.oidc_callback.OIDC_Callback',)
+    OIDC_OP_AUTHORIZATION_ENDPOINT='https://accounts.google.com/o/oauth2/v2/auth'
+    OIDC_OP_TOKEN_ENDPOINT='https://www.googleapis.com/oauth2/v4/token'
+    OIDC_OP_USER_ENDPOINT="https://www.googleapis.com/oauth2/v3/userinfo"
+    #OIDC_REDIRECT_REQUIRE_HTTPS=True
+    OIDC_RP_SIGN_ALGO="RS256"
+    OIDC_OP_JWKS_ENDPOINT="https://www.googleapis.com/oauth2/v3/certs"
+    LOGIN_REDIRECT_URL="/"
+    OIDC_USE_NONCE=True
+    OIDC_CALLBACK_CLASS='driver_auth.oidc_callback.OIDC_CallbackView'
+    OIDC_AUTHENTICATE_CLASS='driver_auth.oidc_callback.OIDC_RequestView'
+"""
 LOGIN_URL = 'openid'
 
 OIDC_ALLOW_DYNAMIC_OP = False
@@ -455,6 +459,6 @@ if len(GOOGLE_OAUTH_CLIENT_ID) > 0:
             "post_logout_redirect_uris": [HOST_URL + "/openid/callback/logout/"],
         }
     }
-
+"""
 # These fields will be visible to read-only users
-READ_ONLY_FIELDS_REGEX = r'Details$'
+READ_ONLY_FIELDS_REGEX = r'Detalles$'

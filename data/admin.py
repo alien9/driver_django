@@ -6,6 +6,7 @@ from django_json_widget.widgets import JSONEditorWidget
 from grout.widgets import GroutEditorWidget
 from data.models import RecordCostConfig
 from grout.models import RecordSchema, RecordType, Boundary, BoundaryPolygon
+from black_spots.models import RoadMap
 class RecordSchemaAdmin(admin.ModelAdmin):
     formfield_overrides = {
         JSONField: {'widget': GroutEditorWidget}
@@ -31,9 +32,12 @@ class BoundaryPolygonAdmin(admin.ModelAdmin):
 class RecordCostConfigAdmin(admin.ModelAdmin):
     pass
 
+class RoadMapAdmin(admin.ModelAdmin):
+    pass
 
 admin.site.register(RecordSchema, RecordSchemaAdmin)
 admin.site.register(RecordType, RecordTypeAdmin)
 admin.site.register(Boundary, BoundaryAdmin)
 admin.site.register(BoundaryPolygon, BoundaryPolygonAdmin)
 admin.site.register(RecordCostConfig, RecordCostConfigAdmin)
+admin.site.register(RoadMap, RoadMapAdmin)

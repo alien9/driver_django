@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('grout', '0026_auto_20200811_0350'),
+        ('grout', '0025_auto_20180730_2038'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

@@ -44,7 +44,8 @@ urlpatterns = [
     url(r'^openid/callback/login/?$', auth_views.authz_cb, name='openid_login_cb'),
     # OIDC
     #url(r'^openid/', include('djangooidc.urls')),
-    #url(r'openid/', include('djangooidc.urls')),
+    #url(r'openid/', include('djangooidc.urls')),    
+    url(r'^oidc/', include('mozilla_django_oidc.urls')),
 ]
 
 # Allow login to the browseable API

@@ -1,7 +1,7 @@
 import os
 import tempfile
 import zipfile
-from django.contrib.gis.geos import MultiPolygon, Polygon
+from django.contrib.gis.geos import MultiPolygon, Polygon, LineString, MultiLineString
 
 
 def extract_zip_to_temp_dir(filename):
@@ -33,3 +33,12 @@ def make_multipolygon(geom):
         return geom.geos
     else:
         raise ValueError('Feature is not a MultiPolygon or Polygon')
+
+def make_linestring(geom):
+    """Wraps Polygons in MultiPolygons"""
+    if isinstance(geom.geos, LineString):
+        return geom.geos
+    elif isinstance(geom.geos, MultiLineString):
+        return MultiLineString(geom.geos)
+    else:
+        raise ValueError('Feature is not a MultiLineString or LineString')
