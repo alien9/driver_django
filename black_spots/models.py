@@ -9,7 +9,8 @@ from grout.imports.shapefile import (extract_zip_to_temp_dir,
                                      get_shapefiles_in_dir,
                                      make_linestring)
 from django.contrib.gis.gdal import DataSource as GDALDataSource
-import logging,shutil,uuid,os
+import logging,shutil,uuid,os, subprocess
+from django.db import connection
 
 class BlackSpot(GroutModel):
     """A black spot -- an area where there is an historical/statistical
@@ -113,13 +114,16 @@ class RoadMap(Imported):
             boundary_layer = shape_datasource[0]
             if boundary_layer.srs is None:
                 raise ValueError('Shapefile must include a .prj file')
-            self.data_fields = boundary_layer.fields
-            for feature in boundary_layer:
-                feature.geom.transform(settings.GROUT['SRID'])
-                geometry = make_linestring(feature.geom)
-                data = {field: feature.get(field) for field in self.data_fields}
-                self.roads.create(geom=geometry, data=data)
 
+            print(shapefile_path)
+            srid=boundary_layer.srs.attr_value('AUTHORITY',1)
+            cmd = [ "shp2pgsql", "-s", srid, "-g", "geom", "-I", shapefile_path, "temp_table" ]
+            sql=subprocess.run(cmd, stdout=subprocess.PIPE).stdout
+            with connection.cursor() as cursor:
+                cursor.execute(sql.decode())
+            print(self.id)
+            #cursor.execute("INSERT into road (data, geom) ")
+            
             self.status = self.StatusTypes.COMPLETE
             self.save()
         except Exception as e:
