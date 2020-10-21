@@ -74,6 +74,7 @@ MIDDLEWARE = (
     #'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
 )
 
 if DEBUG:
@@ -143,7 +144,18 @@ POSTGIS_VERSION = tuple(
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pt-br'
+USE_I18N = True
+USE_L10N = True
+
+from django.utils.translation import ugettext_lazy as _
+LANGUAGES = ( 
+   ('de', _('German')),
+   ('en', _('English')),
+   ('fr', _('French')),
+   ('es', _('Spanish')),
+   ('pt-br', _('Portuguese'))
+)
 
 TIME_ZONE = os.environ.get("DRIVER_LOCAL_TIME_ZONE", 'America/Sao_Paulo')
 

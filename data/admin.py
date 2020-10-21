@@ -1,12 +1,17 @@
 from django.contrib import admin
 from django.contrib.postgres.fields import JSONField
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from django_json_widget.widgets import JSONEditorWidget
 from grout.widgets import GroutEditorWidget
 from data.models import RecordCostConfig
 from grout.models import RecordSchema, RecordType, Boundary, BoundaryPolygon
 from black_spots.models import RoadMap
+
+admin.site.index_title = _('My Index Title')
+
+
 class RecordSchemaAdmin(admin.ModelAdmin):
     formfield_overrides = {
         JSONField: {'widget': GroutEditorWidget}

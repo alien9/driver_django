@@ -7,13 +7,13 @@
             prefix: "!"
         },
         api: {
-            hostname: "http://titopop.com"
+            hostname: "PROTOCOL://HOST_NAME"
         },
         windshaft: {
-            hostname: "http://titopop.com"
+            hostname: "PROTOCOL://HOST_NAME"
         },
         nominatim: {
-            key: "NmfGZYebsExMYfFWP4Tf"
+            key: "NOMINATIM"
         },
         record: {
             limit: 50
@@ -29,23 +29,15 @@
         },
         recordType: {
             visible: !1,
-            primaryLabel: "Accidente",
-            secondaryLabel: "Intervencion"
+            primaryLabel: "PRIMARYLABEL",
+            secondaryLabel: "SECONDARYLABEL"
         },
         localization: {
-            timeZone: "America/La_Paz",
-            countryCode: "bo",
-            centerLatLon: [-16.5, -68.15],
-            zoom: 12,
-            languages: [{
-                id: "es",
-                label: "Español",
-                rtl: !1
-            },{
-                id: "en-us",
-                label: "English",
-                rtl: !1
-            }]
+            timeZone: "TIMEZONE",
+            countryCode: "COUNTRY",
+            centerLatLon: CENTER,
+            zoom: ZOOM,
+            languages: LANGUAGES
         },
         mapillary: {
             enabled: !1,
@@ -74,7 +66,7 @@
         duplicateRecordsLink: {
             visible: !0
         },
-        OAUTH_CLIENT_ID:"418431456233-i69dc0paqp9ujj40gha8ru5a1tflbjl2.apps.googleusercontent.com"
+        OAUTH_CLIENT_ID:"CLIENTID"
     };
     angular.module("driver.config", []).constant("WebConfig", a)
 }(),
@@ -87,7 +79,7 @@ function() {
             prefix: "!"
         },
         api: {
-            hostname: "http://titopop.com",
+            hostname: "PROTOCOL://HOST_NAME",
             groups: {
                 admin: "admin",
                 readOnly: "public",

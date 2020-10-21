@@ -9,6 +9,7 @@ from black_spots import views as black_spot_views
 from data import views as data_views
 from driver_auth import views as auth_views
 from user_filters import views as filt_views
+from django.conf.urls.i18n import i18n_patterns
 
 router = routers.DefaultRouter()
 router.register('assignments', black_spot_views.EnforcerAssignmentViewSet)
@@ -47,6 +48,10 @@ urlpatterns = [
     #url(r'openid/', include('djangooidc.urls')),    
     url(r'^oidc/', include('mozilla_django_oidc.urls')),
 ]
+
+#urlpatterns += i18n_patterns(
+#    url(r'^admin/', include(admin.site.urls)),
+#)
 
 # Allow login to the browseable API
 urlpatterns.append(url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')))

@@ -1,0 +1,33 @@
+from nginx
+
+RUN apt update; apt install -y certbot
+
+ARG HOST_NAME
+ARG TIMEZONE
+ARG NOMINATIM
+ARG PRIMARYLABEL
+ARG SECONDARYLABEL
+ARG CLIENTID
+ARG COUNTRY
+ARG CENTER
+ARG ZOOM
+ARG LANGUAGES
+ARG PROTOCOL
+
+COPY web /opt/web
+WORKDIR /opt/web
+COPY driver-app.conf /etc/nginx/conf.d/
+RUN sed -i -e "s/HOST_NAME/${HOST_NAME}/g" \
+    /etc/nginx/conf.d/driver-app.conf
+RUN sed -i -e  "s/PROTOCOL/${PROTOCOL}/g" \
+    -e "s/HOST_NAME/${HOST_NAME}/g" \
+    -e "s/TIMEZONE/${TIMEZONE}/g" \
+    -e "s/NOMINATIM/${NOMINATIM}/g" \
+    -e "s/PRIMARYLABEL/${PRIMARYLABEL}/g" \
+    -e "s/SECONDARYLABEL/${SECONDARYLABEL}/g" \
+    -e "s/CLIENTID/${CLIENTID}/g" \
+    -e "s/COUNTRY/${COUNTRY}/g" \
+    -e "s/CENTER/${CENTER}/g" \
+    -e "s/ZOOM/${ZOOM}/g" \
+    -e "s/LANGUAGES/${LANGUAGES}/g" \
+    /opt/web/dist/scripts/scripts.698e6068.js

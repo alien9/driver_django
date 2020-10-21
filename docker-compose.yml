@@ -1,0 +1,119 @@
+version: '2'
+services:
+  postgres:
+    build:
+      context: ./
+      args:
+        - buildno=1
+      dockerfile: Dockerfile.database
+    volumes:
+      - $HOME/driver_django/postgres_data:/var/lib/postgresql
+    environment:
+      - POSTGRES_USER=driver
+      - POSTGRES_PASS=driver
+      - POSTGRES_DBNAME=driver
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+    container_name: database
+    image:
+      driver-database
+  
+  redis-server:
+    image: redis
+    container_name: redis-server
+
+  driver-django:
+    volumes:
+      - $HOME/driver_django/static:/var/www/static
+    depends_on:
+      - redis-server
+      - postgres
+    environment:
+      - HOST_URL=${PROTOCOL}://${HOST_NAME}
+      - DJANGO_ENV=production
+      - DRIVER_DB_HOST=database
+      - DRIVER_DB_NAME=driver
+      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
+      - DRIVER_REDIS_HOST=redis-server
+      - STATIC_ROOT=/var/www/static/
+      - STATIC_URL=${PROTOCOL}://${HOST_NAME}/static/ 
+      - OAUTH_CLIENT_ID=${CLIENTID}
+      - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
+      - DRIVER_ADMIN_PASSWORD={DRIVER_ADMIN_PASSWORD}
+    ports:
+      - "4000:4000"
+    container_name: "driver-django"
+    image: alien9/driver-django
+  
+  driver-celery:
+    depends_on:
+      - redis-server
+      - postgres
+    environment:
+      - HOST_URL=${PROTOCOL}://${HOST_NAME}
+      - DJANGO_ENV=production
+      - DRIVER_DB_HOST=database
+      - DRIVER_DB_NAME=driver
+      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
+      - DRIVER_REDIS_HOST=redis-server
+      - STATIC_ROOT=/var/www/static/
+      - STATIC_URL=${PROTOCOL}://${HOST_NAME}/static/ 
+      - OAUTH_CLIENT_ID=${CLIENTID}
+      - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
+    entrypoint: ["celery", "-A", "driver", "worker", "--queue=taskworker", "--loglevel=info", "--concurrency=4"]
+    container_name: "driver-celery"
+    image: alien9/driver-django
+  
+  windshaft:
+    command: server.js
+    container_name: windshaft
+    links:
+      - redis-server:redis
+    depends_on:
+      - redis-server
+      - postgres
+    ports:
+      - 5000:5000
+    volumes:
+      - ${WINDSHAFT_FILES}/windshaft/driver.js:/opt/windshaft/driver.js
+      - ${WINDSHAFT_FILES}/windshaft/healthCheck.js:/opt/windshaft/healthCheck.js
+      - ${WINDSHAFT_FILES}/windshaft/alphamarker.png:/opt/windshaft/alphamarker.png
+      - ${WINDSHAFT_FILES}/windshaft/server.js:/opt/windshaft/server.js
+    environment:
+      - DRIVER_DB_NAME=driver
+      - DRIVER_DB_USER=driver
+      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
+      - WINDSHAFT_DB_USER=driver
+      - WINDSHAFT_DB_PASSWORD=${DATABASE_PASSWORD}
+      - DRIVER_DB_HOST=database
+      - DRIVER_DB_PORT=5432
+      - DRIVER_APP_HOST=${PROTOCOL}://${HOST_NAME}
+      - DRIVER_REDIS_HOST=redis
+      - DRIVER_REDIS_PORT=6379
+    image: quay.io/azavea/windshaft:0.1.0
+
+  #mapserver:
+    #container_name: mapserver
+    #image: kartoza/mapserver:7.6
+  driver-nginx:
+    container_name: driver-nginx
+    volumes:
+      - $HOME/driver_django/static:/var/www/static
+    build:
+      context: ./
+      args:
+        - HOST_NAME=${HOST_NAME}
+        - PROTOCOL=${PROTOCOL}
+        - TIMEZONE=${TIMEZONE}
+        - NOMINATIM=${NOMINATIM}
+        - PRIMARYLABEL=${PRIMARYLABEL}
+        - SECONDARYLABEL=${SECONDARYLABEL}
+        - CLIENTID=${CLIENTID}
+        - COUNTRY=${COUNTRY}
+        - CENTER=${CENTER}
+        - ZOOM=${ZOOM}
+        - LANGUAGES=${LANGUAGES}
+      dockerfile: Dockerfile.nginx
+    image: alien9/driver-nginx
+    ports: 
+      - "80:80"
+      - "443:443"
