@@ -22,6 +22,8 @@ services:
     container_name: redis-server
 
   driver-django:
+    build:
+      context: ./
     volumes:
       - $HOME/driver_django/static:/var/www/static
     depends_on:
@@ -42,7 +44,7 @@ services:
     ports:
       - "4000:4000"
     container_name: "driver-django"
-    image: alien9/driver-django
+    image: driver-django
   
   driver-celery:
     depends_on:
