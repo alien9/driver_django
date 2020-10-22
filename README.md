@@ -12,8 +12,8 @@ The 443 and 80 ports are required in the host in order to receive and process re
 
 These are first-run commands to prepare the database and web server to run the system:
 
-`docker exec driver-django collectstatic  
-docker exec driver-django ./manage.py migrate  
+`docker exec driver-django collectstatic  \
+docker exec driver-django ./manage.py migrate  \
 docker exec driver-nginx certbot renew  `
 
 ## Development Environment
