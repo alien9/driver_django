@@ -8,5 +8,11 @@ In the project directory, you can run:
 
 `docker-compose up -d`
 
-The 443 and 80 ports are required in the host in order to receive and process requests. 
+The 443 and 80 ports are required in the host in order to receive and process requests. Ensure the proper name server settings to direct the requests to the nginx container, which will provide the web interface. 
+
+## Development Environment
+
+# Requirements
+
+Python 3.8.5; PostgreSQL 9.4
 
