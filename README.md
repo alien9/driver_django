@@ -16,6 +16,7 @@ These are first-run commands to prepare the database and web server to run the s
 `docker exec driver-django ./manage.py migrate`  
 `docker exec driver-nginx certbot renew`
 
+
 ## Development Environment
 
 ## Requirements
