@@ -1,13 +1,12 @@
-# driver_django
+This project is deployed with docker containers. 
 
-System Requirements
+## Environment
 
-docker and docker-compose
+You must define the constant values in the `.env` file. A sample `.env.sample` is provided, and it contains the keys needed for DRIVER to run.
 
+In the project directory, you can run:
 
-Installation 
+`docker-compose up -d`
 
-The configuration is set at .env. nSee .env.sample for reference.
-
-CLIENTID and CLIENT_SECRET must have been configured at Google development console and validated for the selected domain (at hostname).
+The 443 and 80 ports are required in the host in order to receive and process requests. 
 
