@@ -183,7 +183,7 @@ function setRequestParameters(request, callback, redisClient) {
                 var severityRegex = /severity_score/;
                 var castSelect = _.map(fields, function(field) {
                     if (field.match(geomRegex) || field.match(severityRegex)) {
-                        return field; // do not cast geom field
+                        return field + '::geometry';
                     } else {
                         return field + '::varchar';
                     }
