@@ -100,11 +100,6 @@ def build_toddow(queryset):
             .annotate(count=Count('tod')))
 
 
-class DriverTemRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
-    permission_classes = (ReadersReadWritersWrite,)
-    filter_class = filters.DriverTemRecordFilter
-    queryset = DriverRecord.objects.all()
-
 class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
     """Override base RecordViewSet from grout to provide aggregation and tiler integration
     """

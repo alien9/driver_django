@@ -20,17 +20,6 @@ class DriverRecord(Record):
     road = models.CharField(max_length=200, null=True, blank=True)
     state = models.CharField(max_length=50, null=True, blank=True)
 
-class DriverTemRecord(Record):
-    weather = models.CharField(max_length=50, null=True, blank=True)
-    light = models.CharField(max_length=50, null=True, blank=True)
-
-    city = models.CharField(max_length=50, null=True, blank=True)
-    city_district = models.CharField(max_length=50, null=True, blank=True)
-    county = models.CharField(max_length=50, null=True, blank=True)
-    neighborhood = models.CharField(max_length=50, null=True, blank=True)
-    road = models.CharField(max_length=200, null=True, blank=True)
-    state = models.CharField(max_length=50, null=True, blank=True)
-
 class RecordAuditLogEntry(models.Model):
     """Records an occurrence of a Record being altered, who did it, and when.
 

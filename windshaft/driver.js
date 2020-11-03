@@ -130,7 +130,7 @@ function setRequestParameters(request, callback, redisClient) {
             redisClient.get(tilekey, function(err, sql) {
                 console.log(sql);
                 if (!sql) {
-                    callback('Error getting tilekey', null);
+                    callback('Error getting tilekey mesmo', null);
                     return;
                 }
 

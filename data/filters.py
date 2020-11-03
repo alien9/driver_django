@@ -55,8 +55,6 @@ WEATHER_CHOICES = [(c, c) for c in [
     'tornado',
     'wind',
 ]]
-class DriverTemRecordFilter(RecordFilter):
-    pass
 
 class DriverRecordFilter(RecordFilter):
     """Extend RecordFilter to allow filtering on created date."""

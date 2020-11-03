@@ -29,6 +29,12 @@ SECRET_KEY = 'sfdgljfkghdjkgfhjkghdskljhgljhsdjkghfgjklhdgjklshjkhg' # os.enviro
 DEBUG = DEVELOP
 
 ALLOWED_HOSTS = ['*']
+# TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:8000',
+    'http://localhost:4200',
+]
 
 # Application definition
 
@@ -122,7 +128,7 @@ TEMPLATES = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': os.environ.get('DRIVER_DB_NAME', 'driver3'),
+        'NAME': os.environ.get('DRIVER_DB_NAME', 'driver'),
         'HOST': os.environ.get('DRIVER_DB_HOST', 'localhost'),
         'PORT': os.environ.get('DRIVER_DB_PORT', 5432),
         'USER': os.environ.get('DRIVER_DB_USER', 'driver'),
@@ -257,9 +263,6 @@ DRIVER_GROUPS = {
 
 # Django Rest Framework
 # http://www.django-rest-framework.org/
-
-# TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
-CORS_ORIGIN_ALLOW_ALL = True
 
 REST_FRAMEWORK = {
     # NB: session auth must appear before token auth for both to work.
