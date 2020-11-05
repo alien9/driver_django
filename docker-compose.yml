@@ -45,31 +45,6 @@ services:
       - "4000:4000"
     container_name: "driver-django"
     image: driver-django
-    
-  driver-django-dev:
-    command: [ "./manage.py", "runserver", "0.0.0.0:8000"]
-    volumes:
-      - $HOME/works/driver_django/static:/var/www/static
-      - $HOME/works/driver_django:/opt/app
-    depends_on:
-      - redis-server
-      - postgres
-    environment:
-      - HOST_URL=http://localhost:8000
-      - DJANGO_ENV=development
-      - DRIVER_DB_HOST=database
-      - DRIVER_DB_NAME=driver
-      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
-      - DRIVER_REDIS_HOST=redis-server
-      - STATIC_ROOT=/var/www/static/
-      - STATIC_URL=localhost:8000/static/ 
-      - OAUTH_CLIENT_ID=${CLIENTID}
-      - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
-      - DRIVER_ADMIN_PASSWORD={DRIVER_ADMIN_PASSWORD}
-    ports:
-      - "8000:8000"
-    container_name: "driver-django-dev"
-    image: driver-django
   
   driver-celery:
     depends_on:
