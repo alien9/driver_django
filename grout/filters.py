@@ -70,7 +70,7 @@ class RecordFilter(GeoFilterSet):
         if not poly_uuid:
             return queryset
         try:
-            return queryset.filter(geom__intersects=BoundaryPolygon.objects.get(pk=poly_uuid).geom)
+               return queryset.filter(geom__intersects=BoundaryPolygon.objects.get(pk=poly_uuid).geom)
         except ValueError as e:
             raise ParseError(e)
         except BoundaryPolygon.DoesNotExist as e:
@@ -106,7 +106,7 @@ class RecordFilter(GeoFilterSet):
         """Add an upper bound for datetime ranges."""
         if not value:
             # Provide a hardcoded maximum date of 9999AD.
-            min_date = parse('9999-12-31T23:59:59.999999+00:00')
+            max_date = parse('9999-12-31T23:59:59.999999+00:00')
         else:
             try:
                 max_date = parse(value)
@@ -180,7 +180,7 @@ class BoundaryPolygonFilter(GeoFilterSet):
     class Meta:
         model = BoundaryPolygon
         fields = ['data', 'boundary']
-        filter_overrides = FILTER_OVERRIDES
+        filter_overrides = FILTER_OVERRIDES 
 
 
 class JsonBFilterBackend(BaseFilterBackend):

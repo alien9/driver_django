@@ -45,7 +45,7 @@ services:
       - DRIVER_DB_HOST=database
       - DRIVER_DB_PORT=5432
       - DRIVER_APP_HOST=${PROTOCOL}://${HOST_NAME}
-      - DRIVER_REDIS_HOST=redis
+      - DRIVER_REDIS_HOST=redis-server
       - DRIVER_REDIS_PORT=6379
     image: quay.io/azavea/windshaft:0.1.0
 

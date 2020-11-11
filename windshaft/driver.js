@@ -128,12 +128,10 @@ function setRequestParameters(request, callback, redisClient) {
             throw('Parameter: `tilekey` must be specified');
         } else {
             redisClient.get(tilekey, function(err, sql) {
-                console.log(sql);
                 if (!sql) {
-                    callback('Error getting tilekey mesmo', null);
+                    callback('Error getting tilekey', null);
                     return;
                 }
-
                 // cast string columns for interactivity
                 var fromIdx = sql.indexOf(' FROM');
                 var select = sql.substr(0, fromIdx);

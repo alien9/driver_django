@@ -25,7 +25,7 @@ services:
     build:
       context: ./
     volumes:
-      - $HOME/driver_django/static:/var/www/static
+      - ${WINDSHAFT_FILES}/static:/var/www/static
     depends_on:
       - redis-server
       - postgres
@@ -46,31 +46,7 @@ services:
     container_name: "driver-django"
     image: driver-django
     
-  driver-django-dev:
-    command: [ "./manage.py", "runserver", "0.0.0.0:8000"]
-    volumes:
-      - $HOME/works/driver_django/static:/var/www/static
-      - $HOME/works/driver_django:/opt/app
-    depends_on:
-      - redis-server
-      - postgres
-    environment:
-      - HOST_URL=http://localhost:8000
-      - DJANGO_ENV=development
-      - DRIVER_DB_HOST=database
-      - DRIVER_DB_NAME=driver
-      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
-      - DRIVER_REDIS_HOST=redis-server
-      - STATIC_ROOT=/var/www/static/
-      - STATIC_URL=localhost:8000/static/ 
-      - OAUTH_CLIENT_ID=${CLIENTID}
-      - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
-      - DRIVER_ADMIN_PASSWORD={DRIVER_ADMIN_PASSWORD}
-    ports:
-      - "8000:8000"
-    container_name: "driver-django-dev"
-    image: driver-django
-  
+
   driver-celery:
     depends_on:
       - redis-server
@@ -88,7 +64,7 @@ services:
       - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
     entrypoint: ["celery", "-A", "driver", "worker", "--queue=taskworker", "--loglevel=info", "--concurrency=4"]
     container_name: "driver-celery"
-    image: alien9/driver-django
+    image: driver-django
   
   windshaft:
     command: server.js
@@ -123,7 +99,8 @@ services:
     depends_on:
       - driver-django
     volumes:
-      - $HOME/driver_django/static:/var/www/static
+      - ${WINDSHAFT_FILES}/static:/var/www/static
+      - ${WINDSHAFT_FILES}/web:/opt/web
     build:
       context: ./
       args:

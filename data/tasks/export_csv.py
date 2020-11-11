@@ -29,10 +29,9 @@ def _utf8(value):
 
     :param value: The string to encode
     """
+
     if isinstance(value, str):
         return value
-    elif isinstance(value, str):
-        return value.encode('utf-8')
     else:
         return str(value).encode('utf-8')
 
@@ -147,8 +146,8 @@ class DriverRecordExporter(object):
         """Create the output files necessary for writing CSVs"""
         # Using NamedTemporaryFiles is necessary for creating tarballs containing temp files
         # https://bugs.python.org/issue21044
-        rec_outfile = tempfile.NamedTemporaryFile(delete=False)
-        outfiles = {related: tempfile.NamedTemporaryFile(delete=False)
+        rec_outfile = tempfile.NamedTemporaryFile(delete=False, mode="wt")
+        outfiles = {related: tempfile.NamedTemporaryFile(delete=False, mode="wt")
                     for related, subschema in self.schema['definitions'].items()
                     if not subschema.get('details')}
         return (rec_outfile, outfiles)
@@ -264,7 +263,7 @@ class ReadOnlyRecordExporter(DriverRecordExporter):
         """Create the output files necessary for writing CSVs"""
         # Using NamedTemporaryFiles is necessary for creating tarballs containing temp files
         # https://bugs.python.org/issue21044
-        rec_outfile = tempfile.NamedTemporaryFile(delete=False)
+        rec_outfile = tempfile.NamedTemporaryFile(delete=False, mode="wt")
         outfiles = dict()
         return (rec_outfile, outfiles)
 
@@ -301,14 +300,14 @@ class ModelAndDetailsWriter(BaseRecordWriter):
         output = io.StringIO()
         self.model_writer.write_header(output)
         self.details_writer.write_header(output)
-        csv_file.write(self.merge_lines(output.getvalue()).encode())
+        csv_file.write(self.merge_lines(output.getvalue()))
 
     def write_record(self, record, csv_file):
         """Pull data from a record, send to appropriate writers, and then combine output"""
         output = io.StringIO()
         self.model_writer.write_record(record, output)
         self.details_writer.write_related(record.pk, record.data[self.details_key], output)
-        csv_file.write(self.merge_lines(output.getvalue()).encode())
+        csv_file.write(self.merge_lines(output.getvalue()))
 
 
 class RecordModelWriter(BaseRecordWriter):

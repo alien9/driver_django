@@ -54,6 +54,61 @@ WEATHER_CHOICES = [(c, c) for c in [
     'thunderstorm',
     'tornado',
     'wind',
+    'thunderstorm with light rain',
+    'thunderstorm with rain',
+    'thunderstorm with heavy rain',
+    'light thunderstorm',
+    'thunderstorm',
+    'heavy thunderstorm',
+    'ragged thunderstorm',
+    'thunderstorm with light drizzle',
+    'thunderstorm with drizzle',
+    'thunderstorm with heavy drizzle',
+    'light intensity drizzle',
+    'drizzle',
+    'heavy intensity drizzle',
+    'light intensity drizzle rain',
+    'drizzle rain',
+    'heavy intensity drizzle rain',
+    'shower rain and drizzle',
+    'heavy shower rain and drizzle',
+    'shower drizzle',
+    'light rain',
+    'moderate rain',
+    'heavy intensity rain',
+    'very heavy rain',
+    'extreme rain',
+    'freezing rain',
+    'light intensity shower rain',
+    'shower rain',
+    'heavy intensity shower rain',
+    'ragged shower rain',
+    'light snow',
+    'Snow',
+    'Heavy snow',
+    'Sleet',
+    'Light shower sleet',
+    'Shower sleet',
+    'Light rain and snow',
+    'Rain and snow',
+    'Light shower snow',
+    'Shower snow',
+    'Heavy shower snow',
+    'mist',
+    'Smoke',
+    'Haze',
+    'sand/ dust whirls',
+    'fog',
+    'sand',
+    'dust',
+    'volcanic ash',
+    'squalls',
+    'tornado',
+    'clear sky',
+    'few clouds: 11-25%',
+    'scattered clouds: 25-50%',
+    'broken clouds: 51-84%',
+    'overcast clouds: 85-100%'
 ]]
 
 class DriverRecordFilter(RecordFilter):
@@ -61,7 +116,7 @@ class DriverRecordFilter(RecordFilter):
     created_min = django_filters.IsoDateTimeFilter(field_name="created", lookup_expr='gte')
     created_max = django_filters.IsoDateTimeFilter(field_name="created", lookup_expr='lte')
     created_by = django_filters.Filter(field_name='created_by', method='filter_created_by')
-    weather = django_filters.MultipleChoiceFilter(choices=WEATHER_CHOICES)
+    weather = django_filters.Filter(field_name='weather', method='filter_weather')
     archived = django_filters.BooleanFilter(field_name='archived')
     outside_boundary = django_filters.Filter(field_name='geom', method='filter_outside_boundary')
 
@@ -75,6 +130,13 @@ class DriverRecordFilter(RecordFilter):
                 data['archived'] = "False"
 
         super(DriverRecordFilter, self).__init__(data, *args, **kwargs)
+    
+    def filter_weather(self, queryset, field_name, weather):
+        weathers=weather.split(",")
+        query = Q()
+        for w in weathers:
+            query.add(Q(weather=w), Q.OR)
+        return queryset.filter(query)
 
     def filter_outside_boundary(self, queryset, field_name, boundary_uuid):
         """Filter records that fall outside the specified boundary."""
