@@ -45,8 +45,7 @@ services:
       - "4000:4000"
     container_name: "driver-django"
     image: driver-django
-    
-
+      
   driver-celery:
     depends_on:
       - redis-server
