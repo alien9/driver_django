@@ -23,7 +23,7 @@ then
      echo "HTTP"
 else
      echo "HTTPS"
-     docker exec driver-nginx certbot renew
+     docker exec driver-nginx certbot
 fi
 docker exec driver-django ./manage.py collectstatic --noinput
 docker exec driver-django ./manage.py migrate
