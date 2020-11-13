@@ -25,6 +25,7 @@ scripts.template.js > web/dist/scripts/scripts.698e6068.js
 cp driver-app.conf nginx/driver.conf
 sed -i -e "s/HOST_NAME/${HOST_NAME}/g" \
 	-e "s,    root \/opt\/web\/dist,    root $WINDSHAFT_FILES\/web\/dist,g" \
+	-e "s,STATIC_ROOT,$WINDSHAFT_FILES,g" \
 -e "s/driver-django/$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-django-${CONTAINER_NAME})/g" \
 -e "s/driver-celery/$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-celery-${CONTAINER_NAME})/g" \
 -e "s/windshaft/$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' windshaft-${CONTAINER_NAME})/g" \

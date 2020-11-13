@@ -3,7 +3,7 @@
 -- DROP FUNCTION public.caclulate_black_spots(uuid);
 create schema if not exists works;
 CREATE OR REPLACE FUNCTION works.caclulate_black_spots(
-	recordtype uuid)
+	recordtype uuid, elevated varchar)
     RETURNS void
     LANGUAGE 'plpgsql'
 
@@ -39,13 +39,7 @@ v_content_type_key text;
 severity text;
 
 --costs
-tablename  text;
-fieldname text;
-elevated text;
 begin
-tablename:='driverDetalles';
-fieldname:='Gravedad';
-elevated:='Grave';
 raise notice 'rec type %', recordtype;
 size_std:=100;
 select uuid into blackspotset_id from black_spots_blackspotset limit 1;
@@ -66,7 +60,6 @@ select uuid into recordschema from grout_recordschema where record_type_id=recor
 select max(gr.occurred_from)-interval '3000 days' into time_limit from grout_record  gr join grout_recordschema gs on gs.uuid=gr.schema_id where archived='f' and gs.record_type_id=recordtype;
 for r in select gr.* from grout_record gr join grout_recordschema gs on gs.uuid=gr.schema_id where archived='f' and gs.record_type_id=recordtype and occurred_from >= time_limit loop
 	select v_enum_costs->replace((r.data->v_content_type_key->v_property_key)::text,'"', '') into costs;
-	raise notice 'essse aqui % ', r.data->v_content_type_key->v_property_key;
 	severe = case when 
 		(r.data->v_content_type_key->v_property_key)::text=elevated
 			then
@@ -162,7 +155,7 @@ delete from black_spots_blackspot  where black_spot_set_id=blackspotset_id and u
 );
 end;
 $BODY$;
-ALTER FUNCTION works.caclulate_black_spots(uuid)
+ALTER FUNCTION works.caclulate_black_spots(uuid, elevated)
     OWNER TO driver;
 --select works.caclulate_black_spots((select uuid from grout_recordtype))
 
