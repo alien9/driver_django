@@ -41,8 +41,6 @@ services:
       - OAUTH_CLIENT_ID=${CLIENTID}
       - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
       - DRIVER_ADMIN_PASSWORD=${DRIVER_ADMIN_PASSWORD}
-    ports:
-      - "4000:4000"
     container_name: driver-django-${CONTAINER_NAME}
     image: driver-django
       
@@ -73,8 +71,6 @@ services:
     depends_on:
       - redis-server
       - postgres
-    ports:
-      - 5000:5000
     volumes:
       - ${WINDSHAFT_FILES}/windshaft/driver.js:/opt/windshaft/driver.js
       - ${WINDSHAFT_FILES}/windshaft/healthCheck.js:/opt/windshaft/healthCheck.js
@@ -117,6 +113,3 @@ services:
         - LANGUAGES=${LANGUAGES}
       dockerfile: Dockerfile.nginx
     image: alien9/driver-nginx
-    ports: 
-      - "80:80"
-      - "443:443"
