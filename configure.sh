@@ -42,6 +42,6 @@ fi
 docker exec "driver-django-${CONTAINER_NAME}" ./manage.py collectstatic --noinput
 docker exec "driver-django-${CONTAINER_NAME}" ./manage.py migrate
 
-sudo mv nginx/driver.conf /etc/nginx/sites-enabled/driver-sp.conf
+sudo mv nginx/driver.conf /etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf
 sudo service nginx restart
 #docker-compose restart driver-nginx 
