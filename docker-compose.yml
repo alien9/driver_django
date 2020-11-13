@@ -7,7 +7,7 @@ services:
         - buildno=1
       dockerfile: Dockerfile.database
     volumes:
-      - $HOME/driver_django/postgres_data:/var/lib/postgresql
+      - ${WINDSHAFT_FILES}/postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=driver
       - POSTGRES_PASS=driver
