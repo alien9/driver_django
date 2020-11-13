@@ -7,10 +7,10 @@
             prefix: "!"
         },
         api: {
-            hostname: "http://titopop.com"
+            hostname: "https://sp.roadsafety.tk"
         },
         windshaft: {
-            hostname: "http://titopop.com"
+            hostname: "https://sp.roadsafety.tk"
         },
         nominatim: {
             key: "NmfGZYebsExMYfFWP4Tf"
@@ -36,8 +36,8 @@
             timeZone: "America/Sao_Paulo",
             countryCode: "br",
             centerLatLon: [-23.5,-46.5],
-            zoom: 12,
-            languages:  [{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}] 
+            zoom: 11,
+            languages:  [{id: "pt-br", label:"Português", rtl: !1},{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}] 
         },
         mapillary: {
             enabled: !1,
@@ -66,7 +66,7 @@
         duplicateRecordsLink: {
             visible: !0
         },
-        OAUTH_CLIENT_ID:"418431456233-i69dc0paqp9ujj40gha8ru5a1tflbjl2.apps.googleusercontent.com"
+        OAUTH_CLIENT_ID:"418431456233-l64k8s2o2vib71dbcm5gevdun0hafqof.apps.googleusercontent.com"
     };
     angular.module("driver.config", []).constant("WebConfig", a)
 }(),
@@ -79,7 +79,7 @@ function() {
             prefix: "!"
         },
         api: {
-            hostname: "http://titopop.com",
+            hostname: "https://sp.roadsafety.tk",
             groups: {
                 admin: "admin",
                 readOnly: "public",
