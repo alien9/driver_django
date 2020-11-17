@@ -8,6 +8,7 @@ from grout.widgets import GroutEditorWidget
 from data.models import RecordCostConfig
 from grout.models import RecordSchema, RecordType, Boundary, BoundaryPolygon
 from black_spots.models import RoadMap
+from django_admin_hstore_widget.forms import HStoreFormField
 
 admin.site.index_title = _('My Index Title')
 
@@ -34,8 +35,16 @@ class BoundaryAdmin(admin.ModelAdmin):
         verbose_name_plural = "Boundaries"
 class BoundaryPolygonAdmin(admin.ModelAdmin):
     pass
+
+class RecordCostConfigAdminForm(forms.ModelForm):
+    enum_costs = HStoreFormField()
+    
+    class Meta:
+       model = RecordCostConfig
+       exclude = ()
+
 class RecordCostConfigAdmin(admin.ModelAdmin):
-    pass
+    form = RecordCostConfigAdminForm
 
 class RoadMapAdmin(admin.ModelAdmin):
     pass

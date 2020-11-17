@@ -7,7 +7,10 @@ services:
         - buildno=1
       dockerfile: Dockerfile.database
     volumes:
-      - ${WINDSHAFT_FILES}/postgres_data:/var/lib/postgresql/data
+      - ${WINDSHAFT_FILES}/windshaft/driver.js:/opt/windshaft/driver.js
+      - ${WINDSHAFT_FILES}/windshaft/healthCheck.js:/opt/windshaft/healthCheck.js
+      - ${WINDSHAFT_FILES}/windshaft/alphamarker.png:/opt/windshaft/alphamarker.png
+      - ${WINDSHAFT_FILES}/windshaft/server.js:/opt/windshaft/server.js
     environment:
       - POSTGRES_USER=driver
       - POSTGRES_PASS=driver

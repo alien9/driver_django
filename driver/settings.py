@@ -67,6 +67,7 @@ INSTALLED_APPS = (
     'django_json_widget',
     'django_verbatim',
     'mozilla_django_oidc',  # Load after auth
+    'django_admin_hstore_widget',
 )
 
 MIDDLEWARE = (
