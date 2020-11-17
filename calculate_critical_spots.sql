@@ -155,7 +155,7 @@ delete from black_spots_blackspot  where black_spot_set_id=blackspotset_id and u
 );
 end;
 $BODY$;
-ALTER FUNCTION works.caclulate_black_spots(uuid, elevated)
+ALTER FUNCTION works.caclulate_black_spots(uuid, varchar)
     OWNER TO driver;
 --select works.caclulate_black_spots((select uuid from grout_recordtype))
 
