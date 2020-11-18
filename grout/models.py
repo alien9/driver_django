@@ -2,6 +2,7 @@ import os
 import shutil
 import uuid, logging
 
+from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.contrib.gis.db import models
 from django.contrib.gis.gdal import DataSource as GDALDataSource
@@ -289,7 +290,8 @@ class Imported(GroutModel):
 class Boundary(Imported):
     """ MultiPolygon objects which contain related geometries for filtering/querying """
     class Meta:
-            verbose_name_plural = "Boundaries"
+            verbose_name_plural = _("Boundaries")
+            verbose_name = _('Boundary')
     def load_shapefile(self):
         """ Validate the shapefile saved on disk and load into db """
         self.status = self.StatusTypes.PROCESSING
@@ -338,7 +340,9 @@ def post_create(sender, instance, created, **kwargs):
 
 class BoundaryPolygon(GroutModel):
     """ Individual boundaries and associated data for each geom in a BoundaryUpload """
-
+    class Meta:
+            verbose_name_plural = _("Boundary Polygons")
+            verbose_name = _('Boundary Polygon')
     boundary = models.ForeignKey('Boundary',
                                  related_name='polygons',
                                  null=True,

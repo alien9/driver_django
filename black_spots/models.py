@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.gis.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from grout.models import GroutModel, Imported
+from django.utils.translation import ugettext_lazy as _
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.postgres.fields import JSONField
@@ -94,6 +95,9 @@ class LoadForecastTrainingCsv(GroutModel):
     csv = models.FileField(upload_to='training/forecast')
 
 class RoadMap(Imported):
+    class Meta:
+        verbose_name_plural = _("Road Maps")
+        verbose_name = _('Road Map')
     def load_shapefile(self):
         """ Validate the shapefile saved on disk and load into db """
         self.status = self.StatusTypes.PROCESSING

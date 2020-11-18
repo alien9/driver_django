@@ -36,6 +36,11 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:4200',
 ]
 
+#LANGUAGE_CODE = 'pt-br'
+USE_I18N = True
+USE_L10N = True
+LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
+
 # Application definition
 
 INSTALLED_APPS = (
@@ -150,10 +155,6 @@ POSTGIS_VERSION = tuple(
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
-
-LANGUAGE_CODE = 'pt-br'
-USE_I18N = True
-USE_L10N = True
 
 from django.utils.translation import ugettext_lazy as _
 LANGUAGES = ( 

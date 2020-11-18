@@ -4,6 +4,7 @@ import hashlib
 from django.db import models
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.auth.models import User
+from django.utils.translation import ugettext_lazy as _
 
 from grout.models import GroutModel, Record, RecordType
 
@@ -107,6 +108,9 @@ class RecordDuplicate(GroutModel):
 
 
 class RecordCostConfig(GroutModel):
+    class Meta(object):
+        verbose_name = _('Record Cost Config')
+        verbose_name_plural = _('Record Cost Configs')
     """Store a configuration for calculating costs of incidents.
 
     This takes the form of a reference to an enum field on a RecordType, along with user-

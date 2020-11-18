@@ -42,9 +42,10 @@ else
 fi
 docker exec "driver-django-${CONTAINER_NAME}" ./manage.py collectstatic --noinput
 docker exec "driver-django-${CONTAINER_NAME}" ./manage.py migrate
-
-sudo cp -r web "$STATIC_ROOT/"
-sudo cp -r static "$STATIC_ROOT/"
+if [ $STATIC_ROOT != $WINDSHAFT_FILES ]; then
+     sudo cp -r web "$STATIC_ROOT/"
+     sudo cp -r static "$STATIC_ROOT/"
+fi
 sudo mv nginx/driver.conf /etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf
 sudo service nginx restart
 #docker-compose restart driver-nginx 
