@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from django.utils.translation import ugettext_lazy as _
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -73,6 +74,7 @@ INSTALLED_APPS = (
     'django_verbatim',
     'mozilla_django_oidc',  # Load after auth
     'django_admin_hstore_widget',
+    'constance',
 )
 
 MIDDLEWARE = (
@@ -479,3 +481,17 @@ if len(GOOGLE_OAUTH_CLIENT_ID) > 0:
 """
 # These fields will be visible to read-only users
 READ_ONLY_FIELDS_REGEX = r'Detalles$'
+
+CONSTANCE_REDIS_CONNECTION = {
+    'host': REDIS_HOST,
+    'port': 6379,
+    'db': 0,
+}
+
+CONSTANCE_CONFIG = {
+    'SEGMENT_SIZE': (50, _("segment_size")),
+    'MAP_CENTER_LATITUDE': (os.getenv('CENTER_LATITUDE', -23.5), _("Latitude")),
+    'MAP_CENTER_LONGITUDE': (os.getenv('CENTER_LONGITUDE', -46.7), _("Longitude")),
+    'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
+    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', 11), _("Accident")),
+}

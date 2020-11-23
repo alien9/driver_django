@@ -48,4 +48,5 @@ if [ $STATIC_ROOT != $WINDSHAFT_FILES ]; then
 fi
 sudo mv nginx/driver.conf /etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf
 sudo service nginx restart
+echo "Remember to run certbot now."
 #docker-compose restart driver-nginx 

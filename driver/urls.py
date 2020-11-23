@@ -52,6 +52,7 @@ urlpatterns = [
     #url(r'openid/', include('djangooidc.urls')),    
     url(r'^oidc/', include('mozilla_django_oidc.urls')),
     url('i18n/', include('django.conf.urls.i18n')),
+    url(r'^config/', data_views.get_config),
 ]
 
 

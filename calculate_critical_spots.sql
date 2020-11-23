@@ -1,7 +1,94 @@
 -- FUNCTION: public.caclulate_black_spots(uuid)
 
 -- DROP FUNCTION public.caclulate_black_spots(uuid);
+
+
 create schema if not exists works;
+
+create or replace function works.find_segment(p geometry) returns geometry LANGUAGE 'plpgsql' as $B$
+declare
+r record;
+rr record;
+rrr record;
+b uuid;
+blackspotset_id uuid;
+recordschema uuid;
+road geometry;
+updated uuid;
+start_cut numeric;
+end_cut numeric;
+spot numeric;
+current_intersection numeric;
+current_intersection_g geometry;
+size_std numeric;
+current_size numeric;
+pieces numeric;
+part_position numeric;
+time_limit timestamp with time zone;
+severe int;
+count_points int;
+costs numeric;
+v_enum_costs hstore;
+v_property_key text;
+v_content_type_key text;
+severity text;
+
+begin
+	select ii.geom into road from (
+		select i.geom as geom from black_spots_road i order by i.geom <-> r.geom limit 10
+	) as ii order by st_distance(ii.geom, r.geom) limit 1;
+
+--	raise notice 'Country and boundary: %', b;
+	raise notice 'Road: %', road;
+	start_cut:=0;
+	end_cut:=1;
+	select st_Linelocatepoint(road, r.geom) into spot;
+	raise notice 'Spot is located at %', spot;
+	for rr in select i.geom as geom from black_spots_road i where st_intersects(i.geom, road)='t' and not st_equals(i.geom,road) loop
+		select st_intersection(rr.geom, road) into current_intersection_g;
+		raise notice '%', ST_GeometryType(current_intersection_g);
+		if ST_GeometryType(current_intersection_g)='ST_Point' then 
+			select st_linelocatepoint(road, current_intersection_g) into current_intersection;
+			raise notice 'Intersection %', current_intersection;
+			if current_intersection>spot then
+				if current_intersection<end_cut then
+					end_cut:=current_intersection;
+				end if;
+			elsif current_intersection<spot then
+				if current_intersection>start_cut then
+					start_cut:=current_intersection;
+				end if;
+			end if;
+		end if;
+	end loop;
+	raise notice 'max min % %', start_cut, end_cut;
+	select st_linesubstring(road, start_cut, end_cut) into road;				
+	pieces:=round(st_length(road::geography)/size_std);
+	raise notice '% pieces fit', pieces;
+	if pieces > 1 then
+		select st_Linelocatepoint(road, r.geom) into spot;
+		start_cut:=0;
+		end_cut:=1;
+		current_size:=1.0/pieces;
+		part_position:=floor(spot/current_size);
+		if part_position >= pieces then
+			part_position:=pieces-1;
+			raise notice 'ERRRRRRRR';
+		end if;
+		raise notice 'Will be part % of %', part_position, pieces;
+		raise notice 'This is % % ', part_position*current_size,(part_position+1)*current_size;
+		road:=st_linesubstring(road, part_position*current_size,(part_position+1)*current_size);
+	end if;
+
+
+
+return NULL;
+end;
+$B$;
+ALTER FUNCTION works.find_segment(geometry)
+    OWNER TO driver;
+
+
 CREATE OR REPLACE FUNCTION works.caclulate_black_spots(
 	recordtype uuid, elevated varchar)
     RETURNS void
