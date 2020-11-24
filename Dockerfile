@@ -5,6 +5,7 @@ RUN set -ex && \
     apt-get install -y --no-install-recommends libgdal-dev
 
 RUN apt-get update && apt-get install -y \    
+    gettext \
     libgeos-dev \
     libspatialindex-dev \
     gdal-bin \
