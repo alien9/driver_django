@@ -9,6 +9,19 @@ echo "START"
 while read line; do echo "$line"; done < .env
 
 echo ${CONTAINER_NAME}
+
+EXISTE_DJANGO=$(docker ps | grep driver-django-${CONTAINER_NAME})
+EXISTE_CELERY=$(docker ps | grep driver-celery-${CONTAINER_NAME})
+DJANGO_HOST="localhost"
+if [ "${EXISTE_DJANGO}" != "" ]; then
+     DJANGO_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-django-${CONTAINER_NAME})
+fi
+CELERY_HOST="localhost"
+if [ "${EXISTE_CELERY}" != "" ]; then
+     CELERY_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-celery-${CONTAINER_NAME})
+fi
+
+
 LANGUAGES=$(tr \' " " <<<"$LANGUAGES")
 sed -e "s/PROTOCOL/${PROTOCOL}/g" \
      -e "s/HOST_NAME/${HOST_NAME}/g" \
@@ -26,8 +39,8 @@ cp driver-app.conf nginx/driver.conf
 sed -i -e "s/HOST_NAME/${HOST_NAME}/g" \
 	-e "s,    root \/opt\/web\/dist,    root $STATIC_ROOT\/web\/dist,g" \
 	-e "s,STATIC_ROOT,$STATIC_ROOT,g" \
--e "s/driver-django/$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-django-${CONTAINER_NAME})/g" \
--e "s/driver-celery/$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-celery-${CONTAINER_NAME})/g" \
+-e "s/driver-django/${DJANGO_HOST}/g" \
+-e "s/driver-celery/${CELERY_HOST}/g" \
 -e "s/windshaft/$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' windshaft-${CONTAINER_NAME})/g" \
 nginx/driver.conf
 
@@ -40,8 +53,10 @@ else
      echo "HTTPS"
  #    docker exec driver-nginx certbot
 fi
-docker exec "driver-django-${CONTAINER_NAME}" ./manage.py collectstatic --noinput
-docker exec "driver-django-${CONTAINER_NAME}" ./manage.py migrate
+if [ "${EXISTE_DJANGO}" != "" ]; then
+     docker exec "driver-django-${CONTAINER_NAME}" ./manage.py collectstatic --noinput
+     docker exec "driver-django-${CONTAINER_NAME}" ./manage.py migrate
+fi
 if [ $STATIC_ROOT != $WINDSHAFT_FILES ]; then
      sudo cp -r web "$STATIC_ROOT/"
      sudo cp -r static "$STATIC_ROOT/"

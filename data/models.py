@@ -22,21 +22,21 @@ class RecordSegment(models.Model):
     geom = g.LineStringField(srid=settings.GROUT['SRID'], null=True, blank=True)
     name = models.TextField(max_length=200,null=True)
     data = HStoreField()
-    def calculate_cost(self):
+    def calculate_cost(self, data):
         n=0
-        cost=0
-        for re in instance.segment.driverrecord_set.all():
+        price=0
+        for re in self.driverrecord_set.all():
             n+=1
-            if cost.content_type_key in instance.data:
-                if cost.property_key in instance.data[cost.content_type_key]:
-                    if instance.data['driverDetalles'][cost.property_key] in cost.enum_costs:
-                        price+=float(cost.enum_costs[instance.data['driverDetalles'][cost.property_key]])
+            if cost.content_type_key in data:
+                if cost.property_key in data[cost.content_type_key]:
+                    if data['driverDetalles'][cost.property_key] in cost.enum_costs:
+                        price+=float(cost.enum_costs[data['driverDetalles'][cost.property_key]])
         if n>0:
-            instance.segment.data['cost']=price
-            instance.segment.data['count']=n
-            instance.segment.save()
+            self.data['cost']=price
+            self.data['count']=n
+            self.save()
         else:
-            instance.delete()
+            self.delete()
 
 class DriverRecord(Record):
     """Extend Grout Record model with custom fields"""
@@ -60,29 +60,27 @@ def record_after_save(sender, instance, **kwargs):
     if cost is not None:
         n=0
         price=0
-        print("have to calculate cost")
-        print("now")
         if instance.tracker.previous('segment') is not None:
             s=RecordSegment.objects.get(pk=instance.tracker.previous('segment'))
             if s != instance.segment:
-                s.calculate_cost()
-        instance.segment.calculate_cost()
+                s.calculate_cost(instance.data)
+        if instance.segment is not None:
+            instance.segment.calculate_cost(instance.data)
 
 @receiver(pre_save, sender=DriverRecord)
 def record_before_save(sender, instance, **kwargs):
     with connection.cursor() as cursor:
         cursor.execute("select * from works.find_segment(st_geomfromewkt(%s), %s)", [instance.geom.ewkt, config.SEGMENT_SIZE])
         row = cursor.fetchone()
-        s=RecordSegment.objects.filter(geom__equals=GEOSGeometry(row[0]))
-        if not len(s):
-            print("will create")
-            seg=RecordSegment(data={},name=row[1],geom=GEOSGeometry(row[0]))
-            seg.save()
-            print(seg)
-        else:
-            print("ja existe")
-            seg=s[0]
-        instance.segment=seg
+        if row[0] is not None:
+            s=RecordSegment.objects.filter(geom__equals=GEOSGeometry(row[0]))
+            if not len(s):
+                seg=RecordSegment(data={},name=row[1],geom=GEOSGeometry(row[0]))
+                seg.save()
+            else:
+                print("ja existe")
+                seg=s[0]
+            instance.segment=seg
     
 class RecordAuditLogEntry(models.Model):
     """Records an occurrence of a Record being altered, who did it, and when.

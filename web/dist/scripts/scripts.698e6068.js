@@ -33,11 +33,11 @@
             secondaryLabel: "Intervention"
         },
         localization: {
-            timeZone: "America/Sao_Paulo",
-            countryCode: "br",
-            centerLatLon: [-23.5,-46.5],
-            zoom: 12,
-            languages:  [{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}] 
+            timeZone: "Pacific/Pago_Pago",
+            countryCode: "ws",
+            centerLatLon: [-13.63770590146877,-172.44653200580277],
+            zoom: 11,
+            languages:  [{id: "pt-br", label:"Português", rtl: !1},{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}] 
         },
         mapillary: {
             enabled: !1,
