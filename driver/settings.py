@@ -493,5 +493,5 @@ CONSTANCE_CONFIG = {
     'MAP_CENTER_LATITUDE': (os.getenv('CENTER_LATITUDE', -23.5), _("Latitude")),
     'MAP_CENTER_LONGITUDE': (os.getenv('CENTER_LONGITUDE', -46.7), _("Longitude")),
     'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
-    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', 11), _("Accident")),
+    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Accident"), _("Accident")),
 }
