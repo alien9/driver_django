@@ -48,13 +48,15 @@ services:
     image: driver-django
       
   driver-celery:
+    volumes:
+      - ${WINDSHAFT_FILES}/zip:/var/www/media
     depends_on:
       - redis-server
       - postgres
     environment:
       - HOST_URL=${PROTOCOL}://${HOST_NAME}
       - DJANGO_ENV=production
-      - DRIVER_DB_HOST=database
+      - DRIVER_DB_HOST=database-${CONTAINER_NAME}
       - DRIVER_DB_NAME=driver
       - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
       - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}

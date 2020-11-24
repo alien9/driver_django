@@ -3,6 +3,13 @@
 if [[ ! -d "nginx" ]]; then
      mkdir nginx
 fi
+if [[ ! -d "zip" ]]; then
+     mkdir zip
+fi
+if [[ ! -d "postgres_data" ]]; then
+     mkdir postgres_data
+     docker-compose restart postgres
+fi
 while read line; do export "$line"; done < .env
 echo "START"
 

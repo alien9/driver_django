@@ -23,20 +23,22 @@ class RecordSegment(models.Model):
     name = models.TextField(max_length=200,null=True)
     data = HStoreField()
     def calculate_cost(self, data):
-        n=0
-        price=0
-        for re in self.driverrecord_set.all():
-            n+=1
-            if cost.content_type_key in data:
-                if cost.property_key in data[cost.content_type_key]:
-                    if data['driverDetalles'][cost.property_key] in cost.enum_costs:
-                        price+=float(cost.enum_costs[data['driverDetalles'][cost.property_key]])
-        if n>0:
-            self.data['cost']=price
-            self.data['count']=n
-            self.save()
-        else:
-            self.delete()
+        cost=RecordCostConfig.objects.last()
+        if cost is not None:
+            n=0
+            price=0
+            for re in self.driverrecord_set.all():
+                n+=1
+                if cost.content_type_key in data:
+                    if cost.property_key in data[cost.content_type_key]:
+                        if data['driverDetalles'][cost.property_key] in cost.enum_costs:
+                            price+=float(cost.enum_costs[data['driverDetalles'][cost.property_key]])
+            if n>0:
+                self.data['cost']=price
+                self.data['count']=n
+                self.save()
+            else:
+                self.delete()
 
 class DriverRecord(Record):
     """Extend Grout Record model with custom fields"""
