@@ -4,9 +4,41 @@ import hashlib
 from django.db import models
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.auth.models import User
-
+from django.utils.translation import ugettext_lazy as _
+from django.contrib.gis.db import models as g
 from grout.models import GroutModel, Record, RecordType
+from django.db.models.signals import pre_save, post_save
+from driver import settings
+from django.dispatch import receiver
+from django.db import connection
+from django.contrib.gis.geos import GEOSGeometry
+from constance import config
+from model_utils import FieldTracker
 
+class RecordSegment(models.Model):
+    class Meta(object):
+        verbose_name = _('Record Segment')
+        verbose_name_plural = _('Record Segments')
+    geom = g.LineStringField(srid=settings.GROUT['SRID'], null=True, blank=True)
+    name = models.TextField(max_length=200,null=True)
+    data = HStoreField()
+    def calculate_cost(self, data):
+        cost=RecordCostConfig.objects.last()
+        if cost is not None:
+            n=0
+            price=0
+            for re in self.driverrecord_set.all():
+                n+=1
+                if cost.content_type_key in data:
+                    if cost.property_key in data[cost.content_type_key]:
+                        if data['driverDetalles'][cost.property_key] in cost.enum_costs:
+                            price+=float(cost.enum_costs[data['driverDetalles'][cost.property_key]])
+            if n>0:
+                self.data['cost']=price
+                self.data['count']=n
+                self.save()
+            else:
+                self.delete()
 
 class DriverRecord(Record):
     """Extend Grout Record model with custom fields"""
@@ -19,7 +51,39 @@ class DriverRecord(Record):
     neighborhood = models.CharField(max_length=50, null=True, blank=True)
     road = models.CharField(max_length=200, null=True, blank=True)
     state = models.CharField(max_length=50, null=True, blank=True)
+    segment = models.ForeignKey(RecordSegment, null=True, on_delete=models.SET_NULL)
+    tracker = FieldTracker(fields=['segment'])
 
+
+@receiver(post_save, sender=DriverRecord)
+def record_after_save(sender, instance, **kwargs):
+    print('after save callback')
+    cost=RecordCostConfig.objects.last()
+    if cost is not None:
+        n=0
+        price=0
+        if instance.tracker.previous('segment') is not None:
+            s=RecordSegment.objects.get(pk=instance.tracker.previous('segment'))
+            if s != instance.segment:
+                s.calculate_cost(instance.data)
+        if instance.segment is not None:
+            instance.segment.calculate_cost(instance.data)
+
+@receiver(pre_save, sender=DriverRecord)
+def record_before_save(sender, instance, **kwargs):
+    with connection.cursor() as cursor:
+        cursor.execute("select * from works.find_segment(st_geomfromewkt(%s), %s)", [instance.geom.ewkt, config.SEGMENT_SIZE])
+        row = cursor.fetchone()
+        if row[0] is not None:
+            s=RecordSegment.objects.filter(geom__equals=GEOSGeometry(row[0]))
+            if not len(s):
+                seg=RecordSegment(data={},name=row[1],geom=GEOSGeometry(row[0]))
+                seg.save()
+            else:
+                print("ja existe")
+                seg=s[0]
+            instance.segment=seg
+    
 class RecordAuditLogEntry(models.Model):
     """Records an occurrence of a Record being altered, who did it, and when.
 
@@ -107,6 +171,9 @@ class RecordDuplicate(GroutModel):
 
 
 class RecordCostConfig(GroutModel):
+    class Meta(object):
+        verbose_name = _('Record Cost Config')
+        verbose_name_plural = _('Record Cost Configs')
     """Store a configuration for calculating costs of incidents.
 
     This takes the form of a reference to an enum field on a RecordType, along with user-
@@ -140,4 +207,3 @@ class RecordCostConfig(GroutModel):
     #                                                       'Serious injury': 50000, ...})
     # This should be auto-populated by the front-end once a property_key is selected.
     enum_costs = HStoreField()
-

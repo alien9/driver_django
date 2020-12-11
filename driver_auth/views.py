@@ -18,7 +18,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render 
-
+from constance import config
 #from mozilla_django_oidc import OIDCError
 #from djangooidc.oidc import OIDCError
 #from djangooidc.views import CLIENTS
@@ -80,7 +80,6 @@ def authz_cb(request):
 # helper to return list of available SSO clients
 def get_oidc_client_list(request):
     url = reverse('oidc_authentication_init')
-    print(url)
     return JsonResponse({'clients': ["google.com"]})
 
 
@@ -165,6 +164,12 @@ class DriverObtainAuthToken(ObtainAuthToken):
             'groups': list(map(lambda x: x.name, list(user.groups.all())))[0],
             'group':list(map(lambda x: x.id, list(user.groups.all()))),
             'groups_name': list(map(lambda x: x.name, list(user.groups.all()))),
+            'config': {
+                'MAP_CENTER_LATITUDE': config.MAP_CENTER_LATITUDE,
+                'MAP_CENTER_LONGITUDE': config.MAP_CENTER_LONGITUDE,
+                'MAP_ZOOM': config.MAP_ZOOM,
+                "PRIMARY_LABEL": config.PRIMARY_LABEL,
+            }
         }
         """
         this.storage.set('groups', res[0].group[1]).subscribe(() = > {});

@@ -33,6 +33,11 @@ router.register('userfilters', filt_views.SavedFilterViewSet, basename='userfilt
 router.register(r'users', auth_views.UserViewSet)
 router.register(r'groups', auth_views.GroupViewSet)
 
+#urlpatterns = i18n_patterns(
+#    path('admin/', admin.site.urls),
+#)
+
+
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
     url(r'^api/', include(router.urls)),
@@ -46,11 +51,13 @@ urlpatterns = [
     #url(r'^openid/', include('djangooidc.urls')),
     #url(r'openid/', include('djangooidc.urls')),    
     url(r'^oidc/', include('mozilla_django_oidc.urls')),
+    url('i18n/', include('django.conf.urls.i18n')),
+    url(r'^config/', data_views.get_config),
 ]
 
-#urlpatterns += i18n_patterns(
-#    url(r'^admin/', include(admin.site.urls)),
-#)
+
+from django.conf.urls.i18n import i18n_patterns
+
 
 # Allow login to the browseable API
 urlpatterns.append(url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')))

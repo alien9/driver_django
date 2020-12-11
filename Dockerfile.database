@@ -10,6 +10,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # add init script
 RUN mkdir -p /docker-entrypoint-initdb.d
 COPY ./initdb-postgis.sh /docker-entrypoint-initdb.d/postgis.sh
-COPY ./calculate_critical_spots.sql /docker-entrypoint-initdb.d/spots.sql
+COPY ./find_segments.sql /docker-entrypoint-initdb.d/spots.sql
 
 

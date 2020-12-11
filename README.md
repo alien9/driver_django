@@ -8,13 +8,9 @@ In the project directory, you can run:
 
 `docker-compose up -d`
 
-The 443 and 80 ports are required in the host in order to receive and process requests. Ensure the proper name server settings to direct the requests to the nginx container, which will provide the web interface. 
+There are 5 containers running as daemons in order to make DRIVER available.
+The nginx server is set up at the host in the standard mode. 
 
-These are first-run commands to prepare the database and web server to run the system:
-
-`docker exec driver-django ./manage.py collectstatic`  
-`docker exec driver-django ./manage.py migrate`  
-`docker exec driver-nginx certbot renew`
 
 
 ## Development Environment

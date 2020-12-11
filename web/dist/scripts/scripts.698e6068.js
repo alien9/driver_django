@@ -33,7 +33,7 @@
             secondaryLabel: "Intervención"
         },
         localization: {
-            timeZone: "America/Sao_Paulo",
+            timeZone: "America/La_Paz",
             countryCode: "bo",
             centerLatLon: [-16.15,-68.02],
             zoom: 11,

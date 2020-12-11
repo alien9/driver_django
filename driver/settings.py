@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from django.utils.translation import ugettext_lazy as _
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -35,6 +36,11 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:8000',
     'http://localhost:4200',
 ]
+
+#LANGUAGE_CODE = 'pt-br'
+USE_I18N = True
+USE_L10N = True
+LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 # Application definition
 
@@ -67,6 +73,8 @@ INSTALLED_APPS = (
     'django_json_widget',
     'django_verbatim',
     'mozilla_django_oidc',  # Load after auth
+    'django_admin_hstore_widget',
+    'constance',
 )
 
 MIDDLEWARE = (
@@ -149,10 +157,6 @@ POSTGIS_VERSION = tuple(
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
-
-LANGUAGE_CODE = 'pt-br'
-USE_I18N = True
-USE_L10N = True
 
 from django.utils.translation import ugettext_lazy as _
 LANGUAGES = ( 
@@ -477,3 +481,17 @@ if len(GOOGLE_OAUTH_CLIENT_ID) > 0:
 """
 # These fields will be visible to read-only users
 READ_ONLY_FIELDS_REGEX = r'Detalles$'
+
+CONSTANCE_REDIS_CONNECTION = {
+    'host': REDIS_HOST,
+    'port': 6379,
+    'db': 0,
+}
+
+CONSTANCE_CONFIG = {
+    'SEGMENT_SIZE': (50, _("segment_size")),
+    'MAP_CENTER_LATITUDE': (os.getenv('CENTER_LATITUDE', -23.5), _("Latitude")),
+    'MAP_CENTER_LONGITUDE': (os.getenv('CENTER_LONGITUDE', -46.7), _("Longitude")),
+    'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
+    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Accident"), _("Accident")),
+}

@@ -6,11 +6,12 @@ import calendar
 import datetime
 import pytz
 import hashlib
-
+from constance import config
 from dateutil.parser import parse as parse_date
 from django.template.defaultfilters import date as template_date
 
 from celery import states
+from django.http import JsonResponse
 
 from django.conf import settings
 from django.db import transaction
@@ -1380,3 +1381,18 @@ class AndroidSchemaModelsViewSet(viewsets.ViewSet):
             # to actually download the file, specify format=jar request parameter
             redis_conn.expire(uuid, settings.JARFILE_REDIS_TTL_SECONDS)
             return Response(found_jar)
+
+def get_config(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'errors': {'uuid': 'Denied'}},
+                                status=status.HTTP_403_FORBIDDEN)        
+    
+    return JsonResponse(
+        {'config': {
+            'MAP_CENTER_LATITUDE': config.MAP_CENTER_LATITUDE,
+            'MAP_CENTER_LONGITUDE': config.MAP_CENTER_LONGITUDE,
+            'MAP_ZOOM': config.MAP_ZOOM,
+            "PRIMARY_LABEL": config.PRIMARY_LABEL,
+            }
+        },
+        status=status.HTTP_200_OK)
