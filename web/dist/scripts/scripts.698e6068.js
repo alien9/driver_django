@@ -7,10 +7,10 @@
             prefix: "!"
         },
         api: {
-            hostname: "http://titopop.com"
+            hostname: "http://bolivia.titopop.com"
         },
         windshaft: {
-            hostname: "http://titopop.com"
+            hostname: "http://bolivia.titopop.com"
         },
         nominatim: {
             key: "NmfGZYebsExMYfFWP4Tf"
@@ -29,14 +29,14 @@
         },
         recordType: {
             visible: !1,
-            primaryLabel: "Accident",
-            secondaryLabel: "Intervention"
+            primaryLabel: "Accidente",
+            secondaryLabel: "Intervención"
         },
         localization: {
             timeZone: "America/Sao_Paulo",
-            countryCode: "br",
-            centerLatLon: [-23.5,-46.5],
-            zoom: 12,
+            countryCode: "bo",
+            centerLatLon: [-16.15,-68.02],
+            zoom: 11,
             languages:  [{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}] 
         },
         mapillary: {
@@ -79,7 +79,7 @@ function() {
             prefix: "!"
         },
         api: {
-            hostname: "http://titopop.com",
+            hostname: "http://bolivia.titopop.com",
             groups: {
                 admin: "admin",
                 readOnly: "public",
