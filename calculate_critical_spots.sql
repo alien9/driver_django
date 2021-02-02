@@ -147,6 +147,7 @@ select uuid into recordschema from grout_recordschema where record_type_id=recor
 select max(gr.occurred_from)-interval '3000 days' into time_limit from grout_record  gr join grout_recordschema gs on gs.uuid=gr.schema_id where archived='f' and gs.record_type_id=recordtype;
 for r in select gr.* from grout_record gr join grout_recordschema gs on gs.uuid=gr.schema_id where archived='f' and gs.record_type_id=recordtype and occurred_from >= time_limit loop
 	select v_enum_costs->replace((r.data->v_content_type_key->v_property_key)::text,'"', '') into costs;
+	raise notice 'costs % to %', costs, r.data->v_content_type_key->v_property_key;
 	severe = case when 
 		(r.data->v_content_type_key->v_property_key)::text=elevated
 			then
@@ -217,6 +218,9 @@ for r in select gr.* from grout_record gr join grout_recordschema gs on gs.uuid=
 		) select uuid into updated from upd_row;
 		raise notice 'Updated: %', updated;
 		if updated is null then
+			if costs is null then
+				costs:=0;
+			end if;
 			INSERT INTO public.black_spots_blackspot(
 				uuid,
 				created,
@@ -227,7 +231,8 @@ for r in select gr.* from grout_record gr join grout_recordschema gs on gs.uuid=
 				num_severe, 
 				black_spot_set_id)
 			VALUES (md5(random()::text || clock_timestamp()::text)::uuid
-				, now(), now(), 
+				, now(), 
+				now(), 
 				st_buffer(road::geography,30)::geometry, 
 				costs, 
 				1, 

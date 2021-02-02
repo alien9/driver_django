@@ -14,6 +14,7 @@ from django.db import connection
 from django.contrib.gis.geos import GEOSGeometry
 from constance import config
 from model_utils import FieldTracker
+from django_redis import get_redis_connection
 
 class RecordSegment(models.Model):
     class Meta(object):
@@ -31,8 +32,11 @@ class RecordSegment(models.Model):
                 n+=1
                 if cost.content_type_key in data:
                     if cost.property_key in data[cost.content_type_key]:
-                        if data['driverDetalles'][cost.property_key] in cost.enum_costs:
-                            price+=float(cost.enum_costs[data['driverDetalles'][cost.property_key]])
+                        if type(data[cost.content_type_key][cost.property_key])==str:
+                            if data[cost.content_type_key][cost.property_key] in cost.enum_costs:
+                                price+=float(cost.enum_costs[data[cost.content_type_key][cost.property_key]])
+                        else:
+                            price+=data[cost.content_type_key][cost.property_key]
             if n>0:
                 self.data['cost']=price
                 self.data['count']=n
@@ -52,12 +56,30 @@ class DriverRecord(Record):
     road = models.CharField(max_length=200, null=True, blank=True)
     state = models.CharField(max_length=50, null=True, blank=True)
     segment = models.ForeignKey(RecordSegment, null=True, on_delete=models.SET_NULL)
-    tracker = FieldTracker(fields=['segment'])
-
-
+    def geocode(self):
+        with connection.cursor() as cursor:
+            cursor.execute("select * from works.find_segment(st_geomfromewkt(%s), %s)", [self.geom.ewkt, config.SEGMENT_SIZE])
+            row = cursor.fetchone()
+            if row[0] is not None:
+                s=RecordSegment.objects.filter(geom__equals=GEOSGeometry(row[0]))
+                if not len(s):
+                    seg=RecordSegment(data={},name=row[1],geom=GEOSGeometry(row[0]))
+                    seg.save()
+                else:
+                    print("ja existe")
+                    seg=s[0]
+                self.segment=seg
+        self.save()
+        
 @receiver(post_save, sender=DriverRecord)
 def record_after_save(sender, instance, **kwargs):
     print('after save callback')
+    if instance.segment is None:
+        redis_conn = get_redis_connection('geocode')
+        redis_conn.lpush('records', str(instance.uuid))
+        print("lined up %s"% (str(instance.uuid)))
+
+"""
     cost=RecordCostConfig.objects.last()
     if cost is not None:
         n=0
@@ -71,19 +93,9 @@ def record_after_save(sender, instance, **kwargs):
 
 @receiver(pre_save, sender=DriverRecord)
 def record_before_save(sender, instance, **kwargs):
-    with connection.cursor() as cursor:
-        cursor.execute("select * from works.find_segment(st_geomfromewkt(%s), %s)", [instance.geom.ewkt, config.SEGMENT_SIZE])
-        row = cursor.fetchone()
-        if row[0] is not None:
-            s=RecordSegment.objects.filter(geom__equals=GEOSGeometry(row[0]))
-            if not len(s):
-                seg=RecordSegment(data={},name=row[1],geom=GEOSGeometry(row[0]))
-                seg.save()
-            else:
-                print("ja existe")
-                seg=s[0]
-            instance.segment=seg
-    
+  
+
+"""
 class RecordAuditLogEntry(models.Model):
     """Records an occurrence of a Record being altered, who did it, and when.
 
@@ -207,3 +219,14 @@ class RecordCostConfig(GroutModel):
     #                                                       'Serious injury': 50000, ...})
     # This should be auto-populated by the front-end once a property_key is selected.
     enum_costs = HStoreField()
+
+class Dictionary(models.Model):
+    class Meta(object):
+        verbose_name = _('Dictionary')
+        verbose_name_plural = _('Dictionaries')
+    def __str__(self):
+        return self.language_code
+
+    language_code=models.TextField(max_length=8)
+    name=models.TextField(max_length=100)
+    content=HStoreField()

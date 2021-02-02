@@ -33,14 +33,16 @@ router.register('userfilters', filt_views.SavedFilterViewSet, basename='userfilt
 router.register(r'users', auth_views.UserViewSet)
 router.register(r'groups', auth_views.GroupViewSet)
 
-#urlpatterns = i18n_patterns(
-#    path('admin/', admin.site.urls),
-#)
+urlpatterns = i18n_patterns(
+    path('admin/', admin.site.urls),
+)
 
 
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
     url(r'^api/', include(router.urls)),
+    url(r'^/', data_views.index),
+    url(r'^$', data_views.index),
     # get token for given username/password
     url(r'^api-token-auth/', auth_views.obtain_auth_token),
     url(r'^api/sso-token-auth/', auth_views.sso_auth_token),

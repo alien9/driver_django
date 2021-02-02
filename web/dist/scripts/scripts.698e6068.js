@@ -29,12 +29,12 @@
         },
         recordType: {
             visible: !1,
-            primaryLabel: "Accident",
+            primaryLabel: "Accidente",
             secondaryLabel: "Intervention"
         },
         localization: {
-            timeZone: "Pacific/Pago_Pago",
-            countryCode: "ws",
+            timeZone: "America/La_Paz",
+            countryCode: "bo",
             centerLatLon: [-13.63770590146877,-172.44653200580277],
             zoom: 11,
             languages:  [{id: "pt-br", label:"Português", rtl: !1},{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}] 

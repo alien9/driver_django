@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from django_json_widget.widgets import JSONEditorWidget
 from grout.widgets import GroutEditorWidget
-from data.models import RecordCostConfig
+from data.models import RecordCostConfig, Dictionary
 from grout.models import RecordSchema, RecordType, Boundary, BoundaryPolygon
 from black_spots.models import RoadMap
 from django_admin_hstore_widget.forms import HStoreFormField
@@ -57,7 +57,16 @@ class BoundaryAdmin(admin.ModelAdmin):
 #         context['deleted_objects'] = [_('Object listing disabled')]
 #         print("trying to delete")
 #         return super(BoundaryPolygonAdmin, self).render_delete_form(request, context)
-    
+class DictionaryAdminForm(forms.ModelForm):
+    content = HStoreFormField()
+    class Meta:
+       model = Dictionary
+       exclude = ()
+
+class DictionaryAdmin(admin.ModelAdmin):
+    form = DictionaryAdminForm
+    content = HStoreFormField()
+
 class RecordCostConfigAdminForm(forms.ModelForm):
     enum_costs = HStoreFormField()
     
@@ -83,4 +92,5 @@ admin.site.register(RecordSchema, RecordSchemaAdmin)
 admin.site.register(RecordType, RecordTypeAdmin)
 admin.site.register(Boundary, BoundaryAdmin)
 admin.site.register(RecordCostConfig, RecordCostConfigAdmin)
+admin.site.register(Dictionary, DictionaryAdmin)
 admin.site.register(RoadMap, RoadMapAdmin)

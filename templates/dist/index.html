@@ -1,0 +1,107 @@
+<!doctype html><html class="no-js"> <head>
+   <meta charset="utf-8"> <title>DRIVER</title> <meta name="description" content="">
+   <meta name="viewport" content="width=device-width"> <!-- Place favicon.ico and apple-touch-icon.png in the root directory --> 
+   <link rel="stylesheet" href="/static/styles/vendor.dcc1579d.css"> 
+   <link rel="stylesheet" href="/static/styles/main.b71a13fd.css"> 
+</head> 
+<body ng-app="driver" ng-class="{ 'rtl': isRightToLeft }"> 
+   <driver-navbar></driver-navbar> <main ui-view></main> 
+   <script src="/static/scripts/vendor.3474678b.js"></script> 
+   <script type="text/javascript">
+!function() {
+    "use strict";
+    var a = {
+        debug: !0,
+        html5Mode: {
+            enabled: !1,
+            prefix: "!"
+        },
+        api: {
+            hostname: "http://localhost:8000"
+        },
+        windshaft: {
+            hostname: "{{config.WINDSHAFT}}"
+        },
+        mapserver: {
+            hostname: "{{config.MAPSERVER}}"
+        },
+        nominatim: {
+            key: "NmfGZYebsExMYfFWP4Tf"
+        },
+        record: {
+            limit: 50
+        },
+        blackSpots: {
+            visible: !0
+        },
+        heatmap: {
+            visible: !0
+        },
+        interventions: {
+            visible: !0
+        },
+        recordType: {
+            primaryLabel: "{{config.PRIMARY_LABEL}}",
+            secondaryLabel: "Intervenção"
+        },
+        localization: {
+            timeZone: "Africa/Abidjan",
+            countryCode: "ic",
+            centerLatLon: [{{config.MAP_CENTER_LATITUDE}},{{config.MAP_CENTER_LONGITUDE}}],
+            zoom: {{config.MAP_ZOOM}},
+            languages: [{
+                id: "es",
+                label: "Español",
+                rtl: !1
+            }, {
+                id: "ru",
+                label: "Pусский",
+                rtl: !1
+            }, {
+                id: "ua",
+                label: "Yкраинский",
+                rtl: !1
+            }, {
+                id: "pt-br",
+                label: "português do Brasil",
+                rtl: !1
+            }, {
+                id: "exclaim",
+                label: "Exclaim (Developer)",
+                rtl: !1
+            }]
+        },
+        mapillary: {
+            enabled: !1,
+            clientId: "",
+            range: 10
+        },
+        filters: {
+            weather: {
+                visible: !0
+            },
+            createdBy: {
+                visible: !1
+            },
+            createdDate: {
+                visible: !1
+            }
+        },
+        qualityChecks: {
+            outsideBoundary: {
+                visible: !0
+            }
+        },
+        addressSearch: {
+            visible: !0
+        },
+        duplicateRecordsLink: {
+            visible: !0
+        }
+    };
+    angular.module("driver.config", []).constant("WebConfig", a)
+}();
+   </script>
+   <script src="/static/scripts/scripts.b9157401.js"></script>
+  </body>
+</html>

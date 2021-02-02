@@ -32,7 +32,6 @@ fi
 LANGUAGES=$(tr \' " " <<<"$LANGUAGES")
 sed -e "s/PROTOCOL/${PROTOCOL}/g" \
      -e "s/HOST_NAME/${HOST_NAME}/g" \
-     -e "s/TIMEZONE/${TIMEZONE}/g" \
      -e "s/NOMINATIM/${NOMINATIM}/g" \
      -e "s/PRIMARYLABEL/${PRIMARYLABEL}/g" \
      -e "s/SECONDARYLABEL/${SECONDARYLABEL}/g" \
@@ -42,6 +41,11 @@ sed -e "s/PROTOCOL/${PROTOCOL}/g" \
      -e "s/ZOOM/${ZOOM}/g" \
      -e "s/LANGUAGES/${LANGUAGES}/g" \
 scripts.template.js > web/dist/scripts/scripts.698e6068.js
+sed -e "s/PROTOCOL/${PROTOCOL}/g" \
+     -e "s/HOST_NAME/${HOST_NAME}/g" \
+script.editor.template.js > schema_editor/dist/scripts/scripts.911fafa6.js
+
+
 cp driver-app.conf nginx/driver.conf
 sed -i -e "s/HOST_NAME/${HOST_NAME}/g" \
 	-e "s,    root \/opt\/web\/dist,    root $STATIC_ROOT\/web\/dist,g" \

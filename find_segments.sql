@@ -1,5 +1,5 @@
 -- FUNCTION: public.caclulate_black_spots(uuid)
-CREATE EXTENSION HSTORE; CREATE EXTENSION POSTGIS;CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS  HSTORE; CREATE EXTENSION  IF NOT EXISTS POSTGIS;CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- select * from works.find_segment((select geom from grout_record limit 1), 100)
 

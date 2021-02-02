@@ -16,7 +16,17 @@ RUN ["gdal-config", "--version"]
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
 
-COPY . /opt/app
+COPY admin /opt/app/
+COPY black_spots /opt/app/
+COPY data /opt/app/
+COPY driver /opt/app/
+COPY driver_auth /opt/app/
+COPY grout /opt/app/
+COPY locale /opt/app/
+COPY templates /opt/app/
+COPY manage.py /opt/app/
+COPY requirements.txt /opt/app/
+
 
 RUN pip install --no-cache-dir gunicorn
 RUN pip install --no-cache-dir -r requirements.txt

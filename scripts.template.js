@@ -33,7 +33,7 @@
             secondaryLabel: "SECONDARYLABEL"
         },
         localization: {
-            timeZone: "TIMEZONE",
+            timeZone: "America/La_Paz",
             countryCode: "COUNTRY",
             centerLatLon: CENTER,
             zoom: ZOOM,

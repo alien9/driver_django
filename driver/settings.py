@@ -38,8 +38,8 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 #LANGUAGE_CODE = 'pt-br'
-USE_I18N = True
-USE_L10N = True
+USE_I18N = False
+USE_L10N = False
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 # Application definition
@@ -333,7 +333,14 @@ CACHES = {
         'TIMEOUT': None,
         'KEY_PREFIX': 'boundary',
         'VERSION': 1,
-    }
+    },
+    "geocode": {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://{host}:{port}/5'.format(host=REDIS_HOST, port=REDIS_PORT),
+        'TIMEOUT': None,
+        'KEY_PREFIX': 'geocode',
+        'VERSION': 1,
+    },
 }
 
 # Celery
@@ -494,4 +501,6 @@ CONSTANCE_CONFIG = {
     'MAP_CENTER_LONGITUDE': (os.getenv('CENTER_LONGITUDE', -46.7), _("Longitude")),
     'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
     "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Accident"), _("Accident")),
-}
+    "MAPSERVER": (os.getenv('MAPSERVER', "http://localhost:5001"), "MapServer"),
+    "WINDSHAFT": (os.getenv('WINDSHAFT', "http://localhost:5000"), "WindShaft"),
+}   

@@ -75,12 +75,20 @@ from .serializers import (DriverRecordSerializer, DetailsReadOnlyRecordSerialize
 #import transformers
 from driver import mixins
 from functools import reduce
+from django.shortcuts import render
+from constance import config
+from django.contrib.postgres.fields.jsonb import KeyTextTransform
+from django.db.models.fields import FloatField
+from django.db.models.expressions import RawSQL
+
 
 logger = logging.getLogger(__name__)
 
 #DateTimeField.register_lookup(transformers.ISOYearTransform)
 #DateTimeField.register_lookup(transformers.WeekTransform)
 
+def index(request):
+    return render(request, 'dist/index.html', {"config":config})
 
 def build_toddow(queryset):
     """
@@ -322,6 +330,19 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         schema = RecordType.objects.get(pk=record_type_id).get_current_schema()
         path = cost_config.path
         multiple = self._is_multiple(schema, path)
+        numeric = schema.schema['definitions'][path[0]]['properties'][path[2]]['type']=="number"
+        if numeric:
+            counts_queryset = self.get_filtered_queryset(request)
+            res=counts_queryset.annotate(
+                val=RawSQL("((data->%s->%s)::numeric)", (path[0],path[2]))
+            ).aggregate(total=Sum('val'))
+            if res['total'] is None:
+                res['total']=0.0
+            res['prefix']= cost_config.cost_prefix
+            res['suffix']= cost_config.cost_suffix
+            res['outdated_cost_config']= False
+            return Response(res)
+        
         choices = self._get_schema_enum_choices(schema, path)
         # `choices` may include user-entered data; to prevent users from entering column names
         # that conflict with existing Record fields, we're going to use each choice's index as an
@@ -499,7 +520,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
 
         # The data being returned is a nested dictionary: row label -> col labels = integer count
         data = defaultdict(lambda: defaultdict(int))
-
         if not row_multi and not col_multi:
             # Not in multi-mode: sum rows/columns by a simple count annotation.
             # This is the normal case.
@@ -1037,6 +1057,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 return False;
             return schema.schema['definitions'][path[0]]['multiple']
         except:
+            print("error", path)
             # This shouldn't ever fail, but in case a bug causes the schema to change, treat
             # the related type as non-multiple, since that's the main use-case
             logger.exception('Exception obtaining multiple with path: %s', path)
