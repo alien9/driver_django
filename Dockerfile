@@ -16,7 +16,6 @@ RUN ["gdal-config", "--version"]
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
 
-COPY admin /opt/app/
 COPY black_spots /opt/app/
 COPY data /opt/app/
 COPY driver /opt/app/
