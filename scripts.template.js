@@ -7183,7 +7183,7 @@ function() {
     }
     function e(a, b) {
         a.useStaticFilesLoader({
-            prefix: "i18n/",
+            prefix: "static/i18n/",
             suffix: ".json"
         }),
         a.useMissingTranslationHandlerLog(),
