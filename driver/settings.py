@@ -186,7 +186,6 @@ STATIC_URL = os.environ.get('STATIC_URL', '/static/')
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/driver/static/')
 
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
     os.path.join(BASE_DIR, 'templates/dist'),
     os.path.join(BASE_DIR, 'templates/schema_editor/dist'),
 )

@@ -23,7 +23,6 @@ COPY driver_auth /opt/app/driver_auth
 COPY grout /opt/app/grout
 COPY locale /opt/app/locale
 COPY templates /opt/app/templates
-COPY static /opt/app/static
 COPY templatetags /opt/app/templatetags
 COPY user_filters /opt/app/user_filters
 COPY manage.py /opt/app/
