@@ -508,4 +508,25 @@ CONSTANCE_CONFIG = {
     "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Accident"), _("Accident")),
     "MAPSERVER": (os.getenv('MAPSERVER', "http://localhost:5001"), "MapServer"),
     "WINDSHAFT": (os.getenv('WINDSHAFT', "http://localhost:5000"), "WindShaft"),
+    "LANGUAGES": '[{\
+                id: "pt-br",\
+                label: "português do Brasil",\
+                rtl: !1\
+            }, {\
+                id: "es",\
+                label: "Español",\
+                rtl: !1\
+            }, {\
+                id: "ru",\
+                label: "Pусский",\
+                rtl: !1\
+            }, {\
+                id: "ua",\
+                label: "Yкраинский",\
+                rtl: !1\
+            }, {\
+                id: "exclaim",\
+                label: "Exclaim (Developer)",\
+                rtl: !1\
+            }]'
 }   

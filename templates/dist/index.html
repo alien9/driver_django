@@ -10,6 +10,7 @@
    <script type="text/javascript">
 !function() {
     "use strict";
+    var langs=
     var a = {
         debug: !0,
         html5Mode: {
@@ -49,27 +50,7 @@
             countryCode: "ic",
             centerLatLon: [{{config.MAP_CENTER_LATITUDE}},{{config.MAP_CENTER_LONGITUDE}}],
             zoom: {{config.MAP_ZOOM}},
-            languages: [{
-                id: "es",
-                label: "Español",
-                rtl: !1
-            }, {
-                id: "ru",
-                label: "Pусский",
-                rtl: !1
-            }, {
-                id: "ua",
-                label: "Yкраинский",
-                rtl: !1
-            }, {
-                id: "pt-br",
-                label: "português do Brasil",
-                rtl: !1
-            }, {
-                id: "exclaim",
-                label: "Exclaim (Developer)",
-                rtl: !1
-            }]
+            languages: {{config.LANGUAGES}}
         },
         mapillary: {
             enabled: !1,
