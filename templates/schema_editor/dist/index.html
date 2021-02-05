@@ -16,8 +16,28 @@
 
     <ase-navbar></ase-navbar>
     <div ui-view></div>
-
     <script src="/static/scripts/vendor.7ccbdd46.js"></script>
+    <script type="text/javascript">
+!function() {
+    "use strict";
+    var a = {
+        debug: !1,
+        html5Mode: {
+            enabled: !1,
+            prefix: "!"
+        },
+        api: {
+            hostname: "http://localhost:8000",
+            groups: {
+                admin: "admin",
+                readOnly: "public",
+                readWrite: "analyst"
+            }
+        }
+    };
+    angular.module("ase.config", []).constant("ASEConfig", a)
+}();
+    </script>
     <script src="/static/scripts/scripts.715dd8ed.js"></script>
 </body>
 </html>

@@ -16,13 +16,15 @@ RUN ["gdal-config", "--version"]
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
 
-COPY black_spots /opt/app/
-COPY data /opt/app/
-COPY driver /opt/app/
-COPY driver_auth /opt/app/
-COPY grout /opt/app/
-COPY locale /opt/app/
-COPY templates /opt/app/
+COPY black_spots /opt/app/black_spots
+COPY data /opt/app/data
+COPY driver /opt/app/driver
+COPY driver_auth /opt/app/driver_auth
+COPY grout /opt/app/grout
+COPY locale /opt/app/locale
+COPY templates /opt/app/templates
+COPY templatetags /opt/app/templatetags
+COPY user_filters /opt/app/user_filters
 COPY manage.py /opt/app/
 COPY requirements.txt /opt/app/
 

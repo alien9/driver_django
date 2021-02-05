@@ -45,12 +45,6 @@ TIME_ZONE = os.environ.get("DRIVER_LOCAL_TIME_ZONE", 'America/La_Paz')
 
 BLACKSPOT_RECORD_TYPE_LABEL = os.environ.get('BLACKSPOT_RECORD_TYPE_LABEL', 'Incident')
 
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
-    os.path.join(BASE_DIR, 'templates/dist'),
-    os.path.join(BASE_DIR, 'templates/schema_editor/dist'),
-)
-
 # user and group settings
 
 ## django-oidc settings

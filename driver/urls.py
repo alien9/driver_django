@@ -43,6 +43,8 @@ urlpatterns = [
     url(r'^api/', include(router.urls)),
     url(r'^/', data_views.index),
     url(r'^$', data_views.index),
+    url(r'^editor/$', data_views.editor),
+    
     # get token for given username/password
     url(r'^api-token-auth/', auth_views.obtain_auth_token),
     url(r'^api/sso-token-auth/', auth_views.sso_auth_token),

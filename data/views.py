@@ -90,6 +90,9 @@ logger = logging.getLogger(__name__)
 def index(request):
     return render(request, 'dist/index.html', {"config":config})
 
+def editor(request):
+    return render(request, 'schema_editor/dist/index.html', {"config":config})
+
 def build_toddow(queryset):
     """
     Builds a toddow object
