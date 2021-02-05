@@ -45,7 +45,7 @@ services:
       - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
       - DRIVER_ADMIN_PASSWORD=${DRIVER_ADMIN_PASSWORD}
     container_name: driver-django-${CONTAINER_NAME}
-    image: driver-django
+    image: driver-django-${CONTAINER_NAME}"
       
   driver-celery:
     volumes:
@@ -66,7 +66,7 @@ services:
       - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
     entrypoint: ["celery", "-A", "driver", "worker", "--queue=taskworker", "--loglevel=info", "--concurrency=4"]
     container_name: driver-celery-${CONTAINER_NAME}
-    image: driver-django
+    image: driver-django-${CONTAINER_NAME}"
   
   windshaft:
     command: server.js
