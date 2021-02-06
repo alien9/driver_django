@@ -27,6 +27,11 @@ CELERY_HOST="localhost"
 if [ "${EXISTE_CELERY}" != "" ]; then
      CELERY_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-celery-${CONTAINER_NAME})
 fi
+WINDSHAFT_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' windshaft-${CONTAINER_NAME})
+if [ "${WINDSHAFT_HOST}" == "" ]; then
+     echo "Windshaft did not start."
+     exit
+fi
 
 
 LANGUAGES=$(tr \' " " <<<"$LANGUAGES")
@@ -42,14 +47,14 @@ sed -e "s/PROTOCOL/${PROTOCOL}/g" \
      -e "s/LANGUAGES/${LANGUAGES}/g" \
 scripts.template.js > web/dist/scripts/scripts.698e6068.js
 
-cp driver-app.conf nginx/driver.conf
+cp driver-app.conf driver.conf
 sed -i -e "s/HOST_NAME/${HOST_NAME}/g" \
 	-e "s,    root \/opt\/web\/dist,    root $STATIC_ROOT\/web\/dist,g" \
 	-e "s,STATIC_ROOT,$STATIC_ROOT,g" \
 -e "s/driver-django/${DJANGO_HOST}/g" \
 -e "s/driver-celery/${CELERY_HOST}/g" \
 -e "s/windshaft/$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' windshaft-${CONTAINER_NAME})/g" \
-nginx/driver.conf
+driver.conf
 
 #docker exec driver-nginx sed -i -e "s/HOST_NAME/${HOST_NAME}/g" /etc/nginx/conf.d/driver-app.conf
 
@@ -68,7 +73,7 @@ if [ $STATIC_ROOT != $WINDSHAFT_FILES ]; then
      sudo cp -r web "$STATIC_ROOT/"
      sudo cp -r static "$STATIC_ROOT/"
 fi
-sudo mv nginx/driver.conf /etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf
+sudo mv driver.conf /etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf
 sudo service nginx restart
 echo "Remember to run certbot now."
 #docker-compose restart driver-nginx 

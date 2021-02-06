@@ -50,13 +50,4 @@ BLACKSPOT_RECORD_TYPE_LABEL = os.environ.get('BLACKSPOT_RECORD_TYPE_LABEL', 'Inc
 ## django-oidc settings
 HOST_URL = os.environ.get('HOST_URL', 'https://titopop.com')
 
-CONSTANCE_CONFIG = {
-    'SEGMENT_SIZE': (50, _("segment_size")),
-    'MAP_CENTER_LATITUDE': (os.getenv('CENTER_LATITUDE', -23.5), _("Latitude")),
-    'MAP_CENTER_LONGITUDE': (os.getenv('CENTER_LONGITUDE', -46.7), _("Longitude")),
-    'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
-    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Accident"), _("Accident")),
-    "MAPSERVER": (os.getenv('MAPSERVER', "http://localhost:5001"), "MapServer"),
-    "WINDSHAFT": (os.getenv('WINDSHAFT', "http://localhost:5000"), "WindShaft"),
-}   
 APPEND_SLASH=True

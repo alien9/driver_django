@@ -1,24 +1,5 @@
 !function() {
     "use strict";
-    var a = {
-        debug: !0,
-        html5Mode: {
-            enabled: !1,
-            prefix: "!"
-        },
-        api: {
-            hostname: "http://localhost:8000",
-            groups: {
-                admin: "admin",
-                readOnly: "public",
-                readWrite: "analyst"
-            }
-        }
-    };
-    angular.module("ase.config", []).constant("ASEConfig", a)
-}(),
-function() {
-    "use strict";
     angular.module("ase.userdata", ["ase.config"])
 }(),
 function() {
