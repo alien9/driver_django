@@ -4822,7 +4822,15 @@ function() {
         }
         ,
         a.sso = function(a) {
-            e.location.href = h.api.hostname + "/openid/openid/" + a
+            var params={
+                redirect_uri:encodeURI(h.api.hostname+"/oidc/callback/"),
+                response_type:"code",
+                client_id: h.OAUTH_CLIENT_ID,
+                scope: "openid",
+                flowName:"GeneralOAuthFlow"
+            };
+            console.log(new URLSearchParams(params).toString());
+            e.location.href = "/oidc/authenticate/"
         }
         ;
         var i = function(b) {
