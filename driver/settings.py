@@ -513,9 +513,9 @@ CONSTANCE_CONFIG = {
     'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
     "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Accident"), _("Accident")),
     "MAPSERVER": (os.getenv('MAPSERVER', "http://localhost:5001"), "MapServer"),
-    "WINDSHAFT": (os.getenv('WINDSHAFT', "http://localhost:5000"), "WindShaft"),
+    "WINDSHAFT": ("%s://%s" % ((os.getenv('PROTOCOL', "http"), os.getenv('WINDSHAFT', "localhost:5000"))), "WindShaft"),      
     "LANGUAGES": ('[{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}]', _("Languages")),
-    "HOSTNAME": ("HOSTNAME", _("Host Name")),      
-    "TIMEZONE": ("Africa/Abidjan", _("Timezone")),
-    "COUNTRY_CODE": ("ic", _("Country Code")),
+    "HOSTNAME": ("%s://%s" % ((os.getenv('PROTOCOL', "http"), os.getenv('HOSTNAME', "localhost:8000"))), _("Host Name")),
+    "TIMEZONE": (os.getenv('TIMEZONE', "Africa/Abidjan"), _("Timezone")),
+    "COUNTRY_CODE": (os.getenv('COUNTRY_CODE', "ic"), _("Country Code")),
 }   
