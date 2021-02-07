@@ -10,7 +10,6 @@
    <script type="text/javascript">
 !function() {
     "use strict";
-    var langs=
     var a = {
         debug: !0,
         html5Mode: {
@@ -18,7 +17,7 @@
             prefix: "!"
         },
         api: {
-            hostname: "http://{{config.MAPSERVER}}:8000"
+            hostname: "{{config.HOSTNAME}}"
         },
         windshaft: {
             hostname: "{{config.WINDSHAFT}}"
@@ -46,11 +45,11 @@
             secondaryLabel: "Intervenção"
         },
         localization: {
-            timeZone: "Africa/Abidjan",
-            countryCode: "ic",
+            timeZone: "{{config.COUNTRY_CODE}}",
+            countryCode: "{{config.COUNTRY_CODE}}",
             centerLatLon: [{{config.MAP_CENTER_LATITUDE}},{{config.MAP_CENTER_LONGITUDE}}],
             zoom: {{config.MAP_ZOOM}},
-            languages: {{config.LANGUAGES}}
+            languages: {{config.LANGUAGES|safe}}
         },
         mapillary: {
             enabled: !1,
@@ -91,7 +90,7 @@ function() {
             prefix: "!"
         },
         api: {
-            hostname: "http://localhost:8000",
+            hostname: "{{config.HOSTNAME}}",
             groups: {
                 admin: "admin",
                 readOnly: "public",
