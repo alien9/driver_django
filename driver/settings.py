@@ -515,7 +515,7 @@ CONSTANCE_CONFIG = {
     "MAPSERVER": (os.getenv('MAPSERVER', "http://localhost:5001"), "MapServer"),
     "WINDSHAFT": ("%s://%s" % ((os.getenv('PROTOCOL', "http"), os.getenv('WINDSHAFT', "localhost:5000"))), "WindShaft"),      
     "LANGUAGES": ('[{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}]', _("Languages")),
-    "HOSTNAME": ("%s://%s" % ((os.getenv('PROTOCOL', "http"), os.getenv('HOSTNAME', "localhost:8000"))), _("Host Name")),
+    "HOSTNAME": (HOSTNAME, _("Host Name")),
     "TIMEZONE": (os.getenv('TIMEZONE', "Africa/Abidjan"), _("Timezone")),
     "COUNTRY_CODE": (os.getenv('COUNTRY_CODE', "ic"), _("Country Code")),
 }   

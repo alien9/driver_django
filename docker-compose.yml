@@ -34,6 +34,9 @@ services:
       - CENTER_LONGITUDE=${CENTER_LONGITUDE}
       - ZOOM=${ZOOM}
       - HOST_URL=${PROTOCOL}://${HOST_NAME}
+      - HOSTNAME=${HOST_NAME}
+      - COUNTRY_CODE=${COUNTRY_CODE}
+      - TIMEZONE=${TIMEZONE}
       - DJANGO_ENV=production
       - DRIVER_DB_HOST=database-${CONTAINER_NAME}
       - DRIVER_DB_NAME=driver
@@ -55,6 +58,9 @@ services:
       - postgres
     environment:
       - HOST_URL=${PROTOCOL}://${HOST_NAME}
+      - HOSTNAME=${HOST_NAME}
+      - COUNTRY_CODE=${COUNTRY_CODE}
+      - TIMEZONE=${TIMEZONE}
       - DJANGO_ENV=production
       - DRIVER_DB_HOST=database-${CONTAINER_NAME}
       - DRIVER_DB_NAME=driver
