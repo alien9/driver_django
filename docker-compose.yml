@@ -35,7 +35,7 @@ services:
       - ZOOM=${ZOOM}
       - HOST_URL=${PROTOCOL}://${HOST_NAME}
       - HOSTNAME=${HOST_NAME}
-      - COUNTRY_CODE=${COUNTRY_CODE}
+      - COUNTRY=${COUNTRY}
       - TIMEZONE=${TIMEZONE}
       - DJANGO_ENV=production
       - DRIVER_DB_HOST=database-${CONTAINER_NAME}
