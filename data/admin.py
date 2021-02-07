@@ -17,11 +17,6 @@ class RecordSchemaAdmin(admin.ModelAdmin):
     formfield_overrides = {
         JSONField: {'widget': GroutEditorWidget}
     }
-#class RecordSchemaInline(admin.StackedInline):
-#    model = RecordSchema
-#    formfield_overrides = {
-#        JSONField: {'widget': GroutEditorWidget}
-#    }
 
 class RecordTypeAdmin(admin.ModelAdmin):
     formfield_overrides = {
@@ -29,9 +24,6 @@ class RecordTypeAdmin(admin.ModelAdmin):
     }
 def delete_selected(modeladmin, request, queryset):
     queryset.delete()
-#    inlines = [
-#        RecordSchemaInline,
-#    ]
 
 class BoundaryAdmin(admin.ModelAdmin):
     def render_delete_form(self, request, context):
@@ -78,15 +70,9 @@ class RecordCostConfigAdmin(admin.ModelAdmin):
     form = RecordCostConfigAdminForm
 
 class RoadMapAdmin(admin.ModelAdmin):
-    actions = ["silent_delete"]
-    def silent_delete(self, request, queryset):
-        queryset.delete()
-
-    def get_actions(self, request):
-        actions = super().get_actions(request)
-        if 'delete_selected' in actions:
-            del actions['delete_selected']
-            return actions
+    def render_delete_form(self, request, context):
+        context['deleted_objects'] = [_('Object listing disabled')]
+        return super(RoadMapAdmin, self).render_delete_form(request, context)
 
 admin.site.register(RecordSchema, RecordSchemaAdmin)
 admin.site.register(RecordType, RecordTypeAdmin)

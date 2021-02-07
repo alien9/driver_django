@@ -111,6 +111,9 @@ class RoadMap(Imported):
                 raise ValueError('Exactly one shapefile (.shp) required')
 
             shapefile_path = os.path.join(temp_dir, shapefiles[0])
+            print(shapefile_path)
+            sql_path = os.path.join(temp_dir, "temp.sql")
+            print(sql_path)
             shape_datasource = GDALDataSource(shapefile_path)
             if len(shape_datasource) > 1:
                 raise ValueError('Shapefile must have exactly one layer')
@@ -121,12 +124,25 @@ class RoadMap(Imported):
 
             print(shapefile_path)
             srid=boundary_layer.srs.attr_value('AUTHORITY',1)
-            cmd = [ "shp2pgsql", "-s", srid, "-g", "geom", "-I", shapefile_path, "temp_table" ]
-            sql=subprocess.run(cmd, stdout=subprocess.PIPE).stdout
+            sql_file = open(sql_path, 'w+') 
+            cmd = [ "shp2pgsql", "-s", srid, "-g", "geom", "-I", shapefile_path, "temp_table"]
+            e=subprocess.run(cmd, stdout=sql_file).stdout
             with connection.cursor() as cursor:
                 cursor.execute("drop table if exists temp_table;")
                 print("DROPPED")
-                cursor.execute(sql.decode())
+                j=0
+                k=0
+                with open(sql_path, 'r') as reader:
+                    sql=""
+                    for line in reader:
+                        sql+=line.strip()
+                        if sql[len(sql)-1]==";" and j>10000:
+                            cursor.execute(sql)
+                            sql=""
+                            j=0
+                        j+=1
+                        k+=1
+                        print(k)
                 print("INSERTED")
                 cursor.execute("INSERT INTO public.black_spots_road(\
 	uuid, created, modified, data, geom, roadmap_id, name) \
