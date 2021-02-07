@@ -880,7 +880,7 @@ function() {
         function s() {
             D.languages = k.getAvailableLanguages(),
             D.selectedLanguage = k.getSelected(),
-            a.isRightToLeft = D.selectedLanguage.rtl
+            a.isRightToLeft = !!D.selectedLanguage.rtl
         }
         function t() {
             D.authenticated = g.isAuthenticated(),

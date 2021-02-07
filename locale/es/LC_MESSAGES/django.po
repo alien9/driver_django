@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-12-09 14:42-0300\n"
+"POT-Creation-Date: 2021-02-07 12:55-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -34,68 +34,89 @@ msgstr ""
 msgid "Object listing disabled"
 msgstr ""
 
-#: data/models.py:20
+#: data/models.py:21
 msgid "Record Segment"
 msgstr ""
 
-#: data/models.py:21
+#: data/models.py:22
 msgid "Record Segments"
 msgstr ""
 
-#: data/models.py:175
+#: data/models.py:187
 msgid "Record Cost Config"
 msgstr ""
 
-#: data/models.py:176
+#: data/models.py:188
 msgid "Record Cost Configs"
 msgstr ""
 
-#: data/models.py:213
+#: data/models.py:225
 msgid "Dictionary"
 msgstr "Dicionario"
 
-#: data/models.py:214
+#: data/models.py:226
 msgid "Dictionaries"
 msgstr "Dicionarios"
 
-#: driver/settings.py:163
+#: driver/settings.py:169 driver/settings_abidjan.py:37
+#: driver/settings_dev.py:37
 msgid "German"
 msgstr ""
 
-#: driver/settings.py:164
+#: driver/settings.py:170 driver/settings_abidjan.py:38
+#: driver/settings_dev.py:38
 msgid "English"
 msgstr ""
 
-#: driver/settings.py:165
+#: driver/settings.py:171 driver/settings_abidjan.py:39
+#: driver/settings_dev.py:39
 msgid "French"
 msgstr ""
 
-#: driver/settings.py:166
+#: driver/settings.py:172 driver/settings_abidjan.py:40
+#: driver/settings_dev.py:40
 msgid "Spanish"
 msgstr ""
 
-#: driver/settings.py:167
+#: driver/settings.py:173 driver/settings_abidjan.py:41
+#: driver/settings_dev.py:41
 msgid "Portuguese"
 msgstr ""
 
-#: driver/settings.py:492
+#: driver/settings.py:510
 msgid "segment_size"
 msgstr ""
 
-#: driver/settings.py:493
+#: driver/settings.py:511
 msgid "Latitude"
 msgstr ""
 
-#: driver/settings.py:494
+#: driver/settings.py:512
 msgid "Longitude"
 msgstr ""
 
-#: driver/settings.py:495
+#: driver/settings.py:513
 msgid "Zoom"
 msgstr ""
 
-#: driver/settings.py:496
+#: driver/settings.py:514
 msgid "Accident"
+msgstr ""
+
+#: driver/settings.py:517
+msgid "Languages"
+msgstr ""
+
+#: driver/settings.py:518
+msgid "Host Name"
+msgstr ""
+
+#: driver/settings.py:519
+msgid "Timezone"
+msgstr ""
+
+#: driver/settings.py:520
+msgid "Country Code"
 msgstr ""
 
 #: grout/models.py:297

@@ -32,4 +32,4 @@ COPY requirements.txt /opt/app/
 RUN pip install --no-cache-dir gunicorn
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["gunicorn", "driver.wsgi", "-w3", "-b:4000", "-kgevent"]
+CMD ["gunicorn", "driver.wsgi", "-w3", "-b:4000", "-kgevent", "--timeout", "4000"]
