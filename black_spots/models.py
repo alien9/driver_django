@@ -12,6 +12,8 @@ from grout.imports.shapefile import (extract_zip_to_temp_dir,
 from django.contrib.gis.gdal import DataSource as GDALDataSource
 import logging,shutil,uuid,os, subprocess
 from django.db import connection
+from django.contrib.postgres.fields import HStoreField
+
 
 class BlackSpot(GroutModel):
     """A black spot -- an area where there is an historical/statistical
@@ -32,7 +34,6 @@ class BlackSpot(GroutModel):
 
     #: The set of black spots this belongs to
     black_spot_set = models.ForeignKey('BlackSpotSet', on_delete=models.PROTECT)
-
     #: The latitude of the black spot's centroid
     @property
     def latitude(self):
@@ -113,7 +114,6 @@ class RoadMap(Imported):
             shapefile_path = os.path.join(temp_dir, shapefiles[0])
             print(shapefile_path)
             sql_path = os.path.join(temp_dir, "temp.sql")
-            print(sql_path)
             shape_datasource = GDALDataSource(shapefile_path)
             if len(shape_datasource) > 1:
                 raise ValueError('Shapefile must have exactly one layer')
@@ -121,15 +121,13 @@ class RoadMap(Imported):
             boundary_layer = shape_datasource[0]
             if boundary_layer.srs is None:
                 raise ValueError('Shapefile must include a .prj file')
-
-            print(shapefile_path)
+            self.data_fields = boundary_layer.fields
             srid=boundary_layer.srs.attr_value('AUTHORITY',1)
             sql_file = open(sql_path, 'w+') 
             cmd = [ "shp2pgsql", "-s", srid, "-g", "geom", "-I", shapefile_path, "temp_table"]
             e=subprocess.run(cmd, stdout=sql_file).stdout
             with connection.cursor() as cursor:
                 cursor.execute("drop table if exists temp_table;")
-                print("DROPPED")
                 j=0
                 k=0
                 with open(sql_path, 'r') as reader:
@@ -142,16 +140,9 @@ class RoadMap(Imported):
                             j=0
                         j+=1
                         k+=1
-                        print(k)
-                print("INSERTED")
                 cursor.execute("INSERT INTO public.black_spots_road(\
 	uuid, created, modified, data, geom, roadmap_id, name) \
 	select uuid_generate_v1(), now(), now(), row_to_json(temp_table), st_geometryn(temp_table.geom,1), %s, name from temp_table",(self.uuid,))
-                #cursor.execute("update black_spots_roadmap set data_fields=(select array_to_json(array_agg(c)) from(\
-#	select column_name c FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'temp_table'\
-#) as t) \
-#where black_spots_roadmap.uuid=%s", (self.uuid,))
-                print("READY")
             self.status = self.StatusTypes.COMPLETE
             self.save()
         except Exception as e:

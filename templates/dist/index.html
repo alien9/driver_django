@@ -47,7 +47,7 @@
         localization: {
             timeZone: "{{config.TIMEZONE}}",
             countryCode: "{{config.COUNTRY_CODE}}",
-            centerLatLon: [{{config.MAP_CENTER_LATITUDE}},{{config.MAP_CENTER_LONGITUDE}}],
+            centerLatLon: [{{config.MAP_CENTER_LATITUDE|safe}},{{config.MAP_CENTER_LONGITUDE|safe}}],
             zoom: {{config.MAP_ZOOM}},
             languages: {{config.LANGUAGES|safe}}
         },

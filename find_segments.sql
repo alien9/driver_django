@@ -10,6 +10,7 @@ CREATE EXTENSION IF NOT EXISTS  HSTORE; CREATE EXTENSION  IF NOT EXISTS POSTGIS;
 --(select st_asewkt(geom) from grout_record limit 1)
 -- select st_geomfromewkt('SRID=4326;POINT (-68.087329 -16.540165)')
 create schema if not exists works;
+grant all on schema works to driver;
 
 -- select * from works.find_segment(st_geomfromewkt('SRID=4326;POINT (-68.076719 -16.544928)'), 100)
 

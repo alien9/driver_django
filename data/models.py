@@ -16,6 +16,24 @@ from constance import config
 from model_utils import FieldTracker
 from django_redis import get_redis_connection
 
+class SegmentSet(models.Model):
+    class Meta(object):
+        verbose_name = _('Segment Set')
+        verbose_name_plural = _('Segment Sets')
+    name = models.TextField(max_length=200,null=True)
+    effective_start = models.DateTimeField()
+    effective_end = models.DateTimeField(null=True, blank=True)
+    record_type = models.ForeignKey('grout.RecordType', on_delete=models.PROTECT)
+    
+class Segment(models.Model):
+    class Meta(object):
+        verbose_name = _('Segment')
+        verbose_name_plural = _('Segments')
+    geom = g.LineStringField(srid=settings.GROUT['SRID'], null=True, blank=True)
+    name = models.TextField(max_length=200,null=True)
+    data = HStoreField()
+    segment_set=models.ForeignKey(SegmentSet, null=True, on_delete=models.SET_NULL)
+
 class RecordSegment(models.Model):
     class Meta(object):
         verbose_name = _('Record Segment')
@@ -23,12 +41,13 @@ class RecordSegment(models.Model):
     geom = g.LineStringField(srid=settings.GROUT['SRID'], null=True, blank=True)
     name = models.TextField(max_length=200,null=True)
     data = HStoreField()
-    def calculate_cost(self, data):
+    def calculate_cost(self, recordtype):
         cost=RecordCostConfig.objects.last()
         if cost is not None:
             n=0
             price=0
-            for re in self.driverrecord_set.all():
+            for re in self.driverrecord_set.filter(archived=False, schema=recordtype.get_current_schema()):
+                data=re.data
                 n+=1
                 if cost.content_type_key in data:
                     if cost.property_key in data[cost.content_type_key]:
@@ -43,6 +62,7 @@ class RecordSegment(models.Model):
                 self.save()
             else:
                 self.delete()
+            return self.data
 
 class DriverRecord(Record):
     """Extend Grout Record model with custom fields"""
@@ -69,15 +89,13 @@ class DriverRecord(Record):
                     print("ja existe")
                     seg=s[0]
                 self.segment=seg
-        self.save()
+            else:
+                print("Road not found.")
+    def save(self, *args, **kwargs):
+        self.geocode()
+        super(DriverRecord, self).save(*args, **kwargs)
         
-@receiver(post_save, sender=DriverRecord)
-def record_after_save(sender, instance, **kwargs):
-    print('after save callback')
-    if instance.segment is None:
-        redis_conn = get_redis_connection('geocode')
-        redis_conn.lpush('records', str(instance.uuid))
-        print("lined up %s"% (str(instance.uuid)))
+
 
 """
     cost=RecordCostConfig.objects.last()

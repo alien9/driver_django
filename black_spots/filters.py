@@ -14,11 +14,16 @@ from django.contrib.gis.db import models as gis_models
 
 from rest_framework.exceptions import ParseError, NotFound
 from rest_framework_gis.filterset import GeoFilterSet
+from django.contrib.postgres.fields import HStoreField
 
 
 FILTER_OVERRIDES = {
     gis_models.PolygonField: {
         'filter_class': django_filters.CharFilter
+    },
+    HStoreField:{
+        'filter_class': django_filters.CharFilter,
+        'extra': lambda f: {'lookup_expr': 'icontains'},
     }
 }
 

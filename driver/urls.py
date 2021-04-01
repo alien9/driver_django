@@ -57,15 +57,17 @@ urlpatterns = [
     url(r'^oidc/', include('mozilla_django_oidc.urls')),
     url('i18n/', include('django.conf.urls.i18n')),
     url(r'^config/', data_views.get_config),
+    url('tiles/', data_views.proxy),
+    url('mapserver/', data_views.mapserver),
+    url('mapcache/', data_views.mapcache),
+    url('segments/', data_views.segment_sets),
 ]
 
 
 from django.conf.urls.i18n import i18n_patterns
 
-
 # Allow login to the browseable API
 urlpatterns.append(url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')))
-
 
 if settings.DEBUG:
     import debug_toolbar

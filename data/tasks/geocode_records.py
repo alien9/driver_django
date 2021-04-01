@@ -12,12 +12,13 @@ def geocode_records():
     print(is_running)
     if is_running==b'1':
         print("It is already running.")
-        return
+    #    return
     redis_conn.set('is_running', "1")
     id = redis_conn.lpop('records')
     redis_conn.close()
     try:
         while id is not None:
+            print(id)
             redis_conn = get_redis_connection('geocode')
             redis_conn.close()
             r=DriverRecord.objects.get(pk=id.decode('utf8'))

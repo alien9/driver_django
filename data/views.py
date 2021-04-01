@@ -29,6 +29,7 @@ from django.db.models import (
     Value,
     When,
     F,
+    Func
 )
 from django.db.models.functions import Coalesce, Cast
 from django.core import serializers
@@ -58,7 +59,7 @@ from driver_auth.permissions import (IsAdminOrReadOnly,
                                      IsAdminAndReadOnly,
                                      is_admin_or_writer)
 from data.tasks import export_csv
-from data.models import DriverRecord
+from data.models import DriverRecord, SegmentSet
 from data.localization.date_utils import (
     hijri_day_range,
     hijri_week_range,
@@ -76,10 +77,11 @@ from .serializers import (DriverRecordSerializer, DetailsReadOnlyRecordSerialize
 from driver import mixins
 from functools import reduce
 from django.shortcuts import render
-from constance import config
 from django.contrib.postgres.fields.jsonb import KeyTextTransform
 from django.db.models.fields import FloatField
 from django.db.models.expressions import RawSQL
+from django.views.decorators.csrf import csrf_exempt
+from proxy.views import proxy_view
 
 
 logger = logging.getLogger(__name__)
@@ -92,6 +94,26 @@ def index(request):
 
 def editor(request):
     return render(request, 'schema_editor/dist/index.html', {"config":config})
+
+@csrf_exempt
+def proxy(request):
+    remoteurl = "http://%s:5000%s" % (settings.WINDSHAFT_HOST, request.path,)
+    return proxy_view(request, remoteurl)
+
+@csrf_exempt
+def mapserver(request):
+    return proxy_view(request, "http://%s%s" % (config.MAPSERVER, request.path,))
+
+@csrf_exempt
+def mapcache(request):
+    print("mapcache")
+    dest="http://%s/%s" % (config.MAPSERVER, request.path,)
+    print(dest)
+    return proxy_view(request, dest)
+
+def segment_sets(request):
+    s=SegmentSet.objects.all()
+    return JsonResponse({"result":[{"id":segment.id, "name":segment.name} for segment in s]})
 
 def build_toddow(queryset):
     """
@@ -363,7 +385,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             annotate_params = dict()
             annotate_params[idx] = choice_case
             counts_queryset = counts_queryset.annotate(**annotate_params)
-
         output_data = {'prefix': cost_config.cost_prefix, 'suffix': cost_config.cost_suffix}
         if counts_queryset.count() < 1:  # Short-circuit if no events at all
             output_data.update({'total': 0, 'subtotals': {choice: 0 for choice in choices},
@@ -490,7 +511,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             row_param, request, queryset, 'row')
         col_multi, col_labels, annotated_qs = self._query_param_to_annotated_tuple(
             col_param, request, annotated_qs, 'col')
-
+        print(annotated_qs.query)
         # If aggregation_boundary_id exists, grab the associated BoundaryPolygons.
         tables_boundary = request.query_params.get('aggregation_boundary', None)
         if tables_boundary:
@@ -522,7 +543,11 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         """ Fill a nested dictionary with the counts and compute row totals. """
 
         # The data being returned is a nested dictionary: row label -> col labels = integer count
+        
         data = defaultdict(lambda: defaultdict(int))
+        print("multi")
+        print(row_multi)
+        print(col_multi)
         if not row_multi and not col_multi:
             # Not in multi-mode: sum rows/columns by a simple count annotation.
             # This is the normal case.
@@ -572,13 +597,13 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 '{}_{}'.format(multi_prefix, str(label['key']))
                 for label in multi_labels
             ]
+            print({'sum_{}'.format(label): Sum(label) for label in multi_labels})
 
             # Perform a sum on each of the 'multi' columns, storing the data in a sum_* field
             annotated_qs = (
                 annotated_qs.values(single_label, *multi_labels)
                 .order_by()
                 .annotate(**{'sum_{}'.format(label): Sum(label) for label in multi_labels}))
-
             # Iterate over each object and accumulate each sum in the proper dictionary position.
             # Each object either has a 'row' and several 'col_*'s or a 'col' and several 'row_*'s.
             # Get the combinations accordingly and accumulate the appropriate stored value.
@@ -611,6 +636,8 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
               - dict mapping Case values to labels
               - the newly-annotated queryset
         """
+        print("CASE")
+        print(case)
         kwargs = {}
         kwargs[annotation_id] = case
         annotated_qs = queryset.annotate(**kwargs)
@@ -642,16 +669,19 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             schema = RecordType.objects.get(pk=record_type_id).get_current_schema()
             path = request.query_params[param].split(',')
             multiple = self._is_multiple(schema, path)
+            #multiple=schema.schema['definitions'][path[0]][path[1]][path[2]]['type']=='array'
 
-            if (not multiple):
-                return self._get_annotated_tuple(
-                    queryset, annotation_id,
-                    *self._make_choices_case(schema, path))
-            else:
-                # A 'multiple' related object must be annotated differently,
-                # since it may fall into multiple different categories.
-                return self._get_multiple_choices_annotated_tuple(
-                    queryset, annotation_id, schema, path)
+            print("IS ARRAY")
+            print(  schema.schema['definitions'][path[0]][path[1]][path[2]])
+            #if (not multiple):
+            #    return self._get_annotated_tuple(
+            #        queryset, annotation_id,
+            #        *self._make_choices_case(schema, path))
+            #else:
+            #    # A 'multiple' related object must be annotated differently,
+            #    # since it may fall into multiple different categories.
+            return self._get_multiple_choices_annotated_tuple(
+                queryset, annotation_id, schema, path)
 
     def _get_day_label(self, week_day_index):
         """Constructs a day translation label string given a week day index
@@ -1060,13 +1090,14 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 return False;
             return schema.schema['definitions'][path[0]]['multiple']
         except:
-            print("error", path)
             # This shouldn't ever fail, but in case a bug causes the schema to change, treat
             # the related type as non-multiple, since that's the main use-case
             logger.exception('Exception obtaining multiple with path: %s', path)
             return False
 
     def _make_choices_case(self, schema, path):
+        print("Make choices case")
+        print(path)
         """Constructs a Django Case statement for the choices of a schema property
 
         Args:
@@ -1076,9 +1107,9 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             (Case, labels), where Case is a Django Case object with the choice of each record,
             and labels is a dict matching choices to their labels (currently the same).
         """
-
         multiple = self._is_multiple(schema, path)
         choices = self._get_schema_enum_choices(schema, path)
+
         whens = []
         for choice in choices:
             filter_rule = self._make_djsonb_containment_filter(path, choice, multiple)
@@ -1106,18 +1137,32 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         """
 
         choices = self._get_schema_enum_choices(schema, path)
+        print("CHOICES")
+        print(choices)
         labels = [
             {'key': choice, 'label': [{'text': choice, 'translate': False}]}
             for choice in choices
         ]
-
+        is_array=self._is_multiple(schema, path)
+        print("is array????")
+        print(is_array)
         annotations = {}
         for choice in choices:
-            filter_rule = self._make_djsonb_containment_filter(path, choice, True)
-            annotations['{}_{}'.format(annotation_id, choice)] = Case(
-                When(data__jsonb=filter_rule, then=Value(1)),
-                output_field=IntegerField(), default=Value(0))
-
+            if is_array:
+                pattern=json.dumps({path[2]:choice})
+                pattern=pattern[1:len(pattern)-1]
+                annotations['{}_{}'.format(annotation_id, choice)] = RawSQL("\
+                    SELECT count(*) from\
+                    regexp_matches(\"grout_record\".\"data\"->>%s, %s, 'g') \
+                    ",(path[0], pattern)
+                )
+            else:
+                expression="data__%s__%s__contains"  % (path[0], path[2])
+                print(expression)
+                annotations['{}_{}'.format(annotation_id, choice)] = Case(
+                    When(**{expression: choice}, then=Value(1)),
+                    output_field=IntegerField(), default=Value(0)
+                )
         return (True, labels, queryset.annotate(**annotations))
 
     # TODO: This snippet also appears in data/serializers.py and should be refactored into the Grout
@@ -1171,6 +1216,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         # The string value handles dropdown types, while the array handles checkbox types.
         # Since an admin may switch between dropdowns and checkboxes at any time, performing
         # both checks guarantees the filter will be correctly applied for data in both formats.
+
         rule_type = 'containment_multiple' if multiple else 'containment'
         filter_rule = dict(_rule_type=rule_type, contains=[value, [value]])
         for component in filter_path:

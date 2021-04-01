@@ -1,4 +1,5 @@
 from driver.settings import *
+import subprocess
 
 import os
 from django.utils.translation import ugettext_lazy as _
@@ -6,6 +7,9 @@ from django.utils.translation import ugettext_lazy as _
 DEVELOP = True
 STAGING = True if os.environ.get('DJANGO_ENV', 'staging') == 'staging' else False
 PRODUCTION = not DEVELOP and not STAGING
+WINDSHAFT_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-bolivia"]).decode('utf8').strip()
+DRIVER_DB_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "database-bolivia"]).decode('utf8').strip()
+REDIS_HOST = subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "redis-server-bolivia"]).decode('utf8').strip()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
@@ -16,12 +20,11 @@ SECRET_KEY = 'sfdgljfkghdjkgfhjkghdskljhgljhsdjkghfgjklhdgjklshjkhg' # os.enviro
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DEVELOP
 
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': os.environ.get('DRIVER_DB_NAME', 'driver'),
-        'HOST': os.environ.get('DRIVER_DB_HOST', 'localhost'),
+        'HOST': DRIVER_DB_HOST,
         'PORT': os.environ.get('DRIVER_DB_PORT', 5432),
         'USER': os.environ.get('DRIVER_DB_USER', 'driver'),
         'PASSWORD': os.environ.get('DRIVER_DB_PASSWORD', 'driver'),
@@ -51,3 +54,59 @@ BLACKSPOT_RECORD_TYPE_LABEL = os.environ.get('BLACKSPOT_RECORD_TYPE_LABEL', 'Inc
 HOST_URL = os.environ.get('HOST_URL', 'https://titopop.com')
 
 APPEND_SLASH=True
+
+
+
+CACHES = {
+    "default": {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/2',
+        'TIMEOUT': None,  # never expire
+        'KEY_PREFIX': 'DJANGO',
+        'VERSION': 1,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'SOCKET_CONNECT_TIMEOUT': 5,  # seconds
+            'SOCKET_TIMEOUT': 5,  # seconds
+            'MAX_ENTRIES': 900,  # defaults to 300
+            'CULL_FREQUENCY': 4,  # fraction culled when max reached (1 / CULL_FREQ); default: 3
+            # 'COMPRESS_MIN_LEN': 0, # set to value > 0 to enable compression
+        }
+    },
+    "jars": {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/3',
+        'TIMEOUT': JARFILE_REDIS_TTL_SECONDS,
+        'KEY_PREFIX': None,
+        'VERSION': 1,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'SOCKET_CONNECT_TIMEOUT': 5,  # seconds
+            'SOCKET_TIMEOUT': 5,  # seconds
+            'MAX_ENTRIES': 300,  # defaults to 300
+            'CULL_FREQUENCY': 4,  # fraction culled when max reached (1 / CULL_FREQ); default: 3
+            # 'COMPRESS_MIN_LEN': 0, # set to value > 0 to enable compression
+        }
+    },
+    "boundaries": {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://{host}:{port}/4'.format(host=REDIS_HOST, port=REDIS_PORT),
+        # Timeout is set and renewed at the individual key level in data/filters.py
+        'TIMEOUT': None,
+        'KEY_PREFIX': 'boundary',
+        'VERSION': 1,
+    },
+    "geocode": {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://{host}:{port}/5'.format(host=REDIS_HOST, port=REDIS_PORT),
+        'TIMEOUT': None,
+        'KEY_PREFIX': 'geocode',
+        'VERSION': 1,
+    },
+}
+
+# Celery
+BROKER_URL = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
+CELERY_RESULT_BACKEND = 'redis://{}:{}/1'.format(REDIS_HOST, REDIS_PORT)
+from constance import config
+config.MAPSERVER=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "mapcache-bolivia"]).decode('utf8').strip()

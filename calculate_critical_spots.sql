@@ -4,7 +4,7 @@
 
 
 create schema if not exists works;
-
+grant all on schema works to driver;
 create or replace function works.find_segment(p geometry) returns geometry LANGUAGE 'plpgsql' as $B$
 declare
 r record;

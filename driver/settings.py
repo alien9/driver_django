@@ -81,6 +81,8 @@ INSTALLED_APPS = (
     'mozilla_django_oidc',  # Load after auth
     'django_admin_hstore_widget',
     'constance',
+    'wms',
+    'proxy',
 )
 
 MIDDLEWARE = (
@@ -512,10 +514,10 @@ CONSTANCE_CONFIG = {
     'MAP_CENTER_LONGITUDE': (os.getenv('CENTER_LONGITUDE', -46.7), _("Longitude")),
     'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
     "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Accident"), _("Accident")),
-    "MAPSERVER": (os.getenv('MAPSERVER', "http://localhost:5001"), "MapServer"),
     "WINDSHAFT": ("%s://%s" % ((os.getenv('PROTOCOL', "http"), os.getenv('WINDSHAFT', "localhost:5000"))), "WindShaft"),      
     "LANGUAGES": ('[{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}]', _("Languages")),
     "HOSTNAME": ("%s://%s" % ((os.getenv('PROTOCOL', "http"), os.getenv('HOSTNAME', "localhost:8000"))), _("Host Name")),
     "TIMEZONE": (os.getenv('TIMEZONE', "Africa/Abidjan"), _("Timezone")),
     "COUNTRY_CODE": (os.getenv('COUNTRY', "ic"), _("Country Code")),
+    "MAPSERVER": ("mapserver-%s" % (os.getenv('CONTAINER_NAME', 'driver')), "MapServer"),
 }   

@@ -1586,6 +1586,7 @@ function() {
             c.remove(q),
             c.remove(r),
             p.filters = {}
+            localStorage.removeItem('DRIVER.web.filterbar.filters')
         }
         function g() {
             a.$broadcast("driver.filterbar:send")
@@ -3048,7 +3049,7 @@ function() {
                 var c = b[0]
                   , d = b[1];
                 return i = a.instant("AGG.TIME"),
-                j = a.instant("AGG.GEOGRAPHY"),
+                j = "Geography", //a.instant("AGG.GEOGRAPHY"),
                 k = a.instant("AGG.FILTER"),
                 l = [{
                     label: a.instant("AGG.YEAR"),
@@ -3148,6 +3149,7 @@ function() {
                 })
             }),
             j.getOptions().then(function(a) {
+                console.log(a);
                 r.rowColAggs = a
             })
         }
@@ -3195,7 +3197,7 @@ function() {
         }
         var r = this
           , s = d.instant("AGG.TIME")
-          , t = d.instant("AGG.GEOGRAPHY")
+          , t = "Geography"
           , u = d.instant("AGG.FILTER");
         return r.$onInit = l(),
         r
