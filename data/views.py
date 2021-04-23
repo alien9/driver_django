@@ -106,9 +106,7 @@ def mapserver(request):
 
 @csrf_exempt
 def mapcache(request):
-    print("mapcache")
     dest="http://%s/%s" % (config.MAPSERVER, request.path,)
-    print(dest)
     return proxy_view(request, dest)
 
 def segment_sets(request):
@@ -511,7 +509,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             row_param, request, queryset, 'row')
         col_multi, col_labels, annotated_qs = self._query_param_to_annotated_tuple(
             col_param, request, annotated_qs, 'col')
-        print(annotated_qs.query)
         # If aggregation_boundary_id exists, grab the associated BoundaryPolygons.
         tables_boundary = request.query_params.get('aggregation_boundary', None)
         if tables_boundary:
@@ -545,9 +542,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         # The data being returned is a nested dictionary: row label -> col labels = integer count
         
         data = defaultdict(lambda: defaultdict(int))
-        print("multi")
-        print(row_multi)
-        print(col_multi)
         if not row_multi and not col_multi:
             # Not in multi-mode: sum rows/columns by a simple count annotation.
             # This is the normal case.
@@ -597,7 +591,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 '{}_{}'.format(multi_prefix, str(label['key']))
                 for label in multi_labels
             ]
-            print({'sum_{}'.format(label): Sum(label) for label in multi_labels})
 
             # Perform a sum on each of the 'multi' columns, storing the data in a sum_* field
             annotated_qs = (
@@ -636,8 +629,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
               - dict mapping Case values to labels
               - the newly-annotated queryset
         """
-        print("CASE")
-        print(case)
         kwargs = {}
         kwargs[annotation_id] = case
         annotated_qs = queryset.annotate(**kwargs)
@@ -668,18 +659,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         else:  # 'choices_path'; ensured by parent function
             schema = RecordType.objects.get(pk=record_type_id).get_current_schema()
             path = request.query_params[param].split(',')
-            multiple = self._is_multiple(schema, path)
-            #multiple=schema.schema['definitions'][path[0]][path[1]][path[2]]['type']=='array'
-
-            print("IS ARRAY")
-            print(  schema.schema['definitions'][path[0]][path[1]][path[2]])
-            #if (not multiple):
-            #    return self._get_annotated_tuple(
-            #        queryset, annotation_id,
-            #        *self._make_choices_case(schema, path))
-            #else:
-            #    # A 'multiple' related object must be annotated differently,
-            #    # since it may fall into multiple different categories.
             return self._get_multiple_choices_annotated_tuple(
                 queryset, annotation_id, schema, path)
 
@@ -1096,8 +1075,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             return False
 
     def _make_choices_case(self, schema, path):
-        print("Make choices case")
-        print(path)
         """Constructs a Django Case statement for the choices of a schema property
 
         Args:
@@ -1137,15 +1114,11 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         """
 
         choices = self._get_schema_enum_choices(schema, path)
-        print("CHOICES")
-        print(choices)
         labels = [
             {'key': choice, 'label': [{'text': choice, 'translate': False}]}
             for choice in choices
         ]
         is_array=self._is_multiple(schema, path)
-        print("is array????")
-        print(is_array)
         annotations = {}
         for choice in choices:
             if is_array:
@@ -1158,7 +1131,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 )
             else:
                 expression="data__%s__%s__contains"  % (path[0], path[2])
-                print(expression)
                 annotations['{}_{}'.format(annotation_id, choice)] = Case(
                     When(**{expression: choice}, then=Value(1)),
                     output_field=IntegerField(), default=Value(0)

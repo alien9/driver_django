@@ -1,6 +1,7 @@
 import uuid
 import hashlib
 
+from django import forms
 from django.db import models
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.auth.models import User
@@ -64,6 +65,9 @@ class RecordSegment(models.Model):
                 self.delete()
             return self.data
 
+
+
+
 class DriverRecord(Record):
     """Extend Grout Record model with custom fields"""
     weather = models.CharField(max_length=50, null=True, blank=True)
@@ -76,6 +80,7 @@ class DriverRecord(Record):
     road = models.CharField(max_length=200, null=True, blank=True)
     state = models.CharField(max_length=50, null=True, blank=True)
     segment = models.ForeignKey(RecordSegment, null=True, on_delete=models.SET_NULL)
+
     def geocode(self):
         with connection.cursor() as cursor:
             cursor.execute("select * from works.find_segment(st_geomfromewkt(%s), %s)", [self.geom.ewkt, config.SEGMENT_SIZE])
@@ -114,6 +119,20 @@ def record_before_save(sender, instance, **kwargs):
   
 
 """
+
+
+def get_image_path(instance, filename):
+    return os.path.join('photos', str(instance.id), filename)
+
+class Picture(models.Model):
+    image = models.ImageField(upload_to=get_image_path, blank=True, null=True)
+    record = models.ForeignKey(DriverRecord, null=True, on_delete=models.SET_NULL)
+
+class RecordForm(forms.ModelForm):
+    class Meta:
+        model = DriverRecord
+        fields = ('geom',)
+
 class RecordAuditLogEntry(models.Model):
     """Records an occurrence of a Record being altered, who did it, and when.
 
