@@ -7,19 +7,19 @@ services:
         - buildno=1
       dockerfile: Dockerfile.database
     volumes:
-      - $HOME/driver_django/postgres_data:/var/lib/postgresql
+      - ${WINDSHAFT_FILES}/postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=driver
       - POSTGRES_PASS=driver
       - POSTGRES_DBNAME=driver
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-    container_name: database
+    container_name: database-${CONTAINER_NAME}
     image:
       driver-database
   
   redis-server:
     image: redis
-    container_name: redis-server
+    container_name: "redis-server-${CONTAINER_NAME}"
 
   driver-django:
     build:
@@ -30,51 +30,58 @@ services:
       - redis-server
       - postgres
     environment:
+      - CENTER_LATITUDE=${CENTER_LATITUDE}
+      - CENTER_LONGITUDE=${CENTER_LONGITUDE}
+      - ZOOM=${ZOOM}
       - HOST_URL=${PROTOCOL}://${HOST_NAME}
+      - HOSTNAME=${HOST_NAME}
+      - COUNTRY=${COUNTRY}
+      - TIMEZONE=${TIMEZONE}
       - DJANGO_ENV=production
-      - DRIVER_DB_HOST=database
+      - DRIVER_DB_HOST=database-${CONTAINER_NAME}
       - DRIVER_DB_NAME=driver
       - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
-      - DRIVER_REDIS_HOST=redis-server
+      - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
       - STATIC_ROOT=/var/www/static/
       - STATIC_URL=${PROTOCOL}://${HOST_NAME}/static/ 
       - OAUTH_CLIENT_ID=${CLIENTID}
       - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
       - DRIVER_ADMIN_PASSWORD=${DRIVER_ADMIN_PASSWORD}
-    ports:
-      - "4000:4000"
-    container_name: "driver-django"
-    image: driver-django
+    container_name: driver-django-${CONTAINER_NAME}
+    image: driver-django-${CONTAINER_NAME}
       
   driver-celery:
+    volumes:
+      - ${WINDSHAFT_FILES}/zip:/var/www/media
     depends_on:
       - redis-server
       - postgres
     environment:
       - HOST_URL=${PROTOCOL}://${HOST_NAME}
+      - HOSTNAME=${HOST_NAME}
+      - COUNTRY_CODE=${COUNTRY_CODE}
+      - TIMEZONE=${TIMEZONE}
       - DJANGO_ENV=production
-      - DRIVER_DB_HOST=database
+      - DRIVER_DB_HOST=database-${CONTAINER_NAME}
       - DRIVER_DB_NAME=driver
       - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
-      - DRIVER_REDIS_HOST=redis-server
+      - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
       - STATIC_ROOT=/var/www/static/
       - STATIC_URL=${PROTOCOL}://${HOST_NAME}/static/ 
       - OAUTH_CLIENT_ID=${CLIENTID}
       - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
     entrypoint: ["celery", "-A", "driver", "worker", "--queue=taskworker", "--loglevel=info", "--concurrency=4"]
-    container_name: "driver-celery"
-    image: driver-django
+    container_name: driver-celery-${CONTAINER_NAME}
+    image: driver-django-${CONTAINER_NAME}
   
   windshaft:
     command: server.js
-    container_name: windshaft
+    container_name: windshaft-${CONTAINER_NAME}
     links:
       - redis-server:redis
     depends_on:
       - redis-server
       - postgres
-    ports:
-      - 5000:5000
     volumes:
       - ${WINDSHAFT_FILES}/windshaft/driver.js:/opt/windshaft/driver.js
       - ${WINDSHAFT_FILES}/windshaft/healthCheck.js:/opt/windshaft/healthCheck.js
@@ -86,36 +93,34 @@ services:
       - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
       - WINDSHAFT_DB_USER=driver
       - WINDSHAFT_DB_PASSWORD=${DATABASE_PASSWORD}
-      - DRIVER_DB_HOST=database
+      - DRIVER_DB_HOST=database-${CONTAINER_NAME}
       - DRIVER_DB_PORT=5432
       - DRIVER_APP_HOST=${PROTOCOL}://${HOST_NAME}
-      - DRIVER_REDIS_HOST=redis
+      - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
       - DRIVER_REDIS_PORT=6379
     image: quay.io/azavea/windshaft:0.1.0
 
-  driver-nginx:
-    container_name: driver-nginx
-    depends_on:
-      - driver-django
-    volumes:
-      - ${WINDSHAFT_FILES}/static:/var/www/static
-      - ${WINDSHAFT_FILES}/web:/opt/web
-    build:
-      context: ./
-      args:
-        - HOST_NAME=${HOST_NAME}
-        - PROTOCOL=${PROTOCOL}
-        - TIMEZONE=${TIMEZONE}
-        - NOMINATIM=${NOMINATIM}
-        - PRIMARYLABEL=${PRIMARYLABEL}
-        - SECONDARYLABEL=${SECONDARYLABEL}
-        - CLIENTID=${CLIENTID}
-        - COUNTRY=${COUNTRY}
-        - CENTER=${CENTER}
-        - ZOOM=${ZOOM}
-        - LANGUAGES=${LANGUAGES}
-      dockerfile: Dockerfile.nginx
-    image: alien9/driver-nginx
-    ports: 
-      - "80:80"
-      - "443:443"
+  # driver-nginx:
+  #   container_name: driver-nginx-${CONTAINER_NAME}
+  #   depends_on:
+  #     - driver-django
+  #   volumes:
+  #     - ${WINDSHAFT_FILES}/static:/var/www/static
+  #     - ${WINDSHAFT_FILES}/web:/opt/web
+  #     - ${WINDSHAFT_FILES}/nginx:/etc/nginx/conf.d
+  #   build:
+  #     context: ./
+  #     args:
+  #       - HOST_NAME=${HOST_NAME}
+  #       - PROTOCOL=${PROTOCOL}
+  #       - TIMEZONE=${TIMEZONE}
+  #       - NOMINATIM=${NOMINATIM}
+  #       - PRIMARYLABEL=${PRIMARYLABEL}
+  #       - SECONDARYLABEL=${SECONDARYLABEL}
+  #       - CLIENTID=${CLIENTID}
+  #       - COUNTRY=${COUNTRY}
+  #       - CENTER=${CENTER}
+  #       - ZOOM=${ZOOM}
+  #       - LANGUAGES=${LANGUAGES}
+  #     dockerfile: Dockerfile.nginx
+  #   image: alien9/driver-nginx

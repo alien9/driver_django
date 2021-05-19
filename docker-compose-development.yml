@@ -7,23 +7,23 @@ services:
         - buildno=1
       dockerfile: Dockerfile.database
     volumes:
-      - $HOME/driver_django/postgres_data:/var/lib/postgresql
+      - ./postgres_data:/var/lib/postgresql
     environment:
       - POSTGRES_USER=driver
       - POSTGRES_PASS=driver
       - POSTGRES_DBNAME=driver
-      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-    container_name: database
+      - POSTGRES_PASSWORD=driver
+    container_name: database-${CONTAINER_NAME}
     image:
       driver-database
   
   redis-server:
     image: redis
-    container_name: redis-server
+    container_name: "redis-server-${CONTAINER_NAME}"
   
   windshaft:
     command: server.js
-    container_name: windshaft
+    container_name: windshaft-${CONTAINER_NAME}
     links:
       - redis-server:redis
     depends_on:
@@ -39,13 +39,28 @@ services:
     environment:
       - DRIVER_DB_NAME=driver
       - DRIVER_DB_USER=driver
-      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
+      - DRIVER_DB_PASSWORD=driver
       - WINDSHAFT_DB_USER=driver
-      - WINDSHAFT_DB_PASSWORD=${DATABASE_PASSWORD}
-      - DRIVER_DB_HOST=database
+      - WINDSHAFT_DB_PASSWORD=driver
+      - DRIVER_DB_HOST=database-${CONTAINER_NAME}
       - DRIVER_DB_PORT=5432
       - DRIVER_APP_HOST=${PROTOCOL}://${HOST_NAME}
-      - DRIVER_REDIS_HOST=redis-server
+      - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
       - DRIVER_REDIS_PORT=6379
     image: quay.io/azavea/windshaft:0.1.0
 
+  mapserver:
+    container_name: mapserver-${CONTAINER_NAME}
+    depends_on:
+      - postgres
+    volumes:
+      - ./mapfiles/:/etc/mapserver
+    image: camptocamp/mapserver
+
+  mapcache:
+    container_name: mapcache-${CONTAINER_NAME}
+    depends_on:
+      - mapserver
+    volumes:
+      - ./mapfiles/mapcache.xml:/etc/mapcache/mapcache.xml
+    image: camptocamp/mapcache:1.8

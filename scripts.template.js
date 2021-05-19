@@ -33,7 +33,7 @@
             secondaryLabel: "SECONDARYLABEL"
         },
         localization: {
-            timeZone: "TIMEZONE",
+            timeZone: "America/La_Paz",
             countryCode: "COUNTRY",
             centerLatLon: CENTER,
             zoom: ZOOM,
@@ -7183,7 +7183,7 @@ function() {
     }
     function e(a, b) {
         a.useStaticFilesLoader({
-            prefix: "i18n/",
+            prefix: "static/i18n/",
             suffix: ".json"
         }),
         a.useMissingTranslationHandlerLog(),

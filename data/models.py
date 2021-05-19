@@ -1,11 +1,71 @@
 import uuid
 import hashlib
 
+from django import forms
 from django.db import models
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.auth.models import User
-
+from django.utils.translation import ugettext_lazy as _
+from django.contrib.gis.db import models as g
 from grout.models import GroutModel, Record, RecordType
+from django.db.models.signals import pre_save, post_save
+from driver import settings
+from django.dispatch import receiver
+from django.db import connection
+from django.contrib.gis.geos import GEOSGeometry
+from constance import config
+from model_utils import FieldTracker
+from django_redis import get_redis_connection
+
+class SegmentSet(models.Model):
+    class Meta(object):
+        verbose_name = _('Segment Set')
+        verbose_name_plural = _('Segment Sets')
+    name = models.TextField(max_length=200,null=True)
+    effective_start = models.DateTimeField()
+    effective_end = models.DateTimeField(null=True, blank=True)
+    record_type = models.ForeignKey('grout.RecordType', on_delete=models.PROTECT)
+    
+class Segment(models.Model):
+    class Meta(object):
+        verbose_name = _('Segment')
+        verbose_name_plural = _('Segments')
+    geom = g.LineStringField(srid=settings.GROUT['SRID'], null=True, blank=True)
+    name = models.TextField(max_length=200,null=True)
+    data = HStoreField()
+    segment_set=models.ForeignKey(SegmentSet, null=True, on_delete=models.SET_NULL)
+
+class RecordSegment(models.Model):
+    class Meta(object):
+        verbose_name = _('Record Segment')
+        verbose_name_plural = _('Record Segments')
+    geom = g.LineStringField(srid=settings.GROUT['SRID'], null=True, blank=True)
+    name = models.TextField(max_length=200,null=True)
+    data = HStoreField()
+    def calculate_cost(self, recordtype):
+        cost=RecordCostConfig.objects.last()
+        if cost is not None:
+            n=0
+            price=0
+            for re in self.driverrecord_set.filter(archived=False, schema=recordtype.get_current_schema()):
+                data=re.data
+                n+=1
+                if cost.content_type_key in data:
+                    if cost.property_key in data[cost.content_type_key]:
+                        if type(data[cost.content_type_key][cost.property_key])==str:
+                            if data[cost.content_type_key][cost.property_key] in cost.enum_costs:
+                                price+=float(cost.enum_costs[data[cost.content_type_key][cost.property_key]])
+                        else:
+                            price+=data[cost.content_type_key][cost.property_key]
+            if n>0:
+                self.data['cost']=price
+                self.data['count']=n
+                self.save()
+            else:
+                self.delete()
+            return self.data
+
+
 
 
 class DriverRecord(Record):
@@ -19,6 +79,59 @@ class DriverRecord(Record):
     neighborhood = models.CharField(max_length=50, null=True, blank=True)
     road = models.CharField(max_length=200, null=True, blank=True)
     state = models.CharField(max_length=50, null=True, blank=True)
+    segment = models.ForeignKey(RecordSegment, null=True, on_delete=models.SET_NULL)
+
+    def geocode(self):
+        with connection.cursor() as cursor:
+            cursor.execute("select * from works.find_segment(st_geomfromewkt(%s), %s)", [self.geom.ewkt, config.SEGMENT_SIZE])
+            row = cursor.fetchone()
+            if row[0] is not None:
+                s=RecordSegment.objects.filter(geom__equals=GEOSGeometry(row[0]))
+                if not len(s):
+                    seg=RecordSegment(data={},name=row[1],geom=GEOSGeometry(row[0]))
+                    seg.save()
+                else:
+                    print("ja existe")
+                    seg=s[0]
+                self.segment=seg
+            else:
+                print("Road not found.")
+    def save(self, *args, **kwargs):
+        self.geocode()
+        super(DriverRecord, self).save(*args, **kwargs)
+        
+
+
+"""
+    cost=RecordCostConfig.objects.last()
+    if cost is not None:
+        n=0
+        price=0
+        if instance.tracker.previous('segment') is not None:
+            s=RecordSegment.objects.get(pk=instance.tracker.previous('segment'))
+            if s != instance.segment:
+                s.calculate_cost(instance.data)
+        if instance.segment is not None:
+            instance.segment.calculate_cost(instance.data)
+
+@receiver(pre_save, sender=DriverRecord)
+def record_before_save(sender, instance, **kwargs):
+  
+
+"""
+
+
+def get_image_path(instance, filename):
+    return os.path.join('photos', str(instance.id), filename)
+
+class Picture(models.Model):
+    image = models.ImageField(upload_to=get_image_path, blank=True, null=True)
+    record = models.ForeignKey(DriverRecord, null=True, on_delete=models.SET_NULL)
+
+class RecordForm(forms.ModelForm):
+    class Meta:
+        model = DriverRecord
+        fields = ('geom',)
 
 class RecordAuditLogEntry(models.Model):
     """Records an occurrence of a Record being altered, who did it, and when.
@@ -107,6 +220,9 @@ class RecordDuplicate(GroutModel):
 
 
 class RecordCostConfig(GroutModel):
+    class Meta(object):
+        verbose_name = _('Record Cost Config')
+        verbose_name_plural = _('Record Cost Configs')
     """Store a configuration for calculating costs of incidents.
 
     This takes the form of a reference to an enum field on a RecordType, along with user-
@@ -141,3 +257,13 @@ class RecordCostConfig(GroutModel):
     # This should be auto-populated by the front-end once a property_key is selected.
     enum_costs = HStoreField()
 
+class Dictionary(models.Model):
+    class Meta(object):
+        verbose_name = _('Dictionary')
+        verbose_name_plural = _('Dictionaries')
+    def __str__(self):
+        return self.language_code
+
+    language_code=models.TextField(max_length=8)
+    name=models.TextField(max_length=100)
+    content=HStoreField()

@@ -21,7 +21,7 @@ class BaseDriverRecordSerializer(serializers.RecordSerializer):
     class Meta:
         model = DriverRecord
         fields = '__all__'
-        read_only_fields = ('uuid',)
+        read_only_fields = ('uuid', 'segment')
 
     def validate_occurred_from(self, value):
         """ Require that record occurred_from be in the past. """

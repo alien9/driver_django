@@ -29,15 +29,15 @@
         },
         recordType: {
             visible: !1,
-            primaryLabel: "Accident",
+            primaryLabel: "Accidente",
             secondaryLabel: "Intervention"
         },
         localization: {
-            timeZone: "America/Sao_Paulo",
-            countryCode: "br",
-            centerLatLon: [-23.5,-46.5],
-            zoom: 12,
-            languages:  [{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}] 
+            timeZone: "America/La_Paz",
+            countryCode: "bo",
+            centerLatLon: [-13.63770590146877,-172.44653200580277],
+            zoom: 11,
+            languages:  [{id: "pt-br", label:"Português", rtl: !1},{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}] 
         },
         mapillary: {
             enabled: !1,
@@ -7183,7 +7183,7 @@ function() {
     }
     function e(a, b) {
         a.useStaticFilesLoader({
-            prefix: "i18n/",
+            prefix: "static/i18n/",
             suffix: ".json"
         }),
         a.useMissingTranslationHandlerLog(),

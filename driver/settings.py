@@ -12,6 +12,13 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from django.utils.translation import ugettext_lazy as _
+import socket
+
+try:
+    HOSTNAME = socket.gethostname()
+except:
+    HOSTNAME = 'localhost'
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -35,6 +42,11 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:8000',
     'http://localhost:4200',
 ]
+
+#LANGUAGE_CODE = 'pt-br'
+USE_I18N = False
+USE_L10N = False
+LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 # Application definition
 
@@ -67,6 +79,10 @@ INSTALLED_APPS = (
     'django_json_widget',
     'django_verbatim',
     'mozilla_django_oidc',  # Load after auth
+    'django_admin_hstore_widget',
+    'constance',
+    'wms',
+    'proxy',
 )
 
 MIDDLEWARE = (
@@ -150,10 +166,6 @@ POSTGIS_VERSION = tuple(
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'pt-br'
-USE_I18N = True
-USE_L10N = True
-
 from django.utils.translation import ugettext_lazy as _
 LANGUAGES = ( 
    ('de', _('German')),
@@ -180,6 +192,11 @@ BLACKSPOT_RECORD_TYPE_LABEL = os.environ.get('BLACKSPOT_RECORD_TYPE_LABEL', 'Inc
 
 STATIC_URL = os.environ.get('STATIC_URL', '/static/')
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/driver/static/')
+
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'templates/dist'),
+    os.path.join(BASE_DIR, 'templates/schema_editor/dist'),
+)
 
 # Media files (uploaded via API)
 # https://docs.djangoproject.com/en/1.8/topics/files/
@@ -329,7 +346,14 @@ CACHES = {
         'TIMEOUT': None,
         'KEY_PREFIX': 'boundary',
         'VERSION': 1,
-    }
+    },
+    "geocode": {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://{host}:{port}/5'.format(host=REDIS_HOST, port=REDIS_PORT),
+        'TIMEOUT': None,
+        'KEY_PREFIX': 'geocode',
+        'VERSION': 1,
+    },
 }
 
 # Celery
@@ -477,3 +501,23 @@ if len(GOOGLE_OAUTH_CLIENT_ID) > 0:
 """
 # These fields will be visible to read-only users
 READ_ONLY_FIELDS_REGEX = r'Detalles$'
+
+CONSTANCE_REDIS_CONNECTION = {
+    'host': REDIS_HOST,
+    'port': 6379,
+    'db': 0,
+}
+
+CONSTANCE_CONFIG = {
+    'SEGMENT_SIZE': (50, _("segment_size")),
+    'MAP_CENTER_LATITUDE': (os.getenv('CENTER_LATITUDE', -23.5), _("Latitude")),
+    'MAP_CENTER_LONGITUDE': (os.getenv('CENTER_LONGITUDE', -46.7), _("Longitude")),
+    'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
+    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Accident"), _("Accident")),
+    "WINDSHAFT": ("%s://%s" % ((os.getenv('PROTOCOL', "http"), os.getenv('WINDSHAFT', "localhost:5000"))), "WindShaft"),      
+    "LANGUAGES": ('[{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}]', _("Languages")),
+    "HOSTNAME": ("%s://%s" % ((os.getenv('PROTOCOL', "http"), os.getenv('HOSTNAME', "localhost:8000"))), _("Host Name")),
+    "TIMEZONE": (os.getenv('TIMEZONE', "Africa/Abidjan"), _("Timezone")),
+    "COUNTRY_CODE": (os.getenv('COUNTRY', "ic"), _("Country Code")),
+    "MAPSERVER": ("mapserver-%s" % (os.getenv('CONTAINER_NAME', 'driver')), "MapServer"),
+}   

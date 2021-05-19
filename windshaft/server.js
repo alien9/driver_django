@@ -2,7 +2,7 @@ var Redis = require('windshaft/node_modules/redis-mpool/node_modules/redis');
 var Windshaft   = require('windshaft');
 var healthCheck = require('./healthCheck');
 var driver      = require('./driver.js');
-
+var dbName = process.env.DRIVER_DB_NAME;
 var dbUser = process.env.WINDSHAFT_DB_USER;
 var dbHost = process.env.DRIVER_DB_HOST;
 var dbPort = process.env.DRIVER_DB_PORT;
@@ -15,7 +15,7 @@ var redisConfig = {
 };
 
 // Create a connection to the redis client (db #2) for tilekey lookups
-console.log('Creating redis client at '+redisConfig.host);
+console.log('Creating redis client at '+redisConfig.host+' connecting to database '+dbName+' at '+dbHost);
 
 var redisClient = Redis.createClient(redisConfig.port, redisConfig.host);
 redisClient.select(2);
@@ -40,6 +40,7 @@ var config = {
         },
         grainstore: {
           datasource: {
+            dbname: dbName,
             user:dbUser,
             password: dbPassword,
             host: dbHost,

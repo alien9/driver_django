@@ -216,10 +216,12 @@ class FilterTree(object):
                    with the containment query in the first position and the
                    parameters in the second.
         """
+        print("getting multiplo")
+        print(path)
         # The `path` dict stores the full branch that leads to the value in
         # question, from leaf to root.
         leaf, branch = path[0], path[1:]
-
+        print(leaf)
         template = reconstruct_object_multiple(branch)
         has_containment = 'contains' in rule
         abstract_contains_str = leaf + " @> %s"
@@ -236,7 +238,8 @@ class FilterTree(object):
             contains_params.append(template % interpolants)
 
         contains_str = ' OR '.join([abstract_contains_str] * len(all_contained))
-
+        print(contains_str)
+        print('(' + contains_str + ')', contains_params)
         if contains_str != '':
             return ('(' + contains_str + ')', contains_params)
         else:
