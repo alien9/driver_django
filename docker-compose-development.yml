@@ -7,12 +7,12 @@ services:
         - buildno=1
       dockerfile: Dockerfile.database
     volumes:
-      - ./postgres_data:/var/lib/postgresql
+      - ${WINDSHAFT_FILES}/postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=driver
       - POSTGRES_PASS=driver
       - POSTGRES_DBNAME=driver
-      - POSTGRES_PASSWORD=driver
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
     container_name: database-${CONTAINER_NAME}
     image:
       driver-database
@@ -39,9 +39,8 @@ services:
     environment:
       - DRIVER_DB_NAME=driver
       - DRIVER_DB_USER=driver
-      - DRIVER_DB_PASSWORD=driver
       - WINDSHAFT_DB_USER=driver
-      - WINDSHAFT_DB_PASSWORD=driver
+      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
       - DRIVER_DB_HOST=database-${CONTAINER_NAME}
       - DRIVER_DB_PORT=5432
       - DRIVER_APP_HOST=${PROTOCOL}://${HOST_NAME}
