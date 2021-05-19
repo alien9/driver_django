@@ -7,13 +7,13 @@
             prefix: "!"
         },
         api: {
-            hostname: "http://titopop.com"
+            hostname: "http://driver.com"
         },
         windshaft: {
-            hostname: "http://titopop.com"
+            hostname: "http://driver.com"
         },
         nominatim: {
-            key: "NmfGZYebsExMYfFWP4Tf"
+            key: "NOMINATIM"
         },
         record: {
             limit: 50
@@ -66,7 +66,7 @@
         duplicateRecordsLink: {
             visible: !0
         },
-        OAUTH_CLIENT_ID:"418431456233-i69dc0paqp9ujj40gha8ru5a1tflbjl2.apps.googleusercontent.com"
+        OAUTH_CLIENT_ID:"google_client_id"
     };
     angular.module("driver.config", []).constant("WebConfig", a)
 }(),
@@ -79,7 +79,7 @@ function() {
             prefix: "!"
         },
         api: {
-            hostname: "http://titopop.com",
+            hostname: "http://driver.com",
             groups: {
                 admin: "admin",
                 readOnly: "public",
