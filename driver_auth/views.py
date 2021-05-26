@@ -1,7 +1,7 @@
 import logging
 from urllib.parse import quote
 from urllib.parse import parse_qs
-
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User, Group
 from django.http import JsonResponse
@@ -147,8 +147,8 @@ class GroupViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = OptionalLimitOffsetPagination
 
-
 class DriverObtainAuthToken(ObtainAuthToken):
+    @csrf_exempt
     def post(self, request):
         serializer = self.serializer_class(data=request.data,
                                            context={'request': request})
