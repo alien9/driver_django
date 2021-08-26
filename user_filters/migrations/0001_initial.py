@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('uuid', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('label', models.CharField(max_length=255)),
-                ('filter_json', django.contrib.postgres.fields.jsonb.JSONField()),
+                ('filter_json', django.db.models.JSONField()),
                 ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),

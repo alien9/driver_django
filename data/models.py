@@ -97,6 +97,7 @@ class DriverRecord(Record):
                     self.segment=seg
                 else:
                     print("Road not found.")
+
     def save(self, *args, **kwargs):
         self.geocode()
         super(DriverRecord, self).save(*args, **kwargs)

@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import models, migrations
 import django.contrib.gis.db.models.fields
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 import uuid
 
 

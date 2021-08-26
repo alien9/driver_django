@@ -14,4 +14,4 @@ export PGUSER="$POSTGRES_USER"
 # Connections num: 150
 # Data Storage: ssd
 psql -c "CREATE EXTENSION HSTORE; CREATE EXTENSION POSTGIS;CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
-psql -f /docker-entrypoint-initdb.d/spots.sql
+#psql -f /docker-entrypoint-initdb.d/spots.sql

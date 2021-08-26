@@ -99,7 +99,6 @@ class BoundarySerializer(GeoModelSerializer):
 
     def create(self, validated_data):
         boundary = super(BoundarySerializer, self).create(validated_data)
-        boundary.load_shapefile()
         return boundary
 
     class Meta:

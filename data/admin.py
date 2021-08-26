@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
@@ -10,10 +10,11 @@ from grout.models import RecordSchema, RecordType, Boundary, BoundaryPolygon
 from black_spots.models import RoadMap, BlackSpotSet
 from django_admin_hstore_widget.forms import HStoreFormField
 
-admin.site.index_title = _('DRIVER Database')
 
 class PictureAdmin(admin.ModelAdmin):
     pass
+
+admin.site.index_title = _('DRIVER Database')
 
 
 class RecordSchemaAdmin(admin.ModelAdmin):
