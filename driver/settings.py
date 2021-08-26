@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-import os
+import os, sys
 from django.utils.translation import ugettext_lazy as _
 import socket
 
@@ -34,6 +34,7 @@ SECRET_KEY = 'sfdgljfkghdjkgfhjkghdskljhgljhsdjkghfgjklhdgjklshjkhg' # os.enviro
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DEVELOP
+TESTING = 'test' in sys.argv
 
 ALLOWED_HOSTS = ['*']
 # TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
@@ -500,7 +501,7 @@ if len(GOOGLE_OAUTH_CLIENT_ID) > 0:
     }
 """
 # These fields will be visible to read-only users
-READ_ONLY_FIELDS_REGEX = r'Detalles$'
+READ_ONLY_FIELDS_REGEX = r'Det'
 
 CONSTANCE_REDIS_CONNECTION = {
     'host': REDIS_HOST,
@@ -514,7 +515,7 @@ CONSTANCE_CONFIG = {
     'MAP_CENTER_LONGITUDE': (os.getenv('CENTER_LONGITUDE', -46.7), _("Longitude")),
     'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
     "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Accident"), _("Accident")),
-    "WINDSHAFT": ("%s://%s" % ((os.getenv('PROTOCOL', "http"), os.getenv('WINDSHAFT', "localhost:5000"))), "WindShaft"),      
+    "WINDSHAFT": ("", "WindShaft"),
     "LANGUAGES": ('[{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}]', _("Languages")),
     "HOSTNAME": ("%s://%s" % ((os.getenv('PROTOCOL', "http"), os.getenv('HOSTNAME', "localhost:8000"))), _("Host Name")),
     "TIMEZONE": (os.getenv('TIMEZONE', "Africa/Abidjan"), _("Timezone")),

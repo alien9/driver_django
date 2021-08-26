@@ -7,7 +7,7 @@ from dateutil.parser import parse
 from django.core.exceptions import ImproperlyConfigured
 from django.contrib.gis.db import models as gis_models
 from django.contrib.gis.gdal.error import GDALException
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 from django.db.models import Q
 
 from rest_framework.exceptions import ParseError, NotFound

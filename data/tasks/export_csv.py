@@ -33,7 +33,7 @@ def _utf8(value):
     if isinstance(value, str):
         return value
     else:
-        return str(value).encode('utf-8')
+        return str(value)
 
 
 def _sanitize(value):

@@ -26,7 +26,7 @@ COPY templates /opt/app/templates
 COPY templatetags /opt/app/templatetags
 COPY user_filters /opt/app/user_filters
 COPY manage.py /opt/app/
-COPY requirements.txt /opt/app/
+COPY requirements-production.txt /opt/app/requirements.txt
 
 
 RUN pip install --no-cache-dir gunicorn

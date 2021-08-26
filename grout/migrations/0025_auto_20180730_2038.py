@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='record',
             name='data',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True),
+            field=django.db.models.JSONField(blank=True),
         ),
         migrations.AlterField(
             model_name='record',

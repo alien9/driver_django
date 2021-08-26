@@ -108,5 +108,5 @@ CACHES = {
 # Celery
 BROKER_URL = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
 CELERY_RESULT_BACKEND = 'redis://{}:{}/1'.format(REDIS_HOST, REDIS_PORT)
-from constance import config
-config.MAPSERVER=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "mapcache-bolivia"]).decode('utf8').strip()
+#from constance import config
+#config.MAPSERVER=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "mapcache-bolivia"]).decode('utf8').strip()

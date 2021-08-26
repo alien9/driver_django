@@ -164,7 +164,7 @@ def find_duplicate_records(self, time_allowance=None, distance_allowance=None, t
         page = paginator.page(page_num)
         records = queryset.in_bulk(page.object_list)
         done = []
-        for rec_id, record in records.iteritems():
+        for rec_id, record in records.items():
             done.append(rec_id)
             duplicates = find_duplicates_for_record(rec_id, time_allowance, distance_allowance)
             record_duplicates = []

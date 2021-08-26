@@ -5,7 +5,7 @@ from grout.models import GroutModel, Imported
 from django.utils.translation import ugettext_lazy as _
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 from grout.imports.shapefile import (extract_zip_to_temp_dir,
                                      get_shapefiles_in_dir,
                                      make_linestring)

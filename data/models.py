@@ -91,11 +91,10 @@ class DriverRecord(Record):
                     seg=RecordSegment(data={},name=row[1],geom=GEOSGeometry(row[0]))
                     seg.save()
                 else:
-                    print("ja existe")
                     seg=s[0]
                 self.segment=seg
-            else:
-                print("Road not found.")
+#            else:
+#                print("Road not found.")
     def save(self, *args, **kwargs):
         self.geocode()
         super(DriverRecord, self).save(*args, **kwargs)

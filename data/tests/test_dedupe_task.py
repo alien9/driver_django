@@ -9,6 +9,7 @@ from django.test import TestCase
 from django.test.utils import override_settings
 
 from django.db.models import Q
+from django.conf import settings
 
 
 class DedupeTaskTestCase(TestCase):
@@ -19,7 +20,7 @@ class DedupeTaskTestCase(TestCase):
     )
     def setUp(self):
         super(DedupeTaskTestCase, self).setUp()
-        self.start = datetime.now(pytz.timezone('Asia/Manila'))
+        self.start = datetime.now(pytz.timezone(settings.TIME_ZONE))
         self.then = self.start - timedelta(days=10)
         self.beforeThen = self.then - timedelta(days=1)
         self.afterThen = self.then + timedelta(days=1)
@@ -69,7 +70,7 @@ class DedupeTaskTestCase(TestCase):
             schema=self.schema,
             data=dict()
         )
-        self.stop = datetime.now(pytz.timezone('Asia/Manila'))
+        self.stop = datetime.now(pytz.timezone(settings.TIME_ZONE))
 
     @override_settings(
         CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
@@ -81,7 +82,7 @@ class DedupeTaskTestCase(TestCase):
         self.assertEqual(RecordDuplicate.objects.count(), 0)
 
         # find all duplicates
-        result = task.find_duplicate_records.delay().get()
+        result = task.find_duplicate_records() #.delay().get()
 
         self.assertEqual(DedupeJob.objects.count(), 1)
         self.assertEqual(RecordDuplicate.objects.count(), 3)
@@ -94,7 +95,7 @@ class DedupeTaskTestCase(TestCase):
         self.assertIsNotNone(DedupeJob.objects.latest().celery_task)
 
         # test incremental dedupe task
-        now = datetime.now().replace(tzinfo=pytz.timezone('Asia/Manila'))
+        now = datetime.now().replace(tzinfo=pytz.timezone(settings.TIME_ZONE))
         newrecord = DriverRecord.objects.create(
             occurred_from=now,
             occurred_to=now,
@@ -103,7 +104,7 @@ class DedupeTaskTestCase(TestCase):
             schema=self.schema,
             data=dict()
         )
-        result = task.find_duplicate_records.delay().get()
+        result = task.find_duplicate_records() #.delay().get()
         self.assertEqual(DedupeJob.objects.count(), 2)
         self.assertEqual(
             RecordDuplicate.objects.filter(
@@ -122,10 +123,10 @@ class DedupeTaskTestCase(TestCase):
         self.assertEqual(DedupeJob.objects.count(), 0)
         self.assertEqual(RecordDuplicate.objects.count(), 0)
 
-        result = task.find_duplicate_records.delay().get()
+        result = task.find_duplicate_records() #.delay().get()
         job1 = DedupeJob.objects.latest()
 
-        now = datetime.now().replace(tzinfo=pytz.timezone('Asia/Manila'))
+        now = datetime.now().replace(tzinfo=pytz.timezone(settings.TIME_ZONE))
         newrecord = DriverRecord.objects.create(
             occurred_from=now,
             occurred_to=now,

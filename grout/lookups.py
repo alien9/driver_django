@@ -4,7 +4,7 @@ import json
 import re
 
 from django.db.models import Lookup
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 
 
 class FilterTree(object):
@@ -409,6 +409,7 @@ class JSONLookup(Lookup):
         # query tree. Intercept the query parameter (it'll always be the first
         # element in the parameter list, since the custom jsonb filter only accepts one argument)
         # and revert it back to a Python dict for tree parsing.
-        tree = rhs_params[0].adapted
+        print(rhs_params[0]) #.adapted
+        tree = json.loads(rhs_params[0]) #.adapted
 
         return FilterTree(tree, field).sql()

@@ -2,7 +2,7 @@ from datetime import datetime
 import mock
 import os
 import pytz
-import StringIO
+from io import StringIO
 import unittest
 
 from django.test import TestCase
@@ -47,7 +47,7 @@ class DriverRecordExporterTestCase(TestCase):
     def test_constant_info_setup(self):
         """Test that a writer and output file are created for constant fields"""
         self.assertIsInstance(self.exporter.rec_writer, ModelAndDetailsWriter)
-        self.assertIsNotNone(self.exporter.rec_outfile, file)
+        self.assertIsNotNone(self.exporter.rec_outfile)
 
     def test_related_info_detection(self):
         """Test that related fields are detected and writers/outfiles created"""
@@ -55,7 +55,7 @@ class DriverRecordExporterTestCase(TestCase):
         # one fewer writer and output files than there are related info types.
         self.assertEqual(len(self.exporter.writers), len(self.schema.schema['definitions']) - 1)
         self.assertEqual(len(self.exporter.outfiles), len(self.schema.schema['definitions']) - 1)
-        expectedKeys = [key for key, subschema in self.schema_def['definitions'].viewitems()
+        expectedKeys = [key for key, subschema in self.schema_def['definitions'].items()
                         if subschema['details'] is False]
         for key in expectedKeys:
             self.assertIn(key, self.exporter.writers, '{} missing from output writers'.format(key))
@@ -64,7 +64,7 @@ class DriverRecordExporterTestCase(TestCase):
             self.assertIsInstance(writer, RelatedInfoWriter)
         # Checking for file-like objects in Python is not easy.
         for outfile in self.exporter.outfiles.values():
-            self.assertIsNotNone(outfile, file)
+            self.assertIsNotNone(outfile)
 
     def test_read_only_exporter(self):
         """Test that a ReadOnlyRecordExporter has the expected writers and outfiles"""
@@ -76,7 +76,7 @@ class DriverRecordExporterTestCase(TestCase):
 class RecordModelWriterTestCase(TestCase):
     def setUp(self):
         self.csv_columns = ['test1', 'test2']
-        self.outfile = StringIO.StringIO()
+        self.outfile = StringIO()
 
     def tearDown(self):
         self.outfile.close()
@@ -123,7 +123,7 @@ class RelatedInfoWriterTestCase(TestCase):
             }
         }
         self.definition_name = 'testRelatedInfo'
-        self.outfile = StringIO.StringIO()
+        self.outfile = StringIO()
 
     def tearDown(self):
         self.outfile.close()

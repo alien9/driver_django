@@ -17,8 +17,8 @@ from grout.filters import RecordFilter
 
 class RecordAuditLogFilter(django_filters.FilterSet):
     """Allow filtering audit log entries by user, record, min_date, max_date"""
-    min_date = django_filters.IsoDateTimeFilter(name="date", lookup_expr='gte')
-    max_date = django_filters.IsoDateTimeFilter(name="date", lookup_expr='lte')
+    min_date = django_filters.IsoDateTimeFilter(field_name="date", lookup_expr='gte')
+    max_date = django_filters.IsoDateTimeFilter(field_name="date", lookup_expr='lte')
     action = django_filters.ChoiceFilter(choices=RecordAuditLogEntry.ActionTypes.choices)
 
     class Meta:

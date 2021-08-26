@@ -5,7 +5,9 @@ import django.contrib.postgres.fields.hstore
 from django.db import migrations, models
 import django.db.models.deletion
 import uuid
+from django.contrib.postgres.operations import CreateExtension
 
+sql_statement = open("find_segments.sql").read()
 
 class Migration(migrations.Migration):
 
@@ -17,6 +19,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        CreateExtension(name='hstore'),
+        migrations.RunSQL(sql_statement),
         migrations.CreateModel(
             name='DedupeJob',
             fields=[

@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.contrib.gis.db import models
 from django.contrib.gis.gdal import DataSource as GDALDataSource
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 from django.core.validators import MinLengthValidator
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -301,8 +301,10 @@ class Boundary(Imported):
         self.status = self.StatusTypes.PROCESSING
         self.save()
         logging.info("starting")
+        print("statrting")
         try:
             logging.info("extracting the shapefile")
+            print("extracting")
             temp_dir = extract_zip_to_temp_dir(self.source_file)
             shapefiles = get_shapefiles_in_dir(temp_dir)
             if len(shapefiles) != 1:
