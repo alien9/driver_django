@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 Django settings for driver project.
 
@@ -373,7 +375,10 @@ CELERY_ROUTES = {
     'black_spots.tasks.generate_training_input.get_training_precip': {'queue': 'taskworker'},
     'data.tasks.remove_duplicates.remove_duplicates': {'queue': 'taskworker'},
     'data.tasks.export_csv.export_csv': {'queue': 'taskworker'},
-    'data.tasks.fetch_record_csv.export_records': {'queue': 'taskworker'}
+    'data.tasks.fetch_record_csv.export_records': {'queue': 'taskworker'},
+    'data.tasks.geocode_records.geocode_records': {'queue': 'taskworker'},
+    'data.tasks.geocode_records.generate_blackspots': {'queue': 'taskworker'},
+
 }
 # This needs to match the proxy configuration in nginx so that requests for files generated
 # by celery jobs go to the right place.
@@ -501,11 +506,18 @@ if len(GOOGLE_OAUTH_CLIENT_ID) > 0:
 """
 # These fields will be visible to read-only users
 READ_ONLY_FIELDS_REGEX = r'Detalles$'
+from driver.tz_list import TZ_LIST
 
 CONSTANCE_REDIS_CONNECTION = {
     'host': REDIS_HOST,
     'port': 6379,
     'db': 0,
+}
+CONSTANCE_ADDITIONAL_FIELDS = {
+    'tzselect': ['django.forms.fields.ChoiceField', {
+        'widget': 'django.forms.Select',
+        'choices': list(map(lambda x: [x, x], TZ_LIST))
+    }],
 }
 
 CONSTANCE_CONFIG = {
@@ -520,4 +532,5 @@ CONSTANCE_CONFIG = {
     "TIMEZONE": (os.getenv('TIMEZONE', "Africa/Abidjan"), _("Timezone")),
     "COUNTRY_CODE": (os.getenv('COUNTRY', "ic"), _("Country Code")),
     "MAPSERVER": ("mapserver-%s" % (os.getenv('CONTAINER_NAME', 'driver')), "MapServer"),
+    'TIMEZONE': ('America/Sao_Paulo', 'Time Zone', 'tzselect')
 }   

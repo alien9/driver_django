@@ -15,7 +15,7 @@ from grout import serializer_fields
 from data.models import DriverRecord, RecordAuditLogEntry, RecordDuplicate, RecordCostConfig
 
 from django.conf import settings
-
+from constance import config
 
 class BaseDriverRecordSerializer(serializers.RecordSerializer):
     class Meta:
@@ -142,3 +142,8 @@ class RecordCostConfigSerializer(ModelSerializer):
     class Meta:
         model = RecordCostConfig
         fields = '__all__'
+
+class PictureSerializer(ModelSerializer):
+    record = DriverRecordSerializer(required=False, allow_null=True)
+
+

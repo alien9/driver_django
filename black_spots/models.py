@@ -101,6 +101,7 @@ class RoadMap(Imported):
         verbose_name = _('Road Map')
     def load_shapefile(self):
         """ Validate the shapefile saved on disk and load into db """
+        print("saving shapefile")
         self.status = self.StatusTypes.PROCESSING
         self.save()
         logging.info("starting")

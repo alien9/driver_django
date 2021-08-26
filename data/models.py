@@ -1,6 +1,6 @@
 import uuid
 import hashlib
-
+import os 
 from django import forms
 from django.db import models
 from django.contrib.postgres.fields import HStoreField
@@ -83,19 +83,20 @@ class DriverRecord(Record):
 
     def geocode(self):
         with connection.cursor() as cursor:
-            cursor.execute("select * from works.find_segment(st_geomfromewkt(%s), %s)", [self.geom.ewkt, config.SEGMENT_SIZE])
-            row = cursor.fetchone()
-            if row[0] is not None:
-                s=RecordSegment.objects.filter(geom__equals=GEOSGeometry(row[0]))
-                if not len(s):
-                    seg=RecordSegment(data={},name=row[1],geom=GEOSGeometry(row[0]))
-                    seg.save()
+            if self.geom:
+                cursor.execute("select * from works.find_segment(st_geomfromewkt(%s), %s)", [self.geom.ewkt, config.SEGMENT_SIZE])
+                row = cursor.fetchone()
+                if row[0] is not None:
+                    s=RecordSegment.objects.filter(geom__equals=GEOSGeometry(row[0]))
+                    if not len(s):
+                        seg=RecordSegment(data={},name=row[1],geom=GEOSGeometry(row[0]))
+                        seg.save()
+                    else:
+                        print("ja existe")
+                        seg=s[0]
+                    self.segment=seg
                 else:
-                    print("ja existe")
-                    seg=s[0]
-                self.segment=seg
-            else:
-                print("Road not found.")
+                    print("Road not found.")
     def save(self, *args, **kwargs):
         self.geocode()
         super(DriverRecord, self).save(*args, **kwargs)

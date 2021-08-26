@@ -27,6 +27,7 @@ router.register('recordschemas', data_views.DriverRecordSchemaViewSet)
 router.register('recordtypes', data_views.DriverRecordTypeViewSet)
 router.register('recordcosts', data_views.DriverRecordCostConfigViewSet)
 router.register('userfilters', filt_views.SavedFilterViewSet, basename='userfilters')
+router.register('pictures', data_views.PictureViewSet, basename='pictures')
 
 
 # user management

@@ -5,12 +5,15 @@ from django.utils.translation import gettext_lazy as _
 
 from django_json_widget.widgets import JSONEditorWidget
 from grout.widgets import GroutEditorWidget
-from data.models import RecordCostConfig, Dictionary
+from data.models import RecordCostConfig, Dictionary, Picture
 from grout.models import RecordSchema, RecordType, Boundary, BoundaryPolygon
-from black_spots.models import RoadMap
+from black_spots.models import RoadMap, BlackSpotSet
 from django_admin_hstore_widget.forms import HStoreFormField
 
-admin.site.index_title = _('My Index Title')
+admin.site.index_title = _('DRIVER Database')
+
+class PictureAdmin(admin.ModelAdmin):
+    pass
 
 
 class RecordSchemaAdmin(admin.ModelAdmin):
@@ -74,9 +77,15 @@ class RoadMapAdmin(admin.ModelAdmin):
         context['deleted_objects'] = [_('Object listing disabled')]
         return super(RoadMapAdmin, self).render_delete_form(request, context)
 
+class BlackSpotSetAdmin(admin.ModelAdmin):
+    pass
+
+
 admin.site.register(RecordSchema, RecordSchemaAdmin)
 admin.site.register(RecordType, RecordTypeAdmin)
 admin.site.register(Boundary, BoundaryAdmin)
 admin.site.register(RecordCostConfig, RecordCostConfigAdmin)
 admin.site.register(Dictionary, DictionaryAdmin)
 admin.site.register(RoadMap, RoadMapAdmin)
+admin.site.register(Picture, PictureAdmin)
+admin.site.register(BlackSpotSet, BlackSpotSetAdmin)

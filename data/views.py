@@ -59,7 +59,7 @@ from driver_auth.permissions import (IsAdminOrReadOnly,
                                      IsAdminAndReadOnly,
                                      is_admin_or_writer)
 from data.tasks import export_csv
-from data.models import DriverRecord, SegmentSet
+from data.models import DriverRecord, SegmentSet, Picture
 from data.localization.date_utils import (
     hijri_day_range,
     hijri_week_range,
@@ -72,7 +72,7 @@ from .models import RecordAuditLogEntry, RecordDuplicate, RecordCostConfig
 from .serializers import (DriverRecordSerializer, DetailsReadOnlyRecordSerializer,
                          DetailsReadOnlyRecordSchemaSerializer, RecordAuditLogEntrySerializer,
                          RecordDuplicateSerializer, RecordCostConfigSerializer,
-                         DetailsReadOnlyRecordNonPublicSerializer)
+                         DetailsReadOnlyRecordNonPublicSerializer, PictureSerializer)
 #import transformers
 from driver import mixins
 from functools import reduce
@@ -1438,3 +1438,14 @@ def get_config(request):
             }
         },
         status=status.HTTP_200_OK)
+
+class PictureViewSet(viewsets.ViewSet):
+    def list(self, request):
+        queryset=Picture.objects.all()
+        serializer=PictureSerializer(queryset, many=True)
+        return Response(serializer.data)
+        
+    def create(self, request):
+        print(request)
+        print("CREATING")
+        pass
