@@ -71,7 +71,6 @@ INSTALLED_APPS = (
 
     'django_filters',
     'rest_framework_gis',
-
     'grout',
 
     'driver',
@@ -101,7 +100,8 @@ MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
 )
-
+print(DEBUG)
+print("is debug")
 if DEBUG:
     # Perform set up for Django Debug Toolbar
     INSTALLED_APPS += (
@@ -269,7 +269,7 @@ LOGGING = {
         }
     }
 }
-
+DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 # user and group settings
 DEFAULT_ADMIN_EMAIL = os.environ.get("DRIVER_ADMIN_EMAIL", 'systems+driver@azavea.com')
 DEFAULT_ADMIN_USERNAME = os.environ.get("DRIVER_ADMIN_USERNAME", 'admin')

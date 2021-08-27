@@ -9,6 +9,7 @@ import hashlib
 from constance import config
 from dateutil.parser import parse as parse_date
 from django.template.defaultfilters import date as template_date
+from rest_framework.decorators import api_view
 
 from celery import states
 from django.http import JsonResponse
@@ -58,8 +59,9 @@ from driver_auth.permissions import (IsAdminOrReadOnly,
                                      ReadersReadWritersWrite,
                                      IsAdminAndReadOnly,
                                      is_admin_or_writer)
-from data.tasks import export_csv
+from data.tasks import export_csv, generate_blackspots
 from data.models import DriverRecord, SegmentSet, Picture
+from black_spots.models import BlackSpotSet
 from data.localization.date_utils import (
     hijri_day_range,
     hijri_week_range,
@@ -108,6 +110,22 @@ def mapserver(request):
 def mapcache(request):
     dest="http://%s/%s" % (config.MAPSERVER, request.path,)
     return proxy_view(request, dest)
+
+@api_view(['GET', 'POST', ])
+def run_calculate_blackspots(request, uuid):
+    print("Requesting blackspots")
+    task = generate_blackspots.delay(uuid, request.user.pk)
+    return Response({'success': True, 'taskid': task.id}, status=status.HTTP_201_CREATED)
+
+@api_view(['GET', 'POST', ])
+def retrieve_blackspots(request, pk):
+    job_result = generate_blackspots.AsyncResult(pk)
+    if job_result.state in states.READY_STATES:
+        if job_result.state in states.EXCEPTION_STATES:
+            e = job_result.get(propagate=False)
+            return Response({'status': job_result.state, 'error': str(e)})
+        return Response({'status': job_result.state, 'result': "OK"})
+    return Response({'status': job_result.state, 'info': job_result.info})
 
 def segment_sets(request):
     s=SegmentSet.objects.all()
@@ -1444,7 +1462,7 @@ class PictureViewSet(viewsets.ViewSet):
         queryset=Picture.objects.all()
         serializer=PictureSerializer(queryset, many=True)
         return Response(serializer.data)
-        
+
     def create(self, request):
         print(request)
         print("CREATING")

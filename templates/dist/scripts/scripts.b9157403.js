@@ -2984,7 +2984,7 @@ function() {
           , f = a.instant("RECORD.OUT_OF_BOUNDS")
           , g = a.instant("RECORD.CREATED_BY")
           , h = a.instant("ERRORS.UNKNOWN_RULE_TYPE")
-          , i = a.instant("RECORD.Weather");
+          , i = a.instant("RECORD.WEATHER");
         return function(j, k) {
             k = k || '<span class="divider">|</span>';
             var l = [];
@@ -5790,7 +5790,7 @@ function() {
         ,
         R.buildBlackspotPopup = function(a, b) {
             var c = '<div id="blackspot-popup" class="blackspot-popup">';
-            return c += "<div><h4>" + U + "</h4></div>",
+            return c += "<div><h4>" + a.name + "</h4></div>",
             c += "<div><h6>" + V + ": " + a.severity_score + "</h6></div>",
             c += "<div><h6>" + R.recordType.plural_label + ": " + a.num_records + "</h6></div>",
             c += "<div><h6>" + W + ": " + a.num_severe + "</h6></div>",

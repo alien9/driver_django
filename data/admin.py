@@ -10,12 +10,11 @@ from grout.models import RecordSchema, RecordType, Boundary, BoundaryPolygon
 from black_spots.models import RoadMap, BlackSpotSet
 from django_admin_hstore_widget.forms import HStoreFormField
 
+admin.site.index_title = _('DRIVER Database')
+
 
 class PictureAdmin(admin.ModelAdmin):
     pass
-
-admin.site.index_title = _('DRIVER Database')
-
 
 class RecordSchemaAdmin(admin.ModelAdmin):
     formfield_overrides = {
@@ -77,7 +76,19 @@ class RoadMapAdmin(admin.ModelAdmin):
     def render_delete_form(self, request, context):
         context['deleted_objects'] = [_('Object listing disabled')]
         return super(RoadMapAdmin, self).render_delete_form(request, context)
+    def get_deleted_objects(self, queryset, request):
+        print("eh aqui")
+        return super(RoadMapAdmin, self).get_deleted_objects(queryset, request)
 
+    def silent_delete(self, request, queryset):
+        queryset.delete()
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if 'delete_selected' in actions:
+            del actions['delete_selected']
+        return actions
+        
 class BlackSpotSetAdmin(admin.ModelAdmin):
     pass
 

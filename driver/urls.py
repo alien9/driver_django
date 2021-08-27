@@ -2,7 +2,8 @@ from django.conf import settings
 from django.conf.urls import url
 from django.urls import include, path, re_path
 from django.contrib import admin
-
+admin.autodiscover()
+admin.site.enable_nav_sidebar = False
 from rest_framework import routers
 
 from black_spots import views as black_spot_views
@@ -45,7 +46,9 @@ urlpatterns = [
     url(r'^/', data_views.index),
     url(r'^$', data_views.index),
     url(r'^editor/$', data_views.editor),
-    
+    url(r'^calculate_blackspots/(?P<uuid>[-\w]{0,100})/$', data_views.run_calculate_blackspots),
+    url(r'^retrieve_blackspots/(?P<pk>[-\w]{0,100})/$', data_views.retrieve_blackspots),
+
     # get token for given username/password
     url(r'^api-token-auth/', auth_views.obtain_auth_token),
     url(r'^api/sso-token-auth/', auth_views.sso_auth_token),
@@ -69,7 +72,6 @@ from django.conf.urls.i18n import i18n_patterns
 
 # Allow login to the browseable API
 urlpatterns.append(url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')))
-
 if settings.DEBUG or settings.TESTING:
     import debug_toolbar
     urlpatterns = [

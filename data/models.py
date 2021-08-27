@@ -41,6 +41,8 @@ class RecordSegment(models.Model):
         verbose_name_plural = _('Record Segments')
     geom = g.LineStringField(srid=settings.GROUT['SRID'], null=True, blank=True)
     name = models.TextField(max_length=200,null=True)
+    roadmap=models.ForeignKey('black_spots.RoadMap', on_delete=models.CASCADE, null=True)
+    size=models.IntegerField()
     data = HStoreField()
     def calculate_cost(self, recordtype):
         cost=RecordCostConfig.objects.last()
@@ -79,32 +81,47 @@ class DriverRecord(Record):
     neighborhood = models.CharField(max_length=50, null=True, blank=True)
     road = models.CharField(max_length=200, null=True, blank=True)
     state = models.CharField(max_length=50, null=True, blank=True)
-    segment = models.ForeignKey(RecordSegment, null=True, on_delete=models.SET_NULL)
-
-    def geocode(self):
+    segment = models.ManyToManyField(RecordSegment)
+    
+    def geocode(self, roadmap_uuid, size):
         with connection.cursor() as cursor:
             if self.geom:
-                cursor.execute("select * from works.find_segment(st_geomfromewkt(%s), %s)", [self.geom.ewkt, config.SEGMENT_SIZE])
+                cursor.execute("select * from works.find_segment(%s, %s, %s)", [self.geom.ewkt, size, str(roadmap_uuid)])
                 row = cursor.fetchone()
                 if row[0] is not None:
-                    s=RecordSegment.objects.filter(geom__equals=GEOSGeometry(row[0]))
+                    print("FOUND")
+                    print(row[0])
+                    print(GEOSGeometry(row[0]))
+                    s=RecordSegment.objects.filter(
+                        geom=GEOSGeometry(row[0]),
+                        size=size,
+                        roadmap_id=roadmap_uuid
+                    )
                     if not len(s):
-                        seg=RecordSegment(data={},name=row[1],geom=GEOSGeometry(row[0]))
+                        print("create segment")
+                        seg=RecordSegment(
+                            roadmap_id=roadmap_uuid, 
+                            data={},
+                            size=size,
+                            name=row[1],
+                            geom=GEOSGeometry(row[0])
+                        )
                         seg.save()
                     else:
                         print("ja existe")
                         seg=s[0]
-                    self.segment=seg
+                    self.segment.add(seg)
+                    self.save()
                 else:
                     print("Road not found.")
-
+"""
     def save(self, *args, **kwargs):
         self.geocode()
         super(DriverRecord, self).save(*args, **kwargs)
         
 
 
-"""
+
     cost=RecordCostConfig.objects.last()
     if cost is not None:
         n=0
