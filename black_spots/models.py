@@ -14,6 +14,7 @@ import logging,shutil,uuid,os, subprocess
 from django.db import connection
 from django.contrib.postgres.fields import HStoreField
 from django.db.models.signals import pre_save, post_save
+from django.db.models import Q
 
 class RoadMap(Imported):
     class Meta:
