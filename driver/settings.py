@@ -83,7 +83,6 @@ INSTALLED_APPS = (
     'mozilla_django_oidc',  # Load after auth
     'django_admin_hstore_widget',
     'constance',
-    'wms',
     'proxy',
 )
 
