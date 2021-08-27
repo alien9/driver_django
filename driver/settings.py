@@ -151,7 +151,7 @@ DATABASES = {
         'PORT': os.environ.get('DRIVER_DB_PORT', 5432),
         'USER': os.environ.get('DRIVER_DB_USER', 'driver'),
         'PASSWORD': os.environ.get('DRIVER_DB_PASSWORD', 'driver'),
-        'CONN_MAX_AGE': 3600,  # in seconds
+        'CONN_MAX_AGE': 0,  # in seconds
         'OPTIONS': {
         #    'sslmode': 'require'
         }

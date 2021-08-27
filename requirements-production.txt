@@ -112,3 +112,4 @@ zope.event==4.5.0
 zope.interface==5.1.2
 django-json-widget==1.0.1
 django-verbatim==0.1
+django-model-utils==4.0.0

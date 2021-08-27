@@ -146,7 +146,7 @@ class BlackSpotSet(GroutModel):
 @receiver(post_save, sender=BlackSpotSet, dispatch_uid="save_blackspotset")
 def post_save_blackspotset(sender, instance, created, **kwargs):
     if instance.display:
-        alters=BlackSpotSet.objects.filter(uuid!=instance.uuid)
+        alters=BlackSpotSet.objects.filter(~Q(uuid=instance.uuid))
         for b in alters:
             b.display=False
             b.save()
