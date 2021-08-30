@@ -15,6 +15,9 @@
     line-height: 15px;
     color: #fff;
 }
+a.calculating{
+    opacity: 0.4;
+}
 
 </style>
 
@@ -24,35 +27,63 @@
         $ = django.jQuery;
         console.log("Loading")
     }
+    var calculating=true;
+    var uuid='{{ original.uuid }}';
+    if(uuid=='')
+        $('.calculate').addClass('calculating');
+    else
+        calculating=false;
 
     $('.calculate').click(function(){
-        var csrf=document.cookie.match(/token=([^;]*)/).pop().replace(/%22/, '')
-        console.log(csrf);
-        var uuid='{{ original.uuid }}';
-        $.ajax('/calculate_blackspots/'+uuid, {success:function(data){
-            console.log(data)
-            if(!data.taskid){
-                return;
-            }
-            var k;
-            
-            var fu=function(){
-                $.ajax('/retrieve_blackspots/'+data.taskid, {success:function(data_retrieve){
-                    console.log('veio');
-                    console.log(data_retrieve);
-                    if(data_retrieve.status!="SUCCESS"){
-                        k=setTimeout(fu, 3000)
+        if(calculating) return;
+        calculating=true;
+        var csrf=$("input[name=csrfmiddlewaretoken]").val()
+        $('.calculate').addClass('calculating');
+        $.ajaxSetup({
+        headers:
+            { 'X-CSRF-Token': csrf }
+        });
+        $.ajax('/api/blackspotsets/calculate/', {
+                method:'post', 
+                data:{
+                    uuid:uuid,
+                    csrfmiddlewaretoken:csrf
+                }, 
+                success:function(data){
+                    $('.calculate').addClass('calculating');
+                    console.log(data);
+                    if(!data.taskid){
+                        calculating=true;
+                        return;
                     }
-                    $("#retrieve_message").text(data_retrieve.status)
-                }})
-            };
-            k=setTimeout(fu, 3000)
-        }});
+
+                    var k;
+                    
+                    var fu=function(){
+                        $.ajax('/api/blackspotsets/task/', {method:'post', data: {
+                                task:data.taskid,
+                                csrfmiddlewaretoken:csrf
+                            }, success:function(data_retrieve){
+                                console.log('veio');
+                                console.log(data_retrieve);
+                                if(data_retrieve.status!="SUCCESS"){
+                                    k=setTimeout(fu, 3000)
+                                }else{
+                                    $('.calculate').removeClass('calculating');
+                                    calculating=false;
+                                }
+                                $("#retrieve_message").text(data_retrieve.status)
+                            }, error:function(d){
+                                console.log(d)
+                                $("#retrieve_message").text("Error: "+d.status)
+                            }
+                        })
+                    };
+                    k=setTimeout(fu, 3000);
+        }
+        });
     })
-
-
-
-
+    
 })();
 </script>
 

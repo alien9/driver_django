@@ -89,16 +89,12 @@ class DriverRecord(Record):
                 cursor.execute("select * from works.find_segment(%s, %s, %s)", [self.geom.ewkt, size, str(roadmap_uuid)])
                 row = cursor.fetchone()
                 if row[0] is not None:
-                    print("FOUND")
-                    print(row[0])
-                    print(GEOSGeometry(row[0]))
                     s=RecordSegment.objects.filter(
                         geom=GEOSGeometry(row[0]),
                         size=size,
                         roadmap_id=roadmap_uuid
                     )
                     if not len(s):
-                        print("create segment")
                         seg=RecordSegment(
                             roadmap_id=roadmap_uuid, 
                             data={},
@@ -108,12 +104,13 @@ class DriverRecord(Record):
                         )
                         seg.save()
                     else:
-                        print("ja existe")
                         seg=s[0]
                     self.segment.add(seg)
                     self.save()
+                    return seg
                 else:
                     print("Road not found.")
+                    return None
 """
     def save(self, *args, **kwargs):
         self.geocode()

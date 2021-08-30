@@ -2851,7 +2851,7 @@ function() {
         }
         function k(a) {
             return g.query({
-                effective_at: d.getDateFilter().maxDate,
+                /*effective_at: d.getDateFilter().maxDate,*/
                 record_type: a ? a.uuid : ""
             }).$promise
         }
@@ -5387,11 +5387,11 @@ function() {
         function y() {
             var a = O(R.editLayers);
             return a ? u.query({
-                effective_at: k.getDateFilter().maxDate,
+                /*effective_at: k.getDateFilter().maxDate,*/
                 record_type: R.recordType.uuid,
                 polygon: a
             }).$promise : u.query({
-                effective_at: k.getDateFilter().maxDate,
+                /*effective_at: k.getDateFilter().maxDate,*/
                 record_type: R.recordType.uuid
             }).$promise
         }

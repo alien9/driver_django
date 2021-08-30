@@ -39,6 +39,7 @@ def geocode_records():
 @shared_task(track_started=True)
 def generate_blackspots(blackspotset_uuid=None, user_id=None):
     logger.debug("DATA GENERATE BLACK SPOTS")
+    print(blackspotset_uuid)
     if blackspotset_uuid is None:
         rs=RecordType.objects.filter(active=True, label=config.PRIMARY_LABEL)
         if not len(rs):
@@ -51,23 +52,31 @@ def generate_blackspots(blackspotset_uuid=None, user_id=None):
         d=d.replace(tzinfo=tz)
         b.effective_start=d
         b.save()
-        schema=rs.get_current_schema()
-        records=schema.record_set.filter(archived=False and geom is not None)
     else:
         b=BlackSpotSet.objects.get(pk=blackspotset_uuid)
         rs=b.record_type
-        schema=rs.get_current_schema()
-        records=schema.record_set.filter(archived=False and geom is not None) #remember to filter
+    schema=rs.get_current_schema()
+
+    records=schema.record_set.filter(archived=False,occurred_from__gte=b.effective_start)
+    if b.effective_end is not None:
+        records=records.filter(occurred_from__lte=b.effective_end)
+    logger.debug("Records retrieved:")
+    logger.debug(records.query)
+
+
     for blackspot in b.blackspot_set.all():
         blackspot.delete()
-    b.save()
+    
+    segments=set()
     with connection.cursor() as cursor:
         for r in records:
             if not hasattr(r, 'driverrecord'):
                 r.driverrecord=DriverRecord()
-            r.driverrecord.geocode(b.roadmap_id, b.size)
-        logger.debug("segments geocoded")
-        segments=b.roadmap.recordsegment_set.filter(size=b.size)
+            segment=r.driverrecord.geocode(b.roadmap_id, b.size)
+            if segment is not None:
+                segments.add(segment)
+
+        logger.debug("%s segments geocoded" % len(segments))
         for segment in segments:
             segment.calculate_cost(rs)
             cursor.execute("select st_transform(st_buffer(st_transform(geom,3857),50),4326) from data_recordsegment where id=%s", [segment.id])
@@ -81,7 +90,6 @@ def generate_blackspots(blackspotset_uuid=None, user_id=None):
             if segment.name is not None:
                 bs.name=segment.name    
             bs.save()
-            logger.debug("blackspot.save")
         blackspots=b.blackspot_set.order_by('-severity_score')
         total=b.blackspot_set.count()-1
         limit=round(0.2*total)

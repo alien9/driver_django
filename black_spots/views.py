@@ -11,13 +11,17 @@ from black_spots.serializers import (BlackSpotSerializer, BlackSpotSetSerializer
                                      EnforcerAssignmentSerializer)
 from black_spots.filters import (BlackSpotFilter, BlackSpotSetFilter, EnforcerAssignmentFilter)
 from data.views import build_toddow
-
+from rest_framework.decorators import action
+from rest_framework import status
+from driver_auth.permissions import (is_admin_or_writer,)
 from driver_auth.permissions import IsAdminOrReadOnly
 from driver import mixins
 import datetime
 import random
 import uuid
 from dateutil import rrule
+from data.tasks import generate_blackspots
+from celery import states
 
 
 class BlackSpotViewSet(viewsets.ModelViewSet, mixins.GenerateViewsetQuery):
@@ -64,7 +68,31 @@ class BlackSpotSetViewSet(viewsets.ModelViewSet):
             # return tile_token instead of the BlackspotSet uuid
             response = Response({'count': 1, 'results': [{'tilekey': tile_token}]})
         return response
+    
+    @action(detail=False, methods=['POST'])
+    def calculate(self, request, *args, **kwargs):
+        if not is_admin_or_writer(request.user):
+            return Response({'success': False, 'taskid': null}, status=status.HTTP_401_UNAUTHORIZED)
+        if 'uuid' not in request.POST:
+            return Response({'success': False, 'taskid': null}, status=status.HTTP_404_NOT_FOUND)
+        uuid=request.POST.get('uuid')
+        task = generate_blackspots.delay(uuid, request.user.pk)
+        return Response({'success': True, 'taskid': task.id}, status=status.HTTP_201_CREATED)
 
+    @action(detail=False, methods=['POST'])
+    def task(self, request):
+        if not is_admin_or_writer(request.user):
+            return Response({'success': False, 'taskid': null}, status=status.HTTP_401_UNAUTHORIZED)
+        if 'task' not in request.POST:
+            return Response({'success': False, 'taskid': null}, status=status.HTTP_404_NOT_FOUND)
+        task=request.POST.get('task')
+        job_result = generate_blackspots.AsyncResult(task)
+        if job_result.state in states.READY_STATES:
+            if job_result.state in states.EXCEPTION_STATES:
+                e = job_result.get(propagate=False)
+                return Response({'status': job_result.state, 'error': str(e)})
+            return Response({'status': job_result.state, 'result': "OK"})
+        return Response({'status': job_result.state, 'info': job_result.info})
 
 class BlackSpotConfigViewSet(drf_mixins.ListModelMixin, drf_mixins.RetrieveModelMixin,
                              drf_mixins.UpdateModelMixin, viewsets.GenericViewSet):
