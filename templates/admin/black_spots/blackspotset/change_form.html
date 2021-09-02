@@ -1,8 +1,11 @@
 {% extends "admin/change_form.html" %} 
 {% block after_field_sets %}
 <div class="submit-row">
-    <p class="deletelink-box"><a href="javascript:void(0);" class="calculate">Calculate</a></p>
-    <p id="retrieve_message">  </p>
+    <p class="deletelink-box">
+        <a href="javascript:void(0);" class="calculate">Calculate</a>
+    </p>
+    <p id="retrieve_message"> {{original.stats}} </p>
+    
 </div>
 <style type="text/css">
 

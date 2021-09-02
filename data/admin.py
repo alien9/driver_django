@@ -88,9 +88,11 @@ class RoadMapAdmin(admin.ModelAdmin):
         if 'delete_selected' in actions:
             del actions['delete_selected']
         return actions
-        
+
 class BlackSpotSetAdmin(admin.ModelAdmin):
-    pass
+    list_display =  ("title",)
+    def stats(self, obj: BlackSpotSet) -> str:
+        return "%s spots detected" % (obj.blackspot_set.count()) 
 
 
 admin.site.register(RecordSchema, RecordSchemaAdmin)
