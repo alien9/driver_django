@@ -13,6 +13,7 @@ import tarfile
 import shutil
 from collections import namedtuple
 from django.core.files import File
+from constance import config
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
@@ -27,11 +28,10 @@ from black_spots.models import (
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger()
 logger = get_task_logger(__name__)
-
 INTERSECTION_BUFFER_UNITS = int(os.getenv('INTERSECTION_BUFFER_UNITS', '5'))
 MAX_LINE_UNITS = int(os.getenv('MAX_LINE_UNITS', '200'))
 RECORD_PROJECTION = os.getenv('RECORD_PROJECTION', 'epsg:4326')
-TIMEZONE = pytz.timezone(os.getenv('TIMEZONE', 'Asia/Manila'))
+TIMEZONE = pytz.timezone(config.TIMEZONE)
 MATCH_TOLERANCE = int(os.getenv('MATCH_TOLERANCE', '5'))
 RECORD_COL_ID = os.getenv('RECORD_COL_ID', 'record_id')
 RECORD_COL_X = os.getenv('RECORD_COL_X', 'lon')
