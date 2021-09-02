@@ -68,6 +68,16 @@ fi
 if [ "${EXISTE_DJANGO}" != "" ]; then
      docker exec "driver-django-${CONTAINER_NAME}" ./manage.py collectstatic --noinput
      docker exec "driver-django-${CONTAINER_NAME}" ./manage.py migrate
+     while true; do
+          read -p "Create superuser?" yn
+          case $yn in
+               [Yy]* ) docker exec -it $(docker inspect -f '{{.ID}}' driver-django-${CONTAINER_NAME}) python manage.py createsuperuser; break;;
+               [Nn]* ) break;;
+               * ) echo "Please answer yes or no.";;
+          esac
+     done
+
+
 fi
 if [ $STATIC_ROOT != $WINDSHAFT_FILES ]; then
      sudo cp -r web "$STATIC_ROOT/"

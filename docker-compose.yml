@@ -7,7 +7,7 @@ services:
         - buildno=1
       dockerfile: Dockerfile.database
     volumes:
-      - ${WINDSHAFT_FILES}/postgres_data:/var/lib/postgresql/data
+      - /opt/${CONTAINER_NAME}-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=driver
       - POSTGRES_PASS=driver
