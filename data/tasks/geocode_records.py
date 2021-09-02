@@ -2,8 +2,13 @@ from django.conf import settings
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from django_redis import get_redis_connection
-import time, uuid
-from data.models import DriverRecord
+import time, uuid, pytz
+from data.models import DriverRecord, RecordType
+from black_spots.models import BlackSpot, BlackSpotSet
+from constance import config  
+from django.db import connection
+from datetime import datetime
+logger = get_task_logger(__name__)
 
 @shared_task(track_started=True)
 def geocode_records():
@@ -29,3 +34,68 @@ def geocode_records():
     except KeyboardInterrupt:
         redis_conn = get_redis_connection('geocode')
         redis_conn.delete('is_running')
+        
+        
+@shared_task(track_started=True)
+def generate_blackspots(blackspotset_uuid=None, user_id=None):
+    logger.debug("DATA GENERATE BLACK SPOTS")
+    print(blackspotset_uuid)
+    if blackspotset_uuid is None:
+        rs=RecordType.objects.filter(active=True, label=config.PRIMARY_LABEL)
+        if not len(rs):
+            print("No datatype found.")
+            return
+        rs=rs[0]
+        tz = pytz.timezone(config.TIMEZONE)
+        b=BlackSpotSet(record_type=rs, size=100)
+        d=datetime.now()
+        d=d.replace(tzinfo=tz)
+        b.effective_start=d
+        b.save()
+    else:
+        b=BlackSpotSet.objects.get(pk=blackspotset_uuid)
+        rs=b.record_type
+    schema=rs.get_current_schema()
+
+    records=schema.record_set.filter(archived=False,occurred_from__gte=b.effective_start)
+    if b.effective_end is not None:
+        records=records.filter(occurred_from__lte=b.effective_end)
+    logger.debug("Records retrieved:")
+    logger.debug(records.query)
+
+
+    for blackspot in b.blackspot_set.all():
+        blackspot.delete()
+    
+    segments=set()
+    with connection.cursor() as cursor:
+        for r in records:
+            if not hasattr(r, 'driverrecord'):
+                r.driverrecord=DriverRecord()
+            segment=r.driverrecord.geocode(b.roadmap_id, b.size)
+            if segment is not None:
+                segments.add(segment)
+
+        logger.debug("%s segments geocoded" % len(segments))
+        for segment in segments:
+            segment.calculate_cost(rs)
+            cursor.execute("select st_transform(st_buffer(st_transform(geom,3857),50),4326) from data_recordsegment where id=%s", [segment.id])
+            row=cursor.fetchone()
+            bs=BlackSpot()
+            bs.black_spot_set=b
+            bs.geom=row[0]
+            bs.severity_score=segment.data['cost']
+            bs.num_records=segment.data['count']
+            bs.num_severe=segment.data['count']
+            if segment.name is not None:
+                bs.name=segment.name    
+            bs.save()
+        blackspots=b.blackspot_set.order_by('-severity_score')
+        total=b.blackspot_set.count()-1
+        limit=round(0.2*total)
+        while total>limit:
+            blackspots[total].delete()
+            total-=1
+        
+
+

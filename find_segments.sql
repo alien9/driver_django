@@ -14,7 +14,7 @@ grant all on schema works to driver;
 
 -- select * from works.find_segment(st_geomfromewkt('SRID=4326;POINT (-68.076719 -16.544928)'), 100)
 
-create or replace function works.find_segment(p geometry, size_std numeric) returns table(
+create or replace function works.find_segment(point_geometry varchar, size_std numeric, roadmap varchar) returns table(
 	geom varchar,
 	road_name varchar
 	)
@@ -40,19 +40,21 @@ part_position numeric;
 time_limit timestamp with time zone;
 severe int;
 road_name varchar;
-
+road_field_name varchar;
 begin
-	select ii.geom, ii.name into road, road_name from (
-		select i.geom as geom, i.name from black_spots_road i order by i.geom <-> p limit 10
-	) as ii order by st_distance(ii.geom, p) limit 1;
+	select display_field into road_field_name from black_spots_roadmap where uuid=roadmap::uuid;
+	raise notice 'field name %', road_field_name;
+	execute 'select ii.geom, ii.name from (
+		select i.geom as geom, i.'||road_field_name||' from black_spots_road i where i.roadmap_id='''||roadmap||'''::uuid order by i.geom <-> st_geomfromewkt('''||point_geometry||''') limit 10
+	) as ii order by st_distance(ii.geom, st_geomfromewkt('''||point_geometry||''')) limit 1;' into  road, road_name;
 
 --	raise notice 'Country and boundary: %', b;
 	raise notice 'Road: % %', road_name, road;
 	start_cut:=0;
 	end_cut:=1;
-	select st_Linelocatepoint(road, p) into spot;
+	select st_Linelocatepoint(road, st_geomfromewkt(point_geometry)) into spot;
 	raise notice 'Spot is located at %', spot;
-	for rr in select i.geom as geom from black_spots_road i where st_intersects(i.geom, road)='t' and not st_equals(i.geom,road) loop
+	for rr in select i.geom as geom from black_spots_road i where st_intersects(i.geom, road)='t' and not st_equals(i.geom,road) and i.roadmap_id=roadmap::uuid loop
 		select st_intersection(rr.geom, road) into current_intersection_g;
 		raise notice '%', ST_GeometryType(current_intersection_g);
 		if ST_GeometryType(current_intersection_g)='ST_Point' then 
@@ -76,7 +78,7 @@ begin
 	if pieces<=1 then
 		return query select st_asewkt(road)::varchar as geom, road_name;
 	else
-		select st_Linelocatepoint(road, p) into spot;
+		select st_Linelocatepoint(road, st_geomfromewkt(point_geometry)) into spot;
 		start_cut:=0;
 		end_cut:=1;
 		current_size:=1.0/pieces;
@@ -93,5 +95,5 @@ begin
 --return query select null, null;
 end;
 $B$;
-ALTER FUNCTION works.find_segment(geometry,numeric)
+ALTER FUNCTION works.find_segment(varchar,numeric, varchar)
     OWNER TO driver;

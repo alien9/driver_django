@@ -13,6 +13,8 @@ from django.contrib.gis.gdal import DataSource as GDALDataSource
 import logging,shutil,uuid,os, subprocess
 from django.db import connection
 from django.contrib.postgres.fields import HStoreField
+from django.db.models.signals import pre_save, post_save
+from django.db.models import Q
 
 class RoadMap(Imported):
     class Meta:
@@ -110,8 +112,10 @@ class BlackSpot(GroutModel):
     #: Number of severe records accounted for in the polygon while analyzing
     num_severe = models.PositiveIntegerField()
 
+    name = models.TextField(default="", max_length=100)
+
     #: The set of black spots this belongs to
-    black_spot_set = models.ForeignKey('BlackSpotSet', on_delete=models.PROTECT)
+    black_spot_set = models.ForeignKey('BlackSpotSet', on_delete=models.CASCADE)
     #: The latitude of the black spot's centroid
     @property
     def latitude(self):
@@ -129,19 +133,24 @@ class BlackSpotSet(GroutModel):
     """A grouping of black spots generated at one time"""
     title = models.TextField(max_length=100)
     roadmap = models.ForeignKey('RoadMap', null=True, on_delete=models.CASCADE )
-    
-    )
-
+    size = models.IntegerField(default=100)
     #: DateTime when the black spots become effective
     effective_start = models.DateTimeField()
 
     #: DateTime when the black spots are no longer effective.
     #  Should be null when first inserted.
     effective_end = models.DateTimeField(null=True, blank=True)
-
+    display = models.BooleanField(default=True)
     #: The record type these black spots are associated with
     record_type = models.ForeignKey('grout.RecordType', on_delete=models.PROTECT)
 
+@receiver(post_save, sender=BlackSpotSet, dispatch_uid="save_blackspotset")
+def post_save_blackspotset(sender, instance, created, **kwargs):
+    if instance.display:
+        alters=BlackSpotSet.objects.filter(~Q(uuid=instance.uuid))
+        for b in alters:
+            b.display=False
+            b.save()
 
 class BlackSpotConfig(GroutModel):
     """Holds user-configurable settings for how black spot generation should work"""
@@ -176,4 +185,3 @@ class LoadForecastTrainingCsv(GroutModel):
     """Model to track forecast training csvs"""
     #: Path to csvs
     csv = models.FileField(upload_to='training/forecast')
-

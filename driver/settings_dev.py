@@ -55,7 +55,8 @@ HOST_URL = os.environ.get('HOST_URL', 'https://titopop.com')
 
 APPEND_SLASH=True
 
-
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR+'/static/'
 
 CACHES = {
     "default": {
@@ -108,5 +109,13 @@ CACHES = {
 # Celery
 BROKER_URL = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
 CELERY_RESULT_BACKEND = 'redis://{}:{}/1'.format(REDIS_HOST, REDIS_PORT)
+CELERY_EXPORTS_FILE_PATH = BASE_DIR+'/zip'
+
 #from constance import config
 #config.MAPSERVER=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "mapcache-bolivia"]).decode('utf8').strip()
+
+def show_toolbar(request):
+    return True
+DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_TOOLBAR_CALLBACK" : show_toolbar,
+}

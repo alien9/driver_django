@@ -8,17 +8,10 @@
 
 <script>
     (function() {
-        var container = document.getElementById("{{ widget.attrs.id }}");
-        var textarea = document.getElementById("{{widget.attrs.id}}_textarea");
-
-        var options = {{ widget.options|safe }};
-        options.onChange = function () {
-            var json = editor.get();
-            textarea.value=JSON.stringify(json);
-        }
-
-        var editor = new JSONEditor(container, options);
-        var json = {{ widget.value|safe }};
-        editor.set(json);
+        if (!$) {
+    $ = django.jQuery;
+}
+        console.log("OK")
+        consoile.log($)
     })();
 </script>

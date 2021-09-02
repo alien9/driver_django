@@ -82,7 +82,7 @@ class DedupeTaskTestCase(TestCase):
         self.assertEqual(RecordDuplicate.objects.count(), 0)
 
         # find all duplicates
-        result = task.find_duplicate_records() #.delay().get()
+        result = task.find_duplicate_records.delay().get()
 
         self.assertEqual(DedupeJob.objects.count(), 1)
         self.assertEqual(RecordDuplicate.objects.count(), 3)

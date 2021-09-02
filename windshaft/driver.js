@@ -147,7 +147,6 @@ function setRequestParameters(request, callback, redisClient) {
                 }).join(', ');
 
                 params.sql = '(' + castSelect + theRest + ') as grout_record' ;
-                console.log(params.sql);
                 callback(null, request);
             });
         }
@@ -165,7 +164,7 @@ function setRequestParameters(request, callback, redisClient) {
         callback(null, request);
     } else if (params.tablename === 'black_spots_blackspot') {
         if (tilekey) {
-            params.interactivity = 'uuid,severity_score,num_records,num_severe';
+            params.interactivity = 'uuid,severity_score,num_records,num_severe,name';
             params.style = blackspotStyle;
             redisClient.get(params.id, function(err, sql) {
                 if (!sql) {
@@ -192,7 +191,7 @@ function setRequestParameters(request, callback, redisClient) {
             });
         } else {
             //record type, filter effective at
-            params.interactivity = 'uuid,severity_score,num_records,num_severe';
+            params.interactivity = 'uuid,severity_score,num_records,num_severe,name';
             params.style = blackspotStyle;
             if (params.id === 'ALL') {
                 params.sql = baseBoundaryQuery + endBlackspotQuery;
