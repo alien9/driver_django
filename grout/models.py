@@ -87,8 +87,8 @@ class RecordSchema(GroutModel):
 
     class Meta(object):
         unique_together = (('record_type', 'version'),)
-    def __unicode__(self):
-        return "%s %s" % (self.record_type.label, self.version)
+    #def __unicode__(self):
+    #    return "%s %s" % (self.record_type.label, self.version)
     def __str__(self):
         return "%s %s" % (self.record_type.label, self.version)
 
