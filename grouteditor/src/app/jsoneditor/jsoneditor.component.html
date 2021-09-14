@@ -1,7 +1,7 @@
 <div class="jsoneditor-container" *ngIf="dict">
     <span><a href="#" (click)="setMode('code')">Code</a></span> /
     <span><a href="#" (click)="setMode('tree', $event)">Tree</a></span>
-    <textarea [hidden]="mode!='code'" name="{{field_name}}" (change)="load($event)" [(ngModel)]=dict_json>
+    <textarea [hidden]="mode!='code'" name="schema" (change)="load($event)" [(ngModel)]=dict_json>
   </textarea>
     <div *ngIf="mode=='tree'" class="tree">
         <div *ngFor="let item of dict.properties | sortedhash; let i =index " class="subtype">
