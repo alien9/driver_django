@@ -54,6 +54,7 @@ export class JSONEditorComponent implements OnInit {
     }else{
       this.set({"properties":{}});
     }
+    this.save()
   }
   load(event):void{
     try{
@@ -79,6 +80,7 @@ export class JSONEditorComponent implements OnInit {
     }else{
       this.activeKey=null;
     }
+    this.save()
   }
   isActive(x, key=null): boolean{
     if(key!==null){
@@ -104,6 +106,7 @@ export class JSONEditorComponent implements OnInit {
       o.required.push(event.srcElement.value);
     }
     o.properties=h;
+    this.save()
   }
   newTable(tablename): void{
     let propertyOrder: number=0;
@@ -158,6 +161,8 @@ export class JSONEditorComponent implements OnInit {
 
         }
       }
+    }else{
+      this.save()
     }
     this.mode=s;
   }
@@ -201,15 +206,18 @@ export class JSONEditorComponent implements OnInit {
       f.enum.push("New Option");
     if(f.items && f.items.enum)
       f.items.enum.push("New Option");
+    this.save()
   }
   removeOption(f, o): void{
     if(f.enum)
       f.enum.splice(o,1);
     if(f.items && f.items.enum)
       f.items.enum.splice(o,1);
+    this.save()
   }
   setPropertyValue(a, i, event): void{
     a[i]=event.srcElement.value;
+    this.save()
   }
   deactivate():void {
     this.setActive(null);
@@ -233,6 +241,7 @@ export class JSONEditorComponent implements OnInit {
       delete o.items;
       delete o.uniqueItems;
     }
+    this.save()
   }
   setTarget(o,event){
     if(event=="reference"){
@@ -263,6 +272,7 @@ export class JSONEditorComponent implements OnInit {
     }else{
       o["type"]="string";
     }
+    this.save()
   }
   contains(array, o){
     return array.includes(o);
@@ -277,6 +287,7 @@ export class JSONEditorComponent implements OnInit {
           this.dict.definitions[t].required.splice(i,1);
       }
     }
+    this.save()
   }
   newField(definition):void {
     let h={};
@@ -294,6 +305,7 @@ export class JSONEditorComponent implements OnInit {
       "propertyOrder": propertyOrder
     };
     definition.properties=h;
+    this.save()
   }
   deleteField(definition, fieldname){
     if(confirm("Delete "+fieldname+"?")){
@@ -308,6 +320,7 @@ export class JSONEditorComponent implements OnInit {
       if(definition.required && (definition.required.indexOf(fieldname)>=0))
         definition.required.splice(definition.required.indexOf(fieldname),1);
     }
+    this.save()
   }
   moveFieldUp(definition, fieldname){
     let h={};
@@ -323,6 +336,7 @@ export class JSONEditorComponent implements OnInit {
       h[key]=value
     })
     definition.properties=h;
+    this.save()
   }
   moveFieldDown(definition, fieldname){
     let h={};
@@ -338,6 +352,7 @@ export class JSONEditorComponent implements OnInit {
       h[key]=value
     })
     definition.properties=h;
+    this.save()
   }
   isNotLast(i, fieldset){
     return Object.values(fieldset).length-2>i

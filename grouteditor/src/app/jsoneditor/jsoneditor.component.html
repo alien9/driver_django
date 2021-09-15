@@ -22,7 +22,7 @@
             </div>
             <div (click)="setActive(dict.definitions[item.key],'description')">
                 Description: <br>
-                <textarea class="note" [(ngModel)]="dict.definitions[item.key].description"></textarea>
+                <textarea class="note" [(ngModel)]="dict.definitions[item.key].description" (change)=save()></textarea>
             </div>
             <div><label class="block">Multiple <input type="checkbox" [(ngModel)]="dict.definitions[item.key].multiple"  (focus)="setActive(null)" (change)="setReferables()"></label></div>
             <div><label class="block">Details <input type="checkbox" [(ngModel)]="dict.definitions[item.key].details"  (focus)="setActive(null)"></label></div>
@@ -40,26 +40,26 @@
                         <a (click)="moveFieldDown(dict.definitions[item.key], pair.key)">&#x2193;</a>
                     </div>
                     <div>
-                        <label>Searchable <input type="checkbox" [(ngModel)]="pair.value.isSearchable" (focus)="setActive(null)"></label>
+                        <label>Searchable <input type="checkbox" [(ngModel)]="pair.value.isSearchable" (focus)="setActive(null)" (change)=save()></label>
                     </div>
                     <div>
                         <label>Required <input type="checkbox" [ngModel]="contains(dict.definitions[item.key].required,pair.key)" (focus)="setActive(null)" (change)="setRequired(pair.key, item.key, $event)"></label>
                     </div>
                     <div>Type:{{pair.value.options}}
-                        <select [(ngModel)]="dict.definitions[item.key].properties[pair.key].fieldType" [compareWith]="compareByOptionId" (focus)="setActive(null)" (ngModelChange)="setTarget(dict.definitions[item.key].properties[pair.key], $event)">
+                        <select [(ngModel)]="dict.definitions[item.key].properties[pair.key].fieldType" [compareWith]="compareByOptionId" (focus)="setActive(null)" (ngModelChange)="setTarget(dict.definitions[item.key].properties[pair.key], $event)" (change)=save()>
               <option *ngFor="let item of fieldtypes" [ngValue]="item.id" [selected]="item.id===pair.value.fieldType">
                 {{item.name}}
               </option>
             </select>
                         <span *ngIf="hasFormat(pair.value.fieldType)">
               Format:
-              <select [(ngModel)]="dict.definitions[item.key].properties[pair.key].format" [compareWith]="compareByOptionId" (focus)="setActive(null)" (ngModelChange)="setTarget(dict.definitions[item.key].properties[pair.key], $event)">
+              <select [(ngModel)]="dict.definitions[item.key].properties[pair.key].format" [compareWith]="compareByOptionId" (focus)="setActive(null)" (ngModelChange)="setTarget(dict.definitions[item.key].properties[pair.key], $event)" (change)=save()>
                 <option *ngFor="let item of formats" [ngValue]="item.id" [selected]="item.id===pair.value.format">
                   {{item.name}}
                 </option>
               </select>
             </span>
-                        <select *ngIf="pair.value.fieldType==='reference'" [(ngModel)]="pair.value.watch.target">
+                        <select *ngIf="pair.value.fieldType==='reference'" [(ngModel)]="pair.value.watch.target" (change)=save()>
               <option *ngFor="let item of referables" [ngValue]="item.key" [selected]="item.key==pair.value.watch.target">{{item.value.title}}</option>
             </select>
                     </div>
