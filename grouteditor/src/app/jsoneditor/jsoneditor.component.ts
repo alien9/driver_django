@@ -380,6 +380,7 @@ export class JSONEditorComponent implements OnInit {
     for(let key in this.dict.properties){
       if(!this.dict.definitions[key].multiple){
         delete(this.dict.properties[key].items);
+        delete(this.dict.properties[key].plural_title);
         this.dict.properties[key]["$ref"]="#/definitions/"+key;
         delete this.dict.properties[key].type;
       }else{
