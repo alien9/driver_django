@@ -244,6 +244,14 @@ export class JSONEditorComponent implements OnInit {
     this.save()
   }
   setTarget(o,event){
+    if(event=="image"){
+      o["media"]={
+        binaryEncoding: "base64",
+        type: "image/jpeg"
+      }
+    }else{
+      delete o["media"]
+    }
     if(event=="reference"){
       o["watch"]={"target": null};
       o["enumSource"]=[
