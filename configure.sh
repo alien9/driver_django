@@ -1,17 +1,10 @@
 #!/bin/bash
 
-if [[ ! -d "nginx" ]]; then
-     mkdir nginx
-fi
 if [[ ! -d "zip" ]]; then
      mkdir zip
 fi
-if [[ ! -d "postgres_data" ]]; then
-     mkdir postgres_data
-     docker-compose restart postgres
-fi
+
 while read line; do export "$line"; done < .env
-echo "START"
 
 while read line; do echo "$line"; done < .env
 
@@ -48,12 +41,11 @@ sed -e "s/PROTOCOL/${PROTOCOL}/g" \
 scripts.template.js > web/dist/scripts/scripts.698e6068.js
 
 cp driver-app.conf driver.conf
-sed -i -e "s/^.*#HOST_NAME$/${HOST_NAME}/g" \
-	-e "s,    root \/opt\/web\/dist,    root $STATIC_ROOT\/web\/dist,g" \
-	-e "s,STATIC_ROOT,$STATIC_ROOT,g" \
--e "s/(http:\/\/)[^:]+(:4000; #driver-django)$/$1${DJANGO_HOST}$2/g" \
--e "s/driver-celery/${CELERY_HOST}/g" \
--e "s/windshaft/$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' windshaft-${CONTAINER_NAME})/g" \
+sed -i -e "s/\s[^ ]*\s*#HOST_NAME$/ ${HOST_NAME}; #HOST_NAME/g" \
+-e "s,\s[^ ]*\s*#STATIC_ROOT$, ${STATIC_ROOT}; #STATIC_ROOT,g" \
+-e "s,\s[^ ]*\s*#STATIC_ROOT_MEDIA$, ${STATIC_ROOT}/media; #STATIC_ROOT_MEDIA,g" \
+-e "s/http.*#driver-django$/http:\/\/${DJANGO_HOST}:4000; #driver-django/g" \
+-e "s/\s[^ ]*\s*#windshaft$/ http:\/\/${WINDSHAFT_HOST}:5000; #windshaft/g" \
 driver.conf
 
 #docker exec driver-nginx sed -i -e "s/HOST_NAME/${HOST_NAME}/g" /etc/nginx/conf.d/driver-app.conf
@@ -83,7 +75,13 @@ if [ $STATIC_ROOT != $WINDSHAFT_FILES ]; then
      sudo cp -r web "$STATIC_ROOT/"
      sudo cp -r static "$STATIC_ROOT/"
 fi
+
+if [ -f /etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf ]; then
+     sudo rm /etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf
+else
+     echo "Remember to run certbot now."
+fi
 sudo ln -s driver.conf /etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf
 sudo service nginx restart
-echo "Remember to run certbot now."
+
 #docker-compose restart driver-nginx 
