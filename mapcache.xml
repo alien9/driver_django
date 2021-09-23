@@ -1,0 +1,197 @@
+<mapcache>
+    <service type="tms" enabled="true"/>
+    <grid name="SphericalMercator">
+        <metadata>
+            <title>GoogleMapsCompatible</title>
+            <WellKnownScaleSet>urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible</WellKnownScaleSet>
+        </metadata>
+        <extent>-20037508.3427892480 -20037508.3427892480 20037508.3427892480 20037508.3427892480</extent>
+        <srs>EPSG:3857</srs>
+        <srsalias>EPSG:900913</srsalias>
+        <units>m</units>
+        <size>256 256</size>
+        <resolutions>156543.0339280410 78271.51696402048 39135.75848201023 19567.87924100512 9783.939620502561 4891.969810251280 2445.984905125640 1222.992452562820 611.4962262814100 305.7481131407048 152.8740565703525 76.43702828517624 38.21851414258813 19.10925707129406 9.554628535647032 4.777314267823516 2.388657133911758 1.194328566955879 0.5971642834779395</resolutions>
+    </grid>
+    <source name="vmap0" type="wms">
+        <getmap>
+            <params>
+                <FORMAT>image/png</FORMAT>
+                <LAYERS>records</LAYERS>
+                <MAP>/etc/mapserver/records.map</MAP>
+            </params>
+        </getmap>
+        <!-- HTTP URL and parameters to be used when making WMS requests -->
+        <http>
+
+            <!-- URL of the WMS service, without any parameters -->
+            <url>http://mapserver-bolivia</url>
+            <headers>
+                <User-Agent>mod-mapcache/r175</User-Agent>
+                <Referer>http://www.mysite.com?param=2&amp;par=4</Referer>
+            </headers>
+
+            <!-- Timeout in seconds before bailing out from a request -->
+            <connection_timeout>30</connection_timeout>
+        </http>
+    </source>
+    <source name="vmap0grid" type="wms">
+        <getmap>
+            <params>
+                <FORMAT>utfGrid</FORMAT>
+                <LAYERS>records</LAYERS>
+                <MAP>/etc/mapserver/records.map</MAP>
+            </params>
+        </getmap>
+        <!-- HTTP URL and parameters to be used when making WMS requests -->
+        <http>
+
+            <!-- URL of the WMS service, without any parameters -->
+            <url>http://mapserver-bolivia</url>
+            <headers>
+                <User-Agent>mod-mapcache/r175</User-Agent>
+                <Referer>http://www.mysite.com?param=2&amp;par=4</Referer>
+            </headers>
+
+            <!-- Timeout in seconds before bailing out from a request -->
+            <connection_timeout>30</connection_timeout>
+        </http>
+    </source>
+    <format name="PNGQ_FAST" type ="PNG">
+        <compression>fast</compression>
+        <colors>256</colors>
+    </format>
+    <format name="myjpeg" type ="JPEG">
+        <quality>75</quality>
+        <photometric>ycbcr</photometric>
+    </format>
+    <format name="PNG_BEST" type ="PNG">
+        <compression>best</compression>
+    </format>
+    <format name="mixed" type="MIXED">
+        <transparent>PNG_BEST</transparent>
+        <opaque>JPEG</opaque>
+    </format>
+    <cache name="disk" type="disk">
+        <base>/tmp</base>
+        <symlink_blank/>
+    </cache>
+    <format name="MVT" type="RAW">
+        <extension>mvt</extension>
+        <mime_type>application/x-protobuf</mime_type>
+    </format>
+    <format name="UTFGRID" type="RAW">
+        <extension>json</extension>
+        <mime_type>application/json</mime_type>
+    </format>
+    <source name="vmap1" type="wms">
+        <getmap>
+            <params>
+                <FORMAT>image/png</FORMAT>
+                <LAYERS>segments</LAYERS>
+                <MAP>/etc/mapserver/segments.map</MAP>
+            </params>
+        </getmap>
+        <!-- HTTP URL and parameters to be used when making WMS requests -->
+        <http>
+
+            <!-- URL of the WMS service, without any parameters -->
+            <url>http://mapserver-bolivia</url>
+            <headers>
+                <User-Agent>mod-mapcache/r175</User-Agent>
+                <Referer>http://www.mysite.com?param=2&amp;par=4</Referer>
+            </headers>
+
+            <!-- Timeout in seconds before bailing out from a request -->
+            <connection_timeout>30</connection_timeout>
+        </http>
+    </source>
+    <source name="vmap2" type="wms">
+        <getmap>
+            <params>
+                <FORMAT>utfGrid</FORMAT>
+                <LAYERS>segments</LAYERS>
+                <MAP>/etc/mapserver/segments_grid.map</MAP>
+            </params>
+        </getmap>
+        <!-- HTTP URL and parameters to be used when making WMS requests -->
+        <http>
+
+            <!-- URL of the WMS service, without any parameters -->
+            <url>http://mapserver-bolivia</url>
+            <headers>
+                <User-Agent>mod-mapcache/r175</User-Agent>
+                <Referer>http://www.mysite.com?param=2&amp;par=4</Referer>
+            </headers>
+
+            <!-- Timeout in seconds before bailing out from a request -->
+            <connection_timeout>30</connection_timeout>
+        </http>
+    </source>
+    <tileset name="Records">
+        <source>vmap0</source>
+        <cache>disk</cache>
+        <metadata>
+            <title>vmap0 map</title>
+            <abstract>Points from records</abstract>
+            <keywords>
+                <keyword>records</keyword>
+                <keyword>crashes</keyword>
+            </keywords>
+        </metadata>
+        <format>PNG</format>
+        <grid>SphericalMercator</grid>
+        <metatile>5 5</metatile>
+        <metabuffer>10</metabuffer>
+        <expires>3600</expires>
+        <auto_expire>86400</auto_expire>
+    </tileset>
+    <tileset name="RecordsGrid">
+        <source>vmap0grid</source>
+        <cache>disk</cache>
+        <metadata>
+            <title>Records grid map</title>
+            <abstract>Grids for records</abstract>
+            <keywords>
+                <keyword>records</keyword>
+            </keywords>
+        </metadata>
+        <format allow_client_override="true">UTFGRID</format>
+        <grid>SphericalMercator</grid>
+        <expires>3600</expires>
+        <auto_expire>86400</auto_expire>
+    </tileset>
+    <tileset name="Segments">
+        <source>vmap1</source>
+        <cache>disk</cache>
+        <metadata>
+            <title>Segments map</title>
+            <abstract>Segments from records</abstract>
+            <keywords>
+                <keyword>segments</keyword>
+            </keywords>
+        </metadata>
+        <format>PNG</format>
+        <grid>SphericalMercator</grid>
+        <metatile>5 5</metatile>
+        <metabuffer>10</metabuffer>
+        <expires>3600</expires>
+        <auto_expire>86400</auto_expire>
+    </tileset>
+    <tileset name="SegmentsGrid">
+        <source>vmap2</source>
+        <cache>disk</cache>
+        <metadata>
+            <title>Segments grid map</title>
+            <abstract>Segments from records</abstract>
+            <keywords>
+                <keyword>segments</keyword>
+            </keywords>
+        </metadata>
+        <format allow_client_override="true">UTFGRID</format>
+        <grid>SphericalMercator</grid>
+        <expires>3600</expires>
+        <auto_expire>86400</auto_expire>
+    </tileset>
+    <errors>report</errors>
+
+</mapcache>

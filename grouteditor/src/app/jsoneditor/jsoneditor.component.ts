@@ -136,7 +136,7 @@ export class JSONEditorComponent implements OnInit {
     };
     definitions[tablename]={
             "type": "object",
-            "title": "Insert title",
+            "title": "",
             "multiple": false,
             "details": false,
             "required": ["_localId"],
@@ -145,7 +145,7 @@ export class JSONEditorComponent implements OnInit {
             },
             "definitions": {},
             "description": "",
-            "plural_title": "Plural title",
+            "plural_title": "",
             "propertyOrder": propertyOrder
           };
     this.dict.definitions=definitions;
@@ -203,9 +203,9 @@ export class JSONEditorComponent implements OnInit {
   }
   newOption(f): void{
     if(f.enum)
-      f.enum.push("New Option");
+      f.enum.push("");
     if(f.items && f.items.enum)
-      f.items.enum.push("New Option");
+      f.items.enum.push("");
     this.save()
   }
   removeOption(f, o): void{
