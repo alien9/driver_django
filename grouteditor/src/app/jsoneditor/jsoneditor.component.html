@@ -17,7 +17,7 @@
             <div>
                 Title: <input [(ngModel)]="dict.definitions[item.key].title" (change)="renameModel(item.key, $event)">
             </div>
-            <div (click)="setActive(dict.definitions[item.key], 'plural_title')" *ngIf="dict.definitions[item.key].multiple">
+            <div (click)="setActive(dict.definitions[item.key], 'plural_title')">
                 Plural Title: <input [(ngModel)]="dict.definitions[item.key].plural_title" (change)="setPluralTitle(dict.properties[item.key],$event)">
             </div>
             <div (click)="setActive(dict.definitions[item.key],'description')">
@@ -59,26 +59,24 @@
                 </option>
               </select>
             </span>
-                        <select *ngIf="pair.value.fieldType==='reference'" [(ngModel)]="pair.value.watch.target" (change)=save()>
+            <select *ngIf="pair.value.fieldType==='reference'" [(ngModel)]="pair.value.watch.target" (change)=save()>
               <option *ngFor="let item of referables" [ngValue]="item.key" [selected]="item.key==pair.value.watch.target">{{item.value.title}}</option>
             </select>
                     </div>
                     <div *ngIf="pair.value.fieldType==='selectlist'">
                         <div *ngIf="pair.value.displayType==='select'">
+                            <div class="tag"><a href="javascript:void(0)" (click)="newOption(pair.value)"> + </a></div>
                             <div class="tag" *ngFor="let a of pair.value.enum; let i = index">
-                                <a *ngIf="isActive(pair.value.enum, i)==false" href="javascript:void(0);" (click)="setActive(pair.value.enum, i)">{{a}}</a>
-                                <input *ngIf="isActive(pair.value.enum, i)" [value]="dict.definitions[item.key].properties[pair.key].enum[i]" (change)="setPropertyValue(pair.value.enum, i, $event)">
+                                <input [value]="dict.definitions[item.key].properties[pair.key].enum[i]" (change)="setPropertyValue(pair.value.enum, i, $event)">
                                 <a (click)="removeOption(pair.value, i)"> - </a>
                             </div>
-                            <div class="tag"><a href="javascript:void(0)" (click)="newOption(pair.value)"> + </a></div>
                         </div>
                         <div *ngIf="pair.value.format==='checkbox'">
+                            <div class="tag"><a href="javascript:void(0)" (click)="newOption(pair.value)"> + </a></div>
                             <div class="tag" *ngFor="let a of pair.value.items.enum; let i = index">
-                                <a *ngIf="isActive(pair.value.items.enum, i)==false" href="javascript:void(0);" (click)="setActive(pair.value.items.enum, i)">{{a}}</a>
-                                <input *ngIf="isActive(pair.value.items.enum, i)" [value]="dict.definitions[item.key].properties[pair.key].items.enum[i]" (change)="setPropertyValue(pair.value.items.enum, i, $event)">
+                                <input [value]="dict.definitions[item.key].properties[pair.key].items.enum[i]" (change)="setPropertyValue(pair.value.items.enum, i, $event)">
                                 <a (click)="removeOption(pair.value, i)"> - </a>
                             </div>
-                            <div class="tag"><a href="javascript:void(0)" (click)="newOption(pair.value)"> + </a></div>
                         </div>
                         <div *ngIf="pair.value.displayType==='select'">
                             Display: <select [(ngModel)]="pair.value.displayType" (focus)="setActive(null)" (change)="setDisplayType(pair.value, $event)">

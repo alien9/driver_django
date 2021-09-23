@@ -9,6 +9,7 @@ from data.models import RecordCostConfig, Dictionary, Picture
 from grout.models import RecordSchema, RecordType, Boundary, BoundaryPolygon
 from black_spots.models import RoadMap, BlackSpotSet
 from django_admin_hstore_widget.forms import HStoreFormField
+from constance import config
 
 admin.site.index_title = _('DRIVER Database')
 
@@ -62,12 +63,21 @@ class DictionaryAdmin(admin.ModelAdmin):
     form = DictionaryAdminForm
     content = HStoreFormField()
 
+def get_recordcors_choices():
+    r=RecordType.objects.filter(label=config.PRIMARY_LABEL)
+    if not len(r):
+        return []
+    s=r[0].get_current_schema()
+    if s is None:
+        return []
+    return map(lambda x: [x,s.schema['properties'][x]['title']], list(filter(lambda x: not s.schema['definitions'][x]['multiple'], list(s.schema['definitions'].keys()))))
+
 class RecordCostConfigAdminForm(forms.ModelForm):
     enum_costs = HStoreFormField()
-    
     class Meta:
        model = RecordCostConfig
        exclude = ()
+
 
 class RecordCostConfigAdmin(admin.ModelAdmin):
     form = RecordCostConfigAdminForm

@@ -106,7 +106,6 @@ class DriverRecord(Record):
                     else:
                         seg=s[0]
                     self.segment.add(seg)
-                    self.save()
                     return seg
                 else:
                     print("Road not found.")
