@@ -7,10 +7,10 @@
             prefix: "!"
         },
         api: {
-            hostname: "http://titopop.com"
+            hostname: "https://bolivia.drivertool.org"
         },
         windshaft: {
-            hostname: "http://titopop.com"
+            hostname: "https://bolivia.drivertool.org"
         },
         nominatim: {
             key: "NmfGZYebsExMYfFWP4Tf"
@@ -35,9 +35,9 @@
         localization: {
             timeZone: "America/La_Paz",
             countryCode: "bo",
-            centerLatLon: [-13.63770590146877,-172.44653200580277],
+            centerLatLon: [8.56712418187137, -11.803857749105926],
             zoom: 11,
-            languages:  [{id: "pt-br", label:"Português", rtl: !1},{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}] 
+            languages:  [{id: "es", label: "Español", rtl: !1}{id: "en-us", label: "English", rtl: !1}] 
         },
         mapillary: {
             enabled: !1,
@@ -79,7 +79,7 @@ function() {
             prefix: "!"
         },
         api: {
-            hostname: "http://titopop.com",
+            hostname: "https://bolivia.drivertool.org",
             groups: {
                 admin: "admin",
                 readOnly: "public",

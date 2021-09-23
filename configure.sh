@@ -43,7 +43,7 @@ scripts.template.js > web/dist/scripts/scripts.698e6068.js
 cp driver-app.conf driver.conf
 sed -i -e "s/\s[^ ]*\s*#HOST_NAME$/ ${HOST_NAME}; #HOST_NAME/g" \
 -e "s,\s[^ ]*\s*#STATIC_ROOT$, ${STATIC_ROOT}; #STATIC_ROOT,g" \
--e "s,\s[^ ]*\s*#STATIC_ROOT_MEDIA$, ${STATIC_ROOT}/media; #STATIC_ROOT_MEDIA,g" \
+-e "s,\s[^ ]*\s*#STATIC_ROOT_MEDIA$, ${STATIC_ROOT}/zip; #STATIC_ROOT_MEDIA,g" \
 -e "s/http.*#driver-django$/http:\/\/${DJANGO_HOST}:4000; #driver-django/g" \
 -e "s/\s[^ ]*\s*#windshaft$/ http:\/\/${WINDSHAFT_HOST}:5000; #windshaft/g" \
 driver.conf
@@ -76,12 +76,12 @@ if [ $STATIC_ROOT != $WINDSHAFT_FILES ]; then
      sudo cp -r static "$STATIC_ROOT/"
 fi
 
-if [ -f /etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf ]; then
-     sudo rm /etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf
+if [ -h "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf" ]; then
+     sudo rm "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
 else
      echo "Remember to run certbot now."
 fi
-sudo ln -s driver.conf /etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf
+sudo ln -s "$(pwd)/driver.conf" "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
 sudo service nginx restart
 
 #docker-compose restart driver-nginx 
