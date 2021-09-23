@@ -39,8 +39,9 @@ sed -e "s/PROTOCOL/${PROTOCOL}/g" \
      -e "s/ZOOM/${ZOOM}/g" \
      -e "s/LANGUAGES/${LANGUAGES}/g" \
 scripts.template.js > web/dist/scripts/scripts.698e6068.js
-
-cp driver-app.conf driver.conf
+if [[ ! -f driver.conf ]]; then
+     cp driver-app.conf driver.conf
+fi
 sed -i -e "s/\s[^ ]*\s*#HOST_NAME$/ ${HOST_NAME}; #HOST_NAME/g" \
 -e "s,\s[^ ]*\s*#STATIC_ROOT$, ${STATIC_ROOT}; #STATIC_ROOT,g" \
 -e "s,\s[^ ]*\s*#STATIC_ROOT_MEDIA$, ${STATIC_ROOT}/zip; #STATIC_ROOT_MEDIA,g" \
