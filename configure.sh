@@ -48,10 +48,10 @@ sed -e "s/PROTOCOL/${PROTOCOL}/g" \
 scripts.template.js > web/dist/scripts/scripts.698e6068.js
 
 cp driver-app.conf driver.conf
-sed -i -e "s/HOST_NAME/${HOST_NAME}/g" \
+sed -i -e "s/^.*#HOST_NAME$/${HOST_NAME}/g" \
 	-e "s,    root \/opt\/web\/dist,    root $STATIC_ROOT\/web\/dist,g" \
 	-e "s,STATIC_ROOT,$STATIC_ROOT,g" \
--e "s/driver-django/${DJANGO_HOST}/g" \
+-e "s/(http:\/\/)[^:]+(:4000; #driver-django)$/$1${DJANGO_HOST}$2/g" \
 -e "s/driver-celery/${CELERY_HOST}/g" \
 -e "s/windshaft/$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' windshaft-${CONTAINER_NAME})/g" \
 driver.conf
@@ -83,7 +83,7 @@ if [ $STATIC_ROOT != $WINDSHAFT_FILES ]; then
      sudo cp -r web "$STATIC_ROOT/"
      sudo cp -r static "$STATIC_ROOT/"
 fi
-sudo mv driver.conf /etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf
+sudo ln -s driver.conf /etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf
 sudo service nginx restart
 echo "Remember to run certbot now."
 #docker-compose restart driver-nginx 
