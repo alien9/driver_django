@@ -25,7 +25,7 @@
                 <textarea class="note" [(ngModel)]="dict.definitions[item.key].description" (change)=save()></textarea>
             </div>
             <div><label class="block">Multiple <input type="checkbox" [(ngModel)]="dict.definitions[item.key].multiple"  (focus)="setActive(null)" (change)="setReferables()"></label></div>
-            <div><label class="block">Details <input type="checkbox" [(ngModel)]="dict.definitions[item.key].details"  (focus)="setActive(null)"></label></div>
+            <div *ngIf="!dict.definitions[item.key].multiple"><label class="block">Details <input type="radio" [checked]=dict.definitions[item.key].details (focus)="setActive(null)" name="definitions_details" (change)=setDetails($event,dict.definitions[item.key])></label></div>
 
             <div class="props">
                 <div *ngFor="let pair of dict.definitions[item.key].properties | sortedhash; let i=index" class="properties">
@@ -59,7 +59,7 @@
                 </option>
               </select>
             </span>
-            <select *ngIf="pair.value.fieldType==='reference'" [(ngModel)]="pair.value.watch.target" (change)=save()>
+                        <select *ngIf="pair.value.fieldType==='reference'" [(ngModel)]="pair.value.watch.target" (change)=save()>
               <option *ngFor="let item of referables" [ngValue]="item.key" [selected]="item.key==pair.value.watch.target">{{item.value.title}}</option>
             </select>
                     </div>

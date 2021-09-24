@@ -440,4 +440,13 @@ export class JSONEditorComponent implements OnInit {
   save(){
     this.dict_json=JSON.stringify(this.dict)
   }
+  setDetails(eve, element){
+    console.log(eve)
+    console.log(element)
+    for(var k in this.dict.definitions){
+      this.dict.definitions[k].details=false;
+    }
+    element.details=true;
+    this.save();
+  }
 }
