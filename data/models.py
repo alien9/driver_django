@@ -86,6 +86,7 @@ class DriverRecord(Record):
     def geocode(self, roadmap_uuid, size):
         with connection.cursor() as cursor:
             if self.geom:
+                print("select * from works.find_segment(%s, %s, %s)" % (self.geom.ewkt, size, str(roadmap_uuid)))
                 cursor.execute("select * from works.find_segment(%s, %s, %s)", [self.geom.ewkt, size, str(roadmap_uuid)])
                 row = cursor.fetchone()
                 if row[0] is not None:

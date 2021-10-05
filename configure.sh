@@ -44,7 +44,7 @@ if [[ ! -f driver.conf ]]; then
 fi
 sed -i -e "s/\s[^ ]*\s*#HOST_NAME$/ ${HOST_NAME}; #HOST_NAME/g" \
 -e "s,\s[^ ]*\s*#STATIC_ROOT$, ${STATIC_ROOT}; #STATIC_ROOT,g" \
--e "s,\s[^ ]*\s*#STATIC_ROOT_MEDIA$, ${STATIC_ROOT}/zip; #STATIC_ROOT_MEDIA,g" \
+-e "s,\s[^ ]*\s*#STATIC_ROOT_MEDIA$, ${STATIC_ROOT}/zip/; #STATIC_ROOT_MEDIA,g" \
 -e "s/http.*#driver-django$/http:\/\/${DJANGO_HOST}:4000; #driver-django/g" \
 -e "s/\s[^ ]*\s*#windshaft$/ http:\/\/${WINDSHAFT_HOST}:5000; #windshaft/g" \
 driver.conf

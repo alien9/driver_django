@@ -130,6 +130,9 @@ class BlackSpot(GroutModel):
 
 
 class BlackSpotSet(GroutModel):
+    class Meta:
+        verbose_name_plural = _("Critical Spots")
+        verbose_name = _('Critical Spots')
     """A grouping of black spots generated at one time"""
     title = models.TextField(max_length=100)
     roadmap = models.ForeignKey('RoadMap', null=True, on_delete=models.CASCADE )
