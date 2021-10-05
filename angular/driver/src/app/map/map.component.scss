@@ -1,0 +1,11 @@
+#map, .leaflet-container{
+    position: absolute;
+    top: 100px;
+    bottom: 0;
+    width: 100%;
+    background: green;
+  }
+
+html, body{
+    margin:0;padding:0;width: 100%; height:100%;
+}
