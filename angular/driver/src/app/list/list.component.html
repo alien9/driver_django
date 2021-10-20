@@ -1,0 +1,21 @@
+<div class=scrollable-container>
+    <table class="table">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col" i18n>Date and time</th>
+                <th scope="col" i18n>Location</th>
+                <td *ngIf="field">{{field}}</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor=" let r of recordList?recordList[ 'results']:[] ">
+                <th scope="row "><a href="#" (click)="view(r.uuid)">{{r.occurred_from|date}}</a></th>
+                <td>{{r.location_text|firstpart}}</td>
+                <td *ngIf="field && r.data">{{r.data[table]?r.data[table][field]:" "}}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<div class=list-footer *ngIf=recordList>
+    <ngb-pagination class="d-flex justify-content-center " [collectionSize]="3 " [(page)]="page "></ngb-pagination>
+</div>

@@ -8,7 +8,7 @@ import { environment } from '../environments/environment'
 export class AuthService {
 
   getBackend():string {
-    return localStorage.getItem("backend")||environment.api
+    return localStorage.getItem("backend")||(('api' in environment)?environment.api:'')
   }
   logout() {
     localStorage.removeItem('config');
@@ -23,7 +23,6 @@ export class AuthService {
     })
     let b=this.getBackend()
     let a=`${b}/api-token-auth/`
-    console.log(a)
     return this.http.post(a, { username: user, password: pass }, { headers: headers });
   }
 }

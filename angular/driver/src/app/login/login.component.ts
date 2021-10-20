@@ -89,13 +89,10 @@ localStorage.setItem("position", `${position.coords.latitude}\t${position.coords
             .subscribe(
                 data => {
                     if(data.hasOwnProperty('token')){
-                        console.log(data)
-                        console.log("LOGIN SUCCEEDED")
-                        this.setCookie('AuthService.canWrite', 1);
+                        this.setCookie('AuthService.canWrite', data["groups_name"].indexOf('admin')>0  || data["groups_name"].indexOf('analyst')>0);
                         this.setCookie('AuthService.token', data['token'])
                         this.setCookie('AuthService.userId', data['user'])
-                        this.setCookie('AuthService.isAdmin', data['is_admin'])
-
+                        this.setCookie('AuthService.isAdmin', data["groups_name"].indexOf('admin')>0)
                         localStorage.setItem('token', data['token']);
                         localStorage.setItem('config', JSON.stringify(data['config']));
                         this.recordService.getRecordType().subscribe(

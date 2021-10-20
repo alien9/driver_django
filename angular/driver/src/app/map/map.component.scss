@@ -1,11 +1,32 @@
-#map, .leaflet-container{
+#map,
+.map-base {
     position: absolute;
-    top: 100px;
+    top: 56px;
     bottom: 0;
     width: 100%;
-    background: green;
-  }
+}
 
-html, body{
-    margin:0;padding:0;width: 100%; height:100%;
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.modal-backdrop {
+    z-index: 9999 !important;
+}
+
+.modal {
+    z-index: 10000 !important;
+}
+
+.filter-container {
+    right: 55px;
+    position: absolute;
+    top: 70px;
+    z-index: 10000;
+    background-color: white;
+    border-width: 2px;
 }
