@@ -21,6 +21,9 @@ FILTER_OVERRIDES = {
     gis_models.PolygonField: {
         'filter_class': django_filters.CharFilter
     },
+    gis_models.LineStringField: {
+        'filter_class': django_filters.CharFilter
+    },
     HStoreField:{
         'filter_class': django_filters.CharFilter,
         'extra': lambda f: {'lookup_expr': 'icontains'},

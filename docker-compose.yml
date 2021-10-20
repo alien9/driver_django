@@ -107,39 +107,8 @@ services:
       - postgres
     volumes:
       - ./mapserver/:/etc/mapserver
-    image: camptocamp/mapserver
+    image: geodata/mapserver
+    ports:
+      - "8888:80"
 
-  mapcache:
-    container_name: mapcache-${CONTAINER_NAME}
-    depends_on:
-      - mapserver
-    volumes:
-      - ./mapcache.xml:/etc/mapcache/mapcache.xml
-    image: camptocamp/mapcache:1.8
-    
 
-        
-  # driver-nginx:
-  #   container_name: driver-nginx-${CONTAINER_NAME}
-  #   depends_on:
-  #     - driver-django
-  #   volumes:
-  #     - ${WINDSHAFT_FILES}/static:/var/www/static
-  #     - ${WINDSHAFT_FILES}/web:/opt/web
-  #     - ${WINDSHAFT_FILES}/nginx:/etc/nginx/conf.d
-  #   build:
-  #     context: ./
-  #     args:
-  #       - HOST_NAME=${HOST_NAME}
-  #       - PROTOCOL=${PROTOCOL}
-  #       - TIMEZONE=${TIMEZONE}
-  #       - NOMINATIM=${NOMINATIM}
-  #       - PRIMARYLABEL=${PRIMARYLABEL}
-  #       - SECONDARYLABEL=${SECONDARYLABEL}
-  #       - CLIENTID=${CLIENTID}
-  #       - COUNTRY=${COUNTRY}
-  #       - CENTER=${CENTER}
-  #       - ZOOM=${ZOOM}
-  #       - LANGUAGES=${LANGUAGES}
-  #     dockerfile: Dockerfile.nginx
-  #   image: alien9/driver-nginx

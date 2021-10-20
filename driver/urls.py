@@ -26,6 +26,7 @@ router.register('jars', data_views.AndroidSchemaModelsViewSet, basename='jars')
 router.register('records', data_views.DriverRecordViewSet)
 router.register('recordschemas', data_views.DriverRecordSchemaViewSet)
 router.register('recordtypes', data_views.DriverRecordTypeViewSet)
+router.register('dictionaries', data_views.DictionaryViewSet)
 router.register('recordcosts', data_views.DriverRecordCostConfigViewSet)
 router.register('userfilters', filt_views.SavedFilterViewSet, basename='userfilters')
 router.register('pictures', data_views.PictureViewSet, basename='pictures')
@@ -46,8 +47,13 @@ urlpatterns = [
     url(r'^/', data_views.index),
     url(r'^$', data_views.index),
     url(r'^editor/$', data_views.editor),
+    url(r'^maps/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).png/$', data_views.maps),
+    url(r'^grid/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).json/$', data_views.grid),
+    
     url(r'^calculate_blackspots/(?P<uuid>[-\w]{0,100})/$', data_views.run_calculate_blackspots),
     url(r'^retrieve_blackspots/(?P<pk>[-\w]{0,100})/$', data_views.retrieve_blackspots),
+
+    url(r'^dictionary/(?P<code>\w*)/$', data_views.dictionary),
 
     # get token for given username/password
     url(r'^api-token-auth/', auth_views.obtain_auth_token),

@@ -99,8 +99,7 @@ MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
 )
-print(DEBUG)
-print("is debug")
+
 if DEBUG:
     # Perform set up for Django Debug Toolbar
     INSTALLED_APPS += (
@@ -518,6 +517,9 @@ CONSTANCE_ADDITIONAL_FIELDS = {
         'widget': 'django.forms.Select',
         'choices': list(map(lambda x: [x, x], TZ_LIST))
     }],
+    'locales': ['django.forms.fields.ChoiceField',{
+
+    }]
 }
 
 CONSTANCE_CONFIG = {
@@ -526,10 +528,11 @@ CONSTANCE_CONFIG = {
     'MAP_CENTER_LONGITUDE': (os.getenv('CENTER_LONGITUDE', -46.7), _("Longitude")),
     'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
     "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Accident"), _("Accident")),
+    "SECONDARY_LABEL": (os.getenv('PRIMARYLABEL', "Intervention"), _("Intervention")),
     "WINDSHAFT": ("", "WindShaft"),
     "LANGUAGES": ('[{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}]', _("Languages")),
     "HOSTNAME": ("%s://%s" % ((os.getenv('PROTOCOL', "http"), os.getenv('HOSTNAME', "localhost:8000"))), _("Host Name")),
     "COUNTRY_CODE": (os.getenv('COUNTRY', "ic"), _("Country Code")),
     "MAPSERVER": ("mapserver-%s" % (os.getenv('CONTAINER_NAME', 'driver')), "MapServer"),
     'TIMEZONE': ('America/Sao_Paulo', 'Time Zone', 'tzselect')
-}   
+}
