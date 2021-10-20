@@ -1,0 +1,105 @@
+MAP
+    DEBUG 0
+    IMAGECOLOR 0 255 0
+    OUTPUTFORMAT
+        NAME "PNG24"
+        DRIVER 'GD/PNG'
+        MIMETYPE 'image/png'
+        IMAGEMODE RGBA
+        EXTENSION 'png'
+    END
+    OUTPUTFORMAT
+        NAME "UTFGrid"
+        DRIVER UTFGRID
+        EXTENSION "json"
+        FORMATOPTION "LABELS=true"
+        FORMATOPTION "UTFRESOLUTION=4"
+        FORMATOPTION "DUPLICATES=false"
+    END
+    IMAGETYPE      "PNG24"
+    EXTENT -20037508.3427892480 -20037508.3427892480 20037508.3427892480 20037508.3427892480
+    SIZE           256 256
+
+    PROJECTION
+        "init=epsg:3857"
+    END
+    WEB
+        METADATA 
+            WMS_ENABLE_REQUEST "*" 
+            "wms_srs" "EPSG:3857 EPSG:4326"
+            "wms_title" "DRIVER"
+            "wms_name" "Driver Maps"
+            "wms_server_version" "1.1.1"
+            "wms_format" "image/png"
+            "tile_map_edge_buffer" "20"
+            "tile_metatile_level" "0"
+        END
+    END 
+     
+    LAYER
+        name "heatmap"
+        type raster
+        connectiontype kerneldensity
+        connection "records"
+        status on
+        processing "RANGE_COLORSPACE=HSL"
+        PROCESSING "KERNELDENSITY_RADIUS=%radius%"
+        SCALETOKEN
+            NAME "%radius%"
+            VALUES
+            "0" "20"
+            "6935" "6"
+            "13871" "4"
+            END # VALUES
+        END # SCALETOKEN
+
+        processing "KERNELDENSITY_COMPUTE_BORDERS=ON"
+        processing "KERNELDENSITY_NORMALIZATION=1"
+        offsite 0 0 0
+        class
+            style
+                COLORRANGE  "#0000ff00"  "#0000ffff"
+                DATARANGE 0 32
+            end
+            style
+                COLORRANGE  "#0000ffff"  "#ff0000ff"
+                DATARANGE 32 255
+            end
+        end
+    END     
+
+    LAYER
+        NAME        "records"
+        DATA        "geom from (select geom::geometry, uuid, occurred_from from ({{query|safe}}) as q) as rq using unique uuid using srid=4326"
+        CONNECTIONTYPE  POSTGIS
+        CONNECTION      "host={{connection}} dbname=driver user={{username}} password={{password}}"
+        UTFITEM   "uuid"
+        UTFDATA   "{\"uuid\":\"[uuid]\",\"occurred_from\":\"[occurred_from]\"}"
+        PROCESSING "KERNELDENSITY_RADIUS=10"
+        
+        TYPE POINT
+        PROJECTION
+            "init=epsg:4326"
+        END
+        CLASS
+            STYLE
+                OUTLINECOLOR 0 100 0
+                WIDTH 2
+                SIZE 8
+                COLOR 0 99 0
+                OPACITY 50
+                
+                SYMBOL "circlef"
+            END
+        END
+    END
+    SYMBOL
+        NAME "circlef"
+        TYPE ellipse
+        FILLED true
+        POINTS
+            8 8
+        END # POINTS
+        TRANSPARENT 60
+    END # SYMBOL
+END
