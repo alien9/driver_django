@@ -15,6 +15,7 @@ from django.db import connection
 from django.contrib.postgres.fields import HStoreField
 from django.db.models.signals import pre_save, post_save
 from django.db.models import Q
+from django.template.loader import render_to_string
 
 class RoadMap(Imported):
     class Meta:
@@ -102,6 +103,7 @@ class BlackSpot(GroutModel):
 
     #: Buffered road segment polygon where black spot analysis is performed
     geom = models.PolygonField(srid=settings.GROUT['SRID'])
+    the_geom = models.LineStringField(srid=settings.GROUT['SRID'], null=True)
 
     #: Number that determines the severity of this black spot. May be used for color-coding on map.
     severity_score = models.FloatField()
@@ -154,6 +156,22 @@ def post_save_blackspotset(sender, instance, created, **kwargs):
         for b in alters:
             b.display=False
             b.save()
+    # create mapserver file
+    """     color=[0,0,0]
+    if instance.color is not None:
+        h=instance.color.lstrip('#')
+        color=tuple(int(h[i:i+2], 16) for i in (0, 2, 4)) 
+    """
+    t=render_to_string('critical.map', {
+        "connection":connection.settings_dict['HOST'],
+        "username":connection.settings_dict['USER'],
+        "password":connection.settings_dict['PASSWORD'],
+        "query":"the_geom from (select the_geom, uuid from black_spots_blackspot where black_spot_set_id='%s')as q using unique uuid using srid=4326" % (instance.uuid,),
+        #"color": "%s %s %s" % (color[0],color[1],color[2]),
+    })
+    with open("./mapserver/critical_%s.map" % (instance.uuid), "w+") as m:
+        m.write(t)
+
 
 class BlackSpotConfig(GroutModel):
     """Holds user-configurable settings for how black spot generation should work"""

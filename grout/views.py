@@ -15,7 +15,9 @@ from grout.models import (Boundary,
                           BoundaryPolygon,
                           Record,
                           RecordType,
-                          RecordSchema)
+                          RecordSchema
+                          )
+from data.models import Dictionary
 from grout.serializers import (BoundarySerializer,
                                BoundaryPolygonSerializer,
                                BoundaryPolygonNoGeomSerializer,
@@ -159,3 +161,7 @@ class BoundaryViewSet(viewsets.ModelViewSet):
             ('features', features)
         ))
         return Response(data)
+
+class DictionaryViewSet(viewsets.ModelViewSet):
+    queryset = Dictionary.objects.all()
+    

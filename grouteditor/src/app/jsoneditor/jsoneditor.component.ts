@@ -405,14 +405,15 @@ export class JSONEditorComponent implements OnInit {
   moveup(item){
     let current_position=item.value.propertyOrder-1
     let res={"properties":{},"definitions":{}};
-    for(let key in this.dict.properties){
+    for(let key in this.dict.definitions){
       if(key==item.key){
-        this.dict.properties[key].propertyOrder--
+        this.dict.definitions[key].propertyOrder--
       }else{
-        if(this.dict.properties[key].propertyOrder==current_position){
-          this.dict.properties[key].propertyOrder++
+        if(this.dict.definitions[key].propertyOrder==current_position){
+          this.dict.definitions[key].propertyOrder++
         }
       }
+      this.dict.properties[key].propertyOrder=this.dict.definitions[key].propertyOrder
       res.properties[key]=this.dict.properties[key]
       res.definitions[key]=this.dict.definitions[key]
     }
@@ -421,14 +422,15 @@ export class JSONEditorComponent implements OnInit {
   movedown(item){
     let current_position=item.value.propertyOrder+1
     let res={"properties":{},"definitions":{}};
-    for(let key in this.dict.properties){
+    for(let key in this.dict.definitions){
       if(key==item.key){
-        this.dict.properties[key].propertyOrder++
+        this.dict.definitions[key].propertyOrder++
       }else{
-        if(this.dict.properties[key].propertyOrder==current_position){
-          this.dict.properties[key].propertyOrder--
+        if(this.dict.definitions[key].propertyOrder==current_position){
+          this.dict.definitions[key].propertyOrder--
         }
       }
+      this.dict.properties[key].propertyOrder=this.dict.definitions[key].propertyOrder
       res.properties[key]=this.dict.properties[key]
       res.definitions[key]=this.dict.definitions[key]
     }
@@ -440,12 +442,14 @@ export class JSONEditorComponent implements OnInit {
   save(){
     this.dict_json=JSON.stringify(this.dict)
   }
-  setDetails(eve, element){
-    console.log(eve)
-    console.log(element)
+  setDetails(eve, element, key){
     for(var k in this.dict.definitions){
       this.dict.definitions[k].details=false;
     }
+    for(var k in this.dict.properties){
+      this.dict.properties[k].details=false;
+    }
+    this.dict.properties[key].details=true
     element.details=true;
     this.save();
   }

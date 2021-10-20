@@ -7,9 +7,16 @@ from django.utils.translation import ugettext_lazy as _
 DEVELOP = True
 STAGING = True if os.environ.get('DJANGO_ENV', 'staging') == 'staging' else False
 PRODUCTION = not DEVELOP and not STAGING
-WINDSHAFT_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-bolivia"]).decode('utf8').strip()
-DRIVER_DB_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "database-bolivia"]).decode('utf8').strip()
-REDIS_HOST = subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "redis-server-bolivia"]).decode('utf8').strip()
+
+f = open(".env", "r")
+e={}
+for k in [ t.split('=') for t in f.readlines() ]:
+    e[k[0]]=k[1].replace("\n", "")
+
+WINDSHAFT_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-%s" % (e['CONTAINER_NAME'])]).decode('utf8').strip()
+DRIVER_DB_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "database-%s" % (e['CONTAINER_NAME'])]).decode('utf8').strip()
+REDIS_HOST = subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "redis-server-%s" % (e['CONTAINER_NAME'])]).decode('utf8').strip()
+CONTAINER_NAME=e['CONTAINER_NAME']
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/

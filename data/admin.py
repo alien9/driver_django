@@ -10,6 +10,8 @@ from grout.models import RecordSchema, RecordType, Boundary, BoundaryPolygon
 from black_spots.models import RoadMap, BlackSpotSet
 from django_admin_hstore_widget.forms import HStoreFormField
 from constance import config
+from django.forms import ModelForm
+from django.forms.widgets import TextInput
 
 admin.site.index_title = _('DRIVER Database')
 
@@ -29,7 +31,15 @@ class RecordTypeAdmin(admin.ModelAdmin):
 def delete_selected(modeladmin, request, queryset):
     queryset.delete()
 
+class BoundaryForm(ModelForm):
+    class Meta:
+        model = Boundary
+        fields = '__all__'
+        widgets = {
+            'color': TextInput(attrs={'type': 'color'}),
+        }
 class BoundaryAdmin(admin.ModelAdmin):
+    form = BoundaryForm
     def render_delete_form(self, request, context):
         context['deleted_objects'] = [_('Object listing disabled')]
         print("trying to delete limites")

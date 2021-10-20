@@ -79,18 +79,19 @@ def generate_blackspots(blackspotset_uuid=None, user_id=None):
         logger.debug("%s segments geocoded" % len(segments))
         for segment in segments:
             segment.calculate_cost(rs)
-            cursor.execute("select st_transform(st_buffer(st_transform(geom,3857),50),4326) from data_recordsegment where id=%s", [segment.id])
+            cursor.execute("select st_transform(st_buffer(st_transform(geom,3857),50),4326), geom from data_recordsegment where id=%s", [segment.id])
             row=cursor.fetchone()
             bs=BlackSpot()
             bs.black_spot_set=b
             bs.geom=row[0]
+            bs.the_geom=row[1]
             bs.severity_score=segment.data['cost']
             bs.num_records=segment.data['count']
             bs.num_severe=segment.data['count']
             if segment.name is not None:
-                bs.name=segment.name    
+                bs.name=segment.name
             bs.save()
-        blackspots=b.blackspot_set.order_by('-severity_score')
+        blackspots=b.blackspot_set.order_by('-severity_score', '-occurred_from')
         total=b.blackspot_set.count()-1
         limit=round(0.2*total)
         while total>limit:

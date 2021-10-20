@@ -7,7 +7,7 @@ from django.contrib.postgres.fields import HStoreField
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.gis.db import models as g
-from grout.models import GroutModel, Record, RecordType
+from grout.models import GroutModel, Record, RecordType, RecordSchema
 from django.db.models.signals import pre_save, post_save
 from driver import settings
 from django.dispatch import receiver
@@ -273,6 +273,14 @@ class RecordCostConfig(GroutModel):
     # This should be auto-populated by the front-end once a property_key is selected.
     enum_costs = HStoreField()
 
+def add_term(l, t):
+    try:
+        a=l.index(t)
+    except ValueError:
+        pass
+    l.append(t)
+    return l
+
 class Dictionary(models.Model):
     class Meta(object):
         verbose_name = _('Dictionary')
@@ -283,3 +291,27 @@ class Dictionary(models.Model):
     language_code=models.TextField(max_length=8)
     name=models.TextField(max_length=100)
     content=HStoreField()
+    def save(self, *args, **kwargs):
+        terms=[]
+        rs=RecordSchema.objects.all()
+        for r in rs:
+            for k, value in r.schema['definitions'].items():
+                add_term(terms,value['title'])
+                add_term(terms,value['plural_title'])
+                add_term(terms,value['description'])
+            for u, t in value['properties'].items():
+                add_term(terms,u)
+                if 'enum' in t:
+                    for e in t['enum']:
+                        add_term(terms,e)
+                if 'items' in t:
+                    if 'enum' in t['items']:
+                        for e in t['items']['enum']:
+                            add_term(terms,e)
+            for t in terms:
+                if t not in self.content:
+                    self.content[t]=t
+        super(Dictionary, self).save(*args, **kwargs)
+
+
+

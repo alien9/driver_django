@@ -1,7 +1,7 @@
 import os
 import shutil
 import uuid, logging
-
+from django.db import connection
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.contrib.gis.db import models
@@ -10,6 +10,7 @@ from django.db.models import JSONField
 from django.core.validators import MinLengthValidator
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.template.loader import render_to_string
 
 from rest_framework import serializers
 
@@ -301,10 +302,8 @@ class Boundary(Imported):
         self.status = self.StatusTypes.PROCESSING
         self.save()
         logging.info("starting")
-        print("statrting")
         try:
             logging.info("extracting the shapefile")
-            print("extracting")
             temp_dir = extract_zip_to_temp_dir(self.source_file)
             shapefiles = get_shapefiles_in_dir(temp_dir)
             if len(shapefiles) != 1:
@@ -338,11 +337,42 @@ class Boundary(Imported):
             self.save()
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
+            
+    def write_mapfile(self):
+        color=[0,0,0]
+        if self.color is not None:
+            h=self.color.lstrip('#')
+            color=tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+        t=render_to_string('boundary.map', {
+            "connection":connection.settings_dict['HOST'],
+            "username":connection.settings_dict['USER'],
+            "password":connection.settings_dict['PASSWORD'],
+            "query":"geom from (select geom, uuid from grout_boundarypolygon where boundary_id='%s')as q using unique uuid using srid=4326" % (self.uuid,),
+            "color": "%s %s %s" % (color[0],color[1],color[2]),
+        })
+        with open("./mapserver/boundary_%s.map" % (self.uuid), "w+") as m:
+            m.write(t)
 
 @receiver(post_save, sender=Boundary, dispatch_uid="create_boundary")
 def post_create(sender, instance, created, **kwargs):
     if created:
         instance.load_shapefile()
+    # create mapserver file
+    instance.write_mapfile()
+
+    """ color=[0,0,0]
+    if instance.color is not None:
+        h=instance.color.lstrip('#')
+        color=tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+    t=render_to_string('boundary.map', {
+        "connection":connection.settings_dict['HOST'],
+        "username":connection.settings_dict['USER'],
+        "password":connection.settings_dict['PASSWORD'],
+        "query":"geom from (select geom, uuid from grout_boundarypolygon where boundary_id='%s')as q using unique uuid using srid=4326" % (instance.uuid,),
+        "color": "%s %s %s" % (color[0],color[1],color[2]),
+    })
+    with open("./mapserver/boundary_%s.map" % (instance.uuid), "w+") as m:
+        m.write(t) """
 
 class BoundaryPolygon(GroutModel):
     """ Individual boundaries and associated data for each geom in a BoundaryUpload """

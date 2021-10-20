@@ -1,5 +1,5 @@
 from collections import defaultdict
-import json
+import json, math
 import logging
 import uuid
 import calendar
@@ -10,6 +10,8 @@ from constance import config
 from dateutil.parser import parse as parse_date
 from django.template.defaultfilters import date as template_date
 from rest_framework.decorators import api_view
+from django.template.loader import render_to_string
+from django.shortcuts import get_object_or_404
 
 from celery import states
 from django.http import JsonResponse
@@ -32,6 +34,8 @@ from django.db.models import (
     F,
     Func
 )
+
+from django.db import connection
 from django.db.models.functions import Coalesce, Cast
 from django.core import serializers
 from django_redis import get_redis_connection
@@ -60,7 +64,7 @@ from driver_auth.permissions import (IsAdminOrReadOnly,
                                      IsAdminAndReadOnly,
                                      is_admin_or_writer)
 from data.tasks import export_csv, generate_blackspots
-from data.models import DriverRecord, SegmentSet, Picture
+from data.models import DriverRecord, SegmentSet, Picture, Dictionary
 from black_spots.models import BlackSpotSet
 from data.localization.date_utils import (
     hijri_day_range,
@@ -74,7 +78,8 @@ from .models import RecordAuditLogEntry, RecordDuplicate, RecordCostConfig
 from .serializers import (DriverRecordSerializer, DetailsReadOnlyRecordSerializer,
                          DetailsReadOnlyRecordSchemaSerializer, RecordAuditLogEntrySerializer,
                          RecordDuplicateSerializer, RecordCostConfigSerializer,
-                         DetailsReadOnlyRecordNonPublicSerializer, PictureSerializer)
+                         DetailsReadOnlyRecordNonPublicSerializer, PictureSerializer, 
+                         DictionarySerializer)
 #import transformers
 from driver import mixins
 from functools import reduce
@@ -97,6 +102,11 @@ def index(request):
 def editor(request):
     return render(request, 'schema_editor/dist/index.html', {"config":config})
 
+def dictionary(request, code):
+    d = Dictionary.objects.filter(language_code=code)
+    if len(d):
+        return JsonResponse(d[0].content)
+
 @csrf_exempt
 def proxy(request):
     remoteurl = "http://%s:5000%s" % (settings.WINDSHAFT_HOST, request.path,)
@@ -106,6 +116,37 @@ def proxy(request):
 def mapserver(request):
     return proxy_view(request, "http://%s%s" % (config.MAPSERVER, request.path,))
 
+@csrf_exempt
+def grid(request, geometry, mapfile, layer, z, x, y):
+    num_sq=math.pow(2, int(z))
+    size_sq=40075016.68557849/num_sq
+    x0=-20037508.342789244+int(x)*size_sq
+    x1=x0+size_sq
+    y0=20037508.342789244-(int(y)+1)*size_sq
+    y1=y0+size_sq
+    path="?map=/etc/mapserver/{geometry}_{mapfile}&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=records&STYLES=&SRS=EPSG:3857&BBOX={x0},{y0},{x1},{y1}&WIDTH=250&HEIGHT=250&type=utfgrid&format=application/json".format(
+        mapfile="%s.map" % mapfile,
+        x0=x0,
+        x1=x1,
+        y0=y0,
+        y1=y1,
+        geometry=geometry,
+    )
+    return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
+
+@csrf_exempt
+def maps(request, geometry, mapfile, layer, z, x, y):
+    path="?map=/etc/mapserver/{geometry}_{mapfile}&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS={layer}&STYLES=&SRS=EPSG:3857&MODE=tile&TILEMODE=gmap&TILE={x}+{y}+{z}&WIDTH=250&HEIGHT=250&format=image/png".format(
+        mapfile="%s.map" % mapfile,
+        x=x,
+        y=y,
+        z=z,
+        geometry=geometry,
+        layer=layer
+    )
+    print( "%s/%s" % (config.MAPSERVER, path,))
+    return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
+ 
 @csrf_exempt
 def mapcache(request):
     dest="http://%s/%s" % (config.MAPSERVER, request.path,)
@@ -171,6 +212,9 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             else:
                 return DriverRecordSerializer
         return DetailsReadOnlyRecordSerializer
+    
+    def get_super_queryset(self):
+        return super(DriverRecordViewSet, self).get_queryset()
 
     def get_queryset(self):
         qs = super(DriverRecordViewSet, self).get_queryset()
@@ -255,6 +299,45 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             tile_token = uuid.uuid4()
             self._cache_tile_sql(tile_token, query_sql)
             response.data['tilekey'] = tile_token
+        elif ('mapfile' in request.query_params and
+                request.query_params['mapfile'] in ['True', 'true']):
+            response = Response(dict())
+            recordtype_uuid=request.query_params['record_type']
+            s=RecordSchema.objects.filter(record_type=recordtype_uuid).order_by('-version')
+            if not len(s):
+                #throw an error
+                response.data['mapfile'] = None
+            else:
+                schema=s[0]
+                g=Record.objects.filter(schema=schema)
+                
+                query_sql = self.generate_mapserver_query_sql(request).replace('"', '\\"')
+                cursor = connection.cursor()
+                query_sql=cursor.mogrify(query_sql,[recordtype_uuid]).decode("utf-8")
+                print(query_sql)
+                cursor.close()
+                
+                if 'records_mapfile' in request.session:
+                    tile_token = request.session['records_mapfile']
+                else:
+                    if settings.DEBUG:
+                        tile_token="records_debug"
+                    else:
+                        tile_token=uuid.uuid4()
+                    request.session['records_mapfile']=str(tile_token)
+                    request.session.modified = True
+                dbstring=connection.settings_dict['HOST']
+                if settings.CONTAINER_NAME:
+                    dbstring="database-{container}".format(container=settings.CONTAINER_NAME)
+                t=render_to_string('records.map', {
+                    "connection":connection.settings_dict['HOST'],
+                    "username":connection.settings_dict['USER'],
+                    "password":connection.settings_dict['PASSWORD'],
+                    "query":query_sql
+                })
+                with open("./mapserver/records_%s.map" % tile_token, "w+") as m:
+                    m.write(t)
+                response.data['mapfile'] = tile_token
         else:
             response = super(DriverRecordViewSet, self).list(self, request, *args, **kwargs)
         return response
@@ -1453,6 +1536,7 @@ def get_config(request):
             'MAP_CENTER_LONGITUDE': config.MAP_CENTER_LONGITUDE,
             'MAP_ZOOM': config.MAP_ZOOM,
             "PRIMARY_LABEL": config.PRIMARY_LABEL,
+            "SECONDARY_LABEL": config.SECONDARY_LABEL
             }
         },
         status=status.HTTP_200_OK)
@@ -1467,3 +1551,17 @@ class PictureViewSet(viewsets.ViewSet):
         print(request)
         print("CREATING")
         pass
+
+class DictionaryViewSet(viewsets.ViewSet):
+    serializer_class=DictionarySerializer
+    queryset=Dictionary.objects.all()
+    def retrieve(self, request, pk=None):
+        queryset=Dictionary.objects.all()
+        dictionary=get_object_or_404(queryset,language_code=pk)
+        serializer=DictionarySerializer(dictionary)
+        return Response(serializer.data)    
+    def list(self, request):
+        queryset = Dictionary.objects.all()
+        serializer = DictionarySerializer(queryset, many=True)
+        return Response(serializer.data)
+
