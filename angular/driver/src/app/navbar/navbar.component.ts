@@ -14,6 +14,7 @@ import {TranslateService} from '@ngx-translate/core';
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent implements OnInit {
+  @Input() config:object
   @Input() boundaries: any[] = []
   @Input() boundary: any
   @Input() boundaryPolygons: any[] = []
@@ -181,5 +182,8 @@ export class NavbarComponent implements OnInit {
   setlang(code:string){
     localStorage.setItem("Language",code)
     location.reload()
+  }
+  mapillaryAuth(){
+    window.location.href=this.config['MAPILLARY.URL']
   }
 }

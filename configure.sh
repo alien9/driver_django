@@ -26,7 +26,7 @@ if [ "${WINDSHAFT_HOST}" == "" ]; then
      exit
 fi
 
-
+# DRIVER1 configure
 LANGUAGES=$(tr \' " " <<<"$LANGUAGES")
 sed -e "s/PROTOCOL/${PROTOCOL}/g" \
      -e "s/HOST_NAME/${HOST_NAME}/g" \
@@ -39,15 +39,28 @@ sed -e "s/PROTOCOL/${PROTOCOL}/g" \
      -e "s/ZOOM/${ZOOM}/g" \
      -e "s/LANGUAGES/${LANGUAGES}/g" \
 scripts.template.js > web/dist/scripts/scripts.698e6068.js
-if [[ ! -f driver.conf ]]; then
-     cp driver-app.conf driver.conf
+# DRIVER1 end configure
+
+
+if [[ ! -f "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf" ]]; then
+     cp driver-app.conf "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf" ]]
+     sudo ln -s "$(pwd)/driver.conf" "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
 fi
-sed -i -e "s/\s[^ ]*\s*#HOST_NAME$/ ${HOST_NAME}; #HOST_NAME/g" \
+
+#if [ -h "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf" ]; then
+#     sudo rm "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
+#else
+#     echo "Remember to run certbot now."
+#fi
+
+
+
+sudo sed -i -e "s/\s[^ ]*\s*#HOST_NAME$/ ${HOST_NAME}; #HOST_NAME/g" \
 -e "s,\s[^ ]*\s*#STATIC_ROOT$, ${STATIC_ROOT}; #STATIC_ROOT,g" \
 -e "s,\s[^ ]*\s*#STATIC_ROOT_MEDIA$, ${STATIC_ROOT}/zip/; #STATIC_ROOT_MEDIA,g" \
 -e "s/http.*#driver-django$/http:\/\/${DJANGO_HOST}:4000; #driver-django/g" \
 -e "s/\s[^ ]*\s*#windshaft$/ http:\/\/${WINDSHAFT_HOST}:5000; #windshaft/g" \
-driver.conf
+"/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
 
 #docker exec driver-nginx sed -i -e "s/HOST_NAME/${HOST_NAME}/g" /etc/nginx/conf.d/driver-app.conf
 
@@ -72,17 +85,13 @@ if [ "${EXISTE_DJANGO}" != "" ]; then
 
 
 fi
+
+# DRIVER 1 setting up
 if [ $STATIC_ROOT != $WINDSHAFT_FILES ]; then
      sudo cp -r web "$STATIC_ROOT/"
      sudo cp -r static "$STATIC_ROOT/"
 fi
+# DRIVER 1 end
 
-if [ -h "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf" ]; then
-     sudo rm "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
-else
-     echo "Remember to run certbot now."
-fi
-sudo ln -s "$(pwd)/driver.conf" "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
 sudo service nginx restart
 
-#docker-compose restart driver-nginx 

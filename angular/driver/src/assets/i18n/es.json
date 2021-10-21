@@ -1,15 +1,15 @@
 {
-	"All": "Todos",
-	"Date and time": "",
-	"Filters": "Filtraje",
-	"Interval": "Intervalo",
-	"Latitude": "",
-	"Light": "",
-	"List": "Lista",
-	"Location": "",
-	"Longitude": "",
-	"Map": "Mapa",
-	"Report": "Relatório",
-	"Weather": "",
-	"to": "hasta"
+    "All": "Todos",
+    "Date and time": "Fecha y hora",
+    "Filters": "Filtraje",
+    "Interval": "Intervalo",
+    "Latitude": "Latitude",
+    "Light": "Luces",
+    "List": "Lista",
+    "Location": "Ubicación",
+    "Longitude": "Longitude",
+    "Map": "Mapa",
+    "Report": "Relatório",
+    "Weather": "Clima",
+    "to": "hasta"
 }

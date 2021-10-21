@@ -37,6 +37,8 @@ import {TranslateLoader, TranslateModule} from '@ngx-translate/core';
 import {TranslateHttpLoader} from '@ngx-translate/http-loader';
 import {MultiTranslateHttpLoader} from 'ngx-translate-multi-http-loader';
 
+import { SafePipeModule } from 'safe-pipe'
+
 export function HttpLoaderFactory(httpClient: HttpClient) {
   return new MultiTranslateHttpLoader(httpClient, [
       {prefix: "./assets/i18n/", suffix: ".json"},
@@ -92,6 +94,7 @@ const icons = {
     ModalModule,
     HttpClientModule,
     NgbModule,
+    SafePipeModule,
     NgxBootstrapIconsModule.pick(icons)
   ],
   providers: [

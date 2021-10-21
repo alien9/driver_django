@@ -10,6 +10,7 @@ import { environment } from '../../environments/environment';
 export class InputComponent implements OnInit {
   @Input() record: object
   @Input() recordSchema: object
+  @Input() config:object
   public schema:object
   public options: any
   public layersControl: any

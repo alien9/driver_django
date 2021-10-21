@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { LeafletModule } from '@asymmetrik/ngx-leaflet';
 import * as L from 'leaflet';
 import { Router } from '@angular/router';
@@ -10,6 +10,7 @@ import { DrawEvents, featureGroup, FeatureGroup, icon, latLng, tileLayer } from 
 import { utfGrid } from '../UtfGrid';
 import { } from 'jquery'
 import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-index',
@@ -17,6 +18,7 @@ import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
   styleUrls: ['./index.component.scss']
 })
 export class IndexComponent implements OnInit {
+  public config:object
   public boundaries: any[] = []
   public boundary: any
   public boundaryPolygons: any[]
@@ -39,7 +41,8 @@ export class IndexComponent implements OnInit {
   constructor(
     private recordService: RecordService,
     private router: Router,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit(): void {
@@ -48,6 +51,12 @@ export class IndexComponent implements OnInit {
       this.router.navigateByUrl('/login')
       return
     }
+    this.config=JSON.parse(localStorage.getItem("config"))
+    const mapillary_auth: string = this.route.snapshot.queryParamMap.get('code');
+    if(mapillary_auth){
+      localStorage.setItem('mapillary_auth', mapillary_auth)
+    }
+
     this.recordSchema = JSON.parse(localStorage.getItem("record_schema"))
     this.backend = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
 
