@@ -49,12 +49,13 @@ urlpatterns = [
     url(r'^editor/$', data_views.editor),
     url(r'^maps/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).png/$', data_views.maps),
     url(r'^grid/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).json/$', data_views.grid),
+
+    url(r'^mapillary_callback/$', data_views.mapillary_callback),
     
     url(r'^calculate_blackspots/(?P<uuid>[-\w]{0,100})/$', data_views.run_calculate_blackspots),
     url(r'^retrieve_blackspots/(?P<pk>[-\w]{0,100})/$', data_views.retrieve_blackspots),
 
     url(r'^dictionary/(?P<code>\w*)/$', data_views.dictionary),
-
     # get token for given username/password
     url(r'^api-token-auth/', auth_views.obtain_auth_token),
     url(r'^api/sso-token-auth/', auth_views.sso_auth_token),

@@ -58,7 +58,7 @@ BLACKSPOT_RECORD_TYPE_LABEL = os.environ.get('BLACKSPOT_RECORD_TYPE_LABEL', 'Inc
 # user and group settings
 
 ## django-oidc settings
-HOST_URL = os.environ.get('HOST_URL', 'https://titopop.com')
+HOST_URL = os.environ.get('HOST_URL', '')
 
 APPEND_SLASH=True
 

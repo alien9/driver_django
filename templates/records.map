@@ -83,10 +83,10 @@ MAP
         END
         CLASS
             STYLE
-                OUTLINECOLOR 0 100 0
+                OUTLINECOLOR 0 0 160
                 WIDTH 2
-                SIZE 8
-                COLOR 0 99 0
+                SIZE 6
+                COLOR 0 0 200
                 OPACITY 50
                 
                 SYMBOL "circlef"
@@ -94,11 +94,12 @@ MAP
         END
     END
     SYMBOL
+        ANCHORPOINT 0.5 0.5
         NAME "circlef"
         TYPE ellipse
         FILLED true
         POINTS
-            8 8
+            40 40
         END # POINTS
         TRANSPARENT 60
     END # SYMBOL

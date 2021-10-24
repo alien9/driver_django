@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from django_json_widget.widgets import JSONEditorWidget
 from grout.widgets import GroutEditorWidget
-from data.models import RecordCostConfig, Dictionary, Picture
+from data.models import RecordCostConfig, Dictionary, Picture, DriverRecord
 from grout.models import RecordSchema, RecordType, Boundary, BoundaryPolygon
 from black_spots.models import RoadMap, BlackSpotSet
 from django_admin_hstore_widget.forms import HStoreFormField
@@ -15,6 +15,20 @@ from django.forms.widgets import TextInput
 
 admin.site.index_title = _('DRIVER Database')
 
+class DriverRecordAdminForm(ModelForm):
+    class Meta:
+        model = DriverRecord
+        fields = '__all__'
+  
+
+class DriverRecordAdmin(admin.ModelAdmin):
+    form = DriverRecordAdminForm
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context=extra_context or {}
+        extra_context['mapillary_client_token']=getattr(config, 'MAPILLARY_CLIENT_TOKEN')
+        extra_context['mapillary_client_id']=getattr(config, 'MAPILLARY_CLIENT_ID')
+        extra_context['mapillary_secret']=getattr(config, 'MAPILLARY_SECRET')
+        return super().change_view(request, object_id, form_url, extra_context=extra_context,)   
 
 class PictureAdmin(admin.ModelAdmin):
     pass
@@ -123,3 +137,4 @@ admin.site.register(Dictionary, DictionaryAdmin)
 admin.site.register(RoadMap, RoadMapAdmin)
 admin.site.register(Picture, PictureAdmin)
 admin.site.register(BlackSpotSet, BlackSpotSetAdmin)
+admin.site.register(DriverRecord, DriverRecordAdmin)

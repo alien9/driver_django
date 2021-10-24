@@ -397,7 +397,7 @@ GROUT = {
 }
 
 ## django-oidc settings
-HOST_URL = os.environ.get('HOST_URL', 'https://titopop.com')
+HOST_URL = os.environ.get('HOST_URL', '')
 
 # TODO: conditionally set for GLUU in production
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get('OAUTH_CLIENT_ID', '418431456233-i69dc0paqp9ujj40gha8ru5a1tflbjl2.apps.googleusercontent.com')
@@ -534,5 +534,9 @@ CONSTANCE_CONFIG = {
     "HOSTNAME": ("%s://%s" % ((os.getenv('PROTOCOL', "http"), os.getenv('HOSTNAME', "localhost:8000"))), _("Host Name")),
     "COUNTRY_CODE": (os.getenv('COUNTRY', "ic"), _("Country Code")),
     "MAPSERVER": ("mapserver-%s" % (os.getenv('CONTAINER_NAME', 'driver')), "MapServer"),
-    'TIMEZONE': ('America/Sao_Paulo', 'Time Zone', 'tzselect')
+    'TIMEZONE': ('America/Sao_Paulo', 'Time Zone', 'tzselect'),
+    'MAPILLARY_CLIENT_TOKEN': ("", _("Mapillary Client token")),
+    'MAPILLARY_CLIENT_ID': ("", _("Mapillary Client")),
+    'MAPILLARY_SECRET': ("", _("Mapillary secret")),
+    'MAPILLARY_TOKEN': ("", _("Mapillary token")),
 }
