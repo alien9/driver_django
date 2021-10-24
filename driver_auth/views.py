@@ -156,6 +156,9 @@ class DriverObtainAuthToken(ObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
+        conf={}
+        for k,v in settings.CONSTANCE_CONFIG.items():
+            conf[k]=getattr(config, k)
         o={
             'token': token.key,
             'user': token.user_id,
@@ -164,12 +167,7 @@ class DriverObtainAuthToken(ObtainAuthToken):
             'groups': list(map(lambda x: x.name, list(user.groups.all())))[0],
             'group':list(map(lambda x: x.id, list(user.groups.all()))),
             'groups_name': list(map(lambda x: x.name, list(user.groups.all()))),
-            'config': {
-                'MAP_CENTER_LATITUDE': config.MAP_CENTER_LATITUDE,
-                'MAP_CENTER_LONGITUDE': config.MAP_CENTER_LONGITUDE,
-                'MAP_ZOOM': config.MAP_ZOOM,
-                "PRIMARY_LABEL": config.PRIMARY_LABEL,
-            }
+            'config': conf,
         }
         """
         this.storage.set('groups', res[0].group[1]).subscribe(() = > {});

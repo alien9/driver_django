@@ -91,7 +91,7 @@ def generate_blackspots(blackspotset_uuid=None, user_id=None):
             if segment.name is not None:
                 bs.name=segment.name
             bs.save()
-        blackspots=b.blackspot_set.order_by('-severity_score', '-occurred_from')
+        blackspots=b.blackspot_set.order_by('-severity_score')
         total=b.blackspot_set.count()-1
         limit=round(0.2*total)
         while total>limit:

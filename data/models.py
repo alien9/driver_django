@@ -81,8 +81,9 @@ class DriverRecord(Record):
     neighborhood = models.CharField(max_length=50, null=True, blank=True)
     road = models.CharField(max_length=200, null=True, blank=True)
     state = models.CharField(max_length=50, null=True, blank=True)
-    segment = models.ManyToManyField(RecordSegment)
-    
+    segment = models.ManyToManyField(RecordSegment, null=True, blank=True)
+    mapillary = models.CharField(null=True, blank=True, max_length=64)
+
     def geocode(self, roadmap_uuid, size):
         with connection.cursor() as cursor:
             if self.geom:

@@ -11,7 +11,7 @@ from dateutil.parser import parse as parse_date
 from django.template.defaultfilters import date as template_date
 from rest_framework.decorators import api_view
 from django.template.loader import render_to_string
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404,redirect
 
 from celery import states
 from django.http import JsonResponse
@@ -106,6 +106,29 @@ def dictionary(request, code):
     d = Dictionary.objects.filter(language_code=code)
     if len(d):
         return JsonResponse(d[0].content)
+
+def mapillary_callback(request):
+    j={"result":"FAIL"}
+    if 'code' in request.GET:
+        import requests
+        client_id=getattr(config, 'MAPILLARY_CLIENT_TOKEN')
+        url = 'https://graph.mapillary.com/token'
+        payload={
+            "grant_type": "authorization_code",
+            "code": request.GET.get('code'),
+            "client_id": getattr(config, 'MAPILLARY_CLIENT_ID')
+        }
+        headers = {
+            'content-type': 'application/json',
+            'Accept-Charset': 'UTF-8',
+            "Authorization": "OAuth {secret}".format(secret=getattr(config, 'MAPILLARY_SECRET'))
+        }
+        r = requests.post(url, data=payload, headers=headers)
+        j=r.json()
+        response=redirect(request.GET.get('state'))
+        response.set_cookie('mapillary_auth', j['access_token'])
+        return response
+    return JsonResponse(j)
 
 @csrf_exempt
 def proxy(request):
