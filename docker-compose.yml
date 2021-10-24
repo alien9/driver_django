@@ -10,7 +10,6 @@ services:
       - /opt/${CONTAINER_NAME}-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=driver
-      - POSTGRES_PASS=driver
       - POSTGRES_DBNAME=driver
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
     container_name: database-${CONTAINER_NAME}
