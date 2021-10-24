@@ -153,6 +153,7 @@ export class IndexComponent implements OnInit {
       })
   }
   setBoundaryPolygon(b: any) {
+    if(!this.filter) this.filter={}
     this.boundary_polygon_uuid=(b) ? b['uuid'] : null
     if(this.boundary_polygon_uuid){
       this.filter['polygon_id']=this.boundary_polygon_uuid
