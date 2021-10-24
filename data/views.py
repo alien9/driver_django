@@ -147,13 +147,14 @@ def grid(request, geometry, mapfile, layer, z, x, y):
     x1=x0+size_sq
     y0=20037508.342789244-(int(y)+1)*size_sq
     y1=y0+size_sq
-    path="?map=/etc/mapserver/{geometry}_{mapfile}&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=records&STYLES=&SRS=EPSG:3857&BBOX={x0},{y0},{x1},{y1}&WIDTH=250&HEIGHT=250&type=utfgrid&format=application/json".format(
+    path="?map=/etc/mapserver/{geometry}_{mapfile}&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS={layer}&STYLES=&SRS=EPSG:3857&BBOX={x0},{y0},{x1},{y1}&WIDTH=250&HEIGHT=250&type=utfgrid&format=application/json".format(
         mapfile="%s.map" % mapfile,
         x0=x0,
         x1=x1,
         y0=y0,
         y1=y1,
         geometry=geometry,
+        layer=layer
     )
     return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
 

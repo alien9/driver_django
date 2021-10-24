@@ -25,7 +25,7 @@ services:
     build:
       context: ./
     volumes:
-      - ${WINDSHAFT_FILES}/static:/var/www/static
+      - ./driver_static:/var/www/static
     depends_on:
       - redis-server
       - postgres

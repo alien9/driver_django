@@ -166,7 +166,7 @@ def post_save_blackspotset(sender, instance, created, **kwargs):
         "connection":connection.settings_dict['HOST'],
         "username":connection.settings_dict['USER'],
         "password":connection.settings_dict['PASSWORD'],
-        "query":"the_geom from (select the_geom, uuid from black_spots_blackspot where black_spot_set_id='%s')as q using unique uuid using srid=4326" % (instance.uuid,),
+        "query":"the_geom from (select the_geom, uuid, name, num_records, severity_score from black_spots_blackspot where black_spot_set_id='%s')as q using unique uuid using srid=4326" % (instance.uuid,),
         #"color": "%s %s %s" % (color[0],color[1],color[2]),
     })
     with open("./mapserver/critical_%s.map" % (instance.uuid), "w+") as m:
