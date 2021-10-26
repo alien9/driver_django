@@ -1,7 +1,7 @@
 <app-navbar class=navbar-fixed [config]=config [filter]=filter [boundaries]=boundaries (boundaryChange)=setBoundary($event) (boundaryPolygonChange)=setBoundaryPolygon($event) [boundary]=boundary [boundaryPolygons]=boundaryPolygons [boundaryPolygon]=boundaryPolygon
-    (filterChange)=setFilter($event) (stateChange)=selectState($event)></app-navbar>
+    (filterChange)=setFilter($event) (stateChange)=selectState($event) [stateSelected]=state></app-navbar>
 <app-list *ngIf="state=='List'" [filter]=filter [boundary_polygon_uuid]=boundary_polygon_uuid [recordSchema]=recordSchema [recordList]=recordList (viewRecord)="viewRecord(viewpoint, $event)"></app-list>
-<app-map *ngIf="state=='Map'" [fitBounds]=fitBounds [options]=options [layers]=layers [layersControl]=layersControl [boundary_polygon_uuid]=boundary_polygon_uuid></app-map>
+<app-map *ngIf="state=='Map'" [fitBounds]=fitBounds [options]=options [layers]=layers [layersControl]=layersControl [boundary_polygon_uuid]=boundary_polygon_uuid (map)=setMap($event)></app-map>
 
 <button (click)=mapClick(viewpoint) [hidden]="true" id="map-popup-button"></button>
 <ng-template #viewpoint let-modal>
@@ -18,3 +18,17 @@
         <button type="button" class="btn btn-light" (click)="modal.close('Close click')" i18n>Close</button>
     </div>
 </ng-template>
+
+<div id="popup-content">
+    <h5>-name-</h5>
+    <p>{{'Cost'| translate}}: -cost-</p>
+    <p>{{'Count'| translate}}: -total-</p>
+</div>
+<div id="record-popup-content">
+    <h3>-date-</h3>
+    <p>-location-</p>
+    <input id="record-uuid" value="-uuid-" type=hidden>
+    <a href="#" id="open-record-popup" (click)=popClick($event)>{{'View'|translate}}</a>
+</div>
+
+<app-report *ngIf="state=='Report'" [recordSchema]=recordSchema></app-report>

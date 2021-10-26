@@ -37,7 +37,8 @@ import {TranslateLoader, TranslateModule} from '@ngx-translate/core';
 import {TranslateHttpLoader} from '@ngx-translate/http-loader';
 import {MultiTranslateHttpLoader} from 'ngx-translate-multi-http-loader';
 
-import { SafePipeModule } from 'safe-pipe'
+import { SafePipeModule } from 'safe-pipe';
+import { ReportComponent } from './report/report.component';
 
 export function HttpLoaderFactory(httpClient: HttpClient) {
   return new MultiTranslateHttpLoader(httpClient, [
@@ -71,7 +72,8 @@ const icons = {
     DictDumpPipe,
     FirstPipe,
     ListComponent,
-    IndexComponent
+    IndexComponent,
+    ReportComponent
   ],
   imports: [
     BrowserModule,

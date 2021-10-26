@@ -86,6 +86,7 @@ L.UTFGrid = L.TileLayer.extend({
         self.fire('error', { error: err });
         return;
       }
+      console.log(response.responseText);
       var data = JSON.parse(response.responseText);
       self._cache[key] = data;
       L.Util.bind(self._handleTileLoad, self)(key, data);
@@ -136,7 +137,7 @@ L.UTFGrid = L.TileLayer.extend({
       resolution = this.options.resolution,
       x = Math.floor(point.x / tileSize),
       y = Math.floor(point.y / tileSize),
-      gridX = Math.floor((point.x - (x * tileSize)) / resolution),
+      gridX = Math.floor((point.x - (x * tileSize)) / resolution), 
       gridY = Math.floor((point.y - (y * tileSize)) / resolution),
       max = map.options.crs.scale(map.getZoom()) / tileSize;
 

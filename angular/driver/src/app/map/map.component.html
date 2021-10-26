@@ -1,4 +1,4 @@
 <!--app-navbar [boundaries]=boundaries (boundaryChange)=setBoundary($event) (boundaryPolygonChange)=setBoundaryPolygon($event) [boundary]=boundary [boundaryPolygons]=boundaryPolygons [boundaryPolygon]=boundaryPolygon (filterChange)=setFilter($event) (stateChange)=selectState($event)></app-navbar-->
-<div class="map-base" #map leaflet leafletDraw [leafletDrawOptions]="drawOptions" [leafletLayers]=layers (leafletDrawCreated)="onDrawCreated($event)" [leafletLayersControl]="layersControl" [leafletOptions]="options" [leafletFitBounds]="fitBounds">
+<div class="map-base" #map leaflet leafletDraw [leafletDrawOptions]="drawOptions" [leafletLayers]=layers (leafletDrawCreated)="onDrawCreated($event)" [leafletLayersControl]="layersControl" [leafletOptions]="options" [leafletFitBounds]="fitBounds" (leafletMapReady)="onMapReady($event)">
     <div [leafletLayer]="drawnItems"></div>
 </div>

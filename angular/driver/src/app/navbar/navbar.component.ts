@@ -26,7 +26,7 @@ export class NavbarComponent implements OnInit {
   @Output() filterChange = new EventEmitter<object>()
   @Output() stateChange = new EventEmitter<string>()
   public recordSchema: object
-  public stateSelected = 'Map'
+  @Input() stateSelected
   public authenticated: boolean = true
   public occurred_min: Date
   public occurred_max: Date
@@ -49,6 +49,7 @@ export class NavbarComponent implements OnInit {
   }
   onStateSelected(state) {
     this.stateSelected = state
+    localStorage.setItem('state',state)
     this.stateChange.emit(state)
   }
   selectBoundary(b) {

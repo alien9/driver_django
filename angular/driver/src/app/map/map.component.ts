@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { LeafletModule } from '@asymmetrik/ngx-leaflet';
 import * as L from 'leaflet';
 import { Router } from '@angular/router';
@@ -22,6 +22,8 @@ export class MapComponent implements OnInit {
   @Input() layersControl: any
   @Input() fitBounds: any
   @Input() boundary_polygon_uuid: any
+  @Output() map=new EventEmitter<L.Map>()
+
   public polygon: any
   public drawnItems: FeatureGroup = featureGroup();
   public drawOptions = {
@@ -71,5 +73,8 @@ export class MapComponent implements OnInit {
   onDrawCreated(e: any) {
     const layer = (e as DrawEvents.Created).layer;
     this.drawnItems.addLayer(layer);
+  }
+  onMapReady(e: any){
+    this.map.emit(e)
   }
 }

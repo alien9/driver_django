@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { LeafletModule } from '@asymmetrik/ngx-leaflet';
 import * as L from 'leaflet';
 import { Router } from '@angular/router';
@@ -17,14 +17,14 @@ import { ActivatedRoute } from '@angular/router';
   templateUrl: './index.component.html',
   styleUrls: ['./index.component.scss']
 })
-export class IndexComponent implements OnInit {
+export class IndexComponent implements OnInit {  
   public config:object
   public boundaries: any[] = []
   public boundary: any
   public boundaryPolygons: any[]
   public boundaryPolygon: any
   public polygon: any
-  public state: string = 'Map'
+  public state: string
   public fitBounds: any
   public layersControl: any
   public layers: any[]
@@ -36,8 +36,10 @@ export class IndexComponent implements OnInit {
   public filter: object
   public record:object
   public recordList:object
-
+  public map:L.Map
   record_uuid: string
+  public critical: object={}
+  popContent:any
   constructor(
     private recordService: RecordService,
     private router: Router,
@@ -46,6 +48,8 @@ export class IndexComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.state=localStorage.getItem('state') || 'Map'
+    this.popContent=$("#popup-content")[0]
     let cu = document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")
     if (!cu.length) {
       this.router.navigateByUrl('/login')
@@ -99,7 +103,44 @@ export class IndexComponent implements OnInit {
       critical_data => {
         if (critical_data['results']) {
           critical_data['results'].forEach(rs => {
-            this.layersControl.overlays[rs["title"]] = L.tileLayer(`${this.backend}/maps/critical/${rs['uuid']}/critical/{z}/{x}/{y}.png`, {});
+            let gl=utfGrid(`${this.backend}/grid/critical/${rs['uuid']}/critical/{z}/{x}/{y}.json/`, {
+              resolution: 4,
+              pointerCursor: true,
+              mouseInterval: 66
+            })
+            gl.on('mouseover', (e) => {
+              if (e.data) {
+                $('.leaflet-grab').css('cursor', 'pointer')
+              }
+              else {
+                $('.leaflet-grab').css('cursor', 'grab')
+              }
+            });
+            gl.on('mouseout', (e) => {
+              $('.leaflet-grab').css('cursor', 'grab')
+            });
+            gl.on('click', (e: any) => {
+
+              if(!e.data) return
+              let t=this.popContent.innerHTML
+              .replace(/-total-/, e.data.num_records)
+              .replace(/-name-/, e.data.name)
+              .replace(/-cost-/, e.data.cost)
+
+              new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
+              
+              
+              /* if (e.data) {
+                this.record_uuid = e.data.uuid
+                gl.openPopup($("#popup-content")[0], e.latlng, {}) 
+                $("#map-popup-button").trigger('click')
+              } */
+            })
+
+            this.layersControl.overlays[rs["title"]] = new L.LayerGroup([
+              L.tileLayer(`${this.backend}/maps/critical/${rs['uuid']}/critical/{z}/{x}/{y}.png`, {}),
+              gl
+            ])
           })
         }
         this.recordService.getBoundaries().pipe(first()).subscribe(
@@ -195,7 +236,15 @@ export class IndexComponent implements OnInit {
       critical_data => {
         if (critical_data['results']) {
           critical_data['results'].forEach(rs => {
-            this.layersControl.overlays[rs["title"]] = L.tileLayer(`${this.backend}/maps/critical/${rs['uuid']}/critical/{z}/{x}/{y}.png`, {});
+            let gl=utfGrid(`${this.backend}/grid/critical/${rs['uuid']}/critical/{z}/{x}/{y}.json/`, {
+              resolution: 4,
+              pointerCursor: true,
+              mouseInterval: 66
+            })
+            this.layersControl.overlays[rs["title"]] = new L.LayerGroup([
+              L.tileLayer(`${this.backend}/maps/critical/${rs['uuid']}/critical/{z}/{x}/{y}.png`, {}),
+              gl
+            ])
           })
           }
 
@@ -209,14 +258,13 @@ export class IndexComponent implements OnInit {
       data => {
         let ts = (new Date()).getTime()
         this.layersControl.overlays['Heatmap'] = L.tileLayer(`${this.backend}/maps/records/${data["mapfile"]}/heatmap/{z}/{x}/{y}.png/?${ts}`, {})
-        let cl = utfGrid(`${this.backend}/grid/records/${data["mapfile"]}/records/{z}/{x}/{y}.json/?${ts}`, {
+        let cl = utfGrid(`${this.backend}/grid/records/${data["mapfile"]}/records_offset/{z}/{x}/{y}.json/?${ts}`, {
           resolution: 4,
           pointerCursor: true,
           mouseInterval: 66
         })
         cl.on('mouseover', (e) => {
           if (e.data) {
-            this.record_uuid = e.data.uuid
             $('.leaflet-grab').css('cursor', 'pointer')
           }
           else {
@@ -225,13 +273,19 @@ export class IndexComponent implements OnInit {
         });
         cl.on('mouseout', (e) => {
           $('.leaflet-grab').css('cursor', 'grab')
-          this.record_uuid = null
         });
         cl.on('click', (e: any) => {
           if (e.data) {
+            let t=$("#record-popup-content").html()
+              .replace(/-date-/, new Date(Date.parse(e.data['occurred_from'])).toLocaleDateString())
+              .replace(/-location-/, e.data['location_text'])
+              .replace(/-uuid-/, e.data['uuid'])
+            new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
             this.record_uuid = e.data.uuid
-            $("#map-popup-button").trigger('click')
-          }
+            $("#open-record-popup").on('click',function(){
+              $('#map-popup-button').trigger('click');
+            })
+           }
         })
         this.layers = this.layers.filter(k => k != this.recordsLayer)
         this.recordsLayer = new L.LayerGroup([
@@ -242,6 +296,7 @@ export class IndexComponent implements OnInit {
         this.layersControl.overlays['Records'] = this.recordsLayer
       })
   }
+
   setFilter(e: any) {
     this.filter = e
     this.loadRecords(false)
@@ -252,6 +307,7 @@ export class IndexComponent implements OnInit {
   }
 
   mapClick(content: any) {
+    if(!this.record_uuid) this.record_uuid=$("#record-uuid").val().toString()
     if (this.record_uuid) {
       this.recordService.getRecord(this.record_uuid).pipe(first()).subscribe(
         data => {
@@ -261,5 +317,11 @@ export class IndexComponent implements OnInit {
       this.record_uuid = null
     }
 
+  }
+  setMap(e:L.Map){
+    this.map=e
+  }
+  popClick(e:any){
+    console.log(e)
   }
 }
