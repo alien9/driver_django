@@ -4757,7 +4757,14 @@ function(a) {
         JSON.stringify(a, S, b))
     }
     function U(a) {
-        return v(a) ? JSON.parse(a) : a
+        var kkk;
+        try{
+            kkk=v(a) ? JSON.parse(a) : a;
+        }catch(exxx){
+            console.log(exxx);
+            kkk=a.replace('"', "");
+        }
+        return kkk
     }
     function V(a, b) {
         a = a.replace(ie, "");

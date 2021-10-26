@@ -36,13 +36,14 @@ import { IndexComponent } from './index/index.component';
 import {TranslateLoader, TranslateModule} from '@ngx-translate/core';
 import {TranslateHttpLoader} from '@ngx-translate/http-loader';
 import {MultiTranslateHttpLoader} from 'ngx-translate-multi-http-loader';
-
+import { environment } from '../environments/environment';
 import { SafePipeModule } from 'safe-pipe'
 
 export function HttpLoaderFactory(httpClient: HttpClient) {
+  let b=localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
   return new MultiTranslateHttpLoader(httpClient, [
       {prefix: "./assets/i18n/", suffix: ".json"},
-      {prefix: "http://192.168.1.101:8000/dictionary/", suffix: "/"},
+      {prefix: `${b}/dictionary/`, suffix: "/"},
   ]);
 }
 

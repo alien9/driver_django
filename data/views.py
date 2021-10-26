@@ -351,8 +351,9 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                     request.session['records_mapfile']=str(tile_token)
                     request.session.modified = True
                 dbstring=connection.settings_dict['HOST']
-                if settings.CONTAINER_NAME:
-                    dbstring="database-{container}".format(container=settings.CONTAINER_NAME)
+                if settings.DEBUG:
+                    if hasattr(settings, 'CONTAINER_NAME'):
+                        dbstring="database-{container}".format(container=settings.CONTAINER_NAME)
                 t=render_to_string('records.map', {
                     "connection":connection.settings_dict['HOST'],
                     "username":connection.settings_dict['USER'],

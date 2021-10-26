@@ -4757,7 +4757,7 @@ function(a) {
         JSON.stringify(a, S, b))
     }
     function U(a) {
-        return v(a) ? JSON.parse(a) : a
+        return v(a) ? a.replace('"','') : a
     }
     function V(a, b) {
         a = a.replace(ie, "");

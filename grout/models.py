@@ -360,20 +360,6 @@ def post_create(sender, instance, created, **kwargs):
     # create mapserver file
     instance.write_mapfile()
 
-    """ color=[0,0,0]
-    if instance.color is not None:
-        h=instance.color.lstrip('#')
-        color=tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
-    t=render_to_string('boundary.map', {
-        "connection":connection.settings_dict['HOST'],
-        "username":connection.settings_dict['USER'],
-        "password":connection.settings_dict['PASSWORD'],
-        "query":"geom from (select geom, uuid from grout_boundarypolygon where boundary_id='%s')as q using unique uuid using srid=4326" % (instance.uuid,),
-        "color": "%s %s %s" % (color[0],color[1],color[2]),
-    })
-    with open("./mapserver/boundary_%s.map" % (instance.uuid), "w+") as m:
-        m.write(t) """
-
 class BoundaryPolygon(GroutModel):
     """ Individual boundaries and associated data for each geom in a BoundaryUpload """
     class Meta:
