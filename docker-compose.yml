@@ -24,10 +24,12 @@ services:
     build:
       context: ./
     volumes:
-      - ${WINDSHAFT_FILES}/static:/var/www/static
+      - ./static:/var/www/static
+      - ./mapserver:/opt/app/mapserver
     depends_on:
       - redis-server
       - postgres
+      - mapserver
     environment:
       - CENTER_LATITUDE=${CENTER_LATITUDE}
       - CENTER_LONGITUDE=${CENTER_LONGITUDE}
@@ -51,7 +53,7 @@ services:
       
   driver-celery:
     volumes:
-      - ${WINDSHAFT_FILES}/zip:/var/www/media
+      - ./zip:/var/www/media
     depends_on:
       - redis-server
       - postgres
@@ -98,7 +100,8 @@ services:
       - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
       - DRIVER_REDIS_PORT=6379
     image: quay.io/azavea/windshaft:0.1.0
-
+    ports:
+      - "5555:5000"
 
   mapserver:
     container_name: mapserver-${CONTAINER_NAME}

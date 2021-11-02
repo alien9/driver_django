@@ -6,7 +6,8 @@ import { SearchableFilterPipe } from './search-field.pipe'
 import { EnumPipe } from './../enum.pipe'
 import { JSDocTagName } from '@angular/compiler/src/output/output_ast';
 import { Router } from '@angular/router';
-import {TranslateService} from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
+import { translate } from '@angular/localize/src/translate';
 
 @Component({
   selector: 'app-navbar',
@@ -14,7 +15,7 @@ import {TranslateService} from '@ngx-translate/core';
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent implements OnInit {
-  @Input() config:object
+  @Input() config: object
   @Input() boundaries: any[] = []
   @Input() boundary: any
   @Input() boundaryPolygons: any[] = []
@@ -25,6 +26,7 @@ export class NavbarComponent implements OnInit {
   @Output() boundaryPolygonChange = new EventEmitter<object>()
   @Output() filterChange = new EventEmitter<object>()
   @Output() stateChange = new EventEmitter<string>()
+  @Output() reportChange=new EventEmitter<object>()
   public recordSchema: object
   @Input() stateSelected
   public authenticated: boolean = true
@@ -34,22 +36,39 @@ export class NavbarComponent implements OnInit {
   public occurred_max_ngb: NgbDateStruct
   public schema: any
   public tables: any[]
-  language:string
+  public reportFilters: any[]
+  public tabs = [
+
+  ]
+  public reportHeaders: object
+  private header:object  = {row: null, col:  null, aggregation_boundary:null}// the type of row_ / col_ period_type,boundary_id,choices_path
+  public crosstabsFilters:object
+  private hasGeography:boolean=false
+  private hasTime:object={'row':false, 'col':false}
+  language: string
   constructor(
+    public readonly translate: TranslateService,
     private router: Router,
-    private modalService: NgbModal) {      
-    }
+    private modalService: NgbModal) {
+  }
 
   ngOnInit(): void {
+    this.tabs = [
+      { "label": 'Rows', "key": 'col' },
+      { "label": 'Columns', "key": 'row' }
+    ]
+    this.reportHeaders = {
+
+    }
     this.recordSchema = JSON.parse(localStorage.getItem('record_schema'))
     this.schema = this.recordSchema['schema']
-    this.language=localStorage.getItem("Language") || 'en'
+    this.language = localStorage.getItem("Language") || 'en'
     console.log(this.schema)
     this.initDataFrame()
   }
   onStateSelected(state) {
     this.stateSelected = state
-    localStorage.setItem('state',state)
+    localStorage.setItem('state', state)
     this.stateChange.emit(state)
   }
   selectBoundary(b) {
@@ -88,7 +107,6 @@ export class NavbarComponent implements OnInit {
       let defs = this.schema['definitions'][t]
       Object.entries(defs.properties).forEach((k) => {
         let e = (k[1]['enum']) ? k[1]['enum'] : (k[1]['items']) ? k[1]['items'].enum : []
-        console.log(this.filterPage[t][k[0]])
         let selected = Object.entries(this.filterPage[t][k[0]]).filter(m => m[1]).map(m => m[0])
         if (e.length && selected.length) {
           let j = {}
@@ -131,7 +149,16 @@ export class NavbarComponent implements OnInit {
     this.tables = Object.keys(this.schema['properties'])
       .sort((k, j) => { return this.schema['properties'][k].propertyOrder - this.schema['properties'][j].propertyOrder })
     let fu = localStorage.getItem('current_filter')
-
+    this.reportFilters = []
+    this.tables.forEach(t => {
+      let table=this.schema['definitions'][t]['plural_title']||this.schema['definitions'][t]['title']
+      Object.entries(this.schema['definitions'][t]['properties'])
+        .sort((k, j) => { return k[1]['propertyOrder'] - j[1]['propertyOrder'] })
+        .filter(k => k[1]['isSearchable'])
+        .forEach(element => {
+          this.reportFilters.push({title:element[0], table:t})
+        });
+    })
     this.loadFilter(fu)
   }
   loadFilter(fu) {
@@ -180,11 +207,66 @@ export class NavbarComponent implements OnInit {
   download() {
 
   }
-  setlang(code:string){
-    localStorage.setItem("Language",code)
+  setlang(code: string) {
+    localStorage.setItem("Language", code)
     location.reload()
   }
-  mapillaryAuth(){
-    window.location.href=this.config['MAPILLARY.URL']
+  mapillaryAuth() {
+    window.location.href = this.config['MAPILLARY.URL']
+  }
+  setReportHeaders(e: any) {
+    this.assembleReport()
+  }
+  wantsGeography() {
+    if(!this.reportHeaders['row']||!this.reportHeaders['col']) return false
+    if(this.hasGeography) return false
+    return true
+  }
+  wantsTime(tab:string){
+    let t=this.tabs.filter(fu=>fu.key!=tab).pop()['key']
+    return !this.hasTime[t]
+  }
+  resetReport(){
+    this.reportHeaders={}
+  }
+  assembleReport(){
+    this.crosstabsFilters={}
+    this.hasGeography=false
+    this.hasTime={'row':false, 'col':false}
+    this.tabs.forEach(tab=>{ // row, col
+      if(!this.reportHeaders[tab.key])return
+      let m=this.reportHeaders[tab.key].match(/(\w+),(.+)$/)
+      if(m.length==3){
+        this.crosstabsFilters[`${tab.key}_${m[1]}`]=m[2]
+        if(m[1]=='boundary_id') this.hasGeography=true
+        if(m[1]=='period_type') this.hasTime[tab.key]=true
+      }
+    })
+    if(this.reportHeaders['boundary'])
+      this.crosstabsFilters['aggregation_boundary']=this.reportHeaders['boundary']
+
+  }
+  applyReport(modal:any){
+    //http://192.168.1.101:8000/api/records/crosstabs/? \
+    //  aggregation_boundary=39119147-20a7-44d3-903c-fc83b7b939c9&
+    // archived=False&
+    // calendar=gregorian&
+    // col_period_type=month&
+    // occurred_max=2021-10-28T23:59:59.999Z&
+    // occurred_min=2021-07-30T00:00:00.000Z&
+    // record_type=d3005b08-ce42-4012-9497-65fd82efb11a&
+    // row_choices_path=driverDetails,properties,Incident+type
+    //
+    //a.options[a.selectedIndex].parentNode.getAttribute('value');
+    this.assembleReport()
+    let f=JSON.parse(localStorage.getItem("current_filter") || '{}')
+    Object.entries(f).forEach(([k, v])=>{
+      this.crosstabsFilters[k]=v
+    })
+    console.log(this.crosstabsFilters)
+    this.reportChange.emit(this.crosstabsFilters)
+  }
+  setHeader(tab:string, kind:string){
+    this.header[tab]=kind
   }
 }

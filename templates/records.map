@@ -93,6 +93,31 @@ MAP
             END
         END
     END
+    LAYER
+        NAME        "records_offset"
+        DATA        "geom from (select geom::geometry, uuid, occurred_from, location_text from ({{query|safe}}) as q) as rq using unique uuid using srid=4326"
+        CONNECTIONTYPE  POSTGIS
+        CONNECTION      "host={{connection}} dbname=driver user={{username}} password={{password}}"
+        UTFITEM   "uuid"
+        UTFDATA   "{\"uuid\":\"[uuid]\",\"occurred_from\":\"[occurred_from]\", \"location_text\":\"[location_text]\"}"
+        PROCESSING "KERNELDENSITY_RADIUS=10"
+        
+        TYPE POINT
+        PROJECTION
+            "init=epsg:4326"
+        END
+        CLASS
+            STYLE
+                OUTLINECOLOR 100 0 160
+                WIDTH 2
+                SIZE 6
+                COLOR 200 0 100
+                OPACITY 50
+                OFFSET 3 3
+                SYMBOL "circlef"
+            END
+        END
+    END
     SYMBOL
         ANCHORPOINT 0.5 0.5
         NAME "circlef"

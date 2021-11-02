@@ -27,33 +27,36 @@ import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
 import { ModalModule } from 'ngx-bootstrap/modal';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { filter, funnel, threeDots, threeDotsVertical,calendar,x } from 'ngx-bootstrap-icons';
+import { filter, funnel, threeDots, threeDotsVertical, calendar, x, textParagraph } from 'ngx-bootstrap-icons';
 
 import { NgxBootstrapIconsModule } from 'ngx-bootstrap-icons';
 import { ListComponent } from './list/list.component';
 import { IndexComponent } from './index/index.component';
 
-import {TranslateLoader, TranslateModule} from '@ngx-translate/core';
-import {TranslateHttpLoader} from '@ngx-translate/http-loader';
-import {MultiTranslateHttpLoader} from 'ngx-translate-multi-http-loader';
+import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import { MultiTranslateHttpLoader } from 'ngx-translate-multi-http-loader';
 
 import { SafePipeModule } from 'safe-pipe';
 import { ReportComponent } from './report/report.component';
+import { environment } from '../environments/environment';
+import { ReportViewComponent } from './report-view/report-view.component';
 
 export function HttpLoaderFactory(httpClient: HttpClient) {
+  let b = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
   return new MultiTranslateHttpLoader(httpClient, [
-      {prefix: "./assets/i18n/", suffix: ".json"},
-      {prefix: "http://192.168.1.101:8000/dictionary/", suffix: "/"},
+    { prefix: "./assets/i18n/", suffix: ".json" },
+    { prefix: `${b}/dictionary/`, suffix: "/" },
   ]);
 }
 
 const icons = {
   filter,
   funnel,
-  threeDots, 
+  threeDots,
   threeDotsVertical,
   calendar,
-  x
+  x,
+  textParagraph
 };
 
 @NgModule({
@@ -73,17 +76,18 @@ const icons = {
     FirstPipe,
     ListComponent,
     IndexComponent,
-    ReportComponent
+    ReportComponent,
+    ReportViewComponent
   ],
   imports: [
     BrowserModule,
     HttpClientModule,
     TranslateModule.forRoot({
-        loader: {
-            provide: TranslateLoader,
-            useFactory: HttpLoaderFactory,
-            deps: [HttpClient]
-        }
+      loader: {
+        provide: TranslateLoader,
+        useFactory: HttpLoaderFactory,
+        deps: [HttpClient]
+      }
     }),
     AppRoutingModule,
     BrowserAnimationsModule,

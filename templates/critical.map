@@ -8,7 +8,14 @@ MAP
         IMAGEMODE RGBA
         EXTENSION 'png'
     END
-
+    OUTPUTFORMAT
+        NAME "UTFGrid"
+        DRIVER UTFGRID
+        EXTENSION "json"
+        FORMATOPTION "LABELS=true"
+        FORMATOPTION "UTFRESOLUTION=4"
+        FORMATOPTION "DUPLICATES=false"
+    END
     IMAGETYPE      "PNG24"
     EXTENT -20037508.3427892480 -20037508.3427892480 20037508.3427892480 20037508.3427892480
     SIZE           256 256
@@ -36,7 +43,7 @@ MAP
         CONNECTION      "host={{connection}} dbname=driver user={{username}} password={{password}}"
         
         UTFITEM   "uuid"
-        UTFDATA   "{\"uuid\":\"[uuid]\",\"occurred_from\":\"[occurred_from]\"}"
+        UTFDATA   "{\"uuid\":\"[uuid]\",\"name\":\"[name]\", \"cost\":\"[severity_score]\", \"num_records\":\"[num_records]\"}"
         PROCESSING "KERNELDENSITY_RADIUS=10"
         
         TYPE LINE

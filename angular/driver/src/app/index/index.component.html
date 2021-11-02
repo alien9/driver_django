@@ -1,12 +1,12 @@
 <app-navbar class=navbar-fixed [config]=config [filter]=filter [boundaries]=boundaries (boundaryChange)=setBoundary($event) (boundaryPolygonChange)=setBoundaryPolygon($event) [boundary]=boundary [boundaryPolygons]=boundaryPolygons [boundaryPolygon]=boundaryPolygon
-    (filterChange)=setFilter($event) (stateChange)=selectState($event) [stateSelected]=state></app-navbar>
+    (filterChange)=setFilter($event) (stateChange)=selectState($event) (reportChange)=setReport($event) [stateSelected]=state></app-navbar>
 <app-list *ngIf="state=='List'" [filter]=filter [boundary_polygon_uuid]=boundary_polygon_uuid [recordSchema]=recordSchema [recordList]=recordList (viewRecord)="viewRecord(viewpoint, $event)"></app-list>
 <app-map *ngIf="state=='Map'" [fitBounds]=fitBounds [options]=options [layers]=layers [layersControl]=layersControl [boundary_polygon_uuid]=boundary_polygon_uuid (map)=setMap($event)></app-map>
 
 <button (click)=mapClick(viewpoint) [hidden]="true" id="map-popup-button"></button>
 <ng-template #viewpoint let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" i18n>Record</h4>
+        <h4 class="modal-title">{{'Record' | translate}}</h4>
         <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span> 
         </button>
@@ -31,4 +31,4 @@
     <a href="#" id="open-record-popup" (click)=popClick($event)>{{'View'|translate}}</a>
 </div>
 
-<app-report *ngIf="state=='Report'" [recordSchema]=recordSchema></app-report>
+<app-report *ngIf="state=='Reports' && report" [recordSchema]=recordSchema [reportParameters]=report></app-report>

@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-light" style="z-index:9999">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="z-index:9999">
     <div class="container-fluid">
         <a class="navbar-brand" i18n href="#">DRIVER</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -11,10 +11,14 @@
                         {{stateSelected | translate}}
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="#" (click)="onStateSelected('Map')" i18n>{{'Map' | translate}}</a></li>
-                        <li><a class="dropdown-item" href="#" (click)="onStateSelected('List')" i18n>{{'List' | translate}}</a></li>
-                        <li><a class="dropdown-item" href="#" (click)="onStateSelected('Reports')" i18n>{{'Reports' | translate}}</a></li>
-                        <li><a class="dropdown-item" href="#" (click)="onStateSelected('Charts')" i18n>{{'Charts' | translate}}</a></li>
+                        <li><a class="dropdown-item" href="#" (click)="onStateSelected('Map')" i18n>{{'Map' |
+                                translate}}</a></li>
+                        <li><a class="dropdown-item" href="#" (click)="onStateSelected('List')" i18n>{{'List' |
+                                translate}}</a></li>
+                        <li><a class="dropdown-item" href="#" (click)="onStateSelected('Reports')" i18n>{{'Reports' |
+                                translate}}</a></li>
+                        <li><a class="dropdown-item" href="#" (click)="onStateSelected('Charts')" i18n>{{'Charts' |
+                                translate}}</a></li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
@@ -58,17 +62,17 @@
                     </ul>
                 </li>
                 <li class="nav-item">
-                    <button (click)=startFilters(viewpoint) class="btn btn-outline-secondary" type="submit">
-                        <i-bs name="funnel"></i-bs>
-                    </button>
+                    <form class="form-inline my-2 my-lg-0">
+                        <button (click)=startFilters(viewpoint) class="btn btn-outline-secondary" type="submit">
+                            <i-bs name="funnel"></i-bs>
+                        </button>
+                        <button *ngIf="stateSelected=='Reports'" (click)=startFilters(report) class="btn btn-outline-secondary" type="submit">
+                            <i-bs name="text-paragraph"></i-bs>
+                        </button>
+                    </form>
                 </li>
                 <li class="nav-item">
-                    <button *ngIf="stateSelected=='Reports'" (click)=startFilters(viewpoint) class="btn btn-outline-secondary" type="submit">
-                        <i-bs name="text-paragraph"></i-bs>
-                        <i class="bi bi-text-paragraph"></i>
 
-                        aaaa
-                    </button>
                 </li>
             </ul>
 
@@ -173,5 +177,58 @@
         <button type="button" class="btn btn-outline-secondary" (click)="apply()" i18n>Apply</button>
         <button type="button" class="btn btn-outline-secondary" (click)="modal.close( 'Close click')" i18n>Close</button>
         <button type="button" class="btn btn-outline-secondary" (click)="modal.close( 'Close click')" i18n>Cancel</button>
+    </div>
+</ng-template>
+
+<ng-template #report let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title">{{'Report' | translate}}</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{'Active filter'|translate}}</h5>
+                <p class="card-text" *ngIf="filter['occurred_min'] && filter['occurred_max']">{{'Occurred date'| translate}}: {{filter['occurred_min']|date}} {{'to'|translate}} {{filter['occurred_max']|date}}</p>
+            </div>
+        </div>
+
+        <div class="input-group mb-3 mt-3" *ngFor="let tab of tabs">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon3">{{tab['label']|translate}}:</span>
+            </div>
+            <select class="custom-select" [(ngModel)]=reportHeaders[tab.key] (change)=setReportHeaders($event) id="{{tab.key}}_header">
+                <optgroup label="{{'Geography'|translate}}" *ngIf=boundaries.length>
+                    <option [value]="'boundary_id,'+item.uuid" *ngFor="let item of boundaries">{{item.label}}</option>
+                </optgroup>
+                <optgroup label="{{'Time'|translate}}" *ngIf=wantsTime(tab.key)>
+                    <option value="period_type,day">{{'Day'|translate}}</option>
+                    <option value="period_type,week_day">{{'Day of Week'|translate}}</option>
+                    <option value="period_type,hour">{{'Hour of Day'|translate}}</option>
+                    <option value="period_type,month">{{'Month'|translate}}</option>
+                    <option value="period_type,week">{{'Week'|translate}}</option>
+                    <option value="period_type,year">{{'Year'|translate}}</option>
+                </optgroup>
+                <optgroup label="{{'Filter'|translate}}">
+                    <option [value]="'choices_path,'+field['table']+',properties,'+field['title']" *ngFor="let field of reportFilters">
+                        {{field['title']||translate}}</option>
+                </optgroup>
+            </select>
+        </div>
+        <div class="input-group mb-3" *ngIf="boundaries.length && wantsGeography()">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon3">{{'Aggregate by boundary'|translate}}:</span>
+            </div>
+            <select class="custom-select" [(ngModel)]="reportHeaders['boundary']" (change)="setReportHeaders($event)">
+                <option [value]="item.uuid" *ngFor="let item of boundaries">{{item.label}}</option>
+            </select>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="resetReport()" i18n>{{'Reset'|translate}}</button>
+        <button type="button" class="btn btn-light" [disabled]="!reportHeaders['row'] || !reportHeaders['col']" (click)="applyReport($event)">{{'Apply'|translate}}</button>
+        <button type="button" class="btn btn-light" (click)="modal.close('Close click')" i18n>{{'Close'|translate}}</button>
     </div>
 </ng-template>

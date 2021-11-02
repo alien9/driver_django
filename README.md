@@ -25,3 +25,17 @@ Postgresql
 ## Requirements
 
 Python 3.8.5; PostgreSQL 9.4; GDAL 2.4.1; PostGIS 2.5
+
+## AngularJS front-end
+
+./angular/driver
+
+For dev envirinment, run:
+
+npm install --save
+ng serve
+
+npm run extract-translations
+
+The dictionaries will be stored at ./angular/driver/src/assets/i18n
+To create a new language, include its code as an empty json file; this must match a dictionary created in the back-end to provide the option to the language.

@@ -9,7 +9,6 @@ import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
 import { DrawEvents, featureGroup, FeatureGroup, icon, latLng, tileLayer } from 'leaflet';
 import { utfGrid } from '../UtfGrid';
 import { } from 'jquery'
-import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
@@ -39,6 +38,7 @@ export class IndexComponent implements OnInit {
   public map:L.Map
   record_uuid: string
   public critical: object={}
+  public report:object
   popContent:any
   constructor(
     private recordService: RecordService,
@@ -179,7 +179,8 @@ export class IndexComponent implements OnInit {
 
   setBoundary(event: any) {
     this.boundary = event
-    localStorage.setItem("boundary", this.boundary.uuid)
+    if(event) {
+      localStorage.setItem("boundary", this.boundary.uuid)
     this.recordService.getBoundaryPolygons(this.boundary).pipe(first()).subscribe(
       data => {
         if (data["results"]) {
@@ -190,8 +191,8 @@ export class IndexComponent implements OnInit {
           else */
           this.setBoundaryPolygon(null)
         }
-
       })
+    }
   }
   setBoundaryPolygon(b: any) {
     if(!this.filter) this.filter={}
@@ -276,13 +277,16 @@ export class IndexComponent implements OnInit {
         });
         cl.on('click', (e: any) => {
           if (e.data) {
+            let du=new Date(Date.parse(e.data['occurred_from']))
             let t=$("#record-popup-content").html()
-              .replace(/-date-/, new Date(Date.parse(e.data['occurred_from'])).toLocaleDateString())
+              .replace(/-date-/, `${du.toLocaleDateString()}, ${du.toLocaleTimeString()}`)
               .replace(/-location-/, e.data['location_text'])
               .replace(/-uuid-/, e.data['uuid'])
             new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
+            var m=this.map
             this.record_uuid = e.data.uuid
             $("#open-record-popup").on('click',function(){
+              m.closePopup()
               $('#map-popup-button').trigger('click');
             })
            }
@@ -323,5 +327,8 @@ export class IndexComponent implements OnInit {
   }
   popClick(e:any){
     console.log(e)
+  }
+  setReport(r:object){
+    this.report=r
   }
 }
