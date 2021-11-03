@@ -112,6 +112,12 @@ class DriverRecord(Record):
                 else:
                     print("Road not found.")
                     return None
+@receiver(post_save, sender=DriverRecord)
+def record_after_save(sender, instance, **kwargs):
+    if instance.location_text is None:
+        print("should geocode")
+
+
 """
     def save(self, *args, **kwargs):
         self.geocode()
