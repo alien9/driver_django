@@ -30,7 +30,7 @@ Python 3.8.5; PostgreSQL 9.4; GDAL 2.4.1; PostGIS 2.5
 
 ./angular/driver
 
-For dev envirinment, run:
+For dev environment, run:
 
 npm install --save
 ng serve

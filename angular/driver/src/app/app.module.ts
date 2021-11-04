@@ -33,6 +33,9 @@ import { NgxBootstrapIconsModule } from 'ngx-bootstrap-icons';
 import { ListComponent } from './list/list.component';
 import { IndexComponent } from './index/index.component';
 
+import { IsDatePipe } from './report/isdate.pipe';
+import {LocalizedDatePipe } from './report/localized.date.pipe';
+
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { MultiTranslateHttpLoader } from 'ngx-translate-multi-http-loader';
 
@@ -74,6 +77,8 @@ const icons = {
     FormatPipe,
     DictDumpPipe,
     FirstPipe,
+    IsDatePipe,
+    LocalizedDatePipe,
     ListComponent,
     IndexComponent,
     ReportComponent,

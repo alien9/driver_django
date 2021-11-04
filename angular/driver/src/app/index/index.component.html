@@ -31,4 +31,4 @@
     <a href="#" id="open-record-popup" (click)=popClick($event)>{{'View'|translate}}</a>
 </div>
 
-<app-report *ngIf="state=='Reports' && report" [recordSchema]=recordSchema [reportParameters]=report></app-report>
+<app-report *ngIf="state=='Reports' && report" [recordSchema]=recordSchema [boundaries]=boundaries [report]=report [config]=config></app-report>
