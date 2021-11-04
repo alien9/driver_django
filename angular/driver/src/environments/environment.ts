@@ -4,9 +4,7 @@
 
 export const environment = {
   production: false,
-  api: "http://192.168.1.101:8000",
-  mapserver:"http://192.168.1.101:8000/mapcache/tms/1.0.0/",
-  label: "Incident",
+  api: "http://localhost:8000",
   center: [-16.5, -68.15],
   zoom: 12
 };

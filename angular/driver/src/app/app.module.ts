@@ -42,7 +42,6 @@ import { MultiTranslateHttpLoader } from 'ngx-translate-multi-http-loader';
 import { SafePipeModule } from 'safe-pipe';
 import { ReportComponent } from './report/report.component';
 import { environment } from '../environments/environment';
-import { ReportViewComponent } from './report-view/report-view.component';
 
 export function HttpLoaderFactory(httpClient: HttpClient) {
   let b = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
@@ -81,8 +80,8 @@ const icons = {
     LocalizedDatePipe,
     ListComponent,
     IndexComponent,
-    ReportComponent,
-    ReportViewComponent
+    ReportComponent
+
   ],
   imports: [
     BrowserModule,

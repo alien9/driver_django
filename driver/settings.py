@@ -539,4 +539,5 @@ CONSTANCE_CONFIG = {
     'MAPILLARY_CLIENT_ID': ("", _("Mapillary Client")),
     'MAPILLARY_SECRET': ("", _("Mapillary secret")),
     'MAPILLARY_TOKEN': ("", _("Mapillary token")),
+    'NOMINATIM': ("", _("Nominatim key")),
 }

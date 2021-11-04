@@ -106,6 +106,7 @@ def dictionary(request, code):
     d = Dictionary.objects.filter(language_code=code)
     if len(d):
         return JsonResponse(d[0].content)
+    return JsonResponse({})
 
 def mapillary_callback(request):
     j={"result":"FAIL"}
