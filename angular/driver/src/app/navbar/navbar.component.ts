@@ -8,6 +8,8 @@ import { JSDocTagName } from '@angular/compiler/src/output/output_ast';
 import { Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { translate } from '@angular/localize/src/translate';
+import { RecordService } from './../record.service'
+import { first } from 'rxjs/operators';
 
 @Component({
   selector: 'app-navbar',
@@ -26,7 +28,7 @@ export class NavbarComponent implements OnInit {
   @Output() boundaryPolygonChange = new EventEmitter<object>()
   @Output() filterChange = new EventEmitter<object>()
   @Output() stateChange = new EventEmitter<string>()
-  @Output() reportChange=new EventEmitter<object>()
+  @Output() reportChange = new EventEmitter<object>()
   public recordSchema: object
   @Input() stateSelected
   public authenticated: boolean = true
@@ -41,12 +43,15 @@ export class NavbarComponent implements OnInit {
 
   ]
   public reportHeaders: object
-  private header:object  = {row: null, col:  null, aggregation_boundary:null}// the type of row_ / col_ period_type,boundary_id,choices_path
-  public crosstabsFilters:object
-  private hasGeography:boolean=false
-  private hasTime:object={'row':false, 'col':false}
+  reportParameters: object
+  public report: object
+  private header: object = { row: null, col: null, aggregation_boundary: null }// the type of row_ / col_ period_type,boundary_id,choices_path
+  public crosstabsFilters: object
+  private hasGeography: boolean = false
+  private hasTime: object = { 'row': false, 'col': false }
   language: string
   constructor(
+    private recordService: RecordService,
     public readonly translate: TranslateService,
     private router: Router,
     private modalService: NgbModal) {
@@ -54,8 +59,8 @@ export class NavbarComponent implements OnInit {
 
   ngOnInit(): void {
     this.tabs = [
-      { "label": 'Rows', "key": 'col' },
-      { "label": 'Columns', "key": 'row' }
+      { "label": 'Rows', "key": 'row' },
+      { "label": 'Columns', "key": 'col' }
     ]
     this.reportHeaders = {
 
@@ -142,8 +147,10 @@ export class NavbarComponent implements OnInit {
     if (this.occurred_max_ngb) {
       result['occurred_max'] = this.fromNgb(this.occurred_max_ngb)
     }
-    this.filterChange.emit(result)
+
     localStorage.setItem("current_filter", JSON.stringify(result))
+    result['obj'] = jsonb
+    this.filterChange.emit(result)
   }
   initDataFrame() {
     this.tables = Object.keys(this.schema['properties'])
@@ -151,29 +158,32 @@ export class NavbarComponent implements OnInit {
     let fu = localStorage.getItem('current_filter')
     this.reportFilters = []
     this.tables.forEach(t => {
-      let table=this.schema['definitions'][t]['plural_title']||this.schema['definitions'][t]['title']
+      let table = this.schema['definitions'][t]['plural_title'] || this.schema['definitions'][t]['title']
       Object.entries(this.schema['definitions'][t]['properties'])
         .sort((k, j) => { return k[1]['propertyOrder'] - j[1]['propertyOrder'] })
         .filter(k => k[1]['isSearchable'])
         .forEach(element => {
-          this.reportFilters.push({title:element[0], table:t})
+          this.reportFilters.push({ title: element[0], table: t })
         });
     })
-    this.loadFilter(fu)
+    this.loadFilter()
   }
-  loadFilter(fu) {
-    let f: object
-    if (fu) {
-      let h = JSON.parse(fu)
-      f = JSON.parse(h.jsonb)
-      this.occurred_max = new Date(h.occurred_max)
-      this.occurred_min = new Date(h.occurred_min)
+  loadFilter() {
+    let f = {}
+    if (!this.filter) this.filter = {}
+
+    if (this.filter['occurred_max']) {
+      this.occurred_max = new Date(this.filter['occurred_max'])
     } else {
       this.occurred_max = new Date()
+    }
+    if (this.filter['occurred_min']) {
+      this.occurred_min = new Date(this.filter['occurred_min'])
+    } else {
       this.occurred_min = new Date()
       this.occurred_min.setMonth(this.occurred_max.getMonth() - 3);
-      f = {}
     }
+
     this.occurred_min_ngb = this.asNgbDateStruct(this.occurred_min)
     this.occurred_max_ngb = this.asNgbDateStruct(this.occurred_max)
 
@@ -185,13 +195,21 @@ export class NavbarComponent implements OnInit {
       let defs = this.schema['definitions'][t]
       Object.entries(defs.properties).forEach((k) => {
         let e = (k[1]['enum']) ? k[1]['enum'] : (k[1]['items']) ? k[1]['items'].enum : []
+        console.log(e)
         if (!f[t][k[0]]) f[t][k[0]] = {}
         e.forEach(element => {
-          if (f[t][k[0]]['contains']) f[t][k[0]][element] = f[t][k[0]]['contains'].indexOf(element) >= 0
+
+          if (this.filter && this.filter['obj'] && this.filter['obj'][t] && this.filter['obj'][t][k[0]] && this.filter['obj'][t][k[0]]['contains']) {
+            if (this.filter['obj'][t][k[0]]['contains'].indexOf(element) >= 0) {
+              f[t][k[0]][element] = true
+            } else {
+              f[t][k[0]][element] = false
+            }
+          }
         });
         if ((k[1]['type'] == "number") || (k[1]['type'] == "integer")) {
-          f[t][k[0]].minimum = f[t][k[0]]['min']
-          f[t][k[0]].maximum = f[t][k[0]]['max']
+          f[t][k[0]].minimum = this.filter['obj'][t][k[0]]['min']
+          f[t][k[0]].maximum = this.filter['obj'][t][k[0]]['max']
         }
       })
       this.filterPage = f
@@ -218,35 +236,35 @@ export class NavbarComponent implements OnInit {
     this.assembleReport()
   }
   wantsGeography() {
-    if(!this.reportHeaders['row']||!this.reportHeaders['col']) return false
-    if(this.hasGeography) return false
+    if (!this.reportHeaders['row'] || !this.reportHeaders['col']) return false
+    if (this.hasGeography) return false
     return true
   }
-  wantsTime(tab:string){
-    let t=this.tabs.filter(fu=>fu.key!=tab).pop()['key']
+  wantsTime(tab: string) {
+    let t = this.tabs.filter(fu => fu.key != tab).pop()['key']
     return !this.hasTime[t]
   }
-  resetReport(){
-    this.reportHeaders={}
+  resetReport() {
+    this.reportHeaders = {}
   }
-  assembleReport(){
-    this.crosstabsFilters={}
-    this.hasGeography=false
-    this.hasTime={'row':false, 'col':false}
-    this.tabs.forEach(tab=>{ // row, col
-      if(!this.reportHeaders[tab.key])return
-      let m=this.reportHeaders[tab.key].match(/(\w+),(.+)$/)
-      if(m.length==3){
-        this.crosstabsFilters[`${tab.key}_${m[1]}`]=m[2]
-        if(m[1]=='boundary_id') this.hasGeography=true
-        if(m[1]=='period_type') this.hasTime[tab.key]=true
+  assembleReport() {
+    this.crosstabsFilters = {}
+    this.hasGeography = false
+    this.hasTime = { 'row': false, 'col': false }
+    this.tabs.forEach(tab => { // row, col
+      if (!this.reportHeaders[tab.key]) return
+      let m = this.reportHeaders[tab.key].match(/(\w+),(.+)$/)
+      if (m.length == 3) {
+        this.crosstabsFilters[`${tab.key}_${m[1]}`] = m[2]
+        if (m[1] == 'boundary_id') this.hasGeography = true
+        if (m[1] == 'period_type') this.hasTime[tab.key] = true
       }
     })
-    if(this.reportHeaders['boundary'])
-      this.crosstabsFilters['aggregation_boundary']=this.reportHeaders['boundary']
+    if (this.reportHeaders['boundary'])
+      this.crosstabsFilters['aggregation_boundary'] = this.reportHeaders['boundary']
 
   }
-  applyReport(modal:any){
+  applyReport(modal: any) {
     //http://192.168.1.101:8000/api/records/crosstabs/? \
     //  aggregation_boundary=39119147-20a7-44d3-903c-fc83b7b939c9&
     // archived=False&
@@ -259,14 +277,47 @@ export class NavbarComponent implements OnInit {
     //
     //a.options[a.selectedIndex].parentNode.getAttribute('value');
     this.assembleReport()
-    let f=JSON.parse(localStorage.getItem("current_filter") || '{}')
-    Object.entries(f).forEach(([k, v])=>{
-      this.crosstabsFilters[k]=v
+    let f = JSON.parse(localStorage.getItem("current_filter") || '{}')
+    Object.entries(f).forEach(([k, v]) => {
+      this.crosstabsFilters[k] = v
     })
     console.log(this.crosstabsFilters)
-    this.reportChange.emit(this.crosstabsFilters)
+    this.loadReport(this.crosstabsFilters)
   }
-  setHeader(tab:string, kind:string){
-    this.header[tab]=kind
+  setHeader(tab: string, kind: string) {
+    this.header[tab] = kind
+  }
+
+  loadReport(p: any) {
+    this.reportParameters = p
+    let path = {};
+    (['col', 'row']).forEach(tab => {
+      if (this.reportParameters[`${tab}_choices_path`]) {
+        let p = this.reportParameters[`${tab}_choices_path`]
+        path[tab] = p.match(/[^,]+,[^,]+,(.+)$/).pop()
+      }
+      if (this.reportParameters[`${tab}_period_type`]) {
+        path[tab] = this.reportParameters[`${tab}_period_type`]
+      }
+      if (this.reportParameters[`${tab}_boundary_id`]) {
+        let boundary = this.boundaries.filter(bu => bu['uuid'] == this.reportParameters[`${tab}_boundary_id`]).pop()
+        path[tab] = boundary['label']
+      }
+    })
+    this.report = null
+    if (this.reportParameters) {
+      this.recordService.getCrossTabs(this.recordSchema["record_type"], this.reportParameters).pipe(first()).subscribe(
+        crosstabs => {
+          this.reportChange.emit({
+            crosstabs: crosstabs,
+            path: path,
+            parameters: this.reportParameters
+          })
+        }
+      )
+    }
+  }
+  resetFilter() {
+    this.loadFilter()
   }
 }

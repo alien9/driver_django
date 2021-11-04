@@ -67,7 +67,10 @@ export class IndexComponent implements OnInit {
     let bp = localStorage.getItem("boundary_polygon")
     if (bp) this.boundary_polygon_uuid = bp
     let fu = localStorage.getItem("current_filter")
-    if (fu) this.filter = JSON.parse(fu)
+    if (fu) {
+      this.filter = JSON.parse(fu)
+      this.filter['obj']=JSON.parse(this.filter['jsonb'])
+    }
 
     let str = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
       {

@@ -1,36 +1,35 @@
-<div *ngIf=reportParameters>
-    <h3>
-        {{reportParameters['occurred_min']|date:'longDate'}} - {{reportParameters['occurred_max']|date:'longDate'}}
-    </h3>
-    <h5>{{'Records'|translate}} {{'by'|translate}} {{path['row']|translate}} {{'and'|translate}} {{path['col']|translate}}</h5>
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">First</th>
-                <th scope="col">Last</th>
-                <th scope="col">Handle</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <th scope="row">1</th>
-                <td>Mark</td>
-                <td>Otto</td>
-                <td>@mdo</td>
-            </tr>
-            <tr>
-                <th scope="row">2</th>
-                <td>Jacob</td>
-                <td>Thornton</td>
-                <td>@fat</td>
-            </tr>
-            <tr>
-                <th scope="row">3</th>
-                <td>Larry</td>
-                <td>the Bird</td>
-                <td>@twitter</td>
-            </tr>
-        </tbody>
-    </table>
+<div *ngIf="report['crosstabs']">
+    <div *ngFor="let table of report['crosstabs']['tables']; let j=index">
+        <div class=m-2>
+            <h3>
+                {{report['parameters']['occurred_min']|localizedDate:'longDate'}} - {{report['parameters']['occurred_max']|localizedDate:'longDate'}}
+            </h3>
+            <h5>{{config['PRIMARY_LABEL']|translate}}
+                <span *ngIf="table['tablekey']">{{'for'|translate}} {{report['crosstabs']['table_labels'][table['tablekey']]}}</span> {{'by'|translate}} {{report['path']['row']|translate}} {{'and'|translate}} {{report['path']['col']|translate}}
+            </h5>
+        </div>
+        <table class="table" *ngIf=report>
+            <thead>
+                <tr>
+                    <th scope="col">{{report['path']['row']|translate}}</th>
+                    <th scope="col" *ngFor="let col of report['crosstabs']['col_labels']; let i=index">
+                        <span *ngIf="report['parameters']['col_period_type']">{{col.key|isdate}}</span>
+                        <span *ngIf="report['parameters']['col_choices_path']">{{col.key|translate}}</span>
+                        <span *ngIf="report['parameters']['col_boundary_id']">{{report['crosstabs']['col_labels'][i].label[0].text}}</span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let row of report['crosstabs']['row_labels']; let i=index">
+                    <th scope="row" *ngIf="report['parameters']['row_period_type']">{{row.key|isdate}}</th>
+                    <th scope="row" *ngIf="report['parameters']['row_choices_path']">{{row.key|translate}}</th>
+                    <th scope="row" *ngIf="report['parameters']['row_boundary_id']">
+                        {{report['crosstabs']['row_labels'][i].label[0].text}}</th>
+                    <td *ngFor="let col of report['crosstabs']['col_labels']">
+                        {{report['crosstabs']['tables'][j]['data'][row.key]?(report['crosstabs']['tables'][j]['data'][row.key][col.key]?report['crosstabs']['tables'][j]['data'][row.key][col.key]:"0"):"0"}}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
