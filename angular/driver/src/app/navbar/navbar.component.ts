@@ -198,7 +198,6 @@ export class NavbarComponent implements OnInit {
         console.log(e)
         if (!f[t][k[0]]) f[t][k[0]] = {}
         e.forEach(element => {
-
           if (this.filter && this.filter['obj'] && this.filter['obj'][t] && this.filter['obj'][t][k[0]] && this.filter['obj'][t][k[0]]['contains']) {
             if (this.filter['obj'][t][k[0]]['contains'].indexOf(element) >= 0) {
               f[t][k[0]][element] = true
@@ -208,8 +207,10 @@ export class NavbarComponent implements OnInit {
           }
         });
         if ((k[1]['type'] == "number") || (k[1]['type'] == "integer")) {
-          f[t][k[0]].minimum = this.filter['obj'][t][k[0]]['min']
-          f[t][k[0]].maximum = this.filter['obj'][t][k[0]]['max']
+          if (this.filter && this.filter['obj'] && this.filter['obj'][t]) {
+            f[t][k[0]].minimum = this.filter['obj'][t][k[0]]['min']
+            f[t][k[0]].maximum = this.filter['obj'][t][k[0]]['max']
+          }
         }
       })
       this.filterPage = f

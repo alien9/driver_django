@@ -1,6 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { RecordService } from '../record.service'
 import { first } from 'rxjs/operators';
+import { NgxSpinnerService } from "ngx-spinner";
 
 @Component({
   selector: 'app-list',
@@ -17,9 +18,13 @@ export class ListComponent implements OnInit {
   public fieldname: string = "Header"
   public table: string
   public field: string
-  constructor(private recordService: RecordService) { }
+  constructor(
+    private recordService: RecordService,
+    private spinner: NgxSpinnerService
+  ) { }
 
   ngOnInit(): void {
+    this.spinner.show();
     let tables = Object.entries(this.recordSchema['schema']['properties']).sort((a, b) => (a[1]['propertyOrder'] < b[1]['propertyOrder']) ? -1 : 1).filter(k => !k[1]['multiple'])
     if (tables.length) {
       let fields = Object.entries(this.recordSchema['schema']['definitions'][tables[0][0]]['properties']).sort((a, b) => (a[1]['propertyOrder'] < b[1]['propertyOrder']) ? -1 : 1).filter(k => !(k[1]['options'] && k[1]['options']['hidden']))
@@ -32,12 +37,13 @@ export class ListComponent implements OnInit {
   }
   loadRecords() {
     if (this.boundary_polygon_uuid) this.filter["polygon_id"] = this.boundary_polygon_uuid
-    if (!this.recordList) {
+    //if (!this.recordList) {
       this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"] }, { filter: this.filter }).pipe(first()).subscribe(
         data => {
           this.recordList = data
+          this.spinner.show();
         })
-    }
+    //}
   }
   view(uuid: string) {
     this.viewRecord.emit(uuid)

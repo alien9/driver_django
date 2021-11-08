@@ -18,6 +18,7 @@ export class ReportComponent implements OnInit {
   path:object={}
   locale:string
   timezone:any
+  weekdays:object
   constructor(
     private recordService: RecordService
   ) { }
@@ -26,6 +27,12 @@ export class ReportComponent implements OnInit {
 
     this.timezone=(new Date()).getTimezoneOffset()
     this.locale=localStorage.getItem("Language") || "en"
+    this.weekdays={}
+    let d=new Date()
+    for(let i=0;i<7;i++){
+      this.weekdays[d.getDay()]=d.toLocaleDateString(this.locale, {weekday:'long'})
+      d.setDate(d.getDate()+1)
+    }
     /* 
     (['col','row']).forEach(tab=>{
       if(this.reportParameters[`${tab}_choices_path`]){

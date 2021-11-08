@@ -1,3 +1,6 @@
+<div class="float-right"><button>
+    editar
+</button></div><br>
 <ul ngbNav #nav="ngbNav" class="nav-tabs">
     <li [ngbNavItem]="k.key" *ngFor="let k of schema['definitions']|keyvalue|orderBy">
         <a ngbNavLink *ngIf="!k.value.multiple">{{k.value.title|translate}}</a>

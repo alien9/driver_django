@@ -6,7 +6,12 @@
 <button (click)=mapClick(viewpoint) [hidden]="true" id="map-popup-button"></button>
 <ng-template #viewpoint let-modal>
     <div class="modal-header">
-        <h4 class="modal-title">{{'Record' | translate}}</h4>
+        <h4 class="modal-title">{{'Record' | translate}}
+            <button type="button" class="btn float-left mx-2" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                <i-bs name="pencil-square"></i-bs>
+            </button>
+
+        </h4>
         <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span> 
         </button>

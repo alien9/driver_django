@@ -33,6 +33,7 @@ export class InputComponent implements OnInit {
       }
     }
     let latlng=this.record['geom'].coordinates.reverse()
+    console.log(latlng)
     this.layers = [osm,
       L.marker(latlng, {
         icon: L.icon({

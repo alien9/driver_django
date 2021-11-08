@@ -200,6 +200,7 @@
 
             </div>
         </div>
+        <div style="display:none">{{'Rows'|translate}}, {{'Columns'|translate}}</div>
         <div class="input-group mb-3 mt-3" *ngFor="let tab of tabs">
             <div class="input-group-prepend">
                 <span class="input-group-text" id="basic-addon3">{{tab['label']|translate}}:</span>
@@ -209,12 +210,12 @@
                     <option [value]="'boundary_id,'+item.uuid" *ngFor="let item of boundaries">{{item.label}}</option>
                 </optgroup>
                 <optgroup label="{{'Time'|translate}}" *ngIf=wantsTime(tab.key)>
-                    <option value="period_type,day">{{'Day'|translate}}</option>
-                    <option value="period_type,week_day">{{'Day of Week'|translate}}</option>
-                    <option value="period_type,hour">{{'Hour of Day'|translate}}</option>
-                    <option value="period_type,month">{{'Month'|translate}}</option>
-                    <option value="period_type,week">{{'Week'|translate}}</option>
-                    <option value="period_type,year">{{'Year'|translate}}</option>
+                    <option value="period_type,day">{{'day'|translate}}</option>
+                    <option value="period_type,day_of_week">{{'day_of_week'|translate}}</option>
+                    <option value="period_type,hour_of_day">{{'hour_of_day'|translate}}</option>
+                    <option value="period_type,month">{{'month'|translate}}</option>
+                    <option value="period_type,week">{{'week'|translate}}</option>
+                    <option value="period_type,year">{{'year'|translate}}</option>
                 </optgroup>
                 <optgroup label="{{'Filter'|translate}}">
                     <option [value]="'choices_path,'+field['table']+',properties,'+field['title']" *ngFor="let field of reportFilters">
