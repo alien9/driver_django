@@ -41,7 +41,7 @@ export class ListComponent implements OnInit {
       this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"] }, { filter: this.filter }).pipe(first()).subscribe(
         data => {
           this.recordList = data
-          this.spinner.show();
+          this.spinner.hide();
         })
     //}
   }

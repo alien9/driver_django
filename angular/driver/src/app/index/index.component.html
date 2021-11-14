@@ -7,7 +7,7 @@
 <ng-template #viewpoint let-modal>
     <div class="modal-header">
         <h4 class="modal-title">{{'Record' | translate}}
-            <button type="button" class="btn float-left mx-2" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <button type="button" class="btn float-left mx-2" aria-label="Edit" (click)="editRecord()" *ngIf="(!editing) && canWrite">
                 <i-bs name="pencil-square"></i-bs>
             </button>
 
@@ -17,7 +17,7 @@
         </button>
     </div>
     <div class="modal-body">
-        <app-input [config]=config [record]=record [recordSchema]=recordSchema></app-input>
+        <app-input [config]=config [record]=record [recordSchema]=recordSchema [editing]=editing></app-input>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-light" (click)="modal.close('Close click')" i18n>Close</button>

@@ -66,6 +66,10 @@ export class NavbarComponent implements OnInit {
 
     }
     this.recordSchema = JSON.parse(localStorage.getItem('record_schema'))
+    if(!this.recordSchema){
+      this.router.navigateByUrl('/login')
+      return
+    }
     this.schema = this.recordSchema['schema']
     this.language = localStorage.getItem("Language") || 'en'
     console.log(this.schema)
@@ -207,7 +211,7 @@ export class NavbarComponent implements OnInit {
           }
         });
         if ((k[1]['type'] == "number") || (k[1]['type'] == "integer")) {
-          if (this.filter && this.filter['obj'] && this.filter['obj'][t]) {
+          if (this.filter && this.filter['obj'] && this.filter['obj'][t] && this.filter['obj'][t][k[0]]) {
             f[t][k[0]].minimum = this.filter['obj'][t][k[0]]['min']
             f[t][k[0]].maximum = this.filter['obj'][t][k[0]]['max']
           }

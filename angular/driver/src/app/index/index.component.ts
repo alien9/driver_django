@@ -16,8 +16,8 @@ import { ActivatedRoute } from '@angular/router';
   templateUrl: './index.component.html',
   styleUrls: ['./index.component.scss']
 })
-export class IndexComponent implements OnInit {  
-  public config:object
+export class IndexComponent implements OnInit {
+  public config: object
   public boundaries: any[] = []
   public boundary: any
   public boundaryPolygons: any[]
@@ -33,13 +33,15 @@ export class IndexComponent implements OnInit {
   public recordsLayer: L.LayerGroup
   public boundary_polygon_uuid: string
   public filter: object
-  public record:object
-  public recordList:object
-  public map:L.Map
+  public record: object
+  public recordList: object
+  public map: L.Map
   record_uuid: string
-  public critical: object={}
-  public report:object
-  popContent:any
+  public critical: object = {}
+  public report: object
+  public editing:boolean=false
+  public canWrite:boolean=false
+  popContent: any
   constructor(
     private recordService: RecordService,
     private router: Router,
@@ -48,16 +50,18 @@ export class IndexComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.state=localStorage.getItem('state') || 'Map'
-    this.popContent=$("#popup-content")[0]
     let cu = document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")
     if (!cu.length) {
       this.router.navigateByUrl('/login')
       return
     }
-    this.config=JSON.parse(localStorage.getItem("config"))
+    let w=document.cookie.match(/AuthService\.canWrite=([^ ;]*);/).pop()
+    if(w && w.length) this.canWrite=true
+    this.state = localStorage.getItem('state') || 'Map'
+    this.popContent = $("#popup-content")[0]
+    this.config = JSON.parse(localStorage.getItem("config"))
     const mapillary_auth: string = this.route.snapshot.queryParamMap.get('code');
-    if(mapillary_auth){
+    if (mapillary_auth) {
       localStorage.setItem('mapillary_auth', mapillary_auth)
     }
 
@@ -69,7 +73,7 @@ export class IndexComponent implements OnInit {
     let fu = localStorage.getItem("current_filter")
     if (fu) {
       this.filter = JSON.parse(fu)
-      this.filter['obj']=JSON.parse(this.filter['jsonb'])
+      this.filter['obj'] = JSON.parse(this.filter['jsonb'])
     }
 
     let str = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
@@ -102,11 +106,11 @@ export class IndexComponent implements OnInit {
     this.options = {
       layers: this.layers
     }
-    this.recordService.getCritical().pipe(first()).subscribe(
-      critical_data => {
+    this.recordService.getCritical().pipe(first()).subscribe({
+      next: critical_data => {
         if (critical_data['results']) {
           critical_data['results'].forEach(rs => {
-            let gl=utfGrid(`${this.backend}/grid/critical/${rs['uuid']}/critical/{z}/{x}/{y}.json/`, {
+            let gl = utfGrid(`${this.backend}/grid/critical/${rs['uuid']}/critical/{z}/{x}/{y}.json/`, {
               resolution: 4,
               pointerCursor: true,
               mouseInterval: 66
@@ -123,31 +127,26 @@ export class IndexComponent implements OnInit {
               $('.leaflet-grab').css('cursor', 'grab')
             });
             gl.on('click', (e: any) => {
-
-              if(!e.data) return
-              let t=this.popContent.innerHTML
-              .replace(/-total-/, e.data.num_records)
-              .replace(/-name-/, e.data.name)
-              .replace(/-cost-/, e.data.cost)
-
+              if (!e.data) return
+              let t = this.popContent.innerHTML
+                .replace(/-total-/, e.data.num_records)
+                .replace(/-name-/, e.data.name)
+                .replace(/-cost-/, e.data.cost)
               new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
-              
-              
               /* if (e.data) {
                 this.record_uuid = e.data.uuid
                 gl.openPopup($("#popup-content")[0], e.latlng, {}) 
                 $("#map-popup-button").trigger('click')
               } */
             })
-
             this.layersControl.overlays[rs["title"]] = new L.LayerGroup([
               L.tileLayer(`${this.backend}/maps/critical/${rs['uuid']}/critical/{z}/{x}/{y}.png`, {}),
               gl
             ])
           })
         }
-        this.recordService.getBoundaries().pipe(first()).subscribe(
-          data => {
+        this.recordService.getBoundaries().pipe(first()).subscribe({
+          next: data => {
             if (!data["results"]) {
               alert("Geometries not found")
               return
@@ -164,17 +163,15 @@ export class IndexComponent implements OnInit {
             this.boundaries.forEach(b => {
               this.layersControl.overlays[b.label] = L.tileLayer(`${this.backend}/maps/boundary/${b.uuid}/boundary/{z}/{x}/{y}.png`, {});
             })
-          },
-          err => {
-            console.log("Error: " + err.status)
-            if (err.status == 403)
-              this.router.navigateByUrl('/login')
           }
-        )
+        })
+      },
+      error: err => {
+        console.log("Error: " + err.status)
+        if (err.status == 403)
+          this.router.navigateByUrl('/login')
       }
-    )
-
-
+    })
   }
   selectState(s: string) {
     this.state = s
@@ -182,28 +179,28 @@ export class IndexComponent implements OnInit {
 
   setBoundary(event: any) {
     this.boundary = event
-    if(event) {
+    if (event) {
       localStorage.setItem("boundary", this.boundary.uuid)
-    this.recordService.getBoundaryPolygons(this.boundary).pipe(first()).subscribe(
-      data => {
-        if (data["results"]) {
-          this.boundaryPolygons = data["results"]
-          /*
-          let bu = localStorage.getItem("boundary_polygon")
-          if (bu) this.applyBoundaryPolygon(this.boundaryPolygons.filter(k => k['uuid'] == bu)[0]) 
-          else */
-          this.setBoundaryPolygon(null)
-        }
-      })
+      this.recordService.getBoundaryPolygons(this.boundary).pipe(first()).subscribe(
+        data => {
+          if (data["results"]) {
+            this.boundaryPolygons = data["results"]
+            /*
+            let bu = localStorage.getItem("boundary_polygon")
+            if (bu) this.applyBoundaryPolygon(this.boundaryPolygons.filter(k => k['uuid'] == bu)[0]) 
+            else */
+            this.setBoundaryPolygon(null)
+          }
+        })
     }
   }
   setBoundaryPolygon(b: any) {
-    if(!this.filter) this.filter={}
-    this.boundary_polygon_uuid=(b) ? b['uuid'] : null
-    if(this.boundary_polygon_uuid){
-      this.filter['polygon_id']=this.boundary_polygon_uuid
+    if (!this.filter) this.filter = {}
+    this.boundary_polygon_uuid = (b) ? b['uuid'] : null
+    if (this.boundary_polygon_uuid) {
+      this.filter['polygon_id'] = this.boundary_polygon_uuid
       localStorage.setItem("boundary_polygon", this.boundary_polygon_uuid)
-    }else{
+    } else {
       delete this.filter['polygon_id']
       localStorage.removeItem("boundary_polygon")
     }
@@ -226,8 +223,8 @@ export class IndexComponent implements OnInit {
       }
     }
     this.loadRecords(true)
-    this.recordList=null
-    if(this.state=='List'){
+    this.recordList = null
+    if (this.state == 'List') {
       if (this.boundary_polygon_uuid) this.filter["polygon_id"] = this.boundary_polygon_uuid
       this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"] }, { filter: this.filter }).pipe(first()).subscribe(
         data => {
@@ -240,7 +237,7 @@ export class IndexComponent implements OnInit {
       critical_data => {
         if (critical_data['results']) {
           critical_data['results'].forEach(rs => {
-            let gl=utfGrid(`${this.backend}/grid/critical/${rs['uuid']}/critical/{z}/{x}/{y}.json/`, {
+            let gl = utfGrid(`${this.backend}/grid/critical/${rs['uuid']}/critical/{z}/{x}/{y}.json/`, {
               resolution: 4,
               pointerCursor: true,
               mouseInterval: 66
@@ -250,13 +247,13 @@ export class IndexComponent implements OnInit {
               gl
             ])
           })
-          }
+        }
 
       }
     )
   }
   loadRecords(show: boolean) {
-    this.recordService.getMapFileKey({ 'uuid': this.recordSchema["record_type"] }, { 
+    this.recordService.getMapFileKey({ 'uuid': this.recordSchema["record_type"] }, {
       filter: this.filter
     }).pipe(first()).subscribe(
       data => {
@@ -280,19 +277,19 @@ export class IndexComponent implements OnInit {
         });
         cl.on('click', (e: any) => {
           if (e.data) {
-            let du=new Date(Date.parse(e.data['occurred_from']))
-            let t=$("#record-popup-content").html()
+            let du = new Date(Date.parse(e.data['occurred_from']))
+            let t = $("#record-popup-content").html()
               .replace(/-date-/, `${du.toLocaleDateString()}, ${du.toLocaleTimeString()}`)
               .replace(/-location-/, e.data['location_text'])
               .replace(/-uuid-/, e.data['uuid'])
             new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
-            var m=this.map
+            var m = this.map
             this.record_uuid = e.data.uuid
-            $("#open-record-popup").on('click',function(){
+            $("#open-record-popup").on('click', function () {
               m.closePopup()
               $('#map-popup-button').trigger('click');
             })
-           }
+          }
         })
         this.layers = this.layers.filter(k => k != this.recordsLayer)
         this.recordsLayer = new L.LayerGroup([
@@ -308,30 +305,35 @@ export class IndexComponent implements OnInit {
     this.filter = e
     this.loadRecords(false)
   }
-  viewRecord(content:any, uuid:string){
-    this.record_uuid=uuid
+  viewRecord(content: any, uuid: string) {
+    this.record_uuid = uuid
     this.mapClick(content)
   }
 
   mapClick(content: any) {
-    if(!this.record_uuid) this.record_uuid=$("#record-uuid").val().toString()
+    this.editing=false
+    if (!this.record_uuid) this.record_uuid = $("#record-uuid").val().toString()
     if (this.record_uuid) {
       this.recordService.getRecord(this.record_uuid).pipe(first()).subscribe(
         data => {
           this.record = data
-          this.modalService.open(content, { size: 'lg' });
+          this.modalService.open(content, { size: 'lg', animation: false });
         })
       this.record_uuid = null
     }
 
   }
-  setMap(e:L.Map){
-    this.map=e
+  setMap(e: L.Map) {
+    this.map = e
   }
-  popClick(e:any){
+  popClick(e: any) {
     console.log(e)
   }
-  setReport(r:object){
-    this.report=r
+  setReport(r: object) {
+    this.report = r
+  }
+  editRecord(){
+    this.editing=true
+    return false
   }
 }

@@ -23,7 +23,6 @@ import { DisplayPipe } from './navbar/display.pipe'
 import { FormatPipe } from './navbar/format.pipe'
 import { DictDumpPipe } from './navbar/dict_dump.pipe'
 import { FirstPipe } from './list/first.pipe'
-
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
 import { ModalModule } from 'ngx-bootstrap/modal';
@@ -36,18 +35,17 @@ import { IndexComponent } from './index/index.component';
 
 import { IsDatePipe } from './report/isdate.pipe';
 import { LocalizedDatePipe } from './report/localized.date.pipe';
-
-import { NgxSpinnerModule } from "ngx-spinner";
-
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { MultiTranslateHttpLoader } from 'ngx-translate-multi-http-loader';
 
+import { ArrayFirstPipe } from './input/first.pipe'
 import { SafePipeModule } from 'safe-pipe';
 import { ReportComponent } from './report/report.component';
 import { environment } from '../environments/environment';
 import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 import localeEs from '@angular/common/locales/es';
+import { NgxSpinnerModule } from "ngx-spinner";
 
 registerLocaleData(localePt);
 registerLocaleData(localeEs);
@@ -85,6 +83,7 @@ const icons = {
     FormatPipe,
     DictDumpPipe,
     FirstPipe,
+    ArrayFirstPipe,
     IsDatePipe,
     LocalizedDatePipe,
     ListComponent,
@@ -122,7 +121,7 @@ const icons = {
     { provide: LOCALE_ID, useValue: 'es' }
   ],
   bootstrap: [AppComponent],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA]
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AppModule { }
 

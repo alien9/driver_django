@@ -77,4 +77,7 @@ export class MapComponent implements OnInit {
   onMapReady(e: any){
     this.map.emit(e)
   }
+  onDrawStop(e:any){
+    console.log(e)
+  }
 }
