@@ -24,7 +24,7 @@ export class ReportComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-
+debugger
     this.timezone=(new Date()).getTimezoneOffset()
     this.locale=localStorage.getItem("Language") || "en"
     this.weekdays={}
@@ -56,6 +56,10 @@ export class ReportComponent implements OnInit {
         }
       )
     } */
+    console.log(this.report)
+    if(!this.report){
+      $("#report_button").trigger('click')
+    }
   }
 
 }

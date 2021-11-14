@@ -39,8 +39,9 @@ export class IndexComponent implements OnInit {
   record_uuid: string
   public critical: object = {}
   public report: object
-  public editing:boolean=false
-  public canWrite:boolean=false
+  public editing: boolean = false
+  public canWrite: boolean = false
+  private isDrawing: boolean = false
   popContent: any
   constructor(
     private recordService: RecordService,
@@ -55,8 +56,8 @@ export class IndexComponent implements OnInit {
       this.router.navigateByUrl('/login')
       return
     }
-    let w=document.cookie.match(/AuthService\.canWrite=([^ ;]*);/).pop()
-    if(w && w.length) this.canWrite=true
+    let w = document.cookie.match(/AuthService\.canWrite=([^ ;]*);/).pop()
+    if (w && w.length) this.canWrite = true
     this.state = localStorage.getItem('state') || 'Map'
     this.popContent = $("#popup-content")[0]
     this.config = JSON.parse(localStorage.getItem("config"))
@@ -248,7 +249,6 @@ export class IndexComponent implements OnInit {
             ])
           })
         }
-
       }
     )
   }
@@ -277,6 +277,8 @@ export class IndexComponent implements OnInit {
         });
         cl.on('click', (e: any) => {
           if (e.data) {
+            console.log(this.isDrawing)
+            if (this.isDrawing) return
             let du = new Date(Date.parse(e.data['occurred_from']))
             let t = $("#record-popup-content").html()
               .replace(/-date-/, `${du.toLocaleDateString()}, ${du.toLocaleTimeString()}`)
@@ -311,7 +313,7 @@ export class IndexComponent implements OnInit {
   }
 
   mapClick(content: any) {
-    this.editing=false
+    this.editing = false
     if (!this.record_uuid) this.record_uuid = $("#record-uuid").val().toString()
     if (this.record_uuid) {
       this.recordService.getRecord(this.record_uuid).pipe(first()).subscribe(
@@ -332,8 +334,19 @@ export class IndexComponent implements OnInit {
   setReport(r: object) {
     this.report = r
   }
-  editRecord(){
-    this.editing=true
+  editRecord() {
+    this.editing = true
     return false
+  }
+  setPolygon(p: any) {
+    if (!p) delete this.filter['polygon']
+    else {
+      this.filter['polygon'] = JSON.stringify(p.toGeoJSON()['geometry'])
+      this.polygon = p
+    }
+    this.loadRecords(true)
+  }
+  setDrawing(e: boolean) {
+    this.isDrawing = e
   }
 }
