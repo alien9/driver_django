@@ -6,6 +6,16 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
 
+
+Run `npm run extract-translations`  to compile the dictionaries from newly translated terms.
+
+The dictionaries will be stored at `./angular/driver/src/assets/i18n`.
+
+To create a new language, include its code name as an empty file at
+
+`./angular/driver/src/assets/i18n/<lang_code>.json`
+and run `npm run extract-translations` to generate the dictionary scaffold.
+
 ## Code scaffolding
 
 Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.

@@ -40,11 +40,18 @@
                         ],
                         "scripts": [
                             "node_modules/jquery/dist/jquery.min.js",
-                            "node_modules/popper.js/dist/umd/popper.min.js",
                             "node_modules/bootstrap/dist/js/bootstrap.min.js"
                         ]
                     },
                     "configurations": {
+                        "development": {
+                            "buildOptimizer": false,
+                            "optimization": false,
+                            "vendorChunk": true,
+                            "extractLicenses": false,
+                            "sourceMap": true,
+                            "namedChunks": true
+                        },
                         "production": {
                             "fileReplacements": [{
                                 "replace": "src/environments/environment.ts",
@@ -53,7 +60,6 @@
                             "optimization": true,
                             "outputHashing": "all",
                             "sourceMap": false,
-                            "extractCss": true,
                             "namedChunks": false,
                             "extractLicenses": true,
                             "vendorChunk": false,
@@ -81,8 +87,12 @@
                     "configurations": {
                         "production": {
                             "browserTarget": "driver:build:production"
+                        },
+                        "development": {
+                            "browserTarget": "driver:build:development"
                         }
-                    }
+                    },
+                    "defaultConfiguration": "development"
                 },
                 "extract-i18n": {
                     "builder": "@angular-devkit/build-angular:extract-i18n",

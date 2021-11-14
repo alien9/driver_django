@@ -1,50 +1,72 @@
-<ul ngbNav #nav="ngbNav" class="nav-tabs">
+<ul ngbNav #nav="ngbNav" class="nav-tabs" (navChange)=tabChange($event)>
     <li [ngbNavItem]="k.key" *ngFor="let k of schema['definitions']|keyvalue|orderBy">
         <a ngbNavLink *ngIf="!k.value.multiple">{{k.value.title|translate}}</a>
         <a ngbNavLink *ngIf="k.value.multiple">{{k.value.plural_title|translate}}</a>
         <ng-template ngbNavContent>
             <div class="small-map" *ngIf="k.value.details">
-                <div class="input-map" leaflet [leafletLayers]=layers [leafletLayersControl]="layersControl" [leafletOptions]="options"></div>
+                <div class="input-map" leaflet [leafletLayers]=layers [leafletLayersControl]="layersControl" [leafletOptions]="options" (leafletMapReady)=mapReady($event)></div>
             </div>
             <ul class="list-group list-group-flush" *ngIf="k.value.details">
                 <li class="list-group-item">
-                    <span i18n>{{'Latitude'|translate}}</span>: {{record['geom'].coordinates[0]}}
+                    <span>{{'Latitude'|translate}}</span>: {{record['geom'].coordinates[1]}}
                 </li>
                 <li class="list-group-item">
-                    <span i18n>{{'Longitude'|translate}}</span>: {{record['geom'].coordinates[1]}}
+                    <span>{{'Longitude'|translate}}</span>: {{record['geom'].coordinates[0]}}
                 </li>
                 <li class="list-group-item">
-                    <span i18n>{{'Location'|translate}}</span>: {{record["location_text"] }}
+                    <span>{{'Location'|translate}}</span>: {{record["location_text"] }}
                 </li>
                 <li class="list-group-item">
-                    <span i18n>{{'Date and time'|translate}}</span>: {{record["occurred_from"] }}
+                    <span>{{'Date and time'|translate}}</span>: {{record["occurred_from"]|localizedDate }} {{record["occurred_from"]|localizedDate:'shortTime' }}
                 </li>
                 <li class="list-group-item">
-                    <span i18n>{{'Weather'|translate}}</span>: {{record["weather"] }}
+                    <span>{{'Weather'|translate}}</span>: {{record["weather"] }}
                 </li>
                 <li class="list-group-item">
-                    <span i18n>{{'Light'|translate}}</span>: {{record["light"] }}
+                    <span>{{'Light'|translate}}</span>: {{record["light"] }}
                 </li>
             </ul>
             <div *ngIf="!k.value.multiple">
                 <ul class="list-group list-group-flush" *ngFor="let f of k.value.properties|keyvalue|display|orderBy">
-                    <li class="list-group-item">{{f.key|translate}}: {{record['data']|dict_dump:k.key:null:f.key|format:f.value}}
+                    <li class="list-group-item">{{f.key|translate}}:
+                        <span *ngIf="!editing">{{record['data']|dict_dump:k.key:null:f.key|format:f.value}}</span>
+                        <span *ngIf="editing">
+                            <select class="form-select" *ngIf="f.value.displayType=='select'"
+                                [(ngModel)]="record['data'][k.key][f.key]">
+                                <option></option>
+                                <option *ngFor="let o of f.value.enum" [ngValue]="o">{{o|translate}}</option>
+                            </select>
+                            <input class="form-control" type="text" [(ngModel)]="record['data'][k.key][f.key]" *ngIf="f.value.fieldType=='text' && f.value.type=='string'">
+                            <input class="form-control" type="number" [(ngModel)]="record['data'][k.key][f.key]" *ngIf="f.value.fieldType=='integer'">
+                            <input class="form-control" type="number" [(ngModel)]="record['data'][k.key][f.key]" *ngIf="f.value.fieldType=='number'">
+                        </span>
                         <img [src]="record['data'][k.key][f.key]" *ngIf="f.value.media && record['data'][k.key] && record['data'][k.key][f.key]">
                     </li>
                 </ul>
-
             </div>
             <div *ngIf="k.value.multiple">
-
                 <div class="card" *ngFor="let kk of record['data'][k.key]; let i = index">
                     <div class="card-body">
                         <h5 class="card-title">{{k.value.title|translate}}</h5>
                         <h6 class="card-subtitle mb-2 text-muted">{{k.value.description|translate}}</h6>
-
                         <ul class="list-group list-group-flush" *ngFor="let f of k.value.properties|keyvalue|display|orderBy">
-                            <li class="list-group-item">
-                                {{f.key}}: {{record['data']|dict_dump:k.key:i:f.key|format:f.value}}
-                                <img [src]="record['data'][k.key][f.key]" *ngIf="f.value.media && record['data'][k.key] && record['data'][k.key][f.key]">
+                            <li class="list-group-item">{{f.key|translate}}:
+                                <span *ngIf="!editing">{{record['data']|dict_dump:k.key:i:f.key|format:f.value}}</span>
+                                <span *ngIf="editing">
+                                    <select class="form-select" *ngIf="f.value.displayType=='select'"
+                                        [(ngModel)]="record['data'][k.key][i][f.key]">
+                                        <option></option>
+                                        <option *ngFor="let o of f.value.enum" [ngValue]="o">{{o|translate}}</option>
+                                    </select>
+                                    <input class="form-control" type="text" [(ngModel)]="record['data'][k.key][i][f.key]" *ngIf="f.value.fieldType=='text' && f.value.type=='string'">
+                                    <input class="form-control" type="number" [(ngModel)]="record['data'][k.key][i][f.key]" *ngIf="f.value.fieldType=='integer'">
+                                    <input class="form-control" type="number" [(ngModel)]="record['data'][k.key][i][f.key]" *ngIf="f.value.fieldType=='number'">
+                                    <select class="form-select" *ngIf="f.value.fieldType=='reference'" [(ngModel)]="record['data'][k.key][i][f.key]">
+                                        <option></option>
+                                        <option *ngFor="let related of record['data'][f.value.watch.target]" [ngValue]="related['_localId']">{{related[schema['definitions'][f.value.watch.target].properties|keyvalue|arrayfirst]|translate}}</option>
+                                    </select>
+                                </span>
+                                <img [src]="record['data'][k.key][f.key]" *ngIf="f.value.media && record['data'][k.key] && record['data'][k.key].length>i && record['data'][k.key][i][f.key]">
                             </li>
                         </ul>
                     </div>

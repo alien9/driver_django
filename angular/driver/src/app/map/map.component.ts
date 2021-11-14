@@ -22,28 +22,18 @@ export class MapComponent implements OnInit {
   @Input() layersControl: any
   @Input() fitBounds: any
   @Input() boundary_polygon_uuid: any
-  @Output() map=new EventEmitter<L.Map>()
-
-  public polygon: any
+  @Output() map = new EventEmitter<L.Map>()
+  @Output() onSetPolygon=new EventEmitter<object>()
+  @Input() polygon: any
+  @Output() setDrawing=new EventEmitter<boolean>()
   public drawnItems: FeatureGroup = featureGroup();
-  public drawOptions = {
-    position: 'topright',
-    draw: {
-      marker: false,
-      polyline: false,
-      circlemarker: true,
-      rectangle: {showArea: false}
-    },
-    edit: {
-      featureGroup: this.drawnItems
-    }
-  };
+  public drawOptions:any
 
   public recordSchema: any;
   backend: string
   record_uuid: any;
   popup: L.Popup
-  
+
   private recordsLayer: L.LayerGroup
   constructor(
     private router: Router,
@@ -60,9 +50,22 @@ export class MapComponent implements OnInit {
     this.recordSchema = JSON.parse(localStorage.getItem("record_schema"))
     let config = JSON.parse(localStorage.getItem("config"))
     let bp = localStorage.getItem("boundary_polygon")
-    if(bp) this.boundary_polygon_uuid=bp
+    if (bp) this.boundary_polygon_uuid = bp
     let fu = localStorage.getItem("current_filter")
-
+    if(this.polygon) this.drawnItems.addLayer(this.polygon)
+    this.drawOptions = {
+      position: 'topright',
+      draw: {
+        marker: false,
+        polyline: false,
+        circlemarker: false,
+        circle: false,
+        rectangle: { showArea: false }
+      },
+      edit: {
+        featureGroup: this.drawnItems
+      }
+    };
   }
   logout() {
     document.cookie.split(/; /).map(k => k.split(/=/)).forEach(k => {
@@ -71,10 +74,20 @@ export class MapComponent implements OnInit {
     this.router.navigateByUrl('/login')
   }
   onDrawCreated(e: any) {
+    this.drawnItems=featureGroup()
     const layer = (e as DrawEvents.Created).layer;
     this.drawnItems.addLayer(layer);
+    this.onSetPolygon.emit(layer)
+    this.setDrawing.emit(false)
   }
-  onMapReady(e: any){
+  onDrawDeleted(e:any){
+    this.onSetPolygon.emit(null)
+    this.setDrawing.emit(false)
+  }
+  onMapReady(e: any) {
     this.map.emit(e)
+  }
+  startDraw(e:any){
+    this.setDrawing.emit(true)
   }
 }
