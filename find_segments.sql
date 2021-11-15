@@ -1,5 +1,5 @@
 -- FUNCTION: public.caclulate_black_spots(uuid)
-CREATE EXTENSION IF NOT EXISTS  HSTORE; CREATE EXTENSION  IF NOT EXISTS POSTGIS;CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+--CREATE EXTENSION IF NOT EXISTS  HSTORE; CREATE EXTENSION  IF NOT EXISTS POSTGIS;CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- select * from works.find_segment((select geom from grout_record limit 1), 100)
 
@@ -10,7 +10,7 @@ CREATE EXTENSION IF NOT EXISTS  HSTORE; CREATE EXTENSION  IF NOT EXISTS POSTGIS;
 --(select st_asewkt(geom) from grout_record limit 1)
 -- select st_geomfromewkt('SRID=4326;POINT (-68.087329 -16.540165)')
 create schema if not exists works;
-grant all on schema works to driver;
+--grant all on schema works to driver;
 
 -- select * from works.find_segment(st_geomfromewkt('SRID=4326;POINT (-68.076719 -16.544928)'), 100)
 
@@ -95,5 +95,5 @@ begin
 --return query select null, null;
 end;
 $B$;
-ALTER FUNCTION works.find_segment(varchar,numeric, varchar)
-    OWNER TO driver;
+--ALTER FUNCTION works.find_segment(varchar,numeric, varchar)
+--    OWNER TO driver;
