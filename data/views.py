@@ -133,7 +133,7 @@ def mapillary_callback(request):
 
 @csrf_exempt
 def proxy(request):
-    remoteurl = "http://%s:5000%s" % (settings.WINDSHAFT_HOST, request.path,)
+    remoteurl = "http://%s:5000%s" % (config.WINDSHAFT, request.path,)
     return proxy_view(request, remoteurl)
 
 @csrf_exempt
@@ -713,8 +713,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 multi_labels = col_labels
                 single_label = 'row'
                 multi_prefix = 'col'
-            print("multi labels:")
-            print(multi_labels)
+
             multi_labels = [
                 '{}_{}'.format(multi_prefix, str(label['key']))
                 for label in multi_labels
