@@ -111,10 +111,10 @@ class RecordSchema(GroutModel):
         """
         jsonschema.Draft4Validator.check_schema(schema)
     def save(self, *args, **kwargs):
-        print("saving recordschema")
+        
         if self.record_type is not None:
             self.schema["record_type"]=str(self.record_type.uuid)
-        print(self.version)
+        
         super(RecordSchema, self).save(*args, **kwargs)
 
 
@@ -327,7 +327,7 @@ class Boundary(Imported):
             self.status = self.StatusTypes.COMPLETE
             self.save()
         except Exception as e:
-            print(str(e))
+            
             if self.errors is None:
                 self.errors = {}
             self.errors['message'] = str(e)

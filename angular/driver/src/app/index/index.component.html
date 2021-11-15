@@ -17,7 +17,7 @@
         </button>
     </div>
     <div class="modal-body">
-        <app-input [config]=config [record]=record [recordSchema]=recordSchema [editing]=editing></app-input>
+        <app-input [config]=config *ngIf=record [record]=record [recordSchema]=recordSchema [editing]=editing></app-input>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-light" (click)="modal.close('Close click')" i18n>Close</button>

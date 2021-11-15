@@ -34,7 +34,7 @@ sed -e "s/PROTOCOL/${PROTOCOL}/g" \
      -e "s/PRIMARYLABEL/${PRIMARYLABEL}/g" \
      -e "s/SECONDARYLABEL/${SECONDARYLABEL}/g" \
      -e "s/CLIENTID/${CLIENTID}/g" \
-     -e "s/COUNTRY/${COUNTRY}/g" \
+     -e "s/COUNTRY/${COUNTRY_CODE}/g" \
      -e "s/CENTER/${CENTER}/g" \
      -e "s/ZOOM/${ZOOM}/g" \
      -e "s/LANGUAGES/${LANGUAGES}/g" \

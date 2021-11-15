@@ -26,6 +26,7 @@ export class InputComponent implements OnInit {
   constructor(private webService: WebService) { }
 
   ngOnInit(): void {
+    this.record['location_text']='..'
     console.log(this.record)
     this.editing = false
     this.schema = this.recordSchema['schema']

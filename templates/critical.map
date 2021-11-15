@@ -40,7 +40,7 @@ MAP
         NAME        "critical"
         DATA        "{{query|safe}}"
         CONNECTIONTYPE  POSTGIS
-        CONNECTION      "host={{connection}} dbname=driver user={{username}} password={{password}}"
+        CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
         
         UTFITEM   "uuid"
         UTFDATA   "{\"uuid\":\"[uuid]\",\"name\":\"[name]\", \"cost\":\"[severity_score]\", \"num_records\":\"[num_records]\"}"

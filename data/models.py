@@ -87,7 +87,7 @@ class DriverRecord(Record):
     def geocode(self, roadmap_uuid, size):
         with connection.cursor() as cursor:
             if self.geom:
-                print("select * from works.find_segment(%s, %s, %s)" % (self.geom.ewkt, size, str(roadmap_uuid)))
+                
                 cursor.execute("select * from works.find_segment(%s, %s, %s)", [self.geom.ewkt, size, str(roadmap_uuid)])
                 row = cursor.fetchone()
                 if row[0] is not None:
@@ -110,7 +110,7 @@ class DriverRecord(Record):
                     self.segment.add(seg)
                     return seg
                 else:
-                    print("Road not found.")
+                    
                     return None
 @receiver(post_save, sender=DriverRecord)
 def record_after_save(sender, instance, **kwargs):
@@ -300,6 +300,10 @@ class Dictionary(models.Model):
     content=HStoreField()
     def save(self, *args, **kwargs):
         terms=[]
+        rt=RecordType.objects.all()
+        for r in rt:
+            add_term(terms,r.label)
+            add_term(terms,r.plural_label)
         rs=RecordSchema.objects.all()
         for r in rs:
             for k, value in r.schema['definitions'].items():

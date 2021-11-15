@@ -7,10 +7,10 @@
             prefix: "!"
         },
         api: {
-            hostname: "http://driver.net"
+            hostname: "http://sp.driver.net"
         },
         windshaft: {
-            hostname: "http://driver.net"
+            hostname: "http://sp.driver.net"
         },
         nominatim: {
             key: "NmfGZYebsExMYfFWP4Tf"
@@ -33,8 +33,8 @@
             secondaryLabel: "Intervention"
         },
         localization: {
-            timeZone: "America/La_Paz",
-            countryCode: "bo",
+            timeZone: "TIMEZONE",
+            countryCode: "br",
             centerLatLon: [-13.63770590146877,-172.44653200580277],
             zoom: 11,
             languages:  [{id: "pt-br", label:"Português", rtl: !1},{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}] 
@@ -79,7 +79,7 @@ function() {
             prefix: "!"
         },
         api: {
-            hostname: "http://driver.net",
+            hostname: "http://sp.driver.net",
             groups: {
                 admin: "admin",
                 readOnly: "public",

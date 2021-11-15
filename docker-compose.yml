@@ -1,20 +1,20 @@
 version: '3'
 services:
-  postgres:
-    build:
-      context: ./
-      args:
-        - buildno=1
-      dockerfile: Dockerfile.database
-    volumes:
-      - /opt/${CONTAINER_NAME}-data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=driver
-      - POSTGRES_DBNAME=driver
-      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-    container_name: database-${CONTAINER_NAME}
-    image:
-      alien9/driver-database
+  # postgres:
+  #   build:
+  #     context: ./
+  #     args:
+  #       - buildno=1
+  #     dockerfile: Dockerfile.database
+  #   volumes:
+  #     - /opt/${CONTAINER_NAME}-data:/var/lib/postgresql/data
+  #   environment:
+  #     - POSTGRES_USER=driver
+  #     - POSTGRES_DBNAME=driver
+  #     - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+  #   container_name: database-${CONTAINER_NAME}
+  #   image:
+  #     alien9/driver-database
   
   redis-server:
     image: redis
@@ -26,9 +26,9 @@ services:
     volumes:
       - ./static:/var/www/static
       - ./mapserver:/opt/app/mapserver
+      - ./html:/opt/app/web
     depends_on:
       - redis-server
-      - postgres
       - mapserver
     environment:
       - CENTER_LATITUDE=${CENTER_LATITUDE}
@@ -36,11 +36,11 @@ services:
       - ZOOM=${ZOOM}
       - HOST_URL=${PROTOCOL}://${HOST_NAME}
       - HOSTNAME=${HOST_NAME}
-      - COUNTRY=${COUNTRY}
       - TIMEZONE=${TIMEZONE}
       - DJANGO_ENV=production
-      - DRIVER_DB_HOST=database-${CONTAINER_NAME}
-      - DRIVER_DB_NAME=driver
+      - DRIVER_DB_HOST=${DATABASE_HOST}
+      - DRIVER_DB_NAME=${DATABASE_NAME}
+      - DRIVER_DB_USERNAME=${DATABASE_USERNAME}
       - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
       - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
       - STATIC_ROOT=/var/www/static/
@@ -56,15 +56,15 @@ services:
       - ./zip:/var/www/media
     depends_on:
       - redis-server
-      - postgres
     environment:
       - HOST_URL=${PROTOCOL}://${HOST_NAME}
       - HOSTNAME=${HOST_NAME}
       - COUNTRY_CODE=${COUNTRY_CODE}
       - TIMEZONE=${TIMEZONE}
       - DJANGO_ENV=production
-      - DRIVER_DB_HOST=database-${CONTAINER_NAME}
-      - DRIVER_DB_NAME=driver
+      - DRIVER_DB_HOST=${DATABASE_HOST}
+      - DRIVER_DB_NAME=${DATABASE_NAME}
+      - DRIVER_DB_USER=${DATABASE_USERNAME}
       - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
       - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
       - STATIC_ROOT=/var/www/static/
@@ -75,38 +75,8 @@ services:
     container_name: driver-celery-${CONTAINER_NAME}
     image: alien9/driver-django
   
-  windshaft:
-    command: server.js
-    container_name: windshaft-${CONTAINER_NAME}
-    links:
-      - redis-server:redis
-    depends_on:
-      - redis-server
-      - postgres
-    volumes:
-      - ${WINDSHAFT_FILES}/windshaft/driver.js:/opt/windshaft/driver.js
-      - ${WINDSHAFT_FILES}/windshaft/healthCheck.js:/opt/windshaft/healthCheck.js
-      - ${WINDSHAFT_FILES}/windshaft/alphamarker.png:/opt/windshaft/alphamarker.png
-      - ${WINDSHAFT_FILES}/windshaft/server.js:/opt/windshaft/server.js
-    environment:
-      - DRIVER_DB_NAME=driver
-      - DRIVER_DB_USER=driver
-      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
-      - WINDSHAFT_DB_USER=driver
-      - WINDSHAFT_DB_PASSWORD=${DATABASE_PASSWORD}
-      - DRIVER_DB_HOST=database-${CONTAINER_NAME}
-      - DRIVER_DB_PORT=5432
-      - DRIVER_APP_HOST=${PROTOCOL}://${HOST_NAME}
-      - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
-      - DRIVER_REDIS_PORT=6379
-    image: quay.io/azavea/windshaft:0.1.0
-    ports:
-      - "5555:5000"
-
   mapserver:
     container_name: mapserver-${CONTAINER_NAME}
-    depends_on:
-      - postgres
     volumes:
       - ./mapserver/:/etc/mapserver
     image: geodata/mapserver

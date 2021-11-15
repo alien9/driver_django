@@ -37,7 +37,7 @@ ng serve
 
 npm run extract-translations
 
-build: see angular/driver/README.md
+Front-end build: see angular/driver/README.md
 
 The dictionaries will be stored at ./angular/driver/src/assets/i18n
 To create a new language, include its code as an empty json file; this must match a dictionary created in the back-end to provide the option to the language.

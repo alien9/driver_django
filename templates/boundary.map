@@ -33,7 +33,7 @@ MAP
         NAME        "boundary"
         DATA        "{{query|safe}}"
         CONNECTIONTYPE  POSTGIS
-        CONNECTION      "host={{connection}} dbname=driver user={{username}} password={{password}}"
+        CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
         
         TYPE POLYGON
         PROJECTION
