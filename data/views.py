@@ -713,8 +713,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             else:
                 multi_labels = col_labels
                 single_label = 'row'
-                multi_prefix = 'col'
-
+                multi_prefix = 'col'           
             multi_labels = [
                 '{}_{}'.format(multi_prefix, str(label['key']))
                 for label in multi_labels

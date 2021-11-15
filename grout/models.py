@@ -346,6 +346,7 @@ class Boundary(Imported):
         t=render_to_string('boundary.map', {
             "connection":connection.settings_dict['HOST'],
             "username":connection.settings_dict['USER'],
+            "dbname":connection.settings_dict['NAME'],
             "password":connection.settings_dict['PASSWORD'],
             "query":"geom from (select geom, uuid from grout_boundarypolygon where boundary_id='%s')as q using unique uuid using srid=4326" % (self.uuid,),
             "color": "%s %s %s" % (color[0],color[1],color[2]),

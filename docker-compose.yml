@@ -26,7 +26,6 @@ services:
     volumes:
       - ./static:/var/www/static
       - ./mapserver:/opt/app/mapserver
-      - ./html:/opt/app/web
     depends_on:
       - redis-server
       - mapserver
@@ -84,3 +83,27 @@ services:
       - "8888:80"
 
 
+  windshaft:
+    command: server.js
+    container_name: windshaft-${CONTAINER_NAME}
+    links:
+      - redis-server:redis
+    depends_on:
+      - redis-server
+    volumes:
+      - ${WINDSHAFT_FILES}/windshaft/driver.js:/opt/windshaft/driver.js
+      - ${WINDSHAFT_FILES}/windshaft/healthCheck.js:/opt/windshaft/healthCheck.js
+      - ${WINDSHAFT_FILES}/windshaft/alphamarker.png:/opt/windshaft/alphamarker.png
+      - ${WINDSHAFT_FILES}/windshaft/server.js:/opt/windshaft/server.js
+    environment:
+      - DRIVER_DB_NAME=${DATABASE_NAME}
+      - DRIVER_DB_USER=${DATABASE_USERNAME}
+      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
+      - WINDSHAFT_DB_USER=${DATABASE_USERNAME}
+      - WINDSHAFT_DB_PASSWORD=${DATABASE_PASSWORD}
+      - DRIVER_DB_HOST=${DATABASE_HOST}
+      - DRIVER_DB_PORT=5432
+      - DRIVER_APP_HOST=${PROTOCOL}://${HOST_NAME}
+      - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
+      - DRIVER_REDIS_PORT=6379
+    image: quay.io/azavea/windshaft:0.1.0

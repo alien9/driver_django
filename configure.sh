@@ -40,15 +40,16 @@ sed -e "s/PROTOCOL/${PROTOCOL}/g" \
      -e "s/LANGUAGES/${LANGUAGES}/g" \
 scripts.template.js > web/dist/scripts/scripts.b9157403.js
 
-if [[ ! -f driver.conf ]]; then
-     cp driver-app.conf driver.conf
+if [[ ! -f driver-${CONTAINER_NAME}-conf ]]; then
+     cp driver-app.conf driver-${CONTAINER_NAME}.conf
 fi
 sed -i -e "s/\s[^ ]*\s*#HOST_NAME$/ ${HOST_NAME}; #HOST_NAME/g" \
 -e "s,\s[^ ]*\s*#STATIC_ROOT$, ${STATIC_ROOT}; #STATIC_ROOT,g" \
 -e "s,\s[^ ]*\s*#STATIC_ROOT_MEDIA$, ${STATIC_ROOT}/zip/; #STATIC_ROOT_MEDIA,g" \
 -e "s/http.*#driver-django$/http:\/\/${DJANGO_HOST}:4000; #driver-django/g" \
 -e "s/\s[^ ]*\s*#windshaft$/ http:\/\/${WINDSHAFT_HOST}:5000; #windshaft/g" \
-driver.conf
+-e "s,\s[^ ]*\s*#ALPHA_ROOT$, ${STATIC_ROOT}/static/dist/; #ALPHA_ROOT,g" \
+driver-${CONTAINER_NAME}.conf
 
 #docker exec driver-nginx sed -i -e "s/HOST_NAME/${HOST_NAME}/g" /etc/nginx/conf.d/driver-app.conf
 
@@ -86,7 +87,7 @@ else
           echo "Remember to run certbot now."
      fi
 fi
-sudo ln -s "$(pwd)/driver.conf" "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
+sudo ln -s "$(pwd)/driver-${CONTAINER_NAME}.conf" "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
 sudo service nginx restart
 
 #docker-compose restart driver-nginx 

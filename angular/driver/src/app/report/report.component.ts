@@ -2,6 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { RecordService } from './../record.service'
 import { first } from 'rxjs/operators';
 import { inputCursor } from 'ngx-bootstrap-icons';
+import { NgxSpinnerService } from "ngx-spinner";
 
 @Component({
   selector: 'app-report',
@@ -20,11 +21,11 @@ export class ReportComponent implements OnInit {
   timezone:any
   weekdays:object
   constructor(
-    private recordService: RecordService
+    private recordService: RecordService,
+    private spinner: NgxSpinnerService
   ) { }
 
   ngOnInit(): void {
-debugger
     this.timezone=(new Date()).getTimezoneOffset()
     this.locale=localStorage.getItem("Language") || "en"
     this.weekdays={}
@@ -56,10 +57,13 @@ debugger
         }
       )
     } */
+    console.log('this.report')
     console.log(this.report)
     if(!this.report){
-      $("#report_button").trigger('click')
+      setTimeout(function(){$("#report_button").trigger('click')}, 100)
     }
   }
+  relate(){
 
+  }
 }

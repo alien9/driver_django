@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
 RUN ["gdal-config", "--version"]
 
 RUN mkdir -p /opt/app
+
 WORKDIR /opt/app
 
 COPY black_spots /opt/app/black_spots
@@ -27,7 +28,7 @@ COPY user_filters /opt/app/user_filters
 COPY manage.py /opt/app/
 COPY requirements-production.txt /opt/app/requirements.txt
 COPY find_segments.sql /opt/app/find_segments.sql
-COPY angular/driver/dist/driver /opt/app/web
+COPY web /opt/app/web/dist
 
 
 
