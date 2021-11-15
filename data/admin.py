@@ -56,11 +56,11 @@ class BoundaryAdmin(admin.ModelAdmin):
     form = BoundaryForm
     def render_delete_form(self, request, context):
         context['deleted_objects'] = [_('Object listing disabled')]
-        print("trying to delete limites")
+        
         return super(BoundaryAdmin, self).render_delete_form(request, context)
     
     def get_deleted_objects(self, queryset, request):
-        print("eh aqui")
+        
         return super(BoundaryAdmin, self).get_deleted_objects(queryset, request)
 
     def silent_delete(self, request, queryset):
@@ -75,7 +75,7 @@ class BoundaryAdmin(admin.ModelAdmin):
 # class BoundaryPolygonAdmin(admin.ModelAdmin):
 #     def render_delete_form(self, request, context):
 #         context['deleted_objects'] = [_('Object listing disabled')]
-#         print("trying to delete")
+#         
 #         return super(BoundaryPolygonAdmin, self).render_delete_form(request, context)
 class DictionaryAdminForm(forms.ModelForm):
     content = HStoreFormField()
@@ -111,7 +111,6 @@ class RoadMapAdmin(admin.ModelAdmin):
         context['deleted_objects'] = [_('Object listing disabled')]
         return super(RoadMapAdmin, self).render_delete_form(request, context)
     def get_deleted_objects(self, queryset, request):
-        print("eh aqui")
         return super(RoadMapAdmin, self).get_deleted_objects(queryset, request)
 
     def silent_delete(self, request, queryset):

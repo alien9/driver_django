@@ -169,7 +169,7 @@ def maps(request, geometry, mapfile, layer, z, x, y):
         geometry=geometry,
         layer=layer
     )
-    print( "%s/%s" % (config.MAPSERVER, path,))
+    
     return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
  
 @csrf_exempt
@@ -179,7 +179,7 @@ def mapcache(request):
 
 @api_view(['GET', 'POST', ])
 def run_calculate_blackspots(request, uuid):
-    print("Requesting blackspots")
+    
     task = generate_blackspots.delay(uuid, request.user.pk)
     return Response({'success': True, 'taskid': task.id}, status=status.HTTP_201_CREATED)
 
@@ -339,7 +339,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 query_sql = self.generate_mapserver_query_sql(request).replace('"', '\\"')
                 cursor = connection.cursor()
                 query_sql=cursor.mogrify(query_sql,[recordtype_uuid]).decode("utf-8")
-                print(query_sql)
+                
                 cursor.close()
                 
                 if 'records_mapfile' in request.session:
@@ -359,6 +359,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                     "connection":connection.settings_dict['HOST'],
                     "username":connection.settings_dict['USER'],
                     "password":connection.settings_dict['PASSWORD'],
+                    "dbname":connection.settings_dict['NAME'],
                     "query":query_sql
                 })
                 with open("./mapserver/records_%s.map" % tile_token, "w+") as m:
@@ -713,12 +714,13 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 multi_labels = col_labels
                 single_label = 'row'
                 multi_prefix = 'col'
-
             multi_labels = [
                 '{}_{}'.format(multi_prefix, str(label['key']))
                 for label in multi_labels
             ]
-
+            
+            
+            
             # Perform a sum on each of the 'multi' columns, storing the data in a sum_* field
             annotated_qs = (
                 annotated_qs.values(single_label, *multi_labels)
@@ -1252,10 +1254,15 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 pattern=json.dumps({path[2]:choice})
                 pattern=pattern[1:len(pattern)-1]
                 annotations['{}_{}'.format(annotation_id, choice)] = RawSQL("\
-                    SELECT count(*) from\
-                    regexp_matches(\"grout_record\".\"data\"->>%s, %s, 'g') \
-                    ",(path[0], pattern)
+                    SELECT \
+ case when \"grout_record\".\"data\"->>%s ~ %s = 't' then 1 else 0 end\
+",(path[0], pattern)
                 )
+                """                 annotations['{}_{}'.format(annotation_id, choice)] = RawSQL("\
+                SELECT \
+                -1+array_length(regexp_split_to_array(\"grout_record\".\"data\"->>%s, %s),1) as l \
+                ",(path[0], pattern)
+                                ) """
             else:
                 expression="data__%s__%s__contains"  % (path[0], path[2])
                 annotations['{}_{}'.format(annotation_id, choice)] = Case(
@@ -1574,8 +1581,8 @@ class PictureViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request):
-        print(request)
-        print("CREATING")
+        
+        
         pass
 
 class DictionaryViewSet(viewsets.ViewSet):

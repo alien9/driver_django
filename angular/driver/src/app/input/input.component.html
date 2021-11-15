@@ -23,7 +23,7 @@
                     <span>{{'Weather'|translate}}</span>: {{record["weather"] }}
                 </li>
                 <li class="list-group-item">
-                    <span>{{'Light'|translate}}</span>: {{record["light"] }}
+                    <span>{{'Light'|translate}}</span>: {{record["light"]|translate}}
                 </li>
             </ul>
             <div *ngIf="!k.value.multiple">

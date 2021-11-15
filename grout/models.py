@@ -111,10 +111,10 @@ class RecordSchema(GroutModel):
         """
         jsonschema.Draft4Validator.check_schema(schema)
     def save(self, *args, **kwargs):
-        print("saving recordschema")
+        
         if self.record_type is not None:
             self.schema["record_type"]=str(self.record_type.uuid)
-        print(self.version)
+        
         super(RecordSchema, self).save(*args, **kwargs)
 
 
@@ -327,7 +327,7 @@ class Boundary(Imported):
             self.status = self.StatusTypes.COMPLETE
             self.save()
         except Exception as e:
-            print(str(e))
+            
             if self.errors is None:
                 self.errors = {}
             self.errors['message'] = str(e)
@@ -346,6 +346,7 @@ class Boundary(Imported):
         t=render_to_string('boundary.map', {
             "connection":connection.settings_dict['HOST'],
             "username":connection.settings_dict['USER'],
+            "dbname":connection.settings_dict['NAME'],
             "password":connection.settings_dict['PASSWORD'],
             "query":"geom from (select geom, uuid from grout_boundarypolygon where boundary_id='%s')as q using unique uuid using srid=4326" % (self.uuid,),
             "color": "%s %s %s" % (color[0],color[1],color[2]),

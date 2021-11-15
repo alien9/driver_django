@@ -72,7 +72,7 @@ MAP
         NAME        "records"
         DATA        "geom from (select geom::geometry, uuid, occurred_from from ({{query|safe}}) as q) as rq using unique uuid using srid=4326"
         CONNECTIONTYPE  POSTGIS
-        CONNECTION      "host={{connection}} dbname=driver user={{username}} password={{password}}"
+        CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
         UTFITEM   "uuid"
         UTFDATA   "{\"uuid\":\"[uuid]\",\"occurred_from\":\"[occurred_from]\"}"
         PROCESSING "KERNELDENSITY_RADIUS=10"
@@ -97,7 +97,7 @@ MAP
         NAME        "records_offset"
         DATA        "geom from (select geom::geometry, uuid, occurred_from, location_text from ({{query|safe}}) as q) as rq using unique uuid using srid=4326"
         CONNECTIONTYPE  POSTGIS
-        CONNECTION      "host={{connection}} dbname=driver user={{username}} password={{password}}"
+        CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
         UTFITEM   "uuid"
         UTFDATA   "{\"uuid\":\"[uuid]\",\"occurred_from\":\"[occurred_from]\", \"location_text\":\"[location_text]\"}"
         PROCESSING "KERNELDENSITY_RADIUS=10"

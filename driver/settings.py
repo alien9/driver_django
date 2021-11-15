@@ -197,6 +197,7 @@ STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/driver/static/')
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'templates/dist'),
     os.path.join(BASE_DIR, 'templates/schema_editor/dist'),
+    os.path.join(BASE_DIR, 'web'),
 )
 
 # Media files (uploaded via API)

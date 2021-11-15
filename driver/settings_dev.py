@@ -13,8 +13,9 @@ e={}
 for k in [ t.split('=') for t in f.readlines() ]:
     e[k[0]]=k[1].replace("\n", "")
 
+DRIVER_DB_HOST=e['DATABASE_HOST']
 WINDSHAFT_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-%s" % (e['CONTAINER_NAME'])]).decode('utf8').strip()
-DRIVER_DB_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "database-%s" % (e['CONTAINER_NAME'])]).decode('utf8').strip()
+#DRIVER_DB_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "database-%s" % (e['CONTAINER_NAME'])]).decode('utf8').strip()
 REDIS_HOST = subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "redis-server-%s" % (e['CONTAINER_NAME'])]).decode('utf8').strip()
 CONTAINER_NAME=e['CONTAINER_NAME']
 
@@ -30,17 +31,18 @@ DEBUG = DEVELOP
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': os.environ.get('DRIVER_DB_NAME', 'driver'),
+        'NAME': e['DATABASE_NAME'],
         'HOST': DRIVER_DB_HOST,
         'PORT': os.environ.get('DRIVER_DB_PORT', 5432),
         'USER': os.environ.get('DRIVER_DB_USER', 'driver'),
-        'PASSWORD': os.environ.get('DRIVER_DB_PASSWORD', 'supersecretpassword'),
+        'PASSWORD': e['DATABASE_PASSWORD'],
         'CONN_MAX_AGE': 3600,  # in seconds
         'OPTIONS': {
         #    'sslmode': 'require'
         }
     }
 }
+
 
 from django.utils.translation import ugettext_lazy as _
 LANGUAGES = ( 
