@@ -10,6 +10,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { translate } from '@angular/localize/src/translate';
 import { RecordService } from './../record.service'
 import { first } from 'rxjs/operators';
+import { NgxSpinnerService } from "ngx-spinner";
 
 @Component({
   selector: 'app-navbar',
@@ -54,7 +55,8 @@ export class NavbarComponent implements OnInit {
     private recordService: RecordService,
     public readonly translate: TranslateService,
     private router: Router,
-    private modalService: NgbModal) {
+    private modalService: NgbModal,
+    private spinner: NgxSpinnerService) {
   }
 
   ngOnInit(): void {
@@ -286,7 +288,6 @@ export class NavbarComponent implements OnInit {
     Object.entries(f).forEach(([k, v]) => {
       this.crosstabsFilters[k] = v
     })
-    console.log(this.crosstabsFilters)
     this.loadReport(this.crosstabsFilters)
   }
   setHeader(tab: string, kind: string) {
@@ -311,6 +312,7 @@ export class NavbarComponent implements OnInit {
     })
     this.report = null
     if (this.reportParameters) {
+      this.spinner.show()
       this.recordService.getCrossTabs(this.recordSchema["record_type"], this.reportParameters).pipe(first()).subscribe(
         crosstabs => {
           this.reportChange.emit({
@@ -318,6 +320,7 @@ export class NavbarComponent implements OnInit {
             path: path,
             parameters: this.reportParameters
           })
+          this.spinner.hide()
         }
       )
     }

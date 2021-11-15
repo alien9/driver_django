@@ -10,6 +10,7 @@ import { DrawEvents, featureGroup, FeatureGroup, icon, latLng, tileLayer } from 
 import { utfGrid } from '../UtfGrid';
 import { } from 'jquery'
 import { ActivatedRoute } from '@angular/router';
+import { NgxSpinnerService } from "ngx-spinner";
 
 @Component({
   selector: 'app-index',
@@ -42,12 +43,14 @@ export class IndexComponent implements OnInit {
   public editing: boolean = false
   public canWrite: boolean = false
   private isDrawing: boolean = false
+  private lastState: string
   popContent: any
   constructor(
     private recordService: RecordService,
     private router: Router,
     private modalService: NgbModal,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private spinner: NgxSpinnerService
   ) { }
 
   ngOnInit(): void {
@@ -175,6 +178,7 @@ export class IndexComponent implements OnInit {
     })
   }
   selectState(s: string) {
+    this.lastState=this.state
     this.state = s
   }
 
@@ -257,6 +261,7 @@ export class IndexComponent implements OnInit {
       filter: this.filter
     }).pipe(first()).subscribe(
       data => {
+        this.spinner.hide()
         let ts = (new Date()).getTime()
         this.layersControl.overlays['Heatmap'] = L.tileLayer(`${this.backend}/maps/records/${data["mapfile"]}/heatmap/{z}/{x}/{y}.png/?${ts}`, {})
         let cl = utfGrid(`${this.backend}/grid/records/${data["mapfile"]}/records_offset/{z}/{x}/{y}.json/?${ts}`, {
@@ -304,6 +309,7 @@ export class IndexComponent implements OnInit {
   }
 
   setFilter(e: any) {
+    this.spinner.show
     this.filter = e
     this.loadRecords(false)
   }
@@ -333,6 +339,7 @@ export class IndexComponent implements OnInit {
   }
   setReport(r: object) {
     this.report = r
+    this.spinner.show
   }
   editRecord() {
     this.editing = true

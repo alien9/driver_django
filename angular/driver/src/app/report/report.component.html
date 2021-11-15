@@ -1,10 +1,11 @@
-<div *ngIf="report['crosstabs']">
+<div *ngIf="report && report['crosstabs']">
     <div *ngFor="let table of report['crosstabs']['tables']; let j=index">
         <div class=m-2>
             <h3>
                 {{report['parameters']['occurred_min']|localizedDate:'longDate'}} - {{report['parameters']['occurred_max']|localizedDate:'longDate'}}
             </h3>
             <h5>{{config['PRIMARY_LABEL']|translate}}
+                <a (click)=relate()>relate</a>
                 <span *ngIf="table['tablekey']">{{'for'|translate}} {{report['crosstabs']['table_labels'][table['tablekey']]}}</span> {{'by'|translate}} {{report['path']['row']|translate}} {{'and'|translate}} {{report['path']['col']|translate}}
             </h5>
         </div>
