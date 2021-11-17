@@ -42,10 +42,8 @@ severe int;
 road_name varchar;
 road_field_name varchar;
 begin
-	select display_field into road_field_name from black_spots_roadmap where uuid=roadmap::uuid;
-	raise notice 'field name %', road_field_name;
 	execute 'select ii.geom, ii.name from (
-		select i.geom as geom, i.'||road_field_name||' from black_spots_road i where i.roadmap_id='''||roadmap||'''::uuid order by i.geom <-> st_geomfromewkt('''||point_geometry||''') limit 10
+		select i.geom as geom, i.name from black_spots_road i where i.roadmap_id='''||roadmap||'''::uuid order by i.geom <-> st_geomfromewkt('''||point_geometry||''') limit 10
 	) as ii order by st_distance(ii.geom, st_geomfromewkt('''||point_geometry||''')) limit 1;' into  road, road_name;
 
 --	raise notice 'Country and boundary: %', b;

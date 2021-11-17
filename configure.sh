@@ -40,7 +40,7 @@ sed -e "s/PROTOCOL/${PROTOCOL}/g" \
      -e "s/LANGUAGES/${LANGUAGES}/g" \
 scripts.template.js > web/dist/scripts/scripts.b9157403.js
 
-if [[ ! -f driver-${CONTAINER_NAME}-conf ]]; then
+if [[ ! -f driver-${CONTAINER_NAME}.conf ]]; then
      cp driver-app.conf driver-${CONTAINER_NAME}.conf
 fi
 sed -i -e "s/\s[^ ]*\s*#HOST_NAME$/ ${HOST_NAME}; #HOST_NAME/g" \
