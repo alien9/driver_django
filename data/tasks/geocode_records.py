@@ -85,9 +85,13 @@ def generate_blackspots(blackspotset_uuid=None, user_id=None):
             bs.black_spot_set=b
             bs.geom=row[0]
             bs.the_geom=row[1]
-            bs.severity_score=segment.data['cost']
-            bs.num_records=segment.data['count']
-            bs.num_severe=segment.data['count']
+            bs.severity_score=0
+            bs.num_records=0
+            bs.num_severe=0
+            if 'cost' in segment.data:
+                bs.severity_score=segment.data['cost']
+                bs.num_records=segment.data['count']
+                bs.num_severe=segment.data['count']
             if segment.name is not None:
                 bs.name=segment.name
             bs.save()

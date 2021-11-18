@@ -52,9 +52,32 @@ MAP
         END
         CLASS
             STYLE
-                COLOR 255 0 0
+                COLOR 250 0 0
                 WIDTH 10
                 OPACITY 70
+            END
+        END
+    END
+    LAYER
+        NAME        "critical_offset"
+        DATA        "{{query|safe}}"
+        CONNECTIONTYPE  POSTGIS
+        CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
+        
+        UTFITEM   "uuid"
+        UTFDATA   "{\"uuid\":\"[uuid]\",\"name\":\"[name]\", \"cost\":\"[severity_score]\", \"num_records\":\"[num_records]\"}"
+        PROCESSING "KERNELDENSITY_RADIUS=10"
+        
+        TYPE LINE
+        PROJECTION
+            "init=epsg:4326"
+        END
+        CLASS
+            STYLE
+                COLOR 250 0 0
+                WIDTH 10
+                OPACITY 70
+                OFFSET 3 3
             END
         END
     END

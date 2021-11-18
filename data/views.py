@@ -574,6 +574,10 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         Allows the following query parameters:
         - aggregation_boundary: Id of a Boundary; separate tables will be generated for each
                                 BoundaryPolygon associated with the Boundary.
+        - relate: Path for the multiple related table to aggregate into counts. If this isn't 
+            provided, the method must return the counts of registries for each aggregation.
+            When the relate patrameter isd provided, the method must count the totals for that 
+            related information.
         - all other filter params accepted by the list endpoint; these will filter the set of
             records before any aggregation is applied. This may result in some rows / columns /
             tables having zero records.
@@ -788,8 +792,9 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         else:  # 'choices_path'; ensured by parent function
             schema = RecordType.objects.get(pk=record_type_id).get_current_schema()
             path = request.query_params[param].split(',')
+            relate=request.query_params.get('relate')
             return self._get_multiple_choices_annotated_tuple(
-                queryset, annotation_id, schema, path)
+                queryset, annotation_id, schema, path, relate)
 
     def _get_day_label(self, week_day_index):
         """Constructs a day translation label string given a week day index
@@ -1226,7 +1231,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         ]
         return (Case(*whens, output_field=CharField()), labels)
 
-    def _get_multiple_choices_annotated_tuple(self, queryset, annotation_id, schema, path):
+    def _get_multiple_choices_annotated_tuple(self, queryset, annotation_id, schema, path, relate=None):
         """Helper wrapper for annotating a queryset with a case statement
 
         Args:
@@ -1234,6 +1239,8 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
           annotation_id (String): 'row' or 'col'
           schema (RecordSchema): A RecordSchema to get properties from
           path (list): A list of path fragments to navigate to the desired property
+          relate (string): What to count - if None, we will return the registries count; 
+            else, the aggregated row or column for the related value.
 
         Returns:
             A 3-tuple of:
@@ -1253,16 +1260,18 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             if is_array:
                 pattern=json.dumps({path[2]:choice})
                 pattern=pattern[1:len(pattern)-1]
-                annotations['{}_{}'.format(annotation_id, choice)] = RawSQL("\
-                    SELECT \
- case when \"grout_record\".\"data\"->>%s ~ %s = 't' then 1 else 0 end\
-",(path[0], pattern)
-                )
-                """                 annotations['{}_{}'.format(annotation_id, choice)] = RawSQL("\
-                SELECT \
-                -1+array_length(regexp_split_to_array(\"grout_record\".\"data\"->>%s, %s),1) as l \
-                ",(path[0], pattern)
-                                ) """
+                if not relate or relate=="":
+                    annotations['{}_{}'.format(annotation_id, choice)] = RawSQL("\
+                        SELECT \
+    case when \"grout_record\".\"data\"->>%s ~ %s = 't' then 1 else 0 end\
+    ",(path[0], pattern)
+                    )
+                else:
+                    annotations['{}_{}'.format(annotation_id, choice)] = RawSQL("\
+                        SELECT \
+                        -1+array_length(regexp_split_to_array(\"grout_record\".\"data\"->>%s, %s),1) as l \
+                        ",(path[0], pattern)
+                                        )
             else:
                 expression="data__%s__%s__contains"  % (path[0], path[2])
                 annotations['{}_{}'.format(annotation_id, choice)] = Case(
