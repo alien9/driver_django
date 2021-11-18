@@ -30,6 +30,7 @@ export class NavbarComponent implements OnInit {
   @Output() filterChange = new EventEmitter<object>()
   @Output() stateChange = new EventEmitter<string>()
   @Output() reportChange = new EventEmitter<object>()
+  @Output() goBack=new EventEmitter<string>()
   public recordSchema: object
   @Input() stateSelected
   public authenticated: boolean = true
@@ -110,7 +111,7 @@ export class NavbarComponent implements OnInit {
     d.setMinutes(0)
     return d.toISOString()
   }
-  apply() {
+  applyFilter(m) {
     //jsonb={"driverVehiculo":{"Tipo":{"_rule_type":"containment_multiple","contains":["Motocicleta",["Motocicleta"]]}},"driverPersona":{"Edad":{"_rule_type":"intrange","min":3,"max":7},"Tipo":{"_rule_type":"containment_multiple","contains":["Conductor","Pasajero",["Conductor"],["Pasajero"]]},"Estado":{"_rule_type":"containment_multiple","contains":["Herido",["Herido"]]}},"driverUbicacionTemporal":{"Estado+meteorol\xc3\xb3gico":{"_rule_type":"containment","contains":["Granizo","Nieve","Niebla+/+neblina",["Granizo"],["Nieve"],["Niebla+/+neblina"]]}}}&occurred_max=2021-09-30T23:59:59.999Z&occurred_min=2021-07-02T00:00:00.000Z&record_type=10a31c60-f0b8-499d-9c79-3cb351278144&weather=cloudy'
     let jsonb = {}
     this.tables.forEach(t => {
@@ -126,7 +127,6 @@ export class NavbarComponent implements OnInit {
           } else {
             j = { "_rule_type": "containment" }
           }
-          console.log(selected)
           j["contains"] = selected
           jt[k[0]] = j
         }
@@ -157,6 +157,8 @@ export class NavbarComponent implements OnInit {
     localStorage.setItem("current_filter", JSON.stringify(result))
     result['obj'] = jsonb
     this.filterChange.emit(result)
+    this.applyReport(null)
+    m.close()
   }
   initDataFrame() {
     this.tables = Object.keys(this.schema['properties'])
@@ -167,7 +169,7 @@ export class NavbarComponent implements OnInit {
       let table = this.schema['definitions'][t]['plural_title'] || this.schema['definitions'][t]['title']
       Object.entries(this.schema['definitions'][t]['properties'])
         .sort((k, j) => { return k[1]['propertyOrder'] - j[1]['propertyOrder'] })
-        .filter(k => k[1]['isSearchable'])
+        .filter(k => k[1]['isSearchable'] && (k[1]['enum']))
         .forEach(element => {
           this.reportFilters.push({ title: element[0], table: t })
         });
@@ -175,9 +177,7 @@ export class NavbarComponent implements OnInit {
     this.loadFilter()
   }
   loadFilter() {
-    let f = {}
     if (!this.filter) this.filter = {}
-
     if (this.filter['occurred_max']) {
       this.occurred_max = new Date(this.filter['occurred_max'])
     } else {
@@ -193,7 +193,7 @@ export class NavbarComponent implements OnInit {
     this.occurred_min_ngb = this.asNgbDateStruct(this.occurred_min)
     this.occurred_max_ngb = this.asNgbDateStruct(this.occurred_max)
 
-
+    let f = {}
     this.tables.forEach(t => {
       if (!f[t]) {
         f[t] = {}
@@ -201,7 +201,6 @@ export class NavbarComponent implements OnInit {
       let defs = this.schema['definitions'][t]
       Object.entries(defs.properties).forEach((k) => {
         let e = (k[1]['enum']) ? k[1]['enum'] : (k[1]['items']) ? k[1]['items'].enum : []
-        console.log(e)
         if (!f[t][k[0]]) f[t][k[0]] = {}
         e.forEach(element => {
           if (this.filter && this.filter['obj'] && this.filter['obj'][t] && this.filter['obj'][t][k[0]] && this.filter['obj'][t][k[0]]['contains']) {
@@ -221,7 +220,6 @@ export class NavbarComponent implements OnInit {
       })
       this.filterPage = f
     })
-
   }
   logout() {
     document.cookie.split(/; /).map(k => k.split(/=/)).forEach(k => {
@@ -281,14 +279,13 @@ export class NavbarComponent implements OnInit {
     // occurred_min=2021-07-30T00:00:00.000Z&
     // record_type=d3005b08-ce42-4012-9497-65fd82efb11a&
     // row_choices_path=driverDetails,properties,Incident+type
-    //
-    //a.options[a.selectedIndex].parentNode.getAttribute('value');
     this.assembleReport()
     let f = JSON.parse(localStorage.getItem("current_filter") || '{}')
     Object.entries(f).forEach(([k, v]) => {
       this.crosstabsFilters[k] = v
     })
     this.loadReport(this.crosstabsFilters)
+    if(modal) modal.dismiss('Apply')
   }
   setHeader(tab: string, kind: string) {
     this.header[tab] = kind
@@ -312,6 +309,7 @@ export class NavbarComponent implements OnInit {
     })
     this.report = null
     if (this.reportParameters) {
+      if(!this.reportParameters['relate'])this.reportParameters['relate']=""
       this.spinner.show()
       this.recordService.getCrossTabs(this.recordSchema["record_type"], this.reportParameters).pipe(first()).subscribe(
         crosstabs => {
@@ -327,5 +325,9 @@ export class NavbarComponent implements OnInit {
   }
   resetFilter() {
     this.loadFilter()
+  }
+  cancelReport(modal:any){
+    this.goBack.emit('Reports')
+    modal.close('Go Back')
   }
 }

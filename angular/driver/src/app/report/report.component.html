@@ -4,8 +4,14 @@
             <h3>
                 {{report['parameters']['occurred_min']|localizedDate:'longDate'}} - {{report['parameters']['occurred_max']|localizedDate:'longDate'}}
             </h3>
-            <h5>{{config['PRIMARY_LABEL']|translate}}
-                <a (click)=relate()>relate</a>
+            <h5>
+                <span *ngIf="report['relatable']">
+                    <select [(ngModel)]="report['parameters']['relate']" (change)=setRelate()>
+                        <option value="">{{config['PRIMARY_LABEL']|translate}}</option>
+                        <option [value]="report['relatable']">{{recordSchema['schema']['definitions'][report['relatable'][0]]['plural_title']|translate}}</option>
+                    </select>                
+                </span>
+                <span *ngIf="!report['relatable']">{{config['PRIMARY_LABEL']|translate}}</span>
                 <span *ngIf="table['tablekey']">{{'for'|translate}} {{report['crosstabs']['table_labels'][table['tablekey']]}}</span> {{'by'|translate}} {{report['path']['row']|translate}} {{'and'|translate}} {{report['path']['col']|translate}}
             </h5>
         </div>

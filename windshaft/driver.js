@@ -15,15 +15,16 @@ var validTables = ['grout_boundary', 'grout_record', 'black_spots_blackspot'];
 
 // queries
 var baseBoundaryQuery = ["(SELECT p.uuid AS polygon_id, b.uuid AS shapefile_id, ",
-                         "b.label, b.color, p.geom ",
-                         "FROM grout_boundarypolygon p INNER JOIN grout_boundary b ",
-                         "ON (p.boundary_id=b.uuid)"
-                        ].join("");
+    "b.label, b.color, p.geom ",
+    "FROM grout_boundarypolygon p INNER JOIN grout_boundary b ",
+    "ON (p.boundary_id=b.uuid)"
+].join("");
 var filterBoundaryQuery = " WHERE b.uuid ='";
 var endBoundaryQuery = ") AS grout_boundary";
 
 var baseBlackspotQuery = ["(SELECT * ",
-                          "FROM black_spots_blackspot b "].join("");
+    "FROM black_spots_blackspot b "
+].join("");
 var filterBlackspotQuery = "WHERE b.black_spot_set_id ='";
 var endBlackspotQuery = ") AS black_spots_blackspot";
 
@@ -97,16 +98,16 @@ function setRequestParameters(request, callback, redisClient) {
     var params = request.params;
     var tilekey = request.query.tilekey;
 
-    params.dbname = 'driver';
+    params.dbname = process.env.DRIVER_DB_NAME;
 
     // table name must be in the whitelist
     if (!_.contains(validTables, params.tablename)) {
-        throw('Invalid table name ' + params.tablename);
+        throw ('Invalid table name ' + params.tablename);
     }
 
     // check for a valid record type UUID (or 'ALL' to match all record types)
     if (params.id !== 'ALL' && !uuidRegex.test(params.id)) {
-        throw('Invalid record type UUID');
+        throw ('Invalid record type UUID');
     }
 
     params.table = params.tablename;
@@ -125,7 +126,7 @@ function setRequestParameters(request, callback, redisClient) {
 
         // retrieve stored query for record points
         if (!tilekey) {
-            throw('Parameter: `tilekey` must be specified');
+            throw ('Parameter: `tilekey` must be specified');
         } else {
             redisClient.get(tilekey, function(err, sql) {
                 if (!sql) {
@@ -146,11 +147,11 @@ function setRequestParameters(request, callback, redisClient) {
                     }
                 }).join(', ');
 
-                params.sql = '(' + castSelect + theRest + ') as grout_record' ;
+                params.sql = '(' + castSelect + theRest + ') as grout_record';
                 callback(null, request);
             });
         }
-    } else if (params.tablename === 'grout_boundary'){
+    } else if (params.tablename === 'grout_boundary') {
         params.interactivity = 'label';
         var boundaryColor = request.query.color || '#f4b431';
         var colorStyle = 'line-color: ' + boundaryColor + ';';
@@ -186,7 +187,7 @@ function setRequestParameters(request, callback, redisClient) {
                     }
                 }).join(', ');
 
-                params.sql = '(' + castSelect + theRest + ') as black_spots_blackspot' ;
+                params.sql = '(' + castSelect + theRest + ') as black_spots_blackspot';
                 callback(null, request);
             });
         } else {

@@ -11,6 +11,10 @@ import { utfGrid } from '../UtfGrid';
 import { } from 'jquery'
 import { ActivatedRoute } from '@angular/router';
 import { NgxSpinnerService } from "ngx-spinner";
+import { AfterViewInit, Directive } from '@angular/core';
+import { NavbarComponent } from '../navbar/navbar.component'
+import { MaxValidator } from '@angular/forms';
+
 
 @Component({
   selector: 'app-index',
@@ -44,6 +48,9 @@ export class IndexComponent implements OnInit {
   public canWrite: boolean = false
   private isDrawing: boolean = false
   private lastState: string
+
+  @ViewChild(NavbarComponent) navbar!: NavbarComponent;
+
   popContent: any
   constructor(
     private recordService: RecordService,
@@ -114,7 +121,7 @@ export class IndexComponent implements OnInit {
       next: critical_data => {
         if (critical_data['results']) {
           critical_data['results'].forEach(rs => {
-            let gl = utfGrid(`${this.backend}/grid/critical/${rs['uuid']}/critical/{z}/{x}/{y}.json/`, {
+            let gl = utfGrid(`${this.backend}/grid/critical/${rs['uuid']}/critical_offset/{z}/{x}/{y}.json/`, {
               resolution: 4,
               pointerCursor: true,
               mouseInterval: 66
@@ -178,7 +185,7 @@ export class IndexComponent implements OnInit {
     })
   }
   selectState(s: string) {
-    this.lastState=this.state
+    this.lastState = this.state
     this.state = s
   }
 
@@ -228,14 +235,7 @@ export class IndexComponent implements OnInit {
       }
     }
     this.loadRecords(true)
-    this.recordList = null
-    if (this.state == 'List') {
-      if (this.boundary_polygon_uuid) this.filter["polygon_id"] = this.boundary_polygon_uuid
-      this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"] }, { filter: this.filter }).pipe(first()).subscribe(
-        data => {
-          this.recordList = data
-        })
-    }
+    this.refreshList()
   }
   loadCritical() {
     this.recordService.getCritical().pipe(first()).subscribe(
@@ -282,7 +282,6 @@ export class IndexComponent implements OnInit {
         });
         cl.on('click', (e: any) => {
           if (e.data) {
-            console.log(this.isDrawing)
             if (this.isDrawing) return
             let du = new Date(Date.parse(e.data['occurred_from']))
             let t = $("#record-popup-content").html()
@@ -307,11 +306,24 @@ export class IndexComponent implements OnInit {
         this.layersControl.overlays['Records'] = this.recordsLayer
       })
   }
-
+  refreshList() {
+    this.recordList = null
+    if (this.state == 'List') {
+      this.spinner.show()
+      if (this.boundary_polygon_uuid) this.filter["polygon_id"] = this.boundary_polygon_uuid
+      this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"] }, { filter: this.filter }).pipe(first()).subscribe(
+        data => {
+          this.spinner.hide()
+          this.recordList = data
+        }
+      )
+    }
+  }
   setFilter(e: any) {
     this.spinner.show
     this.filter = e
     this.loadRecords(false)
+    this.refreshList()
   }
   viewRecord(content: any, uuid: string) {
     this.record_uuid = uuid
@@ -339,7 +351,19 @@ export class IndexComponent implements OnInit {
   }
   setReport(r: object) {
     this.report = r
-    this.spinner.show
+    if (this.report['parameters']['col_choices_path'] && !this.report['parameters']['row_choices_path']) {
+      let rel = this.report['parameters']['col_choices_path'].split(',')
+      if (this.recordSchema['schema'].definitions[rel[0]]['multiple']) {
+        this.report['relatable'] = rel
+      }
+    } else {
+      if (this.report['parameters']['row_choices_path'] && !this.report['parameters']['col_choices_path']) {
+        let rel = this.report['parameters']['row_choices_path'].split(',')
+        if (this.recordSchema['schema'].definitions[rel[0]]['multiple']) {
+          this.report['relatable'] = rel
+        }
+      }
+    }
   }
   editRecord() {
     this.editing = true
@@ -355,5 +379,16 @@ export class IndexComponent implements OnInit {
   }
   setDrawing(e: boolean) {
     this.isDrawing = e
+  }
+  goBack(from: string) {
+    if (!this.lastState || (this.lastState == from)) {
+      this.selectState('Map')
+    } else {
+      this.selectState(this.lastState)
+    }
+  }
+  reloadReport(relate: string) {
+    this.report['parameters']['relate'] = relate
+    this.navbar.loadReport(this.report['parameters'])
   }
 }

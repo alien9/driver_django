@@ -162,10 +162,9 @@
         </div>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-light" (click)="resetFilter()">{{'Reset'|translate}}</button>
-        <button type="button" class="btn btn-outline-secondary" (click)="apply();modal.close( 'Apply click')">{{'Apply'|translate}}</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="applyFilter(modal);">{{'Apply'|translate}}</button>
         <button type="button" class="btn btn-outline-secondary" (click)="resetFilter()">{{'Reset'|translate}}</button>
-        <button type="button" class="btn btn-outline-secondary" (click)="modal.close( 'Close click')">{{'Cancel'|translate}}</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.close('Close click')">{{'Close'|translate}}</button>
     </div>
 </ng-template>
 
@@ -195,7 +194,6 @@
             </div>
             <select class="custom-select" [(ngModel)]=reportHeaders[tab.key] (change)=setReportHeaders($event) id="{{tab.key}}_header">
                 <optgroup label="{{'Geography'|translate}}" *ngIf=boundaries.length>
-                    <option></option>
                     <option [value]="'boundary_id,'+item.uuid" *ngFor="let item of boundaries">{{item.label}}</option>
                 </optgroup>
                 <optgroup label="{{'Time'|translate}}" *ngIf=wantsTime(tab.key)>
@@ -224,7 +222,7 @@
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-light" (click)="resetReport();startFilters(viewpoint)">{{'Reset'|translate}}</button>
-        <button type="button" class="btn btn-light" [disabled]="!reportHeaders['row'] || !reportHeaders['col']" (click)="applyReport($event);modal.dismiss('Cross click')">{{'Apply'|translate}}</button>
-        <button type="button" class="btn btn-light" (click)="modal.close('Close click')">{{'Close'|translate}}</button>
+        <button type="button" class="btn btn-light" [disabled]="!reportHeaders['row'] || !reportHeaders['col']" (click)="applyReport(modal)">{{'Apply'|translate}}</button>
+        <button type="button" class="btn btn-light" (click)="cancelReport(modal)">{{'Close'|translate}}</button>
     </div>
 </ng-template>
