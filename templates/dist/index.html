@@ -57,21 +57,21 @@
                     countryCode: "{{config.COUNTRY_CODE}}",
                     centerLatLon: [{
                         {
-                            config.MAP_CENTER_LATITUDE | safe
+                            {{config.MAP_CENTER_LATITUDE | safe}}
                         }
                     }, {
                         {
-                            config.MAP_CENTER_LONGITUDE | safe
+                            {{config.MAP_CENTER_LONGITUDE | safe}}
                         }
                     }],
                     zoom: {
                         {
-                            config.MAP_ZOOM
+                            {{config.MAP_ZOOM}}
                         }
                     },
                     languages: {
                         {
-                            config.LANGUAGES | safe
+                            {{config.LANGUAGES | safe}}
                         }
                     }
                 },
