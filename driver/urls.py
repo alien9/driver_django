@@ -70,7 +70,6 @@ urlpatterns = [
     url(r'^config/', data_views.get_config),
     url('tiles/', data_views.proxy),
     url('mapserver/', data_views.mapserver),
-    url('mapcache/', data_views.mapcache),
     url('segments/', data_views.segment_sets),
 ]
 

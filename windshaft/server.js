@@ -16,7 +16,7 @@ var redisConfig = {
 
 // Create a connection to the redis client (db #2) for tilekey lookups
 console.log('Creating redis client at ' + redisConfig.host + ' connecting to database ' + dbName + ' at ' + dbHost);
-console.log("connecting to database" + dbName);
+
 var redisClient = Redis.createClient(redisConfig.port, redisConfig.host);
 redisClient.select(2);
 

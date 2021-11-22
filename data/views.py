@@ -126,6 +126,9 @@ def mapillary_callback(request):
         }
         r = requests.post(url, data=payload, headers=headers)
         j=r.json()
+        config.MAPILLARY_TOKEN=j['access_token']
+        d=datetime.datetime.now()+datetime.timedelta(seconds=j['expires_in'])
+        config.MAPILLARY_EXPIRES=d
         response=redirect(request.GET.get('state'))
         response.set_cookie('mapillary_auth', j['access_token'])
         return response
@@ -133,7 +136,7 @@ def mapillary_callback(request):
 
 @csrf_exempt
 def proxy(request):
-    remoteurl = "http://%s:5000%s" % (config.WINDSHAFT, request.path,)
+    remoteurl = "%s:5000%s" % (config.WINDSHAFT, request.path,)
     return proxy_view(request, remoteurl)
 
 @csrf_exempt
@@ -172,10 +175,6 @@ def maps(request, geometry, mapfile, layer, z, x, y):
     
     return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
  
-@csrf_exempt
-def mapcache(request):
-    dest="http://%s/%s" % (config.MAPSERVER, request.path,)
-    return proxy_view(request, dest)
 
 @api_view(['GET', 'POST', ])
 def run_calculate_blackspots(request, uuid):

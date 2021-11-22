@@ -4,6 +4,7 @@ from urllib.parse import parse_qs
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User, Group
+from data.models import Dictionary
 from django.http import JsonResponse
 from django.shortcuts import redirect
 
@@ -159,6 +160,9 @@ class DriverObtainAuthToken(ObtainAuthToken):
         conf={}
         for k,v in settings.CONSTANCE_CONFIG.items():
             conf[k]=getattr(config, k)
+        languages=[]
+        for ds in Dictionary.objects.all():
+            languages.append({"code":ds.language_code, "name":ds.name})
         o={
             'token': token.key,
             'user': token.user_id,
@@ -168,21 +172,9 @@ class DriverObtainAuthToken(ObtainAuthToken):
             'group':list(map(lambda x: x.id, list(user.groups.all()))),
             'groups_name': list(map(lambda x: x.name, list(user.groups.all()))),
             'config': conf,
+            'languages': languages,
         }
-        """
-        this.storage.set('groups', res[0].group[1]).subscribe(() = > {});
-
-        // localStorage.setItem('groups_name', res[0].group[0]);
-        this.storage.set('groups_name', res[0].group[0]).subscribe(() = > {});
-
-
-        localStorage.setItem('staff_status', res[0].staff_status)
-        localStorage.setItem('superuser_status', res[0].superuser_status)
-        // localStorage.setItem('email', res[0].email_address)
-        this.storage.set('email', res[0].email_address).subscribe(() = > {});
-        """
         return Response(o)
-
 
 obtain_auth_token = DriverObtainAuthToken.as_view()
 sso_auth_token = DriverSsoAuthToken.as_view()
