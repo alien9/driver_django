@@ -46,6 +46,7 @@ export class InputComponent implements OnInit {
 
 
       let mapillary = L.vectorGrid.protobuf(`https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=${this.config['MAPILLARY_TOKEN']}`, {
+        minZoom: 10,
         maxNativeZoom: 14,
         vectorTileLayerStyles: {
           "image": function (properties) {
