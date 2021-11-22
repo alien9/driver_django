@@ -55,11 +55,9 @@
                 localization: {
                     timeZone: "{{config.TIMEZONE}}",
                     countryCode: "{{config.COUNTRY_CODE}}",
-                    centerLatLon: [
-                        "{{config.MAP_CENTER_LATITUDE | safe}}", "{{config.MAP_CENTER_LONGITUDE | safe}}"
-                    ],
+                    centerLatLon: ["{{config.MAP_CENTER_LATITUDE | safe}}", "{{config.MAP_CENTER_LONGITUDE | safe}}"],
                     zoom: "{{config.MAP_ZOOM}}",
-                    languages: "{{config.LANGUAGES | safe}}"
+                    languages: {{config.LANGUAGES | safe}}
                 },
                 mapillary: {
                     enabled: !1,
