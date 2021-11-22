@@ -4,6 +4,7 @@ import { environment } from '../../environments/environment'
 import { WebService } from '../web.service'
 import { first } from 'rxjs/operators';
 import { getSunrise, getSunset } from 'sunrise-sunset-js';
+import "leaflet.vectorgrid";
 
 @Component({
   selector: 'app-input',
@@ -26,7 +27,7 @@ export class InputComponent implements OnInit {
   constructor(private webService: WebService) { }
 
   ngOnInit(): void {
-    this.record['location_text']='..'
+    this.record['location_text'] = '..'
     console.log(this.record)
     this.editing = false
     this.schema = this.recordSchema['schema']
@@ -41,6 +42,41 @@ export class InputComponent implements OnInit {
       overlays: {
       }
     }
+    if (this.config['MAPILLARY_TOKEN']) {
+
+
+      let mapillary = L.vectorGrid.protobuf(`https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=${this.config['MAPILLARY_TOKEN']}`, {
+        maxNativeZoom: 14,
+        vectorTileLayerStyles: {
+          "image": function (properties) {
+            if (properties.captured_at >= 1514764800000) {
+              return {
+                radius: 1,
+                color: "#99AF64"
+              }
+            } else {
+              return {
+                opacity: 0
+              }
+            }
+          },
+          "sequence": function (properties) {
+            if (properties.captured_at >= 1514764800000) {
+              return {
+                weight: 1,
+                color: "#39AF64",
+              }
+            } else {
+              return {
+                opacity: 0
+              }
+            }
+          }
+        }
+      })
+      this.layersControl.overlays['Mapillary'] = mapillary
+    }
+
     let light = this.record['light']
     if (!light) {
       this.record['light'] = this.getLight(this.record['geom'].coordinates, new Date(this.record['occurred_from']))
@@ -108,10 +144,10 @@ export class InputComponent implements OnInit {
       let sunset = getSunset(c[1], c[0], d).getTime()
       if (Math.abs(sunset - d.getTime()) < 3600000) {
         light = 'Dusk'
-      }else{
-        if((d.getTime() < sunrise) || (d.getTime()>sunset)) light='Night'
+      } else {
+        if ((d.getTime() < sunrise) || (d.getTime() > sunset)) light = 'Night'
       }
-    } 
+    }
     return light
   }
 }

@@ -310,6 +310,7 @@ export class NavbarComponent implements OnInit {
     this.report = null
     if (this.reportParameters) {
       if(!this.reportParameters['relate'])this.reportParameters['relate']=""
+      
       this.spinner.show()
       this.recordService.getCrossTabs(this.recordSchema["record_type"], this.reportParameters).pipe(first()).subscribe(
         crosstabs => {
