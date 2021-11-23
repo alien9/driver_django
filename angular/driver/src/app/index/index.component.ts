@@ -1,19 +1,15 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { LeafletModule } from '@asymmetrik/ngx-leaflet';
 import * as L from 'leaflet';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { RecordService } from '../record.service'
 import { first } from 'rxjs/operators';
-import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
-import { DrawEvents, featureGroup, FeatureGroup, icon, latLng, tileLayer } from 'leaflet';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { utfGrid } from '../UtfGrid';
 import { } from 'jquery'
 import { ActivatedRoute } from '@angular/router';
 import { NgxSpinnerService } from "ngx-spinner";
-import { AfterViewInit, Directive } from '@angular/core';
 import { NavbarComponent } from '../navbar/navbar.component'
-import { MaxValidator } from '@angular/forms';
 
 
 @Component({
