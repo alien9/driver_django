@@ -44,6 +44,7 @@ export class IndexComponent implements OnInit {
   public canWrite: boolean = false
   private isDrawing: boolean = false
   private lastState: string
+  public mapillary_id:string
 
   @ViewChild(NavbarComponent) navbar!: NavbarComponent;
 
@@ -333,7 +334,7 @@ export class IndexComponent implements OnInit {
       this.recordService.getRecord(this.record_uuid).pipe(first()).subscribe(
         data => {
           this.record = data
-          this.modalService.open(content, { size: 'lg', animation: false });
+          this.modalService.open(content, { size: 'lg', animation: false, keyboard:false, backdrop:"static" });
         })
       this.record_uuid = null
     }
@@ -386,5 +387,12 @@ export class IndexComponent implements OnInit {
   reloadReport(relate: string) {
     this.report['parameters']['relate'] = relate
     this.navbar.loadReport(this.report['parameters'])
+  }
+  setMapillary(e){
+    this.mapillary_id=e
+  }
+  closeRecord(m:any){
+    m.dismiss('Cross click')
+    this.mapillary_id=null
   }
 }

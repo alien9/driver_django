@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core'
+import { Component, OnInit, Input, NgZone, Output, EventEmitter } from '@angular/core'
 import * as L from 'leaflet'
 import { environment } from '../../environments/environment'
 import { WebService } from '../web.service'
@@ -16,6 +16,8 @@ export class InputComponent implements OnInit {
   @Input() recordSchema: object
   @Input() config: object
   @Input() editing: boolean
+  @Input() modal: any
+  @Output() mapillaryId = new EventEmitter<string>()
   public schema: object
   public options: any
   public layersControl: any
@@ -24,7 +26,8 @@ export class InputComponent implements OnInit {
   private marker: L.marker
   private map: L.Map
   backend: string
-  constructor(private webService: WebService) { }
+
+  constructor(private webService: WebService, private zone: NgZone) { }
 
   ngOnInit(): void {
     this.record['location_text'] = '..'
@@ -42,39 +45,6 @@ export class InputComponent implements OnInit {
       overlays: {
       }
     }
-    if (this.config['MAPILLARY_TOKEN']) {
-      let mapillary = L.vectorGrid.protobuf(`https://tiles.mapillary.com/maps/vtp/mly1_computed_public/2/{z}/{x}/{y}?access_token=${this.config['MAPILLARY_TOKEN']}`, {
-        maxNativeZoom: 14,
-        vectorTileLayerStyles: {
-          "image": function (properties) {
-            if (properties.captured_at >= 1514764800000) {
-              return {
-                radius: 1,
-                color: "#99AF64"
-              }
-            } else {
-              return {
-                opacity: 0
-              }
-            }
-          },
-          "sequence": function (properties) {
-            if (properties.captured_at >= 1514764800000) {
-              return {
-                weight: 1,
-                color: "#39AF64",
-              }
-            } else {
-              return {
-                opacity: 0
-              }
-            }
-          }
-        }
-      })
-      this.layersControl.overlays['Mapillary'] = mapillary
-    }
-
     let light = this.record['light']
     if (!light) {
       this.record['light'] = this.getLight(this.record['geom'].coordinates, new Date(this.record['occurred_from']))
@@ -87,10 +57,38 @@ export class InputComponent implements OnInit {
     ]
     this.options = {
       layers: this.layers,
-      zoom: 16,
+      zoom: 17,
       center: latlng
     }
     $(window).trigger('resize');
+    if (this.config['MAPILLARY_TOKEN']) {
+      let c = this.record['geom'].coordinates
+      this.webService.getMapillaryImages(this.config['MAPILLARY_TOKEN'], `${c[0] - 0.005},${c[1] - 0.0015},${c[0] + 0.005},${c[1] + 0.0015}`).pipe(first()).subscribe(imagery => {
+        this.layersControl.overlays['Mapillary'] = L.layerGroup()
+        this.options.layers.push(this.layersControl.overlays['Mapillary'])
+        imagery['data'].forEach(img => {
+          let l = new L.CircleMarker(img.geometry['coordinates'].reverse(), {
+            radius: 5,
+            stroke: false,
+            fillColor: '#009933',
+            fillOpacity:0.3
+          }).on('click', (e) => {
+            console.log(`ckicked on ${img.id}`)
+            e.sourceTarget.setStyle({'fillColor':"#ff0000", fillOpacity:1})
+            this.zone.run(() => {
+              this.setMapillaryId(img.id)
+              this.layersControl.overlays['Mapillary'].getLayers().filter(k=>k!=e.sourceTarget).forEach(l=>{
+                l.setStyle({'fillColor':"#009933",fillOpacity:0.3})
+              })
+            })
+          })
+          this.layersControl.overlays['Mapillary'].addLayer(l)
+        })
+      })
+    }
+  }
+  setMapillaryId(id: string) {
+    this.mapillaryId.emit(id)
   }
   setMarker(latlng: L.latlng) {
     this.marker = L.marker(latlng, {
@@ -115,8 +113,6 @@ export class InputComponent implements OnInit {
             this.record['location_text'] = address['display_name']
           }
         })
-
-        console.log(this.record)
       }
     })
   }
@@ -147,5 +143,9 @@ export class InputComponent implements OnInit {
       }
     }
     return light
+  }
+  closeModal(m:any){
+    this.mapillaryId.emit(null)
+    m.close('Cancel')
   }
 }
