@@ -13,17 +13,12 @@
             </button>
 
         </h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+        <button type="button" class="close" aria-label="Close" (click)="closeRecord(modal)">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
-    <div class="modal-body">
-        <app-input [config]=config *ngIf=record [record]=record [recordSchema]=recordSchema [editing]=editing>
-        </app-input>
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-light" (click)="modal.close('Close click')" i18n>Close</button>
-    </div>
+    <app-input [config]=config *ngIf=record [record]=record [recordSchema]=recordSchema [editing]=editing (mapillaryId)=setMapillary($event) [modal]=modal>
+    </app-input>
 </ng-template>
 
 <div id="popup-content">
@@ -39,3 +34,10 @@
 </div>
 
 <app-report *ngIf="state=='Reports'" [recordSchema]=recordSchema [boundaries]=boundaries [report]=report [config]=config (reloadReport)=reloadReport($event)></app-report>
+
+
+<button *ngIf="mapillary_id" type="button" class="close mapillary-close" aria-label="Close" (click)="mapillary_id=null">
+    <span aria-hidden="true ">&times;</span>
+</button>
+<iframe class="mapillaryPop" *ngIf="mapillary_id" [src]="'https://www.mapillary.com/embed?image_key='+mapillary_id+ '&style=photo' | safe : 'resourceUrl'" height="100%" width="100%" frameborder="0">
+</iframe>

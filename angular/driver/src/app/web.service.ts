@@ -10,7 +10,11 @@ import Utils from '../assets/utils';
 export class WebService {
   constructor(private http: HttpClient) { }
 
-  getReverse(lat:string,lng:string): Observable<any[]> {
-    return this.http.get<any[]>(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, { })
+  getReverse(lat: string, lng: string): Observable<any[]> {
+    return this.http.get<any[]>(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, {})
+  }
+
+  getMapillaryImages(token: string, bbox: string): Observable<any[]> {
+    return this.http.get<any[]>(`https://graph.mapillary.com/images?access_token=${token}&fields=id,geometry&bbox=${bbox}`)
   }
 }
