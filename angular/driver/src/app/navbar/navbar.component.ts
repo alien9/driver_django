@@ -237,6 +237,7 @@ export class NavbarComponent implements OnInit {
     document.cookie.split(/; /).map(k => k.split(/=/)).forEach(k => {
       document.cookie = `${k[0]}=; expires=Thu, 01 Jan 1970 00:00:00 UTC;`
     })
+    localStorage.clear()
     this.router.navigateByUrl('/login')
   }
   download() {
