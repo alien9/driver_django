@@ -26,7 +26,7 @@ Run `ng build` to build the project. The build artifacts will be stored in the `
 
 Example build for production:
 
-`ng build --prod --base-href /alpha/ --deploy-url /alpha/ --output-url=../../web`
+`ng build --configuration production --base-href /alpha/ --deploy-url /alpha/ --output-path=../../web`
 
 
 and then, served by nginx as:
