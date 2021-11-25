@@ -102,6 +102,10 @@ export class RecordService {
     })
     return this.http.get<any[]>(`${this.getBackend()}/api/records/crosstabs/`, { headers: this.getHeaders(), params:params })
   }
- // mine http://192.168.1.101:8000/api/records/crosstabs/?archived=False&record_type=d3005b08-ce42-4012-9497-65fd82efb11a&col_period_type=day&row_choices_path=driverDetails,properties,Incident%20type&jsonb=%7B%22driverDetails%22:%7B%22Incident%20type%22:%7B%22_rule_type%22:%22containment%22,%22contains%22:%5B%22_rule_type%22,%22contains%22,%22Collision%22,%22Pedestrian%20hit%22%5D%7D%7D%7D&occurred_min=2011-01-01T02:00:31.759Z&occurred_max=2021-10-30T03:00:31.759Z
- //theirshttp://192.168.1.101:8000/api/records/crosstabs/?archived=False&calendar=gregorian&row_choices_path=driverDetails,properties,Incident+type&jsonb=%7B%22driverDetails%22:%7B%22Incident+type%22:%7B%22_rule_type%22:%22containment%22,%22contains%22:%5B%22Collision%22,%22Pedestrian+hit%22,%5B%22Collision%22%5D,%5B%22Pedestrian+hit%22%5D%5D%7D%7D%7D&occurred_max=2021-10-28T23:59:59.999Z&occurred_min=2021-07-30T00:00:00.000Z&record_type=d3005b08-ce42-4012-9497-65fd82efb11a&col_period_type=day
+  iRapLogin(data){
+    return this.http.post(`${this.getBackend()}/api/irap-login/`, data, { headers: this.getHeaders() });
+  }
+  getIRapDataset(data:object){
+    return this.http.post(`${this.getBackend()}/api/irap-getdataset/`, data, { headers: this.getHeaders() });
+  }
 }

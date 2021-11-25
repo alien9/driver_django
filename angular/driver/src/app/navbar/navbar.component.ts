@@ -24,13 +24,15 @@ export class NavbarComponent implements OnInit {
   @Input() boundaryPolygons: any[] = []
   @Input() boundaryPolygon: any
   @Input() filter: object
+  @Input() iRap:object
   public filterPage: object
   @Output() boundaryChange = new EventEmitter<object>()
   @Output() boundaryPolygonChange = new EventEmitter<object>()
   @Output() filterChange = new EventEmitter<object>()
   @Output() stateChange = new EventEmitter<string>()
   @Output() reportChange = new EventEmitter<object>()
-  @Output() goBack=new EventEmitter<string>()
+  @Output() goBack = new EventEmitter<string>()
+  @Output() iRapChange=new EventEmitter<object>()
   public recordSchema: object
   @Input() stateSelected
   public authenticated: boolean = true
@@ -52,6 +54,9 @@ export class NavbarComponent implements OnInit {
   private hasGeography: boolean = false
   private hasTime: object = { 'row': false, 'col': false }
   language: string
+  irap_email: string
+  irap_password: string
+  irap_err: string
   constructor(
     private recordService: RecordService,
     public readonly translate: TranslateService,
@@ -69,7 +74,7 @@ export class NavbarComponent implements OnInit {
 
     }
     this.recordSchema = JSON.parse(localStorage.getItem('record_schema'))
-    if(!this.recordSchema){
+    if (!this.recordSchema) {
       this.router.navigateByUrl('/login')
       return
     }
@@ -94,6 +99,13 @@ export class NavbarComponent implements OnInit {
   }
   startFilters(content: any) {
     this.modalService.open(content, { size: 'lg' });
+  }
+  startIrap(content: any) {
+    this.modalService.open(content, {});
+    if(this.iRap){
+      this.spinner.show()
+      this.loadIrapDataset()
+    }
   }
   asNgbDateStruct(date: Date) {
     return { day: date.getDate(), month: date.getMonth() + 1, year: date.getFullYear() }
@@ -285,7 +297,7 @@ export class NavbarComponent implements OnInit {
       this.crosstabsFilters[k] = v
     })
     this.loadReport(this.crosstabsFilters)
-    if(modal) modal.dismiss('Apply')
+    if (modal) modal.dismiss('Apply')
   }
   setHeader(tab: string, kind: string) {
     this.header[tab] = kind
@@ -309,8 +321,8 @@ export class NavbarComponent implements OnInit {
     })
     this.report = null
     if (this.reportParameters) {
-      if(!this.reportParameters['relate'])this.reportParameters['relate']=""
-      
+      if (!this.reportParameters['relate']) this.reportParameters['relate'] = ""
+
       this.spinner.show()
       this.recordService.getCrossTabs(this.recordSchema["record_type"], this.reportParameters).pipe(first()).subscribe(
         crosstabs => {
@@ -327,8 +339,43 @@ export class NavbarComponent implements OnInit {
   resetFilter() {
     this.loadFilter()
   }
-  cancelReport(modal:any){
+  cancelReport(modal: any) {
     this.goBack.emit('Reports')
     modal.close('Go Back')
+  }
+  iRapLogin() {
+    this.recordService.iRapLogin({
+      "format":"json",
+      "body":
+      {
+        "username": this.irap_email,
+        "password": this.irap_password
+      }
+    }).pipe(first()).subscribe({
+      next: data => {
+        this.iRapChange.emit(data)
+      }, error: err => {
+        console.log(err)
+        if(err['error'] && err['error']['message']){
+          this.irap_err=err['error']['message']
+        }else{
+          if(err['message']) this.irap_err=err['message']
+          else  this.irap_err='Unknown error' // never should get here
+        }
+      }
+    })
+  }
+  loadIrapDataset(){
+    console.log("will load irap dataset")
+    this.recordService.getIRapDataset({"body":this.iRap['data']}).pipe(first()).subscribe({
+      next: data=>{
+        console.log(data)
+        this.spinner.hide()
+      },
+      error:err=>{
+        this.iRapChange.emit(null)
+        this.spinner.hide()
+      }
+    })
   }
 }

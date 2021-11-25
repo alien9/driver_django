@@ -86,10 +86,8 @@ export class LoginComponent implements OnInit {
                         localStorage.setItem('config', JSON.stringify(data['config']));
                         this.recordService.getRecordType().subscribe(
                             rata => {
-                                console.log(rata)
                                 if (rata['results']) {
                                     let schema_uuid;
-                                    console.log(data['config'].PRIMARY_LABEL)
                                     for (let i = 0; i < rata['results'].length; i++) {
                                         if (rata['results'][i]['label'] == data['config'].PRIMARY_LABEL) {
                                             schema_uuid = rata['results'][i]['current_schema'];
