@@ -544,4 +544,7 @@ CONSTANCE_CONFIG = {
     'MAPILLARY_TOKEN': ("", _("Mapillary token")),
     'MAPILLARY_EXPIRES': ("", _("Mapillary expiry date")),
     'NOMINATIM': ("", _("Nominatim key")),
+    'IRAP_AUTH_ID': ("", _("iRAP Auth ID")),
+    'IRAP_API_KEY': ("", _("iRAP API key")),
+    'IRAP_PRIVATE_KEY': ("", _("iRAP Private key")),
 }

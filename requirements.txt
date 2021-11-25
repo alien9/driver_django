@@ -111,3 +111,4 @@ zipp==3.4.0
 zope.event==4.5.0
 zope.interface==5.1.2
 mock==4.0.3
+py3rijndael==0.3.3

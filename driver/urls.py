@@ -11,7 +11,7 @@ from data import views as data_views
 from driver_auth import views as auth_views
 from user_filters import views as filt_views
 from django.conf.urls.i18n import i18n_patterns
-
+from vida.client import login_irap, getdataset, getlat_lon, fatalitydata
 router = routers.DefaultRouter()
 router.register('assignments', black_spot_views.EnforcerAssignmentViewSet)
 router.register('audit-log', data_views.DriverRecordAuditLogViewSet)
@@ -31,7 +31,6 @@ router.register('recordcosts', data_views.DriverRecordCostConfigViewSet)
 router.register('userfilters', filt_views.SavedFilterViewSet, basename='userfilters')
 router.register('pictures', data_views.PictureViewSet, basename='pictures')
 
-
 # user management
 router.register(r'users', auth_views.UserViewSet)
 router.register(r'groups', auth_views.GroupViewSet)
@@ -39,7 +38,6 @@ router.register(r'groups', auth_views.GroupViewSet)
 urlpatterns = i18n_patterns(
     path('admin/', admin.site.urls),
 )
-
 
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
@@ -63,21 +61,24 @@ urlpatterns = [
     # override openid login callback endpoint by adding url here before djangooidc include
     url(r'^openid/callback/login/?$', auth_views.authz_cb, name='openid_login_cb'),
     # OIDC
-    #url(r'^openid/', include('djangooidc.urls')),
-    #url(r'openid/', include('djangooidc.urls')),    
     url(r'^oidc/', include('mozilla_django_oidc.urls')),
     url('i18n/', include('django.conf.urls.i18n')),
     url(r'^config/', data_views.get_config),
     url('tiles/', data_views.proxy),
     url('mapserver/', data_views.mapserver),
-    url('segments/', data_views.segment_sets),
+    url('segments/', data_views.segment_sets),    
+    url('api/irap-login/', login_irap),
+    url('api/irap-getdataset/', getdataset),
+    url('api/irap-getlat_lon/', getlat_lon),
+    url('api/irap-fatalitydata/', fatalitydata),
 ]
 
-
+# i18n for django-admin
 from django.conf.urls.i18n import i18n_patterns
 
 # Allow login to the browseable API
 urlpatterns.append(url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')))
+
 if settings.DEBUG or settings.TESTING:
     import debug_toolbar
     urlpatterns = [

@@ -1,27 +1,30 @@
 # You will need to import these two objects to access the api
 # By default, the live api will be accessed. If you wish to access the release api, you will need to
 # edit the defines.py file
-from driver_irap.modules.irap_vida.user import User
-from driver_irap.modules.irap_vida.app import App
+from data.models import Irap
+from vida.modules.irap_vida.user import User
+from vida.modules.irap_vida.app import App
 from rest_framework.decorators import api_view
-from utility.response_utils import ok_response, error_response
+from constance import config
 import os
+from rest_framework.response import Response
 
-appAuthId = 15
-appApiKey = 'nVxfLRFxnjSrW9RvxdMXe7j0'
-appPrivateKey = 'ys9nHgSV2g0EYw1bGJttJbO6'
+headers_mapping = {"csv": {"content-type": "application/csv"},
+                   "json": {"content-type": "application/json"}}
 
+
+def ok_response(data={}, status=True, code=200, message="ok", headers='json'):
+    mydata = {"data": data, "message": message, "status": status}
+    return Response(data=mydata, status=code, content_type=headers_mapping[headers])
+
+
+def error_response(data={}, code=401, status=False, message="error", headers='json'):
+    mydata = {"data": data, "message": message, "status": status}
+    return Response(data=mydata, status=code, content_type=headers_mapping[headers])
 
 # This is a dataset that Nilesh has access to (it is in the Philippines)
 @api_view(['POST'])
 def login_irap(request):
-    dataset_id = 744
-
-    # App api credentials as provided previously
-    # appAuthId = 15
-    # appApiKey = 'nVxfLRFxnjSrW9RvxdMXe7j0'
-    # appPrivateKey = 'ys9nHgSV2g0EYw1bGJttJbO6'
-
     # The email and password for the user you wish to access the api as
     try:
         request_body = request.data["body"]
@@ -33,9 +36,9 @@ def login_irap(request):
 
     # First instantiate an App object, passing BROKER credentials
     app_broker = App(
-            app_auth_id=appAuthId,
-            app_api_key=appApiKey,
-            app_private_key=appPrivateKey)
+            app_auth_id=config['IRAP_AUTH_ID'],
+            app_api_key=config['IRAP_API_KEY'],
+            app_private_key=config['IRAP_PRIVATE_KEY'])
 
     # Then call the get_user_token method with the user's email and password
     # In theory you should only need to do this once per user (if you store the returned credentials
@@ -44,7 +47,12 @@ def login_irap(request):
         token = app_broker.get_user_token(user_email, user_password)
     except:
         return error_response(message="Something went wrong")
-    print("token", token)
+    #token {'status': 'Error', 'code': 404, 'error': 'User does not exist'}
+
+    if not 'status' in token:
+        return error_response(data=None, status=token['status'], code=token['code'], message=token['error'])
+    if token['status']=='Error':
+        return error_response(data=None, status=token['status'], code=token['code'], message=token['error'])
 
     # This returns the USER credentials that allow you to access ViDA on behalf of the user
     try:
@@ -52,7 +60,7 @@ def login_irap(request):
         userApiKey = token['user_api_key']
         userPrivateKey = token['user_private_key']
     except:
-        return error_response(message=token["error"])
+        return error_response(message=token["error"], status=token['status'], code=token['code'], )
 
     # You can now use all these credentials to instantiate a User object
     # All API calls after this are on behalf of the user
@@ -128,7 +136,12 @@ def login_irap(request):
                  'user_api_key': token['user_api_key'],
                  'user_private_key': token['user_private_key'],
                  'user_id': token['user_id']}
-
+    if not request.user.irap:
+        irap=Irap(keys=tokendata, settings={}, user=request.user)
+        irap.save()
+    else:
+        request.user.irap.keys=tokendata
+        request.user.irap.save()
     return ok_response(data=tokendata, message="Login successful")
 
 
@@ -139,19 +152,25 @@ def getdataset(request):
         userAuthId = request_body["user_auth_id"]
         userApiKey = request_body["user_api_key"]
         userPrivateKey = request_body["user_private_key"]
-        # dataset_id = request_body["dataset_id"]
     except:
         return error_response(message="json key error")
 
+    print("getting irap dataset")
+    print(userAuthId)
+    print(userApiKey)
+    print(userPrivateKey)
+    print(config.IRAP_AUTH_ID)
+    print(config.IRAP_API_KEY)
+    print(config.IRAP_PRIVATE_KEY)
     # App api credentials as provided previously
     app_user = User(
-        app_auth_id=appAuthId,
-        app_api_key=appApiKey,
-        app_private_key=appPrivateKey,
+        app_auth_id=config.IRAP_AUTH_ID,
+        app_api_key=config.IRAP_API_KEY,
+        app_private_key=config.IRAP_PRIVATE_KEY,
         user_auth_id=userAuthId,
         user_api_key=userApiKey,
         user_private_key=userPrivateKey)
-
+    print(app_user)
     projects_data = app_user.get_projects()
     for project_item in projects_data.response:
         dataset_data = app_user.get_datasets_for_project(project_item['id'])

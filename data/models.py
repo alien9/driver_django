@@ -16,6 +16,7 @@ from django.contrib.gis.geos import GEOSGeometry
 from constance import config
 from model_utils import FieldTracker
 from django_redis import get_redis_connection
+from django.db.models import JSONField
 
 class SegmentSet(models.Model):
     class Meta(object):
@@ -325,4 +326,8 @@ class Dictionary(models.Model):
         super(Dictionary, self).save(*args, **kwargs)
 
 
+class Irap(models.Model):
+    user=models.OneToOneField(User, on_delete=models.CASCADE)
+    keys=HStoreField()
+    settings=JSONField()
 

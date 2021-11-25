@@ -31,7 +31,7 @@
             $ = django.jQuery;
             console.log("Loading")
         }
-/////////////////////////////////////////////////////////// nnnnnn        var cid = $('#mapillary_client_id').html();
+        var cid = $('#mapillary_client_id').html();
         var auth_cookie = document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "mapillary_auth");
         if (auth_cookie.length) {
             $('#locate-point').show();

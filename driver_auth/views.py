@@ -160,9 +160,12 @@ class DriverObtainAuthToken(ObtainAuthToken):
         conf={}
         for k,v in settings.CONSTANCE_CONFIG.items():
             conf[k]=getattr(config, k)
-        languages=[]
+        conf['LANGUAGES']=[]
         for ds in Dictionary.objects.all():
-            languages.append({"code":ds.language_code, "name":ds.name})
+            conf['LANGUAGES'].append({"code":ds.language_code, "name":ds.name})
+        if user.irap is not None:
+            conf['IRAP_KEYS']=user.irap.keys
+            conf['IRAP_SETTINGS']=user.irap.settings
         o={
             'token': token.key,
             'user': token.user_id,
@@ -172,7 +175,6 @@ class DriverObtainAuthToken(ObtainAuthToken):
             'group':list(map(lambda x: x.id, list(user.groups.all()))),
             'groups_name': list(map(lambda x: x.name, list(user.groups.all()))),
             'config': conf,
-            'languages': languages,
         }
         return Response(o)
 
