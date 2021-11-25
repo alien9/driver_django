@@ -1,5 +1,5 @@
 <app-navbar class=navbar-fixed [config]=config [filter]=filter [boundaries]=boundaries (boundaryChange)=setBoundary($event) (boundaryPolygonChange)=setBoundaryPolygon($event) [boundary]=boundary [boundaryPolygons]=boundaryPolygons [boundaryPolygon]=boundaryPolygon
-    (filterChange)=setFilter($event) (stateChange)=selectState($event) (reportChange)=setReport($event) [stateSelected]=state (goBack)=goBack($event)>
+    (filterChange)=setFilter($event) (stateChange)=selectState($event) (reportChange)=setReport($event) [stateSelected]=state (goBack)=goBack($event) (iRapChange)=setIrap($event) [iRap]=iRap>
 </app-navbar>
 <app-list *ngIf="state=='List'" [filter]=filter [boundary_polygon_uuid]=boundary_polygon_uuid [recordSchema]=recordSchema [recordList]=recordList (viewRecord)="viewRecord(viewpoint, $event)"></app-list>
 <app-map *ngIf="state=='Map'" (setDrawing)=setDrawing($event) [fitBounds]=fitBounds [options]=options [layers]=layers [layersControl]=layersControl [boundary_polygon_uuid]=boundary_polygon_uuid (map)=setMap($event) (onSetPolygon)=setPolygon($event) [polygon]=polygon></app-map>
@@ -11,7 +11,6 @@
             <button type="button" class="btn float-left mx-2" aria-label="Edit" (click)="editRecord()" *ngIf="(!editing) && canWrite">
                 <i-bs name="pencil-square"></i-bs>
             </button>
-
         </h4>
         <button type="button" class="close" aria-label="Close" (click)="closeRecord(modal)">
             <span aria-hidden="true">&times;</span>

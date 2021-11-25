@@ -22,11 +22,21 @@
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item" (click)="download()" href="#">{{'Download' | translate}}</a></li>
+                        <li>
+                            <a class="dropdown-item" (click)="download()" href="#">{{'Download' | translate}}</a>
+                        </li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item" (click)="logout()" href="#">{{'Exit'|translate}} </a></li>
+                        <li>
+                            <a class="dropdown-item" (click)="startIrap(vida)" href="#">ViDA</a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" (click)="logout()" href="#">{{'Exit'|translate}} </a>
+                        </li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown px-2">
@@ -40,7 +50,7 @@
                 <li class="nav-item dropdown px-2">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarBoundaryPolygonsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <span *ngIf=!boundaryPolygon>{{'All'|translate}}</span>
-                        <span *ngIf=boundaryPolygon>{{getBoundaryPolygonLabel(boundaryPolygon)}}</span>
+                        <span *ngIf=boundaryPolygon>{{getBoundaryPolygonLabel(boundaryPolygon)|translate}}</span>
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarBoundaryPolygonsDropdown">
                         <li><a class="dropdown-item" href="#" (click)=selectBoundaryPolygon(null)>{{'All'|translate}}</a></li>
@@ -73,26 +83,11 @@
                         <i-bs name="three-dots-vertical"></i-bs>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton1">
-                        <li>
+                        <li *ngFor="let l of config['LANGUAGES']; let i=index">
                             <div class="dropdown-item">
-                                <input class="form-check-input" [(ngModel)]="language" (change)="setlang('en')" type="radio" name="language" id="lannguageSelector1" value="en"> &nbsp;
-                                <label class="form-check-label" for="lannguageSelector1" (change)="setlang('en')">
-                                    English
-                                </label>
-                            </div>
-                        </li>
-                        <li>
-                            <div class="dropdown-item">
-                                <input class="form-check-input" [(ngModel)]="language" (change)="setlang('pt')" type="radio" name="language" id="lannguageSelector2" value="pt"> &nbsp;
-                                <label class="form-check-label" for="lannguageSelector2">
-                                    Portuguese
-                                </label>
-                            </div>
-                        </li>
-                        <li>
-                            <div class="dropdown-item">
-                                <input class="form-check-input" [(ngModel)]="language" (change)="setlang('es')" type="radio" name="language" id="lannguageSelector3" value="es"> &nbsp;
-                                <label class="form-check-label" for="lannguageSelector3"> Spanish
+                                <input class="form-check-input" [(ngModel)]="language" (change)="setlang(l['code'])" type="radio" name="language" id="lannguageSelector{{i}}" [value]="l['code']"> &nbsp;
+                                <label class="form-check-label" for="lannguageSelector{{i}}">
+                                    {{l['name']|translate}}
                                 </label>
                             </div>
                         </li>
@@ -134,8 +129,10 @@
         <div class="table-group" *ngFor="let t of tables">
             <div class="form-group" *ngFor="let k of schema.definitions[t].properties | keyvalue | isSearchable | orderBy">
                 <div class="row" *ngIf="k.value.enum || k.value.items">
-                    <label *ngIf="!schema.definitions[t].multiple">{{schema.title|translate}}: {{k.key|translate}}</label>
-                    <label *ngIf="schema.definitions[t].multiple">{{schema.properties[t].title|translate}}: {{k.key|translate}}</label>
+                    <label *ngIf="!schema.definitions[t].multiple">{{schema.title|translate}}:
+                        {{k.key|translate}}</label>
+                    <label *ngIf="schema.definitions[t].multiple">{{schema.properties[t].title|translate}}:
+                        {{k.key|translate}}</label>
                     <div class="input-group mb-3">
                         <div class="col">
                             <div class="form-check" *ngFor="let option of k.value | enum">
@@ -179,10 +176,13 @@
         <div class="card" *ngIf=filter>
             <div class="card-body">
                 <h5 class="card-title">{{'Active filter'|translate}}</h5>
-                <p class="card-text" *ngIf="filter['occurred_min'] && filter['occurred_max']">{{'Occurred date'| translate}}: {{filter['occurred_min']|localizedDate}} {{'to'|translate}} {{filter['occurred_max']|localizedDate}}</p>
+                <p class="card-text" *ngIf="filter['occurred_min'] && filter['occurred_max']">{{'Occurred date'| translate}}: {{filter['occurred_min']|localizedDate}} {{'to'|translate}} {{filter['occurred_max']|localizedDate}}
+                </p>
 
                 <span *ngFor="let tab of filter['obj'] | keyvalue">
-                    <p *ngFor="let field of tab.value | keyvalue">{{field.key|translate}}: <span *ngFor="let val of field.value['contains']; let i=index; let isLast=last">{{val|translate}}{{isLast?"":", "}}</span></p>
+                    <p *ngFor="let field of tab.value | keyvalue">{{field.key|translate}}: <span
+                            *ngFor="let val of field.value['contains']; let i=index; let isLast=last">{{val|translate}}{{isLast?"":",
+                            "}}</span></p>
                 </span>
 
             </div>
@@ -205,7 +205,8 @@
                     <option value="period_type,year">{{'year'|translate}}</option>
                 </optgroup>
                 <optgroup label="{{'Filter'|translate}}">
-                    <option [value]="'choices_path,'+field['table']+',properties,'+field['title']" *ngFor="let field of reportFilters">
+                    <option [value]="'choices_path,'+field['table']+',properties,'+field['title']"
+                        *ngFor="let field of reportFilters">
                         {{field['title']||translate}}</option>
                 </optgroup>
             </select>
@@ -224,5 +225,47 @@
         <button type="button" class="btn btn-light" (click)="resetReport();startFilters(viewpoint)">{{'Reset'|translate}}</button>
         <button type="button" class="btn btn-light" [disabled]="!reportHeaders['row'] || !reportHeaders['col']" (click)="applyReport(modal)">{{'Apply'|translate}}</button>
         <button type="button" class="btn btn-light" (click)="cancelReport(modal)">{{'Close'|translate}}</button>
+    </div>
+</ng-template>
+
+<ng-template #vida let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title">iRap ViDA</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="card" style=" max-width:300px;margin:auto;background-color:black;" *ngIf="!iRap">
+            <div class="card-body ">
+                <div class="text-center">
+                    <form>
+                        <img src="https://sso.irap.org/img/iRAP_logo_200x79.png" style="margin-bottom:5%" width="100px">
+                        <label class="sr-only" for="email">Email</label>
+                        <input autofocus="" class="form-control" [ngModelOptions]="{standalone: true}" id="emailaddress" placeholder="Email" required="" type="email" [(ngModel)]="irap_email" ng-reflect-model="jvelasquez@worldbank.org">
+                        <label class="sr-only" for="password">Password</label>
+                        <input autofocus="" class="form-control" [ngModelOptions]="{standalone: true}" id="password" placeholder="Password" required="" type="password" ng-reflect-model="Admin@123" [(ngModel)]=irap_password>
+                        <div class="mt-3">
+                            <button class="btn btn-md btn-primary btn-block" style="background-color: white;color: black;" (click)=iRapLogin()>
+                                {{'Sign In'|translate}}
+                            </button>
+                        </div>
+                        <div class="row" style="margin-top:5%;">
+                            <label class="w-50 float-left">
+                                <a href="https://sso.irap.org/register?broker_id=8" style="color: orange;"
+                                    target="_blank">{{'Register'|translate}}</a>
+                            </label>
+                            <label class="w-50 float-left">
+                                <a href="https://sso.irap.org/forgotten_password?broker_id=8" style="color: orange;"
+                                    target="_blank" ng-reflect-translate="">
+                                    {{'Forgot Password'|translate}}
+                                </a>
+                            </label>
+                        </div>
+                        <div class="row">{{irap_err}}</div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </ng-template>

@@ -45,6 +45,7 @@ export class IndexComponent implements OnInit {
   private isDrawing: boolean = false
   private lastState: string
   public mapillary_id:string
+  public iRap:object
 
   @ViewChild(NavbarComponent) navbar!: NavbarComponent;
 
@@ -72,7 +73,7 @@ export class IndexComponent implements OnInit {
     if (mapillary_auth) {
       localStorage.setItem('mapillary_auth', mapillary_auth)
     }
-
+    this.iRap=(this.config['IRAP_KEYS'])?{"data":this.config['IRAP_KEYS'], "settings":this.config['IRAP_SETTINGS']}:null
     this.recordSchema = JSON.parse(localStorage.getItem("record_schema"))
     this.backend = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
 
@@ -394,5 +395,10 @@ export class IndexComponent implements OnInit {
   closeRecord(m:any){
     m.dismiss('Cross click')
     this.mapillary_id=null
+  }
+  setIrap(e:object){
+    this.config['IRAP_KEYS']=e['data']
+    this.config['IRAP_SETTINGS']=e['settings']
+    
   }
 }
