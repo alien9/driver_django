@@ -311,15 +311,15 @@ class Dictionary(models.Model):
                 add_term(terms,value['title'])
                 add_term(terms,value['plural_title'])
                 add_term(terms,value['description'])
-            for u, t in value['properties'].items():
-                add_term(terms,u)
-                if 'enum' in t:
-                    for e in t['enum']:
-                        add_term(terms,e)
-                if 'items' in t:
-                    if 'enum' in t['items']:
-                        for e in t['items']['enum']:
+                for u, t in value['properties'].items():
+                    add_term(terms,u)
+                    if 'enum' in t:
+                        for e in t['enum']:
                             add_term(terms,e)
+                    if 'items' in t:
+                        if 'enum' in t['items']:
+                            for e in t['items']['enum']:
+                                add_term(terms,e)
             for t in terms:
                 if t not in self.content:
                     self.content[t]=t

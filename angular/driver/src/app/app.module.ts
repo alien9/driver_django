@@ -46,6 +46,7 @@ import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 import localeEs from '@angular/common/locales/es';
 import { NgxSpinnerModule } from "ngx-spinner";
+import { ChartsComponent } from './charts/charts.component';
 
 registerLocaleData(localePt);
 registerLocaleData(localeEs);
@@ -88,7 +89,8 @@ const icons = {
     LocalizedDatePipe,
     ListComponent,
     IndexComponent,
-    ReportComponent
+    ReportComponent,
+    ChartsComponent
 
   ],
   imports: [

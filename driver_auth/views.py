@@ -153,7 +153,6 @@ class DriverObtainAuthToken(ObtainAuthToken):
     def post(self, request):
         serializer = self.serializer_class(data=request.data,
                                            context={'request': request})
-        print("instanced serializer")   
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
@@ -163,7 +162,7 @@ class DriverObtainAuthToken(ObtainAuthToken):
         conf['LANGUAGES']=[]
         for ds in Dictionary.objects.all():
             conf['LANGUAGES'].append({"code":ds.language_code, "name":ds.name})
-        if user.irap is not None:
+        if hasattr(user, 'irap'):
             conf['IRAP_KEYS']=user.irap.keys
             conf['IRAP_SETTINGS']=user.irap.settings
         o={
