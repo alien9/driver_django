@@ -34,7 +34,7 @@
 </div>
 
 <app-report *ngIf="state=='Reports'" [recordSchema]=recordSchema [boundaries]=boundaries [report]=report [config]=config (reloadReport)=reloadReport($event)></app-report>
-
+<app-charts *ngIf="state=='Charts'" [recordSchema]=recordSchema [reportFilters]=reportFilters [filter]=filter [boundary_polygon_uuid]=boundary_polygon_uuid [weekdays]=weekdays></app-charts>
 
 <button *ngIf="mapillary_id" type="button" class="close mapillary-close" aria-label="Close" (click)="mapillary_id=null">
     <span aria-hidden="true ">&times;</span>
