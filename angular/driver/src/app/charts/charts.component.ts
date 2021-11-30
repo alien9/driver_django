@@ -187,11 +187,13 @@ export class ChartsComponent implements OnInit, OnChanges{
                   parseInt('377eb8', 16), 
                   parseInt('4daf4a', 16),
                   parseInt('d55e00', 16), 	
-                  parseInt('cc79a7', 16), 	
-                  parseInt('0072b2', 16), 	
-                  parseInt('f0e442', 16), 	
-                  parseInt('009e73', 16)
-                                  
+                  parseInt('2db9c7', 16), 	
+                  parseInt('9972b2', 16), 	
+                  parseInt('c0d442', 16), 	
+                  parseInt('449e73', 16),
+                  parseInt('32e4cc', 16), 
+                  parseInt('e52a1d', 16), 
+           
                 ])
               //stack the data? --> stack per subgroup
               const stackedData = d3.stack()
