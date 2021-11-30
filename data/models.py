@@ -16,8 +16,12 @@ from django.contrib.gis.geos import GEOSGeometry
 from constance import config
 from model_utils import FieldTracker
 from django_redis import get_redis_connection
+<<<<<<< HEAD
 from django.db.models import JSONField
 
+=======
+from grout.models import Boundary
+>>>>>>> dev
 class SegmentSet(models.Model):
     class Meta(object):
         verbose_name = _('Segment Set')
@@ -285,8 +289,7 @@ def add_term(l, t):
     try:
         a=l.index(t)
     except ValueError:
-        pass
-    l.append(t)
+        l.append(t)
     return l
 
 class Dictionary(models.Model):
@@ -298,13 +301,17 @@ class Dictionary(models.Model):
 
     language_code=models.TextField(max_length=8)
     name=models.TextField(max_length=100)
-    content=HStoreField()
+    content=HStoreField(null=True, blank=True)
     def save(self, *args, **kwargs):
         terms=[]
         rt=RecordType.objects.all()
+        for b in Boundary.objects.all():
+            add_term(terms, b.label)
         for r in rt:
             add_term(terms,r.label)
             add_term(terms,r.plural_label)
+        for sd in Dictionary.objects.all():
+            add_term(terms,sd.name)
         rs=RecordSchema.objects.all()
         for r in rs:
             for k, value in r.schema['definitions'].items():
@@ -316,13 +323,22 @@ class Dictionary(models.Model):
                     if 'enum' in t:
                         for e in t['enum']:
                             add_term(terms,e)
+<<<<<<< HEAD
                     if 'items' in t:
                         if 'enum' in t['items']:
                             for e in t['items']['enum']:
                                 add_term(terms,e)
             for t in terms:
+=======
+            for t in sorted(terms):
+>>>>>>> dev
                 if t not in self.content:
                     self.content[t]=t
+        h={}
+        for k in sorted(self.content):
+            h[k]=self.content[k]
+        print(h)
+        self.content=h
         super(Dictionary, self).save(*args, **kwargs)
 
 

@@ -10,6 +10,7 @@ import { } from 'jquery'
 import { ActivatedRoute } from '@angular/router';
 import { NgxSpinnerService } from "ngx-spinner";
 import { NavbarComponent } from '../navbar/navbar.component'
+import { ChartsComponent } from '../charts/charts.component';
 
 
 @Component({
@@ -44,12 +45,14 @@ export class IndexComponent implements OnInit {
   public canWrite: boolean = false
   private isDrawing: boolean = false
   private lastState: string
-  public mapillary_id:string
-  public iRap:object
-
+  public mapillary_id: string
+  locale: string
+  weekdays: object
+  reportFilters: object[]
   @ViewChild(NavbarComponent) navbar!: NavbarComponent;
-
+  @ViewChild(ChartsComponent) charts!: ChartsComponent;
   popContent: any
+  iRap:object
   constructor(
     private recordService: RecordService,
     private router: Router,
@@ -74,8 +77,27 @@ export class IndexComponent implements OnInit {
       localStorage.setItem('mapillary_auth', mapillary_auth)
     }
     this.iRap=(this.config['IRAP_KEYS'])?{"data":this.config['IRAP_KEYS'], "settings":this.config['IRAP_SETTINGS']}:null
+    this.locale = localStorage.getItem("Language") || "en"
+    this.weekdays = {}
+    let d = new Date()
+    for (let i = 0; i < 7; i++) {
+      this.weekdays[d.getDay()] = d.toLocaleDateString(this.locale, { weekday: 'long' })
+      d.setDate(d.getDate() + 1)
+    }
     this.recordSchema = JSON.parse(localStorage.getItem("record_schema"))
     this.backend = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
+
+    let tables = Object.keys(this.recordSchema['schema']['properties'])
+      .sort((k, j) => { return this.recordSchema['schema']['properties'][k].propertyOrder - this.recordSchema['schema']['properties'][j].propertyOrder })
+    this.reportFilters = []
+    tables.forEach(t => {
+      Object.entries(this.recordSchema['schema']['definitions'][t]['properties'])
+        .sort((k, j) => { return k[1]['propertyOrder'] - j[1]['propertyOrder'] })
+        .filter(k => k[1]['isSearchable'] && (k[1]['enum']))
+        .forEach(element => {
+          this.reportFilters.push({ title: element[0], table: t })
+        });
+    })
 
     let bp = localStorage.getItem("boundary_polygon")
     if (bp) this.boundary_polygon_uuid = bp
@@ -335,7 +357,7 @@ export class IndexComponent implements OnInit {
       this.recordService.getRecord(this.record_uuid).pipe(first()).subscribe(
         data => {
           this.record = data
-          this.modalService.open(content, { size: 'lg', animation: false, keyboard:false, backdrop:"static" });
+          this.modalService.open(content, { size: 'lg', animation: false, keyboard: false, backdrop: "static" });
         })
       this.record_uuid = null
     }
@@ -389,12 +411,12 @@ export class IndexComponent implements OnInit {
     this.report['parameters']['relate'] = relate
     this.navbar.loadReport(this.report['parameters'])
   }
-  setMapillary(e){
-    this.mapillary_id=e
+  setMapillary(e) {
+    this.mapillary_id = e
   }
-  closeRecord(m:any){
+  closeRecord(m: any) {
     m.dismiss('Cross click')
-    this.mapillary_id=null
+    this.mapillary_id = null
   }
   setIrap(e:object){
     this.config['IRAP_KEYS']=e['data']

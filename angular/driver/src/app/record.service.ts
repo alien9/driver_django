@@ -38,12 +38,12 @@ export class RecordService {
       .set('record_type', o['uuid'])
       .set('active', 'true')
     if (q) {
-        if (q.filter) {
-          for (var k in q.filter) {
-            if (q.filter[k]) params = params.set(k, q.filter[k])
-          }
+      if (q.filter) {
+        for (var k in q.filter) {
+          if (q.filter[k]) params = params.set(k, q.filter[k])
         }
       }
+    }
     return this.http.get<any[]>(this.getBackend() + '/api/records/', { headers: this.getHeaders(), params: params })
   }
   getMapFileKey(o: Object, q: any): Observable<any[]> {
@@ -64,7 +64,18 @@ export class RecordService {
     }
     return this.http.get<any[]>(this.getBackend() + '/api/records/', { headers: this.getHeaders(), params: params })
   }
-
+  getToddow(filter: any): Observable<any[]> {
+    let params = new HttpParams()
+      .set('archived', 'false')
+      .set('details_only', 'true')
+      .set('limit', '50')
+      .set('active', 'true')
+    for (var k in filter) {
+      if (filter[k]) params = params.set(k, filter[k])
+    }
+    //http://192.168.1.101:8000/api/records/toddow/?archived=False&details_only=True&occurred_max=2021-11-13T01:59:59.999Z&occurred_min=2011-08-04T03:00:00.000Z&polygon_id=60b09207-2d82-49a8-92fc-b80f1fdc67ae&record_type=264a5cb5-6f2c-4817-ae1b-226f5e779ac9
+    return this.http.get<any[]>(this.getBackend() + '/api/records/toddow/', { headers: this.getHeaders(), params: params })
+  }
 
   getTileKey(o: Object, q: any): Observable<any[]> {
     var parameters = {
@@ -92,15 +103,15 @@ export class RecordService {
   getCritical() {
     return this.http.get<any[]>(`${this.getBackend()}/api/blackspotsets/`, { headers: this.getHeaders() })
   }
-  getCrossTabs(o: string, q: object){  
+  getCrossTabs(o: string, q: object) {
     let params = new HttpParams()
       .set('archived', 'False')
       .set('record_type', o)
       .set('calendar', 'gregorian')
-    Object.keys(q).forEach(k=>{
-      params=params.set(k,q[k])
+    Object.keys(q).forEach(k => {
+      params = params.set(k, q[k])
     })
-    return this.http.get<any[]>(`${this.getBackend()}/api/records/crosstabs/`, { headers: this.getHeaders(), params:params })
+    return this.http.get<any[]>(`${this.getBackend()}/api/records/crosstabs/`, { headers: this.getHeaders(), params: params })
   }
   iRapLogin(data){
     return this.http.post(`${this.getBackend()}/api/irap-login/`, data, { headers: this.getHeaders() });

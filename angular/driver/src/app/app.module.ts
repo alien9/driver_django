@@ -45,11 +45,13 @@ import { environment } from '../environments/environment';
 import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 import localeEs from '@angular/common/locales/es';
+import localeFr from '@angular/common/locales/fr';
 import { NgxSpinnerModule } from "ngx-spinner";
 import { ChartsComponent } from './charts/charts.component';
 
 registerLocaleData(localePt);
 registerLocaleData(localeEs);
+registerLocaleData(localeFr);
 export function HttpLoaderFactory(httpClient: HttpClient) {
   let b = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
   return new MultiTranslateHttpLoader(httpClient, [
@@ -120,6 +122,7 @@ const icons = {
   ],
   providers: [
     { provide: LOCALE_ID, useValue: 'pt' },
+    { provide: LOCALE_ID, useValue: 'fr' },
     { provide: LOCALE_ID, useValue: 'es' }
   ],
   bootstrap: [AppComponent],

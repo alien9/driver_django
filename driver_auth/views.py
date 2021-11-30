@@ -165,6 +165,7 @@ class DriverObtainAuthToken(ObtainAuthToken):
         if hasattr(user, 'irap'):
             conf['IRAP_KEYS']=user.irap.keys
             conf['IRAP_SETTINGS']=user.irap.settings
+
         o={
             'token': token.key,
             'user': token.user_id,
