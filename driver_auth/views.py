@@ -163,6 +163,7 @@ class DriverObtainAuthToken(ObtainAuthToken):
         languages=[]
         for ds in Dictionary.objects.all():
             languages.append({"code":ds.language_code, "name":ds.name})
+        conf['LANGUAGES']=languages
         o={
             'token': token.key,
             'user': token.user_id,
