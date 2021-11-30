@@ -166,7 +166,6 @@ export class NavbarComponent implements OnInit {
     let fu = localStorage.getItem('current_filter')
     this.reportFilters = []
     this.tables.forEach(t => {
-      let table = this.schema['definitions'][t]['plural_title'] || this.schema['definitions'][t]['title']
       Object.entries(this.schema['definitions'][t]['properties'])
         .sort((k, j) => { return k[1]['propertyOrder'] - j[1]['propertyOrder'] })
         .filter(k => k[1]['isSearchable'] && (k[1]['enum']))

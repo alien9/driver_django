@@ -74,28 +74,14 @@
                     </button>
                     <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton1">
                         <li>
-                            <div class="dropdown-item">
-                                <input class="form-check-input" [(ngModel)]="language" (change)="setlang('en')" type="radio" name="language" id="lannguageSelector1" value="en"> &nbsp;
-                                <label class="form-check-label" for="lannguageSelector1" (change)="setlang('en')">
-                                    English
+                            <div class="dropdown-item" *ngFor="let c of config['LANGUAGES']; let i=index">
+                                <input class="form-check-input" [(ngModel)]="language" (change)="setlang(c['code'])" type="radio" name="language" id="lannguageSelector{{i}}" [value]="c['code']"> &nbsp;
+                                <label class="form-check-label" for="lannguageSelector{{i}}" (change)="setlang(c['code'])">
+                                    {{c['name']|translate}}
                                 </label>
                             </div>
                         </li>
-                        <li>
-                            <div class="dropdown-item">
-                                <input class="form-check-input" [(ngModel)]="language" (change)="setlang('pt')" type="radio" name="language" id="lannguageSelector2" value="pt"> &nbsp;
-                                <label class="form-check-label" for="lannguageSelector2">
-                                    Portuguese
-                                </label>
-                            </div>
-                        </li>
-                        <li>
-                            <div class="dropdown-item">
-                                <input class="form-check-input" [(ngModel)]="language" (change)="setlang('es')" type="radio" name="language" id="lannguageSelector3" value="es"> &nbsp;
-                                <label class="form-check-label" for="lannguageSelector3"> Spanish
-                                </label>
-                            </div>
-                        </li>
+
                     </ul>
                 </div>
             </form>
