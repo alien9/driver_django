@@ -46,6 +46,7 @@ export class IndexComponent implements OnInit {
   private isDrawing: boolean = false
   private lastState: string
   public mapillary_id: string
+  public irapDataset
   locale: string
   weekdays: object
   reportFilters: object[]
@@ -77,6 +78,10 @@ export class IndexComponent implements OnInit {
       localStorage.setItem('mapillary_auth', mapillary_auth)
     }
     this.iRap=(this.config['IRAP_KEYS'])?{"data":this.config['IRAP_KEYS'], "settings":this.config['IRAP_SETTINGS']}:null
+    if(localStorage.getItem("irapDataset")) {
+      this.irapDataset=JSON.parse(localStorage.getItem("irapDataset"))
+      if(!this.irapDataset['selected']) this.irapDataset['selected']={}
+    }
     this.locale = localStorage.getItem("Language") || "en"
     this.weekdays = {}
     let d = new Date()
@@ -419,8 +424,16 @@ export class IndexComponent implements OnInit {
     this.mapillary_id = null
   }
   setIrap(e:object){
-    this.config['IRAP_KEYS']=e['data']
-    this.config['IRAP_SETTINGS']=e['settings']
+    if(e['user']){
+      this.config['IRAP_KEYS']=e['user']['data']
+      this.config['IRAP_SETTINGS']=e['user']['settings']
+      localStorage.setItem('config', JSON.stringify(this.config))
+    }
+    if(e['dataset']){
+      this.irapDataset=e['dataset']
+      if(!this.irapDataset['selected'])this.irapDataset['selected']={}
+      localStorage.setItem('irapDataset', JSON.stringify(this.irapDataset))
+    }
     
   }
 }
