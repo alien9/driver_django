@@ -25,6 +25,7 @@ export class NavbarComponent implements OnInit {
   @Input() boundaryPolygon: any
   @Input() filter: object
   @Input() iRap:object
+  @Input() irapDataset:object
   public filterPage: object
   @Output() boundaryChange = new EventEmitter<object>()
   @Output() boundaryPolygonChange = new EventEmitter<object>()
@@ -343,7 +344,7 @@ export class NavbarComponent implements OnInit {
     this.goBack.emit('Reports')
     modal.close('Go Back')
   }
-  iRapLogin() {
+  iRapLogin(irapModal) {
     this.recordService.iRapLogin({
       "format":"json",
       "body":
@@ -353,7 +354,8 @@ export class NavbarComponent implements OnInit {
       }
     }).pipe(first()).subscribe({
       next: data => {
-        this.iRapChange.emit(data)
+        this.iRapChange.emit({user:data})
+        irapModal.close('OK')
       }, error: err => {
         console.log(err)
         if(err['error'] && err['error']['message']){
@@ -366,16 +368,23 @@ export class NavbarComponent implements OnInit {
     })
   }
   loadIrapDataset(){
-    console.log("will load irap dataset")
+    if(this.irapDataset) {
+      this.spinner.hide()
+      return
+    }
     this.recordService.getIRapDataset({"body":this.iRap['data']}).pipe(first()).subscribe({
       next: data=>{
         console.log(data)
+        this.iRapChange.emit({dataset:data})
         this.spinner.hide()
       },
       error:err=>{
-        this.iRapChange.emit(null)
+        this.iRapChange.emit({user:null})
         this.spinner.hide()
       }
     })
+  }
+  applyIrap(modal){
+    console.log(this.irapDataset)
   }
 }

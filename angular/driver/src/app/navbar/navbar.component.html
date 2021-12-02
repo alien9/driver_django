@@ -25,10 +25,10 @@
                         <li>
                             <a class="dropdown-item" (click)="download()" href="#">{{'Download' | translate}}</a>
                         </li>
-                        <li>
+                        <li *ngIf="config['IRAP_AUTH_ID']!=''">
                             <hr class="dropdown-divider">
                         </li>
-                        <li>
+                        <li *ngIf="config['IRAP_AUTH_ID']!=''">
                             <a class="dropdown-item" (click)="startIrap(vida)" href="#">ViDA</a>
                         </li>
                         <li>
@@ -78,7 +78,7 @@
                 <button class="btn btn-outline-success" type="submit">Search</button>
             </form-->
             <form class="d-flex">
-                <div class="dropdown dropstart">
+                <div class="dropdown dropstart" *ngIf="config['LANGUAGES']">
                     <button class="btn btn-light" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                         <i-bs name="three-dots-vertical"></i-bs>
                     </button>
@@ -246,7 +246,7 @@
                         <label class="sr-only" for="password">Password</label>
                         <input autofocus="" class="form-control" [ngModelOptions]="{standalone: true}" id="password" placeholder="Password" required="" type="password" ng-reflect-model="Admin@123" [(ngModel)]=irap_password>
                         <div class="mt-3">
-                            <button class="btn btn-md btn-primary btn-block" style="background-color: white;color: black;" (click)=iRapLogin()>
+                            <button class="btn btn-md btn-primary btn-block" style="background-color: white;color: black;" (click)=iRapLogin(vida)>
                                 {{'Sign In'|translate}}
                             </button>
                         </div>
@@ -266,6 +266,23 @@
                     </form>
                 </div>
             </div>
+        </div>
+        <div *ngIf=irapDataset>
+            <ngb-accordion #acc="ngbAccordion" activeIds="ngb-panel-irap" [closeOthers]="true">
+                <ngb-panel [title]="d['name']" *ngFor="let d of irapDataset['data']; let i=index">
+                    <ng-template ngbPanelContent>
+                        <div class="input-group" *ngFor="let de of d['dataset_data']; let j=index">
+                            <label><input type="checkbox" [(ngModel)]="irapDataset['selected'][de['id']]"> {{de['name']}}</label>
+                        </div>
+                    </ng-template>
+                </ngb-panel>
+            </ngb-accordion>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" (click)="applyIrap(vida)">{{'Apply'|translate}}</button>
+                <button type="button" class="btn btn-light" (click)="modal.close('cancel')">{{'Close'|translate}}</button>
+            </div>
+
+
         </div>
     </div>
 </ng-template>
