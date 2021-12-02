@@ -39,7 +39,7 @@ services:
       - DJANGO_ENV=production
       - DRIVER_DB_HOST=${DATABASE_HOST}
       - DRIVER_DB_NAME=${DATABASE_NAME}
-      - DRIVER_DB_USERNAME=${DATABASE_USERNAME}
+      - DRIVER_DB_USER=${DATABASE_USERNAME}
       - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
       - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
       - STATIC_ROOT=/var/www/static/
@@ -80,9 +80,6 @@ services:
     volumes:
       - ./mapserver/:/etc/mapserver
     image: geodata/mapserver
-    ports:
-      - "8888:80"
-
 
   windshaft:
     command: server.js

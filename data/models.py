@@ -16,12 +16,9 @@ from django.contrib.gis.geos import GEOSGeometry
 from constance import config
 from model_utils import FieldTracker
 from django_redis import get_redis_connection
-<<<<<<< HEAD
 from django.db.models import JSONField
-
-=======
 from grout.models import Boundary
->>>>>>> dev
+
 class SegmentSet(models.Model):
     class Meta(object):
         verbose_name = _('Segment Set')
@@ -323,21 +320,17 @@ class Dictionary(models.Model):
                     if 'enum' in t:
                         for e in t['enum']:
                             add_term(terms,e)
-<<<<<<< HEAD
                     if 'items' in t:
                         if 'enum' in t['items']:
                             for e in t['items']['enum']:
                                 add_term(terms,e)
+
             for t in terms:
-=======
-            for t in sorted(terms):
->>>>>>> dev
                 if t not in self.content:
                     self.content[t]=t
         h={}
         for k in sorted(self.content):
             h[k]=self.content[k]
-        print(h)
         self.content=h
         super(Dictionary, self).save(*args, **kwargs)
 

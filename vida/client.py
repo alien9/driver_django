@@ -35,18 +35,18 @@ def login_irap(request):
 
 
     # First instantiate an App object, passing BROKER credentials
-    app_broker = App(
-            app_auth_id=config['IRAP_AUTH_ID'],
-            app_api_key=config['IRAP_API_KEY'],
-            app_private_key=config['IRAP_PRIVATE_KEY'])
 
+    app_broker = App(
+            app_auth_id=int(config.IRAP_AUTH_ID),
+            app_api_key=config.IRAP_API_KEY,
+            app_private_key=config.IRAP_PRIVATE_KEY)
     # Then call the get_user_token method with the user's email and password
     # In theory you should only need to do this once per user (if you store the returned credentials
     # somewhere safe)
     try:
         token = app_broker.get_user_token(user_email, user_password)
     except:
-        return error_response(message="Something went wrong")
+        return error_response(message="Something went wrong. Token not found")
     #token {'status': 'Error', 'code': 404, 'error': 'User does not exist'}
 
     if not 'status' in token:
@@ -136,7 +136,7 @@ def login_irap(request):
                  'user_api_key': token['user_api_key'],
                  'user_private_key': token['user_private_key'],
                  'user_id': token['user_id']}
-    if not request.user.irap:
+    if not hasattr(request.user, 'irap'):
         irap=Irap(keys=tokendata, settings={}, user=request.user)
         irap.save()
     else:
@@ -154,7 +154,6 @@ def getdataset(request):
         userPrivateKey = request_body["user_private_key"]
     except:
         return error_response(message="json key error")
-
     print("getting irap dataset")
     print(userAuthId)
     print(userApiKey)
@@ -164,7 +163,7 @@ def getdataset(request):
     print(config.IRAP_PRIVATE_KEY)
     # App api credentials as provided previously
     app_user = User(
-        app_auth_id=config.IRAP_AUTH_ID,
+        app_auth_id=int(config.IRAP_AUTH_ID),
         app_api_key=config.IRAP_API_KEY,
         app_private_key=config.IRAP_PRIVATE_KEY,
         user_auth_id=userAuthId,
@@ -172,17 +171,10 @@ def getdataset(request):
         user_private_key=userPrivateKey)
     print(app_user)
     projects_data = app_user.get_projects()
-    for project_item in projects_data.response:
-        dataset_data = app_user.get_datasets_for_project(project_item['id'])
-        project_item["dataset_data"] = dataset_data.response
-    # print("main content done...")
-    # dataresult = app_user.get_datasets()
-    #
-    # for i in dataresult.response:
-    #     locdata = app_user.get_before_locations_for_dataset(i['id'])
-    #     i["locdata"] = locdata
-    # return dataresult.response
-
+    if projects_data.response is not None:
+        for project_item in projects_data.response:
+            dataset_data = app_user.get_datasets_for_project(project_item['id'])
+            project_item["dataset_data"] = dataset_data.response
     return ok_response(data=projects_data.response)
 
 

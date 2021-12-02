@@ -12,6 +12,9 @@ from django_admin_hstore_widget.forms import HStoreFormField
 from constance import config
 from django.forms import ModelForm
 from django.forms.widgets import TextInput
+from django.contrib.auth.models import User
+from data.models import Irap
+from django.contrib.auth.admin import UserAdmin
 
 admin.site.index_title = _('DRIVER Database')
 
@@ -122,11 +125,19 @@ class RoadMapAdmin(admin.ModelAdmin):
             del actions['delete_selected']
         return actions
 
+class IrapInline(admin.StackedInline):
+    model=Irap
+
 class BlackSpotSetAdmin(admin.ModelAdmin):
     list_display =  ("title",)
     def stats(self, obj: BlackSpotSet) -> str:
         return "%s spots detected" % (obj.blackspot_set.count()) 
 
+class UserAdminDriver(UserAdmin):
+    inlines = UserAdmin.inlines + [IrapInline]
+   
+admin.site.unregister(User)
+admin.site.register(User, UserAdminDriver)
 
 admin.site.register(RecordSchema, RecordSchemaAdmin)
 admin.site.register(RecordType, RecordTypeAdmin)
