@@ -178,5 +178,5 @@ class DriverObtainAuthToken(ObtainAuthToken):
         }
         return Response(o)
 
-obtain_auth_token = DriverObtainAuthToken.as_view()
+obtain_auth_token = csrf_exempt(DriverObtainAuthToken.as_view())
 sso_auth_token = DriverSsoAuthToken.as_view()

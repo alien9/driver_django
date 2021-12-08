@@ -181,7 +181,6 @@ def getdataset(request):
 """ Following code is for get star rating and longitute and latitude data """
 @api_view(['POST'])
 def getlat_lon(request):
-    print("i am in getlat_lon")
     try:
         request_body = request.data["body"]
         userAuthId = request_body["user_auth_id"]
@@ -192,9 +191,9 @@ def getlat_lon(request):
         return error_response(message="json key error")
 
     app_user = User(
-        app_auth_id=appAuthId,
-        app_api_key=appApiKey,
-        app_private_key=appPrivateKey,
+        app_auth_id=int(config.IRAP_AUTH_ID),
+        app_api_key=config.IRAP_API_KEY,
+        app_private_key=config.IRAP_PRIVATE_KEY,
         user_auth_id=userAuthId,
         user_api_key=userApiKey,
         user_private_key=userPrivateKey)
@@ -214,6 +213,7 @@ def getlat_lon(request):
 @api_view(['POST'])
 def fatalitydata(request):
     try:
+
         request_body = request.data["body"]
         userAuthId = request_body["user_auth_id"]
         userApiKey = request_body["user_api_key"]
@@ -226,16 +226,16 @@ def fatalitydata(request):
         return error_response(message="json key error")
 
     app_user = User(
-        app_auth_id=appAuthId,
-        app_api_key=appApiKey,
-        app_private_key=appPrivateKey,
-        user_auth_id=userAuthId,
+        app_auth_id=int(config.IRAP_AUTH_ID),
+        app_api_key=config.IRAP_API_KEY,
+        app_private_key=config.IRAP_PRIVATE_KEY,
+        user_auth_id=int(userAuthId),
         user_api_key=userApiKey,
         user_private_key=userPrivateKey)
-
+    print("created user")
     modal_info_response = app_user.get_modal_info_for_dataset(dataset_id, latitude, longitude, language)
     response = modal_info_response.response
-
+    print(response)
     existing = ['road_survey_date', 'motorcycle_star_rating_star', 'longitude', 'bicycle_star_rating_star', 'bicycle_fe',
      'latitude', 'section', 'car_fe', 'dataset_id', 'location_id', 'motorcycle_fe', 'pedestrian_fe', 'countermeasures',
      'car_star_rating_star', 'pedestrian_star_rating_star', 'road_name']
@@ -248,9 +248,9 @@ def fatalitydata(request):
         else:
             dict_for_road_data[keyitem] = valueitem
     new_dict["road_features"] = []
-
+    
     # jsonpath = os.path.join(os.getcwd(), "roaddata.json")
-    jsonpath = os.path.join(os.getcwd(), "roaddata_withimages.json")
+    jsonpath = os.path.join(os.getcwd(), "vida/roaddata_withimages.json")
 
     if not os.path.exists(jsonpath):
         return error_response(message="Json file not found")
@@ -263,10 +263,8 @@ def fatalitydata(request):
 
     for key, value in dict_for_road_data.items():
         for itemdict in evaldata:
-            # if (str(itemdict["main_code"])==str(key) and str(itemdict["sub_code"])==str(value)):
             if (str(itemdict["name"])==str(key) and str(itemdict["sub_code"])==str(value)):
                 new_dict["road_features"].append(itemdict)
-
     return ok_response(data=new_dict)
 
 

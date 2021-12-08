@@ -1,0 +1,53 @@
+{% extends "admin/constance/change_list.html" %}
+{% load i18n %}
+{% block content %}
+<div class="submit-row">
+    <p class="deletelink-box">
+        <a href="javascript:void(0);" class="authenticate">Authenticate to Mapillary</a>
+    </p>
+</div>
+<style type="text/css">
+    .submit-row a.authenticate {
+        text-decoration: none;
+    }
+
+    a.calculating {
+        opacity: 0.4;
+    }
+</style>
+<a href="javascript:void(0)">Mapillary Token</a>
+{{ block.super }}
+<script type="text/javascript">
+    (function () {
+        if (!$) {
+            $ = django.jQuery;
+            console.log("Loading")
+        }        
+        var auth_cookie = document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "mapillary_auth");
+        if(auth_cookie.length){
+            var token = auth_cookie[0][1];
+            
+        }
+
+        $('.authenticate').click(function (c) {
+            var err;
+            var client_id = $("#id_MAPILLARY_CLIENT_ID").val();
+            if (!client_id.length) {
+                err = "Client id missing";
+            } else {
+                window.location.href = `https://www.mapillary.com/connect?client_id=${client_id}&state=${window.location.href}`
+                /* var client_token = $("#id_MAPILLARY_CLIENT_TOKEN").val();
+                if(!client_token.length){
+                    err="Client token is missing";
+                }else{
+                    var secret=$("#id_MAPILLARY_SECRET").val();
+                    if(!secret.length){
+
+                    }
+                } */
+            }
+
+        });
+    })();
+</script>
+{% endblock %}
