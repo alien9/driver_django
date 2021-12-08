@@ -1,6 +1,6 @@
 import uuid
 import hashlib
-import os 
+import os,json
 from django import forms
 from django.db import models
 from django.contrib.postgres.fields import HStoreField
@@ -18,6 +18,8 @@ from model_utils import FieldTracker
 from django_redis import get_redis_connection
 from django.db.models import JSONField
 from grout.models import Boundary
+from astral import sun, LocationInfo
+import requests
 
 class SegmentSet(models.Model):
     class Meta(object):
@@ -112,13 +114,36 @@ class DriverRecord(Record):
                     self.segment.add(seg)
                     return seg
                 else:
-                    
                     return None
+                    
+    def save(self, *args, **kwargs):
+        if not self.light:
+            city=LocationInfo("","",config.TIMEZONE, self.geom.y, self.geom.x)
+            s=sun.sun(city.observer, date=self.occurred_from,tzinfo=city.timezone)
+            if abs((s['dawn']-self.occurred_from).seconds)<1800:
+                self.light='dawn'
+            else:
+                if abs((s['sunset']-self.occurred_from).seconds)<1800:
+                    self.light='dusk'
+                else:
+                    if self.occurred_from > s['dawn'] and self.occurred_from < s['sunset']:
+                        self.light='day'
+                    else:
+                        self.light='night'
+        super(DriverRecord, self).save(*args, **kwargs)
+
 @receiver(post_save, sender=DriverRecord)
 def record_after_save(sender, instance, **kwargs):
-    if instance.location_text is None:
+    if instance.location_text is None and config.NOMINATIM!='':
         print("should geocode")
-
+        r=requests.get("https://api.pickpoint.io/v1/reverse?format=json&key={key}&lat={lat}&lon={lon}".format(
+            key=config.NOMINATIM,
+            lat=instance.geom.y,
+            lon=instance.geom.x
+        ))
+        j=r.json()
+        if j:
+            instance.location_text=j['display_name']
 
 """
     def save(self, *args, **kwargs):
