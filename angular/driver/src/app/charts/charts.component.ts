@@ -3,7 +3,7 @@ import { RecordService } from '../record.service'
 import { first } from 'rxjs/operators';
 import * as d3 from 'd3'
 import { arrowLeftRight } from 'ngx-bootstrap-icons';
-import {TranslateService} from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { NgxSpinnerService } from "ngx-spinner";
 
 @Component({
@@ -11,7 +11,7 @@ import { NgxSpinnerService } from "ngx-spinner";
   templateUrl: './charts.component.html',
   styleUrls: ['./charts.component.scss']
 })
-export class ChartsComponent implements OnInit, OnChanges{
+export class ChartsComponent implements OnInit, OnChanges {
   @Input() filter: object
   @Input() boundary_polygon_uuid: string
   @Input() recordSchema: object
@@ -20,6 +20,7 @@ export class ChartsComponent implements OnInit, OnChanges{
   toddow: any
   locale: string
   weekdays: object
+  monthnames: object
   tip = 0
   barChart: object
   constructor(
@@ -34,15 +35,20 @@ export class ChartsComponent implements OnInit, OnChanges{
     this.barChart = { 'interval': 'year' }
     this.locale = localStorage.getItem("Language") || "en"
     this.weekdays = {}
+    this.monthnames={}
     let d = new Date()
+    d.setDate(1)
     for (let i = 0; i < 7; i++) {
       this.weekdays[d.getDay()] = d.toLocaleDateString(this.locale, { weekday: 'short' })
       d.setDate(d.getDate() + 1)
     }
+    for (let i = 0; i < 12; i++) {
+      d.setMonth(i)
+      this.monthnames[i+1] = d.toLocaleDateString(this.locale, { month: 'short' })
+    }
     this.loadChart(1)
   }
-  ngOnChanges(changes: SimpleChanges){
-    console.log(changes)
+  ngOnChanges(changes: SimpleChanges) {
     this.loadChart(this.active)
   }
   loadChart(activeTab: any) {
@@ -140,7 +146,7 @@ export class ChartsComponent implements OnInit, OnChanges{
         let parameters = this.filter
         if (this.barChart['interval'] && this.barChart['field']) {
           this.spinner.show()
-          let ts=this.translateService
+          let ts = this.translateService
           parameters['row_period_type'] = this.barChart['interval']
           parameters['col_choices_path'] = this.barChart['field']
           this.recordService.getCrossTabs(this.recordSchema['record_type'], parameters).pipe(first()).subscribe({
@@ -160,7 +166,6 @@ export class ChartsComponent implements OnInit, OnChanges{
               const margin_bar = { top: 10, right: 30, bottom: 20, left: 50 },
                 width_bar = (h.length * 100) - margin_bar.left - margin_bar.right,
                 height_bar = 400 - margin_bar.top - margin_bar.bottom;
-              console.log(data)
               d3.select("#interval").select("svg").remove()
               const svg_bar = d3.select("#interval")
                 .append("svg")
@@ -174,7 +179,28 @@ export class ChartsComponent implements OnInit, OnChanges{
                 .padding(0.2)
               svg_bar.append("g")
                 .attr("transform", `translate(0, ${height_bar})`)
-                .call(d3.axisBottom(x).tickSizeOuter(0));
+                .call(d3.axisBottom(x).tickSizeOuter(0).tickFormat(hg => {
+                  if (parameters['row_period_type'] == 'day_of_week') {
+                    return this.weekdays[parseInt(hg) - 1]
+                  } else {
+                    if (parameters['row_period_type'] == 'month') {
+                      let my = hg.match(/\((\d+), (\d+)\)/)
+                      return `${this.monthnames[my[2]]} ${my[1]}`
+                    }else{
+                      if(parameters['row_period_type'] == 'week'){
+                        let my = hg.match(/\((\d+), (\d+)\)/)
+                        return `${my[2]} / ${my[1]}`
+                      }else{
+                        if(parameters['row_period_type'] == 'day'){
+                          let myd = hg.match(/\((\d+), (\d+), (\d+)\)/)
+                          let d=new Date(parseInt(myd[1]), parseInt(myd[2])-1, parseInt(myd[3]))
+                          return d.toLocaleDateString(this.locale)
+                        }
+                      }
+                    }
+                    return hg
+                  }
+                }));
               let y = d3.scaleLinear()
                 .domain([0, m])
                 .range([height_bar, 0]);
@@ -183,17 +209,17 @@ export class ChartsComponent implements OnInit, OnChanges{
               const color = d3.scaleOrdinal()
                 .domain(subgroups)
                 .range([
-                  parseInt('e41a1c', 16), 
-                  parseInt('377eb8', 16), 
+                  parseInt('e41a1c', 16),
+                  parseInt('377eb8', 16),
                   parseInt('4daf4a', 16),
-                  parseInt('d55e00', 16), 	
-                  parseInt('2db9c7', 16), 	
-                  parseInt('9972b2', 16), 	
-                  parseInt('c0d442', 16), 	
+                  parseInt('d55e00', 16),
+                  parseInt('2db9c7', 16),
+                  parseInt('9972b2', 16),
+                  parseInt('c0d442', 16),
                   parseInt('449e73', 16),
-                  parseInt('32e4cc', 16), 
-                  parseInt('e52a1d', 16), 
-           
+                  parseInt('32e4cc', 16),
+                  parseInt('e52a1d', 16),
+
                 ])
               //stack the data? --> stack per subgroup
               const stackedData = d3.stack()
@@ -227,7 +253,7 @@ export class ChartsComponent implements OnInit, OnChanges{
               svg_bar_legend.selectAll("mydots").data(subgroups).enter().append("text")
                 .attr("x", 120)
                 .attr("y", function (d, i) { return 13 + i * 25 }) // 100 is where the first dot appears. 25 is the distance between dots
-                .text(function (d) { return  ts.instant(d.toString()) })
+                .text(function (d) { return ts.instant(d.toString()) })
                 .attr("text-anchor", "left")
                 .style("alignment-baseline", "middle")
 

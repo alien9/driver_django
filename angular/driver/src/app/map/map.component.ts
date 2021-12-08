@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, NgZone } from '@angular/core';
 import { LeafletModule } from '@asymmetrik/ngx-leaflet';
 import * as L from 'leaflet';
 import { Router } from '@angular/router';
@@ -23,11 +23,11 @@ export class MapComponent implements OnInit {
   @Input() fitBounds: any
   @Input() boundary_polygon_uuid: any
   @Output() map = new EventEmitter<L.Map>()
-  @Output() onSetPolygon=new EventEmitter<object>()
+  @Output() onSetPolygon = new EventEmitter<object>()
   @Input() polygon: any
-  @Output() setDrawing=new EventEmitter<boolean>()
+  @Output() setDrawing = new EventEmitter<boolean>()
   public drawnItems: FeatureGroup = featureGroup();
-  public drawOptions:any
+  public drawOptions: any
 
   public recordSchema: any;
   backend: string
@@ -38,7 +38,8 @@ export class MapComponent implements OnInit {
   constructor(
     private router: Router,
     private recordService: RecordService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private zone: NgZone
   ) { }
 
   ngOnInit(): void {
@@ -52,7 +53,7 @@ export class MapComponent implements OnInit {
     let bp = localStorage.getItem("boundary_polygon")
     if (bp) this.boundary_polygon_uuid = bp
     let fu = localStorage.getItem("current_filter")
-    if(this.polygon) this.drawnItems.addLayer(this.polygon)
+    if (this.polygon) this.drawnItems.addLayer(this.polygon)
     this.drawOptions = {
       position: 'topright',
       draw: {
@@ -74,20 +75,31 @@ export class MapComponent implements OnInit {
     this.router.navigateByUrl('/login')
   }
   onDrawCreated(e: any) {
-    this.drawnItems=featureGroup()
+    this.drawnItems = featureGroup()
     const layer = (e as DrawEvents.Created).layer;
     this.drawnItems.addLayer(layer);
     this.onSetPolygon.emit(layer)
     this.setDrawing.emit(false)
   }
-  onDrawDeleted(e:any){
+  onDrawDeleted(e: any) {
     this.onSetPolygon.emit(null)
     this.setDrawing.emit(false)
   }
   onMapReady(e: any) {
     this.map.emit(e)
   }
-  startDraw(e:any){
+  startDraw(e: any) {
     this.setDrawing.emit(true)
+  }
+  addLayer(e: any) {
+    console.log('added')
+    console.log(e)
+  }
+  removeLayer(e: any) {
+    console.log('removed')
+    console.log(e)
+  }
+  clickMap(e: any) {
+    console.log(e)
   }
 }

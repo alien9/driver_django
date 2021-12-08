@@ -24,8 +24,8 @@ export class NavbarComponent implements OnInit {
   @Input() boundaryPolygons: any[] = []
   @Input() boundaryPolygon: any
   @Input() filter: object
-  @Input() iRap:object
-  @Input() irapDataset:object
+  @Input() iRap: object
+  @Input() irapDataset: object
   public filterPage: object
   @Output() boundaryChange = new EventEmitter<object>()
   @Output() boundaryPolygonChange = new EventEmitter<object>()
@@ -33,7 +33,7 @@ export class NavbarComponent implements OnInit {
   @Output() stateChange = new EventEmitter<string>()
   @Output() reportChange = new EventEmitter<object>()
   @Output() goBack = new EventEmitter<string>()
-  @Output() iRapChange=new EventEmitter<object>()
+  @Output() iRapChange = new EventEmitter<object>()
   public recordSchema: object
   @Input() stateSelected
   public authenticated: boolean = true
@@ -103,7 +103,7 @@ export class NavbarComponent implements OnInit {
   }
   startIrap(content: any) {
     this.modalService.open(content, {});
-    if(this.iRap){
+    if (this.iRap) {
       this.spinner.show()
       this.loadIrapDataset()
     }
@@ -346,7 +346,7 @@ export class NavbarComponent implements OnInit {
   }
   iRapLogin(irapModal) {
     this.recordService.iRapLogin({
-      "format":"json",
+      "format": "json",
       "body":
       {
         "username": this.irap_email,
@@ -354,37 +354,81 @@ export class NavbarComponent implements OnInit {
       }
     }).pipe(first()).subscribe({
       next: data => {
-        this.iRapChange.emit({user:data})
+        this.iRapChange.emit({ user: data })
         irapModal.close('OK')
       }, error: err => {
         console.log(err)
-        if(err['error'] && err['error']['message']){
-          this.irap_err=err['error']['message']
-        }else{
-          if(err['message']) this.irap_err=err['message']
-          else  this.irap_err='Unknown error' // never should get here
+        if (err['error'] && err['error']['message']) {
+          this.irap_err = err['error']['message']
+        } else {
+          if (err['message']) this.irap_err = err['message']
+          else this.irap_err = 'Unknown error' // never should get here
         }
       }
     })
   }
-  loadIrapDataset(){
-    if(this.irapDataset) {
+  loadIrapDataset() {
+    if (this.irapDataset) {
       this.spinner.hide()
       return
     }
-    this.recordService.getIRapDataset({"body":this.iRap['data']}).pipe(first()).subscribe({
-      next: data=>{
+    this.recordService.getIRapDataset({ "body": this.iRap['data'] }).pipe(first()).subscribe({
+      next: data => {
         console.log(data)
-        this.iRapChange.emit({dataset:data})
+        this.iRapChange.emit({ dataset: data, iRap: this.iRap })
         this.spinner.hide()
       },
-      error:err=>{
-        this.iRapChange.emit({user:null})
+      error: err => {
+        this.iRapChange.emit({ user: null })
         this.spinner.hide()
       }
     })
   }
-  applyIrap(modal){
-    console.log(this.irapDataset)
+  applyIrap(modal) {
+    this.spinner.show()
+    let b = this.iRap['data']
+    b['dataset_id'] = Object.keys(this.irapDataset['selected']).filter(k => this.irapDataset['selected'][k])
+    this.iRapChange.emit({ dataset: this.irapDataset, iRap: this.iRap }) // save selection
+    let d = localStorage.getItem("irap-data")
+    if (d) {
+      this.iRapChange.emit({ layer: JSON.parse(d), iRap: this.iRap })
+      this.spinner.hide()
+      modal.close('ok')
+    } else {
+      this.recordService.getIRapData({ "body": b }).pipe(first()).subscribe({
+        next: data => {
+          localStorage.setItem("irap-data", JSON.stringify(data))
+          this.iRapChange.emit({ layer: data, iRap: this.iRap })
+          this.spinner.hide()
+          modal.close('ok')
+        },
+        error: err => {
+          this.iRapChange.emit({ user: null })
+          this.spinner.hide()
+          modal.close('error')
+        }
+      })
+    }
+  }
+  hasSelection(w: any) {
+    let h = {}
+    w.map(k => k['id']).forEach(element => {
+      h[element] = true
+    });
+    let hasSelected = false
+    if (this.irapDataset['selected']) {
+      Object.keys(this.irapDataset['selected']).filter(l => this.irapDataset['selected'][l]).forEach(k => {
+        if (h[k]) {
+          hasSelected = true
+        }
+      })
+    }
+    if (hasSelected)
+      return "has-selected"
+    else
+      return ""
+  }
+  resetIrap() {
+    this.irapDataset['selected'] = []
   }
 }

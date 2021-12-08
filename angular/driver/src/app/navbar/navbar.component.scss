@@ -3,3 +3,12 @@
         border-left: 2px solid white;
     }
 }
+
+::ng-deep .btn-link {
+    color: black;
+    text-decoration: none;
+}
+
+::ng-deep .has-selected .btn-link {
+    font-weight: bold;
+}

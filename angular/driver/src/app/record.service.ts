@@ -119,4 +119,11 @@ export class RecordService {
   getIRapDataset(data:object){
     return this.http.post(`${this.getBackend()}/api/irap-getdataset/`, data, { headers: this.getHeaders() });
   }
+  getIRapData(data:object){
+    console.log(data)
+    return this.http.post(`${this.getBackend()}/api/irap-getlat_lon/`, data, { headers: this.getHeaders() });
+  }
+  getIRapFatalityData(data: object) {
+    return this.http.post(`${this.getBackend()}/api/irap-fatalitydata/`, data, { headers: this.getHeaders() });
+  }
 }

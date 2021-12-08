@@ -269,7 +269,7 @@
         </div>
         <div *ngIf=irapDataset>
             <ngb-accordion #acc="ngbAccordion" activeIds="ngb-panel-irap" [closeOthers]="true">
-                <ngb-panel [title]="d['name']" *ngFor="let d of irapDataset['data']; let i=index">
+                <ngb-panel [title]="d['name']" *ngFor="let d of irapDataset['data']; let i=index" [cardClass]="hasSelection(d['dataset_data'])">
                     <ng-template ngbPanelContent>
                         <div class="input-group" *ngFor="let de of d['dataset_data']; let j=index">
                             <label><input type="checkbox" [(ngModel)]="irapDataset['selected'][de['id']]"> {{de['name']}}</label>
@@ -278,11 +278,10 @@
                 </ngb-panel>
             </ngb-accordion>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" (click)="applyIrap(vida)">{{'Apply'|translate}}</button>
+                <button type="button" class="btn btn-light" (click)="resetIrap()">{{'Reset'|translate}}</button>
+                <button type="button" class="btn btn-light" (click)="applyIrap(modal)">{{'Apply'|translate}}</button>
                 <button type="button" class="btn btn-light" (click)="modal.close('cancel')">{{'Close'|translate}}</button>
             </div>
-
-
         </div>
     </div>
 </ng-template>

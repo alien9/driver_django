@@ -26,3 +26,23 @@ body {
     font-size: 8pt;
     padding: 0;
 }
+
+.irap-control {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    background-color: white;
+    border: 1px solid gray;
+    z-index: 99999;
+    border-radius: 5px;
+}
+
+.irap-header {
+    position: relative;
+}
+
+.irap-close {
+    position: absolute;
+    right: 2px;
+    top: 2px;
+}

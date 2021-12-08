@@ -46,12 +46,15 @@ import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 import localeEs from '@angular/common/locales/es';
 import localeFr from '@angular/common/locales/fr';
+import localeEn from '@angular/common/locales/en';
 import { NgxSpinnerModule } from "ngx-spinner";
 import { ChartsComponent } from './charts/charts.component';
+import { IrapPopupComponent } from './irap-popup/irap-popup.component';
 
 registerLocaleData(localePt);
 registerLocaleData(localeEs);
 registerLocaleData(localeFr);
+registerLocaleData(localeEn);
 export function HttpLoaderFactory(httpClient: HttpClient) {
   let b = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
   return new MultiTranslateHttpLoader(httpClient, [
@@ -92,7 +95,8 @@ const icons = {
     ListComponent,
     IndexComponent,
     ReportComponent,
-    ChartsComponent
+    ChartsComponent,
+    IrapPopupComponent
 
   ],
   imports: [
@@ -114,7 +118,6 @@ const icons = {
     BsDropdownModule,
     TooltipModule,
     ModalModule,
-    HttpClientModule,
     NgbModule,
     SafePipeModule,
     NgxBootstrapIconsModule.pick(icons),
@@ -123,7 +126,8 @@ const icons = {
   providers: [
     { provide: LOCALE_ID, useValue: 'pt' },
     { provide: LOCALE_ID, useValue: 'fr' },
-    { provide: LOCALE_ID, useValue: 'es' }
+    { provide: LOCALE_ID, useValue: 'es' },
+    { provide: LOCALE_ID, useValue: 'en' }
   ],
   bootstrap: [AppComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
