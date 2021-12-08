@@ -130,16 +130,16 @@ export class InputComponent implements OnInit {
     }
   }
   getLight(c, d) {
-    let light = 'Day'
+    let light = 'day'
     let sunrise = getSunrise(c[1], c[0], d).getTime()
     if (Math.abs(sunrise - d.getTime()) < 3600000) {
-      light = 'Dawn'
+      light = 'dawn'
     } else {
       let sunset = getSunset(c[1], c[0], d).getTime()
       if (Math.abs(sunset - d.getTime()) < 3600000) {
-        light = 'Dusk'
+        light = 'dusk'
       } else {
-        if ((d.getTime() < sunrise) || (d.getTime() > sunset)) light = 'Night'
+        if ((d.getTime() < sunrise) || (d.getTime() > sunset)) light = 'night'
       }
     }
     return light

@@ -25,11 +25,17 @@
                         <li>
                             <a class="dropdown-item" (click)="download()" href="#">{{'Download' | translate}}</a>
                         </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/static/DriverData.apk">{{'Android app' | translate}}</a>
+                        </li>
                         <li *ngIf="config['IRAP_AUTH_ID']!=''">
                             <hr class="dropdown-divider">
                         </li>
                         <li *ngIf="config['IRAP_AUTH_ID']!=''">
-                            <a class="dropdown-item" (click)="startIrap(vida)" href="#">ViDA</a>
+                            <a class="dropdown-item" (click)="startIrap(vida)" href="#">ViDAaaaa{{config['IRAP_AUTH_ID']}}bbb</a>
                         </li>
                         <li>
                             <hr class="dropdown-divider">
@@ -272,7 +278,8 @@
                 <ngb-panel [title]="d['name']" *ngFor="let d of irapDataset['data']; let i=index" [cardClass]="hasSelection(d['dataset_data'])">
                     <ng-template ngbPanelContent>
                         <div class="input-group" *ngFor="let de of d['dataset_data']; let j=index">
-                            <label><input type="checkbox" [(ngModel)]="irapDataset['selected'][de['id']]"> {{de['name']}}</label>
+                            <label><input type="checkbox" [(ngModel)]="irapDataset['selected'][de['id']]">
+                                {{de['name']}}</label>
                         </div>
                     </ng-template>
                 </ngb-panel>

@@ -149,6 +149,7 @@ export class ChartsComponent implements OnInit, OnChanges {
           let ts = this.translateService
           parameters['row_period_type'] = this.barChart['interval']
           parameters['col_choices_path'] = this.barChart['field']
+          parameters['relate'] = this.barChart['field'] // the total count of related
           this.recordService.getCrossTabs(this.recordSchema['record_type'], parameters).pipe(first()).subscribe({
             next: data => {
               this.spinner.hide()
