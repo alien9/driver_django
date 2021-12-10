@@ -355,7 +355,6 @@ export class NavbarComponent implements OnInit {
     }).pipe(first()).subscribe({
       next: data => {
         this.iRapChange.emit({ user: data })
-        irapModal.close('OK')
       }, error: err => {
         console.log(err)
         if (err['error'] && err['error']['message']) {
@@ -368,7 +367,7 @@ export class NavbarComponent implements OnInit {
     })
   }
   loadIrapDataset() {
-    if (this.irapDataset) {
+   if (this.irapDataset) {
       this.spinner.hide()
       return
     }

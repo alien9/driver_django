@@ -1,21 +1,5 @@
 version: '3'
 services:
-  # postgres:
-  #   build:
-  #     context: ./
-  #     args:
-  #       - buildno=1
-  #     dockerfile: Dockerfile.database
-  #   volumes:
-  #     - /opt/${CONTAINER_NAME}-data:/var/lib/postgresql/data
-  #   environment:
-  #     - POSTGRES_USER=driver
-  #     - POSTGRES_DBNAME=driver
-  #     - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-  #   container_name: database-${CONTAINER_NAME}
-  #   image:
-  #     alien9/driver-database
-  
   redis-server:
     image: redis
     container_name: "redis-server-${CONTAINER_NAME}"
@@ -89,10 +73,10 @@ services:
     depends_on:
       - redis-server
     volumes:
-      - ${WINDSHAFT_FILES}/windshaft/driver.js:/opt/windshaft/driver.js
-      - ${WINDSHAFT_FILES}/windshaft/healthCheck.js:/opt/windshaft/healthCheck.js
-      - ${WINDSHAFT_FILES}/windshaft/alphamarker.png:/opt/windshaft/alphamarker.png
-      - ${WINDSHAFT_FILES}/windshaft/server.js:/opt/windshaft/server.js
+      - ./windshaft/driver.js:/opt/windshaft/driver.js
+      - ./windshaft/healthCheck.js:/opt/windshaft/healthCheck.js
+      - ./windshaft/alphamarker.png:/opt/windshaft/alphamarker.png
+      - ./windshaft/server.js:/opt/windshaft/server.js
     environment:
       - DRIVER_DB_NAME=${DATABASE_NAME}
       - DRIVER_DB_USER=${DATABASE_USERNAME}
