@@ -166,7 +166,7 @@ def getdataset(request):
         app_auth_id=int(config.IRAP_AUTH_ID),
         app_api_key=config.IRAP_API_KEY,
         app_private_key=config.IRAP_PRIVATE_KEY,
-        user_auth_id=userAuthId,
+        user_auth_id=int(userAuthId),
         user_api_key=userApiKey,
         user_private_key=userPrivateKey)
     print(app_user)
@@ -194,7 +194,7 @@ def getlat_lon(request):
         app_auth_id=int(config.IRAP_AUTH_ID),
         app_api_key=config.IRAP_API_KEY,
         app_private_key=config.IRAP_PRIVATE_KEY,
-        user_auth_id=userAuthId,
+        user_auth_id=int(userAuthId),
         user_api_key=userApiKey,
         user_private_key=userPrivateKey)
 

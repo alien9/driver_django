@@ -135,7 +135,6 @@ class DriverRecord(Record):
 @receiver(post_save, sender=DriverRecord)
 def record_after_save(sender, instance, **kwargs):
     if instance.location_text is None and config.NOMINATIM!='':
-        print("should geocode")
         r=requests.get("https://api.pickpoint.io/v1/reverse?format=json&key={key}&lat={lat}&lon={lon}".format(
             key=config.NOMINATIM,
             lat=instance.geom.y,
@@ -144,31 +143,7 @@ def record_after_save(sender, instance, **kwargs):
         j=r.json()
         if j:
             instance.location_text=j['display_name']
-
-"""
-    def save(self, *args, **kwargs):
-        self.geocode()
-        super(DriverRecord, self).save(*args, **kwargs)
-        
-
-
-
-    cost=RecordCostConfig.objects.last()
-    if cost is not None:
-        n=0
-        price=0
-        if instance.tracker.previous('segment') is not None:
-            s=RecordSegment.objects.get(pk=instance.tracker.previous('segment'))
-            if s != instance.segment:
-                s.calculate_cost(instance.data)
-        if instance.segment is not None:
-            instance.segment.calculate_cost(instance.data)
-
-@receiver(pre_save, sender=DriverRecord)
-def record_before_save(sender, instance, **kwargs):
-  
-
-"""
+            instance.save()
 
 
 def get_image_path(instance, filename):

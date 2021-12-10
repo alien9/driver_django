@@ -56,6 +56,7 @@ LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 # Application definition
 
 INSTALLED_APPS = (
+    'grout',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -73,8 +74,7 @@ INSTALLED_APPS = (
 
     'django_filters',
     'rest_framework_gis',
-    'grout',
-
+    
     'driver',
     'driver_auth',
     'data',
@@ -536,7 +536,7 @@ CONSTANCE_CONFIG = {
     "LANGUAGES": ('[{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}]', _("Languages")),
     "HOSTNAME": ("%s://%s" % ((os.getenv('PROTOCOL', "http"), os.getenv('HOSTNAME', "localhost:8000"))), _("Host Name")),
     "COUNTRY_CODE": (os.getenv('COUNTRY', "ic"), _("Country Code")),
-    "MAPSERVER": ("mapserver-%s" % (os.getenv('CONTAINER_NAME', 'driver')), "MapServer"),
+    "MAPSERVER": ("http://mapserver-%s" % (os.getenv('CONTAINER_NAME', 'driver')), "MapServer"),
     'TIMEZONE': ('America/Sao_Paulo', 'Time Zone', 'tzselect'),
     'MAPILLARY_CLIENT_TOKEN': ("", _("Mapillary Client token")),
     'MAPILLARY_CLIENT_ID': ("", _("Mapillary Client")),

@@ -15,11 +15,15 @@ for k in [ t.split('=') for t in f.readlines() ]:
 
 DRIVER_DB_HOST=e['DATABASE_HOST']
 WINDSHAFT_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-%s" % (e['CONTAINER_NAME'])]).decode('utf8').strip()
+MAPSERVER_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "mapserver-%s" % (e['CONTAINER_NAME'])]).decode('utf8').strip()
 #DRIVER_DB_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "database-%s" % (e['CONTAINER_NAME'])]).decode('utf8').strip()
 REDIS_HOST = subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "redis-server-%s" % (e['CONTAINER_NAME'])]).decode('utf8').strip()
 CONTAINER_NAME=e['CONTAINER_NAME']
 CONSTANCE_CONFIG['WINDSHAFT']=("http://%s" % (WINDSHAFT_HOST,), "WindShaft")
+CONSTANCE_CONFIG['MAPSERVER']=("http://%s" % (MAPSERVER_HOST,), "Mapserver")
+
 # Quick-start development settings - unsuitable for production
+
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
