@@ -108,7 +108,13 @@ export class JSONEditorComponent implements OnInit {
     o.properties=h;
     this.save()
   }
-  newTable(tablename): void{
+  newTable(): void{
+    let title=null
+    title=prompt('Table name:')
+    if(!title){
+      return
+    }
+    let tablename=`driver${title.normalize("NFD").replace(/[\u0300-\u036f]|\s/g, "")}`;
     let propertyOrder: number=0;
     for(var j in this.dict.properties){
       if(j==tablename){
@@ -122,7 +128,7 @@ export class JSONEditorComponent implements OnInit {
         propertyOrder=1+this.dict.properties[j].propertyOrder;
       }
     }
-
+    
     var properties={};
     var definitions={};
     for(var k in this.dict.properties){
@@ -136,7 +142,7 @@ export class JSONEditorComponent implements OnInit {
     };
     definitions[tablename]={
             "type": "object",
-            "title": "",
+            "title": title,
             "multiple": false,
             "details": false,
             "required": ["_localId"],
@@ -203,9 +209,9 @@ export class JSONEditorComponent implements OnInit {
   }
   newOption(f): void{
     if(f.enum)
-      f.enum.push("");
+      f.enum.push("novo");
     if(f.items && f.items.enum)
-      f.items.enum.push("");
+      f.items.enum.push("novo");
     this.save()
   }
   removeOption(f, o): void{
@@ -216,6 +222,7 @@ export class JSONEditorComponent implements OnInit {
     this.save()
   }
   setPropertyValue(a, i, event): void{
+    console.log(i)
     a[i]=event.srcElement.value;
     this.save()
   }
@@ -403,8 +410,14 @@ export class JSONEditorComponent implements OnInit {
     return (name=="text");
   }
   moveup(item){
+    var d=this.dict['definitions']
+    let o=0
+    Object.keys(this.dict['definitions']).sort((a,b)=>{return d[a]['propertyOrder']-d[b]['propertyOrder']}).forEach(k=>{
+      d[k]['propertyOrder']=o;
+      o++;
+    })
     let current_position=item.value.propertyOrder-1
-    let res={"properties":{},"definitions":{}};
+    let res={"properties":this.dict['properties'],"definitions":{}};
     for(let key in this.dict.definitions){
       if(key==item.key){
         this.dict.definitions[key].propertyOrder--
@@ -413,15 +426,22 @@ export class JSONEditorComponent implements OnInit {
           this.dict.definitions[key].propertyOrder++
         }
       }
-      this.dict.properties[key].propertyOrder=this.dict.definitions[key].propertyOrder
       res.properties[key]=this.dict.properties[key]
       res.definitions[key]=this.dict.definitions[key]
     }
     this.set(res);
   }
   movedown(item){
-    let current_position=item.value.propertyOrder+1
-    let res={"properties":{},"definitions":{}};
+    var d=this.dict['definitions']
+    let o=0;
+    Object.keys(this.dict['definitions']).sort((a,b)=>{return d[a]['propertyOrder']-d[b]['propertyOrder']}).forEach(k=>{
+      d[k]['propertyOrder']=o;
+      o++;
+    })
+
+    let current_position=this.dict.definitions[item.key].propertyOrder+1
+    let res={"properties":this.dict['properties'],"definitions":{}};
+
     for(let key in this.dict.definitions){
       if(key==item.key){
         this.dict.definitions[key].propertyOrder++
@@ -430,8 +450,6 @@ export class JSONEditorComponent implements OnInit {
           this.dict.definitions[key].propertyOrder--
         }
       }
-      this.dict.properties[key].propertyOrder=this.dict.definitions[key].propertyOrder
-      res.properties[key]=this.dict.properties[key]
       res.definitions[key]=this.dict.definitions[key]
     }
     this.set(res);
