@@ -8,8 +8,6 @@ class GenerateViewsetQuery(object):
         # apply filters
         # get sql for the query that should be run
         for backend in list(self.filter_backends):
-            print(backend)
-            print(qset.query)
             qset = backend().filter_queryset(request, qset, self)
 
         cursor = connection.cursor().cursor
@@ -24,8 +22,6 @@ class GenerateViewsetQuery(object):
         # apply filters
         # get sql for the query that should be run
         for backend in list(self.filter_backends):
-            print(backend)
-            print(qset.query)
             qset = backend().filter_queryset(request, qset, self)
 
         cursor = connection.cursor().cursor

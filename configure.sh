@@ -26,20 +26,6 @@ if [ "${WINDSHAFT_HOST}" == "" ]; then
      exit
 fi
 
-
-# LANGUAGES=$(tr \' " " <<<"$LANGUAGES")
-# sed -e "s/PROTOCOL/${PROTOCOL}/g" \
-#      -e "s/HOST_NAME/${HOST_NAME}/g" \
-#      -e "s/NOMINATIM/${NOMINATIM}/g" \
-#      -e "s/PRIMARYLABEL/${PRIMARYLABEL}/g" \
-#      -e "s/SECONDARYLABEL/${SECONDARYLABEL}/g" \
-#      -e "s/CLIENTID/${CLIENTID}/g" \
-#      -e "s/COUNTRY/${COUNTRY_CODE}/g" \
-#      -e "s/CENTER/${CENTER}/g" \
-#      -e "s/ZOOM/${ZOOM}/g" \
-#      -e "s/LANGUAGES/${LANGUAGES}/g" \
-# scripts.template.js > web/dist/scripts/scripts.b9157403.js
-
 if [[ ! -f driver-${CONTAINER_NAME}.conf ]]; then
      cp driver-app.conf driver-${CONTAINER_NAME}.conf
 fi
@@ -49,6 +35,7 @@ sed -i -e "s/\s[^ ]*\s*#HOST_NAME$/ ${HOST_NAME}; #HOST_NAME/g" \
 -e "s/http.*#driver-django$/http:\/\/${DJANGO_HOST}:4000; #driver-django/g" \
 -e "s/\s[^ ]*\s*#windshaft$/ http:\/\/${WINDSHAFT_HOST}:5000; #windshaft/g" \
 -e "s,\s[^ ]*\s*#ALPHA_ROOT$, ${STATIC_ROOT}/static/dist/; #ALPHA_ROOT,g" \
+-e "s,\s[^ ]*\s*#FAVICON$, ${STATIC_ROOT}/static/dist/favicon.ico; #FAVICON,g" \
 driver-${CONTAINER_NAME}.conf
 
 #docker exec driver-nginx sed -i -e "s/HOST_NAME/${HOST_NAME}/g" /etc/nginx/conf.d/driver-app.conf

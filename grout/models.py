@@ -327,7 +327,6 @@ class Boundary(Imported):
             self.status = self.StatusTypes.COMPLETE
             self.save()
         except Exception as e:
-            
             if self.errors is None:
                 self.errors = {}
             self.errors['message'] = str(e)
@@ -343,6 +342,7 @@ class Boundary(Imported):
         if self.color is not None:
             h=self.color.lstrip('#')
             color=tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+        print("create maṕserver file")
         t=render_to_string('boundary.map', {
             "connection":connection.settings_dict['HOST'],
             "username":connection.settings_dict['USER'],

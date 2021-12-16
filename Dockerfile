@@ -30,7 +30,7 @@ COPY manage.py /opt/app/
 COPY requirements-production.txt /opt/app/requirements.txt
 COPY find_segments.sql /opt/app/find_segments.sql
 COPY web /opt/app/web/dist
-
+COPY favicon.ico /opt/app/web/dist/favicon.ico
 
 
 RUN pip install --no-cache-dir gunicorn

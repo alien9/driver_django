@@ -86,7 +86,7 @@ class DriverRecord(Record):
     road = models.CharField(max_length=200, null=True, blank=True)
     state = models.CharField(max_length=50, null=True, blank=True)
     segment = models.ManyToManyField(RecordSegment, null=True, blank=True)
-    mapillary = models.CharField(null=True, blank=True, max_length=64)
+    mapillary = models.TextField(null=True, blank=True)
 
     def geocode(self, roadmap_uuid, size):
         with connection.cursor() as cursor:
@@ -141,8 +141,9 @@ def record_after_save(sender, instance, **kwargs):
             lon=instance.geom.x
         ))
         j=r.json()
+        print("%s, %s" % (j['address']['road'],j['address']['city']))
         if j:
-            instance.location_text=j['display_name']
+            instance.location_text="%s, %s" % (j['address']['road'],j['address']['city']) [0:199]
             instance.save()
 
 

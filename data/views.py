@@ -364,6 +364,9 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 with open("./mapserver/records_%s.map" % tile_token, "w+") as m:
                     m.write(t)
                 response.data['mapfile'] = tile_token
+        elif 'theme' in request.query_params:
+            print('request data')
+            print(request.data)
         else:
             response = super(DriverRecordViewSet, self).list(self, request, *args, **kwargs)
         return response

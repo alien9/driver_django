@@ -1,5 +1,5 @@
 from collections import OrderedDict
-import logging
+import logging, json
 from django.db import IntegrityError
 from dateutil.parser import parse
 
@@ -9,6 +9,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from rest_framework.exceptions import ParseError
 from rest_framework_gis.filters import InBBoxFilter
+from django.http import JsonResponse
 
 from grout import exceptions
 from grout.models import (Boundary,
@@ -161,6 +162,13 @@ class BoundaryViewSet(viewsets.ModelViewSet):
             ('features', features)
         ))
         return Response(data)
+
+    @action(methods=['get', 'post'], detail=False)
+    def mapfile(self, request):
+        print("keys")
+        print(request.data)
+        return JsonResponse({'errors': {'uuid': 'Denied'}},
+            status=status.HTTP_200_OK)
 
 class DictionaryViewSet(viewsets.ModelViewSet):
     queryset = Dictionary.objects.all()
