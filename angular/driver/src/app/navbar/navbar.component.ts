@@ -1,5 +1,5 @@
 import { EmitterVisitorContext } from '@angular/compiler';
-import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core'
+import { Component, Input, OnInit, Output, EventEmitter, HostListener } from '@angular/core'
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap'
 import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap'
 import { SearchableFilterPipe } from './search-field.pipe'
@@ -18,6 +18,7 @@ import { NgxSpinnerService } from "ngx-spinner";
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent implements OnInit {
+
   @Input() config: object
   @Input() boundaries: any[] = []
   @Input() boundary: any
@@ -34,6 +35,7 @@ export class NavbarComponent implements OnInit {
   @Output() reportChange = new EventEmitter<object>()
   @Output() goBack = new EventEmitter<string>()
   @Output() iRapChange = new EventEmitter<object>()
+  @Output() newRecord=new EventEmitter<boolean>()
   public recordSchema: object
   @Input() stateSelected
   public authenticated: boolean = true
@@ -65,7 +67,7 @@ export class NavbarComponent implements OnInit {
     private modalService: NgbModal,
     private spinner: NgxSpinnerService) {
   }
-
+  
   ngOnInit(): void {
     this.tabs = [
       { "label": 'Rows', "key": 'row' },
@@ -321,9 +323,8 @@ export class NavbarComponent implements OnInit {
       }
     })
     this.report = null
-    if (this.reportParameters) {
+    if (this.reportParameters && path['col'] && path['row']) {
       if (!this.reportParameters['relate']) this.reportParameters['relate'] = ""
-
       this.spinner.show()
       this.recordService.getCrossTabs(this.recordSchema["record_type"], this.reportParameters).pipe(first()).subscribe(
         crosstabs => {
@@ -429,5 +430,9 @@ export class NavbarComponent implements OnInit {
   }
   resetIrap() {
     this.irapDataset['selected'] = []
+  }
+  createRecord(e:any){
+    this.newRecord.emit(true)
+    $('.leaflet-container').css('cursor','crosshair');
   }
 }

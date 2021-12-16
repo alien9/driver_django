@@ -113,17 +113,31 @@ export class RecordService {
     })
     return this.http.get<any[]>(`${this.getBackend()}/api/records/crosstabs/`, { headers: this.getHeaders(), params: params })
   }
-  iRapLogin(data){
+  iRapLogin(data) {
     return this.http.post(`${this.getBackend()}/api/irap-login/`, data, { headers: this.getHeaders() });
   }
-  getIRapDataset(data:object){
+  getIRapDataset(data: object) {
     return this.http.post(`${this.getBackend()}/api/irap-getdataset/`, data, { headers: this.getHeaders() });
   }
-  getIRapData(data:object){
+  getIRapData(data: object) {
     console.log(data)
     return this.http.post(`${this.getBackend()}/api/irap-getlat_lon/`, data, { headers: this.getHeaders() });
   }
   getIRapFatalityData(data: object) {
     return this.http.post(`${this.getBackend()}/api/irap-fatalitydata/`, data, { headers: this.getHeaders() });
+  }
+  getBoundaryMapfile(o: Object, q: any): Observable<any[]> {
+    let params = new HttpParams()
+      .set('archived', 'false')
+      .set('active', 'true')
+      .set('theme',true)
+    if (q) {
+      if (q.filter) {
+        for (var k in q.filter) {
+          if (q.filter[k]) params = params.set(k, q.filter[k])
+        }
+      }
+    }
+    return this.http.get<any[]>(`${this.getBackend()}/api/records/?${Utils.toQueryString(q)}`, {headers: this.getHeaders()} )
   }
 }

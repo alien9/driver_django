@@ -72,6 +72,9 @@
                         <button *ngIf="stateSelected=='Reports'" (click)=startFilters(report) class="btn btn-outline-secondary mx-2" type="submit" id="report_button">
                             <i-bs name="text-paragraph"></i-bs>
                         </button>
+                        <button *ngIf="stateSelected=='Map'" (click)=createRecord($event) class="btn btn-outline-secondary mx-2" id="new_record_button">
+                            <i-bs name="pin-map-fill"></i-bs>
+                        </button>
                     </form>
                 </li>
                 <li class="nav-item">
