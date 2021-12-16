@@ -4,6 +4,7 @@
             <a ngbNavLink *ngIf="!k.value.multiple">{{k.value.title|translate}}</a>
             <a ngbNavLink *ngIf="k.value.multiple">{{k.value.plural_title|translate}}</a>
             <ng-template ngbNavContent>
+                <input [(ngModel)]="record['occurred_from']">
                 <div class="small-map" *ngIf="k.value.details">
                     <div class="input-map" leaflet [leafletLayers]=layers [leafletLayersControl]="layersControl" [leafletOptions]="options" (leafletMapReady)=mapReady($event)></div>
                 </div>
@@ -18,7 +19,13 @@
                         <span>{{'Location'|translate}}</span>: {{record["location_text"] }}
                     </li>
                     <li class="list-group-item">
-                        <span>{{'Date and time'|translate}}</span>: {{record["occurred_from"]|localizedDate }} {{record["occurred_from"]|localizedDate:'shortTime' }}
+                        <input class="form-control" type=hidden placeholder="yyyy-mm-dd" name="occurred_date" [(ngModel)]="occurred_date_ngb" ngbDatepicker #df="ngbDatepicker" (change)=setDate()>
+                        <span>{{'Date and time'|translate}}</span>:
+                        <span *ngIf=!editing>{{record["occurred_from"]|localizedDate }} {{record["occurred_from"]|localizedDate:'shortTime' }}</span>
+                        <span *ngIf=editing>
+                            <a href="#" (click)=df.toggle()>{{record["occurred_from"]|localizedDate }}</a>
+                            <ngb-timepicker [(ngModel)]="occurred_time" [spinners]=false [meridian]=false *ngIf=editing  (change)=setDate()></ngb-timepicker>
+                        </span>
                     </li>
                     <li class="list-group-item">
                         <span>{{'Weather'|translate}}</span>: {{record["weather"] }}
@@ -50,6 +57,7 @@
                     </ul>
                 </div>
                 <div *ngIf="k.value.multiple">
+                    <button *ngIf=editing type="button" class="btn btn-light float-right" (click)="addElement(k.key)"> + </button>
                     <div class="card" *ngFor="let kk of record['data'][k.key]; let i = index">
                         <div class="card-body">
                             <h5 class="card-title">{{k.value.title|translate}}</h5>
@@ -96,5 +104,6 @@
 
 </div>
 <div class="modal-footer">
-    <button type="button" class="btn btn-light" (click)="closeModal(modal)" i18n>Close</button>
+    <button type="button" class="btn btn-dark" (click)="saveRecord(modal)">{{'Save'|translate}}</button>
+    <button type="button" class="btn btn-light" (click)="closeModal(modal)">{{'Close'|translate}}</button>
 </div>

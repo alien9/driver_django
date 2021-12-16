@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, NgZone, Injector, ComponentFactoryResolver } from '@angular/core';
+import { Component, OnInit, ViewChild, NgZone, Injector, ComponentFactoryResolver, HostListener } from '@angular/core';
 import * as L from 'leaflet';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
@@ -12,7 +12,7 @@ import { NgxSpinnerService } from "ngx-spinner";
 import { NavbarComponent } from '../navbar/navbar.component'
 import { ChartsComponent } from '../charts/charts.component';
 import { IrapPopupComponent } from '../irap-popup/irap-popup.component';
-
+import * as uuid from 'uuid';
 
 @Component({
   selector: 'app-index',
@@ -20,6 +20,13 @@ import { IrapPopupComponent } from '../irap-popup/irap-popup.component';
   styleUrls: ['./index.component.scss']
 })
 export class IndexComponent implements OnInit {
+  @HostListener('window:keyup', ['$event'])
+  keyEvent(event: KeyboardEvent) {
+    if (event.key && event.key == 'Escape') {
+      this.listening = false
+      $('.leaflet-container').css('cursor', 'grab');
+    }
+  }
   public config: object
   public boundaries: any[] = []
   public boundary: any
@@ -48,6 +55,7 @@ export class IndexComponent implements OnInit {
   private lastState: string
   public mapillary_id: string
   public irapDataset
+  listening: boolean
   hasIrap: boolean
   locale: string
   weekdays: object
@@ -73,7 +81,7 @@ export class IndexComponent implements OnInit {
     private route: ActivatedRoute,
     private spinner: NgxSpinnerService,
     private zone: NgZone,
-    private injector: Injector, 
+    private injector: Injector,
     private resolver: ComponentFactoryResolver
   ) { }
 
@@ -247,13 +255,16 @@ export class IndexComponent implements OnInit {
     }
   }
   setBoundaryPolygon(b: any) {
-    if (!this.filter) this.filter = {}
     this.boundary_polygon_uuid = (b) ? b['uuid'] : null
     if (this.boundary_polygon_uuid) {
+      if (!this.filter) {
+        this.filter = {}
+      }
       this.filter['polygon_id'] = this.boundary_polygon_uuid
       localStorage.setItem("boundary_polygon", this.boundary_polygon_uuid)
     } else {
-      delete this.filter['polygon_id']
+      if (this.filter)
+        delete this.filter['polygon_id']
       localStorage.removeItem("boundary_polygon")
     }
     this.applyBoundaryPolygon(b)
@@ -274,8 +285,30 @@ export class IndexComponent implements OnInit {
         this.fitBounds = bbox
       }
     }
-    this.loadRecords(true)
-    this.refreshList()
+    if (!this.filter) {
+      this.recordService.getRecords({ 'uuid': this.recordSchema['record_type'] }, { 'filter': { 'limit': 1 } }).pipe(first()).subscribe({
+        next: data => {
+          // set filter: last 3 months from latest found data
+          if (data['results'] && data['results'].length) {
+            let di = new Date(data['results'][0].occurred_from)
+            let df = new Date(data['results'][0].occurred_from)
+            df.setMonth(di.getMonth() - 3)
+            let fu = {
+              'occurred_max': di.toISOString(),
+              'occurred_min': df.toISOString()
+            }
+            this.setFilter(fu)
+          }else{
+            //nothing to show
+            this.loadRecords(true)
+            this.refreshList()
+          }
+        }
+      })
+    } else {
+      this.loadRecords(true)
+      this.refreshList()
+    }
   }
   loadCritical() {
     this.recordService.getCritical().pipe(first()).subscribe(
@@ -361,6 +394,8 @@ export class IndexComponent implements OnInit {
   }
   setFilter(e: any) {
     this.spinner.show
+    console.log('setting filter')
+    console.log(e)
     this.filter = e
     this.loadRecords(false)
     this.refreshList()
@@ -368,6 +403,34 @@ export class IndexComponent implements OnInit {
   viewRecord(content: any, uuid: string) {
     this.record_uuid = uuid
     this.mapClick(content)
+  }
+  startRecord(v: any) {
+    this.listening = v
+  }
+  newRecord(v: any, content: any) {
+    console.log('new record')
+    console.log(v)
+    this.listening = false
+    let d=new Date()
+    this.record = {
+      'geom': {"type":"Point", "coordinates":[v.latlng.lng, v.latlng.lat]},
+      'occurred_from': d,
+      'occurred_to': d,
+      'data': {},
+      "schema":this.recordSchema["uuid"]
+    }
+    Object.entries(this.recordSchema['schema']['definitions']).forEach(k => {
+      if (this.recordSchema['schema']['definitions'][k[0]].multiple) {
+        this.record['data'][k[0]] = []
+      } else {
+        this.record['data'][k[0]] = {'_localId':uuid.v4()}
+        Object.keys(k[1]['properties']).forEach(l => {
+          //this.record['data'][k[0]][l] = null
+        })
+      }
+    })
+    this.editing = true
+    this.modalService.open(content, { size: 'lg', animation: false, keyboard: false, backdrop: "static" });
   }
 
   mapClick(content: any) {
@@ -463,7 +526,7 @@ export class IndexComponent implements OnInit {
       }
     }
   }
-  removeIrapLayer(){
+  removeIrapLayer() {
     if (this.layersControl.overlays['iRap']) {
       let j = 0;
       for (let i = 0; i < this.layers.length; i++) {
@@ -483,7 +546,7 @@ export class IndexComponent implements OnInit {
         let yl = e.sourceTarget
         let component = this.resolver.resolveComponentFactory(IrapPopupComponent).create(this.injector);
         component.changeDetectorRef.detectChanges();
-        L.popup({minWidth:600, maxHeight:420})
+        L.popup({ minWidth: 600, maxHeight: 420 })
           .setLatLng(e.latlng)
           .setContent(component.location.nativeElement)
           .openOn(this.map);
@@ -495,19 +558,19 @@ export class IndexComponent implements OnInit {
           b.latitude = l[0]['lat']
           b.longitude = l[0]['lng']
           this.recordService.getIRapFatalityData({ "body": b }).pipe(first()).subscribe(data => {
-            component.instance.roadName=data['data']['road_name']
-            component.instance.inspectionDate=data['data']['road_survey_date']
-            component.instance.rating={
-              'pedestrian':Math.round(data['data']['pedestrian_star_rating_star']),
-              'bicycle':Math.round(data['data']['bicycle_star_rating_star']),
-              'car':Math.round(data['data']['car_star_rating_star']),
-              'motorcycle':Math.round(data['data']['motorcycle_star_rating_star']),
+            component.instance.roadName = data['data']['road_name']
+            component.instance.inspectionDate = data['data']['road_survey_date']
+            component.instance.rating = {
+              'pedestrian': Math.round(data['data']['pedestrian_star_rating_star']),
+              'bicycle': Math.round(data['data']['bicycle_star_rating_star']),
+              'car': Math.round(data['data']['car_star_rating_star']),
+              'motorcycle': Math.round(data['data']['motorcycle_star_rating_star']),
             }
-            component.instance.fe={
-              'pedestrian':data['data']['pedestrian_fe'],
-              'bicycle':data['data']['bicycle_fe'],
-              'car':data['data']['car_fe'],
-              'motorcycle':data['data']['motorcycle_fe'],
+            component.instance.fe = {
+              'pedestrian': data['data']['pedestrian_fe'],
+              'bicycle': data['data']['bicycle_fe'],
+              'car': data['data']['car_fe'],
+              'motorcycle': data['data']['motorcycle_fe'],
             }
             console.log(data)
             component.changeDetectorRef.detectChanges()
@@ -519,9 +582,9 @@ export class IndexComponent implements OnInit {
     this.layersControl.overlays['iRap'] = lg
     this.layers.push(lg)
   }
-  removeIrap(){
+  removeIrap() {
     console.log('removeIrap')
-    this.hasIrap=false
+    this.hasIrap = false
     this.removeIrapLayer()
   }
 }

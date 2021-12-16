@@ -27,7 +27,7 @@ import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
 import { ModalModule } from 'ngx-bootstrap/modal';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { filter, funnel, threeDots, threeDotsVertical, calendar, x, textParagraph, pencilSquare } from 'ngx-bootstrap-icons';
+import { filter, funnel, threeDots, threeDotsVertical, calendar, x, textParagraph, pencilSquare, pinMapFill } from 'ngx-bootstrap-icons';
 
 import { NgxBootstrapIconsModule } from 'ngx-bootstrap-icons';
 import { ListComponent } from './list/list.component';
@@ -71,7 +71,8 @@ const icons = {
   calendar,
   x,
   textParagraph,
-  pencilSquare
+  pencilSquare,
+  pinMapFill
 };
 
 @NgModule({

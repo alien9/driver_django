@@ -15,6 +15,11 @@ export class WebService {
   }
 
   getMapillaryImages(token: string, bbox: string): Observable<any[]> {
-    return this.http.get<any[]>(`https://graph.mapillary.com/images?access_token=${token}&fields=id,geometry&bbox=${bbox}`)
+    let limit = 200
+    return this.http.get<any[]>(`https://graph.mapillary.com/images?access_token=${token}&fields=id,geometry&limit=${limit}&bbox=${bbox}`)
+  }
+  getHistoryWeather( what: any) {
+    let url = 'https://api.openweathermap.org/data/2.5/weather'
+    return this.http.get<any[]>(url, { params: what })
   }
 }

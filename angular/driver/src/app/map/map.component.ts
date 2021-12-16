@@ -22,10 +22,12 @@ export class MapComponent implements OnInit {
   @Input() layersControl: any
   @Input() fitBounds: any
   @Input() boundary_polygon_uuid: any
+  @Input() mapListening: boolean
   @Output() map = new EventEmitter<L.Map>()
   @Output() onSetPolygon = new EventEmitter<object>()
   @Input() polygon: any
   @Output() setDrawing = new EventEmitter<boolean>()
+  @Output() newRecord=new EventEmitter<object>()
   public drawnItems: FeatureGroup = featureGroup();
   public drawOptions: any
 
@@ -100,6 +102,14 @@ export class MapComponent implements OnInit {
     console.log(e)
   }
   clickMap(e: any) {
+    $('.leaflet-container').css('cursor','grab');
     console.log(e)
+    console.log(this.mapListening)
+    if(this.mapListening){
+      $('.leaflet-container').css('cursor','grab');
+      this.newRecord.emit({
+        'latlng':e.latlng
+      })
+    }
   }
 }

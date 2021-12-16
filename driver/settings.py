@@ -547,4 +547,5 @@ CONSTANCE_CONFIG = {
     'IRAP_AUTH_ID': ("", _("iRAP Auth ID")),
     'IRAP_API_KEY': ("", _("iRAP API key")),
     'IRAP_PRIVATE_KEY': ("", _("iRAP Private key")),
+    'OPENWEATHER_RAPID_KEY':("", _("Open Weather API")),
 }
