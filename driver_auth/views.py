@@ -82,7 +82,8 @@ def authz_cb(request):
 def get_oidc_client_list(request):
     url = reverse('oidc_authentication_init')
     return JsonResponse({'clients': ["google.com"]})
-
+def get_google_client_id(request):
+    return JsonResponse({'clientId': config.GOOGLE_OAUTH_CLIENT_ID })
 
 class DriverSsoAuthToken(APIView):
     parser_classes = (JSONParser,)

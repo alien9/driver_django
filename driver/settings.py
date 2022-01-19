@@ -548,4 +548,6 @@ CONSTANCE_CONFIG = {
     'IRAP_API_KEY': ("", _("iRAP API key")),
     'IRAP_PRIVATE_KEY': ("", _("iRAP Private key")),
     'OPENWEATHER_RAPID_KEY':((os.getenv('OPENWEATHER_RAPID_KEY', '')), _("Open Weather API")),
+    'GOOGLE_OAUTH_CLIENT_ID': (GOOGLE_OAUTH_CLIENT_ID, _("Google Client ID")),
+    'GOOGLE_OAUTH_SECRET': (GOOGLE_OAUTH_CLIENT_SECRET, _("Google Client Secret")),
 }

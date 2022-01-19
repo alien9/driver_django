@@ -20,10 +20,10 @@ class FilterTree(object):
     def __init__(self, tree, field):
         self.field = field  # The JSONField to filter on.
         self.tree = tree  # The nested dictionary representing the query.
-
         # Map the available filter types to their corresponding classmethod.
         self.sql_generators = {
             "intrange": self.intrange_filter,
+            "intrange_multiple": self.multiple_intrange_filter,
             "containment": self.containment_filter,
             "containment_multiple": self.multiple_containment_filter
         }
@@ -288,6 +288,52 @@ class FilterTree(object):
         elif has_max and has_min:
             sql_template = '(' + less_than + ' AND ' + more_than + ')'
             return (sql_template, branch + [maximum] + branch + [minimum])
+        else:
+            return None
+
+    @classmethod
+    def multiple_intrange_filter(cls, path, rule):
+        """
+        Filter for numbers that match boundaries provided by a rule.
+
+        Registered on the 'multiple_intrange' rule type.
+
+        Args:
+            path (list): A list of keys representing the path to the field in question,
+                         with keys stored from deepest to shallowest.
+            rule (dict): A dictionary representing the rule to apply.
+
+        Returns:
+            tuple: Information for building a SQL query from this filter rule,
+                   with the containment query in the first position and the
+                   parameters in the second.
+        """
+
+        has_min = 'min' in rule and rule['min'] is not None
+        has_max = 'max' in rule and rule['max'] is not None
+
+        if has_min:
+            minimum = rule['min']
+            more_than = "((select sum(case when ((b->>'{field_name}')::numeric >= %s) then 1 else 0 end)>0 from (select jsonb_array_elements(\"grout_record\".\"data\"->'{table_name}') as b) a) ='t')".format(
+                field_name=path[2],
+                table_name=path[1]
+            )
+        if has_max:
+            maximum = rule['max']
+            less_than = "((select sum(case when ((b->>'{field_name}')::numeric <= %s) then 1 else 0 end)>0 from (select jsonb_array_elements(\"grout_record\".\"data\"->'{table_name}') as b) a) ='t')".format(
+                field_name=path[2],
+                table_name=path[1]
+            )
+
+        if has_min and not has_max:
+            sql_template = '(' + more_than + ')'
+            return (sql_template, [minimum])
+        elif has_max and not has_min:
+            sql_template = '(' + less_than + ')'
+            return (sql_template, [maximum])
+        elif has_max and has_min:
+            sql_template = '(' + less_than + ' AND ' + more_than + ')'
+            return (sql_template, [maximum, minimum])
         else:
             return None
 

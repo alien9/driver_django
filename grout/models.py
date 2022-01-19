@@ -302,6 +302,8 @@ class Boundary(Imported):
         self.status = self.StatusTypes.PROCESSING
         self.save()
         logging.info("starting")
+        if not self.source_file:
+            return
         try:
             logging.info("extracting the shapefile")
             temp_dir = extract_zip_to_temp_dir(self.source_file)
@@ -342,7 +344,7 @@ class Boundary(Imported):
         if self.color is not None:
             h=self.color.lstrip('#')
             color=tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
-        print("create maṕserver file")
+        print("create mapserver file")
         t=render_to_string('boundary.map', {
             "connection":connection.settings_dict['HOST'],
             "username":connection.settings_dict['USER'],

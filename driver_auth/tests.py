@@ -31,16 +31,24 @@ class UserViewTestCase(TestCase):
         response = json.loads(self.client.get(url).content)
         self.assertEqual(len(response['results']), 1)
 
-
 class PermissionsTestCase(TestCase):
     def setUp(self):
         super(PermissionsTestCase, self).setUp()
 
-        self.public_group = Group.objects.get(name=settings.DRIVER_GROUPS['READ_ONLY'])
+        try:
+            self.public_group = Group.objects.get(name=settings.DRIVER_GROUPS['READ_ONLY'])
+        except:
+            self.public_group = Group(name=settings.DRIVER_GROUPS['READ_ONLY'])
+            self.public_group.save()
+
         self.public_user = User.objects.create(username='public')
 
         self.analyst = User.objects.create(username='analyst')
-        analyst_group = Group.objects.get(name=settings.DRIVER_GROUPS['READ_WRITE'])
+        try:
+            analyst_group = Group.objects.get(name=settings.DRIVER_GROUPS['READ_WRITE'])
+        except:
+            analyst_group=Group(name=settings.DRIVER_GROUPS['READ_WRITE'])
+            analyst_group.save()
         self.analyst.groups.add(analyst_group)
 
         self.admin = User.objects.get(username=settings.DEFAULT_ADMIN_USERNAME)
