@@ -25,4 +25,7 @@ export class AuthService {
     let a=`${b}/api-token-auth/`
     return this.http.post(a, { username: user, password: pass }, { headers: headers });
   }
+  getGoogleClientId(){
+    return this.http.get(`${this.getBackend()}/openid/googleclientid/`)
+  }
 }

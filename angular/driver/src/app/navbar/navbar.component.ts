@@ -1,13 +1,8 @@
-import { EmitterVisitorContext } from '@angular/compiler';
 import { Component, Input, OnInit, Output, EventEmitter, HostListener } from '@angular/core'
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap'
 import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap'
-import { SearchableFilterPipe } from './search-field.pipe'
-import { EnumPipe } from './../enum.pipe'
-import { JSDocTagName } from '@angular/compiler/src/output/output_ast';
 import { Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
-import { translate } from '@angular/localize/src/translate';
 import { RecordService } from './../record.service'
 import { first } from 'rxjs/operators';
 import { NgxSpinnerService } from "ngx-spinner";
@@ -28,6 +23,7 @@ export class NavbarComponent implements OnInit {
   @Input() iRap: object
   @Input() irapDataset: object
   public filterPage: object
+  @Input() filterObject: object
   @Output() boundaryChange = new EventEmitter<object>()
   @Output() boundaryPolygonChange = new EventEmitter<object>()
   @Output() filterChange = new EventEmitter<object>()
@@ -35,7 +31,7 @@ export class NavbarComponent implements OnInit {
   @Output() reportChange = new EventEmitter<object>()
   @Output() goBack = new EventEmitter<string>()
   @Output() iRapChange = new EventEmitter<object>()
-  @Output() newRecord=new EventEmitter<boolean>()
+  @Output() newRecord = new EventEmitter<boolean>()
   public recordSchema: object
   @Input() stateSelected
   public authenticated: boolean = true
@@ -46,6 +42,7 @@ export class NavbarComponent implements OnInit {
   public schema: any
   public tables: any[]
   public reportFilters: any[]
+  public savedFilters: any[]
   public tabs = [
 
   ]
@@ -60,6 +57,8 @@ export class NavbarComponent implements OnInit {
   irap_email: string
   irap_password: string
   irap_err: string
+  qrvalue: string = ""
+
   constructor(
     private recordService: RecordService,
     public readonly translate: TranslateService,
@@ -67,7 +66,7 @@ export class NavbarComponent implements OnInit {
     private modalService: NgbModal,
     private spinner: NgxSpinnerService) {
   }
-  
+
   ngOnInit(): void {
     this.tabs = [
       { "label": 'Rows', "key": 'row' },
@@ -85,6 +84,7 @@ export class NavbarComponent implements OnInit {
     this.language = localStorage.getItem("Language") || 'en'
     console.log(this.schema)
     this.initDataFrame()
+    this.qrvalue=this.recordService.getBackend()
   }
   onStateSelected(state) {
     this.stateSelected = state
@@ -102,6 +102,11 @@ export class NavbarComponent implements OnInit {
   }
   startFilters(content: any) {
     this.modalService.open(content, { size: 'lg' });
+    this.recordService.getSavedFilters({ limit: 50 }).pipe(first()).subscribe({
+      next: data => {
+        this.savedFilters = data['results']
+      }
+    })
   }
   startIrap(content: any) {
     this.modalService.open(content, {});
@@ -145,20 +150,20 @@ export class NavbarComponent implements OnInit {
           j["contains"] = selected
           jt[k[0]] = j
         }
-        if (k[1]['type'] && k[1]['type'] == 'integer') {
-          if (this.filterPage[t][k[0]].maximum && this.filterPage[t][k[0]].minimum) {
+        if (k[1]['type'] && (k[1]['type'] == 'integer') || (k[1]['type'] == 'number')) {
+          if (this.filterPage[t][k[0]].maximum || this.filterPage[t][k[0]].minimum) {
             jt[k[0]] = {
-              "_rule_type": "intrange",
-              "min": this.filterPage[t][k[0]].minimum,
-              "max": this.filterPage[t][k[0]].maximum
+              "_rule_type": (this.schema['definitions'][t]['multiple']) ? "intrange_multiple" : "intrange"
             }
+            if (this.filterPage[t][k[0]].maximum) jt[k[0]]["max"] = this.filterPage[t][k[0]].maximum
+            if (this.filterPage[t][k[0]].minimum) jt[k[0]]["min"] = this.filterPage[t][k[0]].minimum
           }
         }
       })
       if (Object.keys(jt).length)
         jsonb[t] = jt
     })
-
+    this.filterObject = jsonb
     let result = {
       jsonb: JSON.stringify(jsonb)
     }
@@ -170,7 +175,6 @@ export class NavbarComponent implements OnInit {
     }
 
     localStorage.setItem("current_filter", JSON.stringify(result))
-    result['obj'] = jsonb
     this.filterChange.emit(result)
     this.applyReport(null)
     m.close()
@@ -217,8 +221,8 @@ export class NavbarComponent implements OnInit {
         let e = (k[1]['enum']) ? k[1]['enum'] : (k[1]['items']) ? k[1]['items'].enum : []
         if (!f[t][k[0]]) f[t][k[0]] = {}
         e.forEach(element => {
-          if (this.filter && this.filter['obj'] && this.filter['obj'][t] && this.filter['obj'][t][k[0]] && this.filter['obj'][t][k[0]]['contains']) {
-            if (this.filter['obj'][t][k[0]]['contains'].indexOf(element) >= 0) {
+          if (this.filter && this.filterObject && this.filterObject[t] && this.filterObject[t][k[0]] && this.filterObject[t][k[0]]['contains']) {
+            if (this.filterObject[t][k[0]]['contains'].indexOf(element) >= 0) {
               f[t][k[0]][element] = true
             } else {
               f[t][k[0]][element] = false
@@ -226,9 +230,9 @@ export class NavbarComponent implements OnInit {
           }
         });
         if ((k[1]['type'] == "number") || (k[1]['type'] == "integer")) {
-          if (this.filter && this.filter['obj'] && this.filter['obj'][t] && this.filter['obj'][t][k[0]]) {
-            f[t][k[0]].minimum = this.filter['obj'][t][k[0]]['min']
-            f[t][k[0]].maximum = this.filter['obj'][t][k[0]]['max']
+          if (this.filter && this.filterObject && this.filterObject[t] && this.filterObject[t][k[0]]) {
+            f[t][k[0]].minimum = this.filterObject[t][k[0]]['min']
+            f[t][k[0]].maximum = this.filterObject[t][k[0]]['max']
           }
         }
       })
@@ -338,7 +342,27 @@ export class NavbarComponent implements OnInit {
       )
     }
   }
+  setFilter(fj: any, m: any) {
+    let f = fj['filter_json']
+    console.log(f)
+    Object.entries(this.filterPage).forEach(v => {
+      Object.keys(v[1]).forEach(k => {
+        v[1][k] = {}
+        if (f[`${v[0]}#${k}`]) {
+          if (f[`${v[0]}#${k}`]['contains']) {
+            f[`${v[0]}#${k}`]['contains'].forEach(tx => {
+              v[1][k][tx] = true
+            })
+          }
+        }
+      })
+    })
+    //['filter_json']
+    //this.applyFilter(m)
+  }
   resetFilter() {
+    localStorage.removeItem("current_filter")
+    this.filterChange.emit({})
     this.loadFilter()
   }
   cancelReport(modal: any) {
@@ -368,7 +392,7 @@ export class NavbarComponent implements OnInit {
     })
   }
   loadIrapDataset() {
-   if (this.irapDataset) {
+    if (this.irapDataset) {
       this.spinner.hide()
       return
     }
@@ -431,8 +455,11 @@ export class NavbarComponent implements OnInit {
   resetIrap() {
     this.irapDataset['selected'] = []
   }
-  createRecord(e:any){
+  createRecord(e: any) {
     this.newRecord.emit(true)
-    $('.leaflet-container').css('cursor','crosshair');
+    $('.leaflet-container').css('cursor', 'crosshair');
+  }
+  qrCode(mod){
+    this.modalService.open(mod, { size: 'lg' });    
   }
 }

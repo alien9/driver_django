@@ -13,11 +13,14 @@ export class ListComponent implements OnInit {
   @Input() boundary_polygon_uuid: string
   @Input() recordSchema: object
   @Input() recordList: object
+  @Input() listPage: number
   @Output() viewRecord = new EventEmitter<string>()
+  @Output() setListPage=new EventEmitter<number>()
   public page: number = 0
   public fieldname: string = "Header"
   public table: string
   public field: string
+  math = Math
   constructor(
     private recordService: RecordService,
     private spinner: NgxSpinnerService
@@ -38,15 +41,18 @@ export class ListComponent implements OnInit {
   loadRecords() {
     if (this.boundary_polygon_uuid) this.filter["polygon_id"] = this.boundary_polygon_uuid
     //if (!this.recordList) {
-      this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"] }, { filter: this.filter }).pipe(first()).subscribe(
-        data => {
-          this.recordList = data
-          this.spinner.hide();
-        })
+    this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"] }, { filter: this.filter }).pipe(first()).subscribe(
+      data => {
+        this.recordList = data
+        this.spinner.hide();
+      })
     //}
   }
   view(uuid: string) {
     this.viewRecord.emit(uuid)
+  }
+  setPage(){
+    this.setListPage.emit(this.listPage)
   }
 
 }

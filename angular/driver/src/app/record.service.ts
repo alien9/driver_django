@@ -28,7 +28,11 @@ export class RecordService {
     return this.http.get<any[]>(this.getBackend() + '/api/recordschemas/' + s + '/', { headers: this.getHeaders() })
   }
   upload(obj: Object): Observable<any[]> {
-    return this.http.post<any[]>(this.getBackend() + '/api/records/', obj, { headers: this.getHeaders() })
+    if (obj['uuid']) {
+      return this.http.patch<any[]>(`${this.getBackend()}/api/records/${obj['uuid']}/`, obj, { headers: this.getHeaders() })
+    } else {
+      return this.http.post<any[]>(this.getBackend() + '/api/records/', obj, { headers: this.getHeaders() })
+    }
   }
   getRecords(o: Object, q: any): Observable<any[]> {
     let params = new HttpParams()
@@ -130,7 +134,7 @@ export class RecordService {
     let params = new HttpParams()
       .set('archived', 'false')
       .set('active', 'true')
-      .set('theme',true)
+      .set('theme', true)
     if (q) {
       if (q.filter) {
         for (var k in q.filter) {
@@ -138,6 +142,9 @@ export class RecordService {
         }
       }
     }
-    return this.http.get<any[]>(`${this.getBackend()}/api/records/?${Utils.toQueryString(q)}`, {headers: this.getHeaders()} )
+    return this.http.get<any[]>(`${this.getBackend()}/api/records/?${Utils.toQueryString(q)}`, { headers: this.getHeaders() })
+  }
+  getSavedFilters(q: any): Observable<any[]> {
+    return this.http.get<any[]>(`${this.getBackend()}/api/userfilters/?${Utils.toQueryString(q)}`, { headers: this.getHeaders() })
   }
 }

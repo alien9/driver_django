@@ -18,5 +18,5 @@
     </table>
 </div>
 <div class=list-footer *ngIf=recordList>
-    <ngb-pagination class="d-flex justify-content-center " [collectionSize]="3 " [(page)]="page "></ngb-pagination>
+    <ngb-pagination class="d-flex justify-content-center" [boundaryLinks]="true" [maxSize]="5" [collectionSize]="recordList['count']" [pageSize]=50 [(page)]="listPage" (pageChange)=setPage()></ngb-pagination>
 </div>
