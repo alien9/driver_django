@@ -31,6 +31,9 @@
                         <li>
                             <a class="dropdown-item" href="/static/DriverData.apk">{{'Android app' | translate}}</a>
                         </li>
+                        <li>
+                            <a class="dropdown-item" href="#" (click)=qrCode(qrcode)>{{'Android code' | translate}}</a>
+                        </li>
                         <li *ngIf="config['IRAP_AUTH_ID']!=''">
                             <hr class="dropdown-divider">
                         </li>
@@ -138,9 +141,9 @@
         <div class="table-group" *ngFor="let t of tables">
             <div class="form-group" *ngFor="let k of schema.definitions[t].properties | keyvalue | isSearchable | orderBy">
                 <div class="row" *ngIf="k.value.enum || k.value.items">
-                    <label *ngIf="!schema.definitions[t].multiple">{{schema.title|translate}}:
+                    <label *ngIf="!schema.definitions[t].multiple">{{schema.definitions[t].title|translate}}:
                         {{k.key|translate}}</label>
-                    <label *ngIf="schema.definitions[t].multiple">{{schema.properties[t].title|translate}}:
+                    <label *ngIf="schema.definitions[t].multiple">{{schema.definitions[t].title|translate}}:
                         {{k.key|translate}}</label>
                     <div class="input-group mb-3">
                         <div class="col">
@@ -151,7 +154,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="row" *ngIf="k.value.type=='integer'">
+                <div class="row" *ngIf="k.value.type=='integer' || k.value.type=='number'">
                     <label>{{k.key|translate}}</label>
                     <div class="input-group mb-3">
                         <input type="number" class="form-control" aria-label="minimum" [(ngModel)]="filterPage[t][k.key].minimum">
@@ -163,6 +166,27 @@
                             <i-bs name="x"></i-bs>
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group" *ngIf=savedFilters>
+            <div class="row">
+                <label for="dpf">{{'Saved filters' | translate}}</label>
+            </div>
+            <div class="row">
+                <div class="input-group mb-3">
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr *ngFor="let filter of savedFilters; index as i">
+                                <th>
+                                    {{ filter.label }}
+                                </th>
+                                <td><a href="javascript:void(0);" (click)="setFilter(filter, modal)">{{ 'Load' |
+                                        translate }}</a></td>
+                                <td>{{ 'Delete' | translate }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -185,15 +209,23 @@
         <div class="card" *ngIf=filter>
             <div class="card-body">
                 <h5 class="card-title">{{'Active filter'|translate}}</h5>
-                <p class="card-text" *ngIf="filter['occurred_min'] && filter['occurred_max']">{{'Occurred date'| translate}}: {{filter['occurred_min']|localizedDate}} {{'to'|translate}} {{filter['occurred_max']|localizedDate}}
+                <p class="card-text" *ngIf="filter['occurred_min'] && filter['occurred_max']">
+                    <p>{{'Occurred date'| translate}}: {{filter['occurred_min']|localizedDate}} {{'to'|translate}} {{filter['occurred_max']|localizedDate}}</p>
+                    <span *ngFor="let tab of filterObject | keyvalue">
+                        <p *ngFor="let field of tab.value | keyvalue">{{field.key|translate}}: 
+                            <span *ngIf="field.value['contains']"><span
+                                    *ngFor="let val of field.value['contains']; let i=index; let isLast=last">{{val|translate}}{{isLast?"":",
+                                    "}}</span>
+                    </span>
+                    <span *ngIf="field.value['min']">
+                                        {{'from'||translate}} {{field.value['min']}}
+                                    </span>
+                    <span *ngIf="field.value['max']">
+                                        {{'up to'||translate}} {{field.value['max']}}
+                                    </span>
+
                 </p>
-
-                <span *ngFor="let tab of filter['obj'] | keyvalue">
-                    <p *ngFor="let field of tab.value | keyvalue">{{field.key|translate}}: <span
-                            *ngFor="let val of field.value['contains']; let i=index; let isLast=last">{{val|translate}}{{isLast?"":",
-                            "}}</span></p>
                 </span>
-
             </div>
         </div>
         <div style="display:none">{{'Rows'|translate}}, {{'Columns'|translate}}</div>
@@ -293,5 +325,11 @@
                 <button type="button" class="btn btn-light" (click)="modal.close('cancel')">{{'Close'|translate}}</button>
             </div>
         </div>
+    </div>
+</ng-template>
+
+<ng-template #qrcode let-modal>
+    <div id="qrcode-content" style="text-align:center" class="mt-3 mb-3">
+        <qrcode [qrdata]="qrvalue" [width]="512" [errorCorrectionLevel]="'M'"></qrcode>
     </div>
 </ng-template>

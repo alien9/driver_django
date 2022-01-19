@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { first } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
 import { RecordService } from '../record.service';
+import { SocialAuthService } from 'angularx-social-login';
+import { GoogleLoginProvider } from 'angularx-social-login';
 
 @Component({
     selector: 'app-login',
@@ -18,6 +20,7 @@ export class LoginComponent implements OnInit {
     returnUrl: string;
     errorMessage: string;
     @Output() entering = new EventEmitter<any>()
+    backend: string = ""
 
     constructor(
         private formBuilder: FormBuilder,
@@ -25,6 +28,7 @@ export class LoginComponent implements OnInit {
         private router: Router,
         private authenticationService: AuthService,
         private recordService: RecordService,
+        private socialAuthService: SocialAuthService,
     ) {
     }
     setCookie(name, value, days = 100) {
@@ -61,8 +65,22 @@ export class LoginComponent implements OnInit {
         // get return url from route parameters or default to '/'
         this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
         //this.open(this.bcontent)
+        this.backend = this.recordService.getBackend()
+    }  
+    loginWithGoogle(): void {
+        this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID);
+      }
+    getGoogleId() {
+       /*  google.accounts.id.initialize({
+            client_id: "YOUR_GOOGLE_CLIENT_ID",
+            callback: handleCredentialResponse
+        });
+        google.accounts.id.renderButton(
+            document.getElementById("buttonDiv"),
+            { theme: "outline", size: "large" }  // customization attributes
+        );
+        google.accounts.id.prompt(); // also display the One Tap dialog */
     }
-
     // convenience getter for easy access to form fields
     get f() { return this.loginForm.controls; }
 

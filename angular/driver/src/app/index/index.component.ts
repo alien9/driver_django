@@ -43,6 +43,7 @@ export class IndexComponent implements OnInit {
   public recordsLayer: L.LayerGroup
   public boundary_polygon_uuid: string
   public filter: object
+  filterObject: object;
   public record: object
   public recordList: object
   public map: L.Map
@@ -55,6 +56,7 @@ export class IndexComponent implements OnInit {
   private lastState: string
   public mapillary_id: string
   public irapDataset
+  listPage: number=1
   listening: boolean
   hasIrap: boolean
   locale: string
@@ -132,7 +134,7 @@ export class IndexComponent implements OnInit {
     let fu = localStorage.getItem("current_filter")
     if (fu) {
       this.filter = JSON.parse(fu)
-      this.filter['obj'] = JSON.parse(this.filter['jsonb'])
+      this.filterObject = JSON.parse(this.filter['jsonb'])
     }
 
     let str = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
@@ -384,6 +386,11 @@ export class IndexComponent implements OnInit {
     if (this.state == 'List') {
       this.spinner.show()
       if (this.boundary_polygon_uuid) this.filter["polygon_id"] = this.boundary_polygon_uuid
+      if(this.listPage && this.listPage>1){
+        this.filter['offset']=(this.listPage-1)*50
+      }else{
+        delete this.filter['offset']
+      }
       this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"] }, { filter: this.filter }).pipe(first()).subscribe(
         data => {
           this.spinner.hide()
@@ -397,6 +404,7 @@ export class IndexComponent implements OnInit {
     console.log('setting filter')
     console.log(e)
     this.filter = e
+    this.filterObject = (this.filter && this.filter['jsonb'])?JSON.parse(this.filter['jsonb']):{}
     this.loadRecords(false)
     this.refreshList()
   }
@@ -586,5 +594,21 @@ export class IndexComponent implements OnInit {
     console.log('removeIrap')
     this.hasIrap = false
     this.removeIrapLayer()
+  }
+  reloadRecords(e:any){
+    console.log("Reloading everything")
+    console.log(e)
+    switch(this.state){
+      case 'List':
+        this.refreshList()
+        break
+      case 'Map':
+        this.loadRecords(true)
+        break
+    }
+  }
+  setListPage(e:any){
+    this.listPage=e
+    this.refreshList()
   }
 }
