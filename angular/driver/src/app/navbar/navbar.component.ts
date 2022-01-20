@@ -32,7 +32,7 @@ export class NavbarComponent implements OnInit {
   @Output() goBack = new EventEmitter<string>()
   @Output() iRapChange = new EventEmitter<object>()
   @Output() newRecord = new EventEmitter<boolean>()
-  public recordSchema: object
+  @Input() recordSchema: object
   @Input() stateSelected
   public authenticated: boolean = true
   public occurred_min: Date
@@ -43,6 +43,8 @@ export class NavbarComponent implements OnInit {
   public tables: any[]
   public reportFilters: any[]
   public savedFilters: any[]
+  public filterLabel:string=""
+  public filtering:boolean=false
   public tabs = [
 
   ]
@@ -75,16 +77,16 @@ export class NavbarComponent implements OnInit {
     this.reportHeaders = {
 
     }
-    this.recordSchema = JSON.parse(localStorage.getItem('record_schema'))
-    if (!this.recordSchema) {
-      this.router.navigateByUrl('/login')
-      return
-    }
+    /*     this.recordSchema = JSON.parse(localStorage.getItem('record_schema'))
+        if (!this.recordSchema) {
+          this.router.navigateByUrl('/login')
+          return
+        } */
     this.schema = this.recordSchema['schema']
     this.language = localStorage.getItem("Language") || 'en'
     console.log(this.schema)
     this.initDataFrame()
-    this.qrvalue=this.recordService.getBackend()
+    this.qrvalue = this.recordService.getBackend()
   }
   onStateSelected(state) {
     this.stateSelected = state
@@ -105,6 +107,7 @@ export class NavbarComponent implements OnInit {
     this.recordService.getSavedFilters({ limit: 50 }).pipe(first()).subscribe({
       next: data => {
         this.savedFilters = data['results']
+        this.spinner.hide()
       }
     })
   }
@@ -177,7 +180,8 @@ export class NavbarComponent implements OnInit {
     localStorage.setItem("current_filter", JSON.stringify(result))
     this.filterChange.emit(result)
     this.applyReport(null)
-    m.close()
+    if (m)
+      m.close()
   }
   initDataFrame() {
     this.tables = Object.keys(this.schema['properties'])
@@ -354,12 +358,56 @@ export class NavbarComponent implements OnInit {
               v[1][k][tx] = true
             })
           }
+          if (f[`${v[0]}#${k}`]['max']) {
+            v[1][k]['maximum']=f[`${v[0]}#${k}`]['max']
+          }
+          if (f[`${v[0]}#${k}`]['min']) {
+            v[1][k]['minimum']=f[`${v[0]}#${k}`]['min']
+          }
+
         }
       })
     })
     //['filter_json']
     //this.applyFilter(m)
   }
+  loadSavedFilters(){
+    this.recordService.getSavedFilters({ limit: 50 }).pipe(first()).subscribe({
+          next: data => {
+            this.savedFilters = data['results']
+            this.spinner.hide()
+            this.filtering=false
+          }
+        })
+  }
+  saveFilter(m: any) {
+    this.applyFilter(null)
+    this.spinner.show()
+    this.filtering=true
+    var p={}
+    Object.keys(this.filterObject).forEach(k=>{
+      Object.keys(this.filterObject[k]).forEach(j=>{
+        p[`${k}#${j}`]=this.filterObject[k][j]
+      })
+    })
+    this.recordService.saveFilter({'label':this.filterLabel, filter_json:p}).pipe(first()).subscribe({
+      next: data=>{
+        this.loadSavedFilters()
+      }, error: err=>{
+        console.log(err)  
+      }
+    })
+  }
+
+  deleteFilter(fu:object){
+    this.filtering=true
+    this.recordService.deleteFilter(fu['uuid']).pipe(first()).subscribe({
+      next: data => {
+        this.loadSavedFilters()
+      }
+    })
+  }
+
   resetFilter() {
     localStorage.removeItem("current_filter")
     this.filterChange.emit({})
@@ -459,7 +507,7 @@ export class NavbarComponent implements OnInit {
     this.newRecord.emit(true)
     $('.leaflet-container').css('cursor', 'crosshair');
   }
-  qrCode(mod){
-    this.modalService.open(mod, { size: 'lg' });    
+  qrCode(mod) {
+    this.modalService.open(mod, { size: 'lg' });
   }
 }

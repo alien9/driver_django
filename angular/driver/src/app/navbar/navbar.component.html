@@ -183,7 +183,7 @@
                                 </th>
                                 <td><a href="javascript:void(0);" (click)="setFilter(filter, modal)">{{ 'Load' |
                                         translate }}</a></td>
-                                <td>{{ 'Delete' | translate }}</td>
+                                <td><a href="javascript:void(0);" (click)="deleteFilter(filter)">{{ 'Delete' | translate }}</a></td>
                             </tr>
                         </tbody>
                     </table>
@@ -192,144 +192,148 @@
         </div>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" (click)="applyFilter(modal);">{{'Apply'|translate}}</button>
-        <button type="button" class="btn btn-outline-secondary" (click)="resetFilter()">{{'Reset'|translate}}</button>
+        <input type="text" [(ngModel)]=filterLabel placeholder="{{'Filter name'| translate}}">
+        <button type="button" class="btn btn-outline-secondary" (click)="saveFilter(modal);" [disabled]="filterLabel.length<1 && filtering">{{'Save'|translate}}</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="applyFilter(modal);" [disabled]="filtering">{{'Apply'|translate}}</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="resetFilter()" [disabled]="filtering">{{'Reset'|translate}}</button>
         <button type="button" class="btn btn-outline-secondary" (click)="modal.close('Close click')">{{'Close'|translate}}</button>
     </div>
 </ng-template>
 
 <ng-template #report let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title">{{'Report' | translate}}</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
+    <div class="modal-header ">
+        <h4 class="modal-title ">{{'Report' | translate}}</h4>
+        <button type="button " class="close " aria-label="Close " (click)="modal.dismiss( 'Cross click') ">
+            <span aria-hidden="true ">&times;</span>
         </button>
     </div>
-    <div class="modal-body">
-        <div class="card" *ngIf=filter>
-            <div class="card-body">
-                <h5 class="card-title">{{'Active filter'|translate}}</h5>
-                <p class="card-text" *ngIf="filter['occurred_min'] && filter['occurred_max']">
-                    <p>{{'Occurred date'| translate}}: {{filter['occurred_min']|localizedDate}} {{'to'|translate}} {{filter['occurred_max']|localizedDate}}</p>
-                    <span *ngFor="let tab of filterObject | keyvalue">
-                        <p *ngFor="let field of tab.value | keyvalue">{{field.key|translate}}: 
-                            <span *ngIf="field.value['contains']"><span
-                                    *ngFor="let val of field.value['contains']; let i=index; let isLast=last">{{val|translate}}{{isLast?"":",
-                                    "}}</span>
+    <div class="modal-body ">
+        <div class="card " *ngIf=filter>
+            <div class="card-body ">
+                <h5 class="card-title ">{{'Active filter'|translate}}</h5>
+                <p class="card-text " *ngIf="filter[ 'occurred_min'] && filter[ 'occurred_max'] ">
+                    <p>{{'Occurred date'| translate}}: {{filter['occurred_min']|localizedDate}} {{'to'|translate}} {{filter['occurred_max']|localizedDate}}
+                    </p>
+                    <span *ngFor="let tab of filterObject | keyvalue ">
+                    <p *ngFor="let field of tab.value | keyvalue ">{{field.key|translate}}:
+                        <span *ngIf="field.value[ 'contains'] "><span
+                                *ngFor="let val of field.value[ 'contains']; let i=index; let isLast=last ">{{val|translate}}{{isLast?"
+                                ":", "}}</span>
                     </span>
-                    <span *ngIf="field.value['min']">
-                                        {{'from'||translate}} {{field.value['min']}}
-                                    </span>
-                    <span *ngIf="field.value['max']">
-                                        {{'up to'||translate}} {{field.value['max']}}
-                                    </span>
+                    <span *ngIf="field.value[ 'min'] ">
+                            {{'from'||translate}} {{field.value['min']}}
+                        </span>
+                    <span *ngIf="field.value[ 'max'] ">
+                            {{'up to'||translate}} {{field.value['max']}}
+                        </span>
 
                 </p>
                 </span>
             </div>
         </div>
-        <div style="display:none">{{'Rows'|translate}}, {{'Columns'|translate}}</div>
-        <div class="input-group mb-3 mt-3" *ngFor="let tab of tabs">
-            <div class="input-group-prepend">
-                <span class="input-group-text" id="basic-addon3">{{tab['label']|translate}}:</span>
+        <div style="display:none ">{{'Rows'|translate}}, {{'Columns'|translate}}</div>
+        <div class="input-group mb-3 mt-3 " *ngFor="let tab of tabs ">
+            <div class="input-group-prepend ">
+                <span class="input-group-text " id="basic-addon3 ">{{tab['label']|translate}}:</span>
             </div>
-            <select class="custom-select" [(ngModel)]=reportHeaders[tab.key] (change)=setReportHeaders($event) id="{{tab.key}}_header">
-                <optgroup label="{{'Geography'|translate}}" *ngIf=boundaries.length>
-                    <option [value]="'boundary_id,'+item.uuid" *ngFor="let item of boundaries">{{item.label}}</option>
+            <select class="custom-select " [(ngModel)]=reportHeaders[tab.key] (change)=setReportHeaders($event) id="{{tab.key}}_header ">
+                <optgroup label="{{ 'Geography'|translate}} " *ngIf=boundaries.length>
+                    <option [value]=" 'boundary_id,'+item.uuid " *ngFor="let item of boundaries ">{{item.label}}
+                    </option>
                 </optgroup>
-                <optgroup label="{{'Time'|translate}}" *ngIf=wantsTime(tab.key)>
-                    <option value="period_type,day">{{'day'|translate}}</option>
-                    <option value="period_type,day_of_week">{{'day_of_week'|translate}}</option>
-                    <option value="period_type,hour_of_day">{{'hour_of_day'|translate}}</option>
-                    <option value="period_type,month">{{'month'|translate}}</option>
-                    <option value="period_type,week">{{'week'|translate}}</option>
-                    <option value="period_type,year">{{'year'|translate}}</option>
+                <optgroup label="{{ 'Time'|translate}} " *ngIf=wantsTime(tab.key)>
+                    <option value="period_type,day ">{{'day'|translate}}</option>
+                    <option value="period_type,day_of_week ">{{'day_of_week'|translate}}</option>
+                    <option value="period_type,hour_of_day ">{{'hour_of_day'|translate}}</option>
+                    <option value="period_type,month ">{{'month'|translate}}</option>
+                    <option value="period_type,week ">{{'week'|translate}}</option>
+                    <option value="period_type,year ">{{'year'|translate}}</option>
                 </optgroup>
-                <optgroup label="{{'Filter'|translate}}">
-                    <option [value]="'choices_path,'+field['table']+',properties,'+field['title']"
-                        *ngFor="let field of reportFilters">
+                <optgroup label="{{ 'Filter'|translate}} ">
+                    <option [value]=" 'choices_path,'+field[ 'table']+ ',properties,'+field[ 'title'] "
+                        *ngFor="let field of reportFilters ">
                         {{field['title']||translate}}</option>
                 </optgroup>
             </select>
         </div>
-        <div class="input-group mb-3" *ngIf="boundaries.length && wantsGeography()">
-            <div class="input-group-prepend">
-                <span class="input-group-text" id="basic-addon3">{{'Aggregate by boundary'|translate}}:</span>
+        <div class="input-group mb-3 " *ngIf="boundaries.length && wantsGeography() ">
+            <div class="input-group-prepend ">
+                <span class="input-group-text " id="basic-addon3 ">{{'Aggregate by boundary'|translate}}:</span>
             </div>
-            <select class="custom-select" [(ngModel)]="reportHeaders['boundary']" (change)="setReportHeaders($event)">
+            <select class="custom-select " [(ngModel)]="reportHeaders[ 'boundary'] " (change)="setReportHeaders($event) ">
                 <option></option>
-                <option [value]="item.uuid" *ngFor="let item of boundaries">{{item.label}}</option>
+                <option [value]="item.uuid " *ngFor="let item of boundaries ">{{item.label}}</option>
             </select>
         </div>
     </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-light" (click)="resetReport();startFilters(viewpoint)">{{'Reset'|translate}}</button>
-        <button type="button" class="btn btn-light" [disabled]="!reportHeaders['row'] || !reportHeaders['col']" (click)="applyReport(modal)">{{'Apply'|translate}}</button>
-        <button type="button" class="btn btn-light" (click)="cancelReport(modal)">{{'Close'|translate}}</button>
+    <div class="modal-footer ">
+        <button type="button " class="btn btn-light " (click)="resetReport();startFilters(viewpoint) ">{{'Reset'|translate}}</button>
+        <button type="button " class="btn btn-light " [disabled]="!reportHeaders[ 'row'] || !reportHeaders[ 'col'] " (click)="applyReport(modal) ">{{'Apply'|translate}}</button>
+        <button type="button " class="btn btn-light " (click)="cancelReport(modal) ">{{'Close'|translate}}</button>
     </div>
 </ng-template>
 
 <ng-template #vida let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title">iRap ViDA</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
+    <div class="modal-header ">
+        <h4 class="modal-title ">iRap ViDA</h4>
+        <button type="button " class="close " aria-label="Close " (click)="modal.dismiss( 'Cross click') ">
+            <span aria-hidden="true ">&times;</span>
         </button>
     </div>
-    <div class="modal-body">
-        <div class="card" style=" max-width:300px;margin:auto;background-color:black;" *ngIf="!iRap">
+    <div class="modal-body ">
+        <div class="card " style=" max-width:300px;margin:auto;background-color:black; " *ngIf="!iRap ">
             <div class="card-body ">
-                <div class="text-center">
+                <div class="text-center ">
                     <form>
-                        <img src="https://sso.irap.org/img/iRAP_logo_200x79.png" style="margin-bottom:5%" width="100px">
-                        <label class="sr-only" for="email">Email</label>
-                        <input autofocus="" class="form-control" [ngModelOptions]="{standalone: true}" id="emailaddress" placeholder="Email" required="" type="email" [(ngModel)]="irap_email" ng-reflect-model="jvelasquez@worldbank.org">
-                        <label class="sr-only" for="password">Password</label>
-                        <input autofocus="" class="form-control" [ngModelOptions]="{standalone: true}" id="password" placeholder="Password" required="" type="password" ng-reflect-model="Admin@123" [(ngModel)]=irap_password>
-                        <div class="mt-3">
-                            <button class="btn btn-md btn-primary btn-block" style="background-color: white;color: black;" (click)=iRapLogin(vida)>
+                        <img src="https://sso.irap.org/img/iRAP_logo_200x79.png " style="margin-bottom:5% " width="100px ">
+                        <label class="sr-only " for="email ">Email</label>
+                        <input autofocus=" " class="form-control " [ngModelOptions]="{standalone: true} " id="emailaddress " placeholder="Email " required=" " type="email " [(ngModel)]="irap_email " ng-reflect-model="jvelasquez@worldbank.org ">
+                        <label class="sr-only " for="password ">Password</label>
+                        <input autofocus=" " class="form-control " [ngModelOptions]="{standalone: true} " id="password " placeholder="Password " required=" " type="password " ng-reflect-model="Admin@123 " [(ngModel)]=irap_password>
+                        <div class="mt-3 ">
+                            <button class="btn btn-md btn-primary btn-block " style="background-color: white;color: black; " (click)=iRapLogin(vida)>
                                 {{'Sign In'|translate}}
                             </button>
                         </div>
-                        <div class="row" style="margin-top:5%;">
-                            <label class="w-50 float-left">
-                                <a href="https://sso.irap.org/register?broker_id=8" style="color: orange;"
-                                    target="_blank">{{'Register'|translate}}</a>
+                        <div class="row " style="margin-top:5%; ">
+                            <label class="w-50 float-left ">
+                                <a href="https://sso.irap.org/register?broker_id=8 " style="color: orange; "
+                                    target="_blank ">{{'Register'|translate}}</a>
                             </label>
-                            <label class="w-50 float-left">
-                                <a href="https://sso.irap.org/forgotten_password?broker_id=8" style="color: orange;"
-                                    target="_blank" ng-reflect-translate="">
+                            <label class="w-50 float-left ">
+                                <a href="https://sso.irap.org/forgotten_password?broker_id=8 " style="color: orange; "
+                                    target="_blank " ng-reflect-translate=" ">
                                     {{'Forgot Password'|translate}}
                                 </a>
                             </label>
                         </div>
-                        <div class="row">{{irap_err}}</div>
+                        <div class="row ">{{irap_err}}</div>
                     </form>
                 </div>
             </div>
         </div>
         <div *ngIf=irapDataset>
             <ngb-accordion #acc="ngbAccordion" activeIds="ngb-panel-irap" [closeOthers]="true">
-                <ngb-panel [title]="d['name']" *ngFor="let d of irapDataset['data']; let i=index" [cardClass]="hasSelection(d['dataset_data'])">
+                <ngb-panel [title]="d['name']" *ngFor="let d of irapDataset[ 'data']; let i=index " [cardClass]="hasSelection(d[ 'dataset_data']) ">
                     <ng-template ngbPanelContent>
-                        <div class="input-group" *ngFor="let de of d['dataset_data']; let j=index">
-                            <label><input type="checkbox" [(ngModel)]="irapDataset['selected'][de['id']]">
+                        <div class="input-group" *ngFor="let de of d[ 'dataset_data']; let j=index ">
+                            <label><input type="checkbox " [(ngModel)]="irapDataset[ 'selected'][de[ 'id']] ">
                                 {{de['name']}}</label>
                         </div>
                     </ng-template>
                 </ngb-panel>
             </ngb-accordion>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" (click)="resetIrap()">{{'Reset'|translate}}</button>
-                <button type="button" class="btn btn-light" (click)="applyIrap(modal)">{{'Apply'|translate}}</button>
-                <button type="button" class="btn btn-light" (click)="modal.close('cancel')">{{'Close'|translate}}</button>
+            <div class="modal-footer ">
+                <button type="button " class="btn btn-light " (click)="resetIrap() ">{{'Reset'|translate}}</button>
+                <button type="button " class="btn btn-light " (click)="applyIrap(modal) ">{{'Apply'|translate}}</button>
+                <button type="button " class="btn btn-light " (click)="modal.close( 'cancel') ">{{'Close'|translate}}</button>
             </div>
         </div>
     </div>
 </ng-template>
 
 <ng-template #qrcode let-modal>
-    <div id="qrcode-content" style="text-align:center" class="mt-3 mb-3">
-        <qrcode [qrdata]="qrvalue" [width]="512" [errorCorrectionLevel]="'M'"></qrcode>
+    <div id="qrcode-content " style="text-align:center " class="mt-3 mb-3 ">
+        <qrcode [qrdata]="qrvalue " [width]="512 " [errorCorrectionLevel]=" 'M' "></qrcode>
     </div>
 </ng-template>

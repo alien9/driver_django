@@ -4,8 +4,6 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { first } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
 import { RecordService } from '../record.service';
-import { SocialAuthService } from 'angularx-social-login';
-import { GoogleLoginProvider } from 'angularx-social-login';
 
 @Component({
     selector: 'app-login',
@@ -28,7 +26,6 @@ export class LoginComponent implements OnInit {
         private router: Router,
         private authenticationService: AuthService,
         private recordService: RecordService,
-        private socialAuthService: SocialAuthService,
     ) {
     }
     setCookie(name, value, days = 100) {
@@ -68,24 +65,9 @@ export class LoginComponent implements OnInit {
         this.backend = this.recordService.getBackend()
     }  
     loginWithGoogle(): void {
-        window.location.href='/oidc/authenticate'
-        /* this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID).then(o=>{
-            alert('OK')
-            console.log(o)
-        }); */
+        window.location.href=`${this.authenticationService.getBackend()}/oidc/authenticate/`
       }
-    getGoogleId() {
-       /*  google.accounts.id.initialize({
-            client_id: "YOUR_GOOGLE_CLIENT_ID",
-            callback: handleCredentialResponse
-        });
-        google.accounts.id.renderButton(
-            document.getElementById("buttonDiv"),
-            { theme: "outline", size: "large" }  // customization attributes
-        );
-        google.accounts.id.prompt(); // also display the One Tap dialog */
-    }
-    // convenience getter for easy access to form fields
+
     get f() { return this.loginForm.controls; }
 
     onSubmit() {
@@ -106,7 +88,10 @@ export class LoginComponent implements OnInit {
                         this.setCookie('AuthService.isAdmin', data["groups_name"].indexOf('admin') > 0)
                         localStorage.setItem('token', data['token']);
                         localStorage.setItem('config', JSON.stringify(data['config']));
-                        this.recordService.getRecordType().subscribe(
+                        this.entering.emit(null)
+                        this.loading = false;
+                        this.router.navigateByUrl('/')
+                        /* this.recordService.getRecordType().subscribe(
                             rata => {
                                 if (rata['results']) {
                                     let schema_uuid;
@@ -130,7 +115,7 @@ export class LoginComponent implements OnInit {
                                     this.errorMessage = data['config'].PRIMARY_LABEL + " record type not found";
                                 }
                                 this.loading = false;
-                            })
+                            }) */
                     }
 
                 }, error: err => {
