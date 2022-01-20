@@ -27,7 +27,7 @@ if [ "${WINDSHAFT_HOST}" == "" ]; then
 fi
 
 if [[ ! -f driver-${CONTAINER_NAME}.conf ]]; then
-     cp driver-app.conf driver-${CONTAINER_NAME}.conf
+     cp driver.conf driver-${CONTAINER_NAME}.conf
 fi
 sed -i -e "s/\s[^ ]*\s*#HOST_NAME$/ ${HOST_NAME}; #HOST_NAME/g" \
 -e "s,\s[^ ]*\s*#STATIC_ROOT$, ${STATIC_ROOT}; #STATIC_ROOT,g" \
