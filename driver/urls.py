@@ -72,6 +72,7 @@ urlpatterns = [
     url('api/irap-getdataset/', getdataset),
     url('api/irap-getlat_lon/', getlat_lon),
     url('api/irap-fatalitydata/', fatalitydata),
+    url(r'^get_config/', auth_views.get_config)
 ]
 
 # i18n for django-admin

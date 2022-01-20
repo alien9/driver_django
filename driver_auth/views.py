@@ -181,3 +181,13 @@ class DriverObtainAuthToken(ObtainAuthToken):
 
 obtain_auth_token = csrf_exempt(DriverObtainAuthToken.as_view())
 sso_auth_token = DriverSsoAuthToken.as_view()
+
+def get_config(request):
+    conf={}
+    for k,v in settings.CONSTANCE_CONFIG.items():
+        conf[k]=getattr(config, k)
+    conf['LANGUAGES']=[]
+    for ds in Dictionary.objects.all():
+        conf['LANGUAGES'].append({"code":ds.language_code, "name":ds.name})
+    return JsonResponse(conf)
+    

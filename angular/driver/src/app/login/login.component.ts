@@ -68,7 +68,11 @@ export class LoginComponent implements OnInit {
         this.backend = this.recordService.getBackend()
     }  
     loginWithGoogle(): void {
-        this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID);
+        window.location.href='/oidc/authenticate'
+        /* this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID).then(o=>{
+            alert('OK')
+            console.log(o)
+        }); */
       }
     getGoogleId() {
        /*  google.accounts.id.initialize({

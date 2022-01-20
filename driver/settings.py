@@ -416,11 +416,10 @@ AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
 
 if GOOGLE_OAUTH_CLIENT_ID:
     AUTHENTICATION_BACKENDS += ('mozilla_django_oidc.auth.OIDCAuthenticationBackend',)
-    #AUTHENTICATION_BACKENDS += ('driver_auth.oidc_callback.OIDC_Callback',)
     OIDC_OP_AUTHORIZATION_ENDPOINT='https://accounts.google.com/o/oauth2/v2/auth'
     OIDC_OP_TOKEN_ENDPOINT='https://www.googleapis.com/oauth2/v4/token'
     OIDC_OP_USER_ENDPOINT="https://www.googleapis.com/oauth2/v3/userinfo"
-    #OIDC_REDIRECT_REQUIRE_HTTPS=True
+    OIDC_REDIRECT_REQUIRE_HTTPS=not DEBUG
     OIDC_RP_SIGN_ALGO="RS256"
     OIDC_OP_JWKS_ENDPOINT="https://www.googleapis.com/oauth2/v3/certs"
     LOGIN_REDIRECT_URL="/"
@@ -548,6 +547,4 @@ CONSTANCE_CONFIG = {
     'IRAP_API_KEY': ("", _("iRAP API key")),
     'IRAP_PRIVATE_KEY': ("", _("iRAP Private key")),
     'OPENWEATHER_RAPID_KEY':((os.getenv('OPENWEATHER_RAPID_KEY', '')), _("Open Weather API")),
-    'GOOGLE_OAUTH_CLIENT_ID': (GOOGLE_OAUTH_CLIENT_ID, _("Google Client ID")),
-    'GOOGLE_OAUTH_SECRET': (GOOGLE_OAUTH_CLIENT_SECRET, _("Google Client Secret")),
 }
