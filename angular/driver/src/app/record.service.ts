@@ -147,4 +147,13 @@ export class RecordService {
   getSavedFilters(q: any): Observable<any[]> {
     return this.http.get<any[]>(`${this.getBackend()}/api/userfilters/?${Utils.toQueryString(q)}`, { headers: this.getHeaders() })
   }
+  saveFilter(data: any): Observable<object> {    
+    return this.http.post(`${this.getBackend()}/api/userfilters/`, data, { headers: this.getHeaders() })
+  }
+  deleteFilter(fud:string){
+    return this.http.delete(`${this.getBackend()}/api/userfilters/${fud}/`, { headers: this.getHeaders() })
+  }
+  getConfig(): Observable<any[]>{
+    return this.http.get<any[]>(`${this.getBackend()}/get_config/`, { headers: this.getHeaders() })
+  }
 }

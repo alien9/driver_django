@@ -27,7 +27,7 @@ export class IndexComponent implements OnInit {
       $('.leaflet-container').css('cursor', 'grab');
     }
   }
-  public config: object
+  public config: object={}
   public boundaries: any[] = []
   public boundary: any
   public boundaryPolygons: any[]
@@ -56,7 +56,7 @@ export class IndexComponent implements OnInit {
   private lastState: string
   public mapillary_id: string
   public irapDataset
-  listPage: number=1
+  listPage: number = 1
   listening: boolean
   hasIrap: boolean
   locale: string
@@ -93,11 +93,42 @@ export class IndexComponent implements OnInit {
       this.router.navigateByUrl('/login')
       return
     }
+    this.recordService.getConfig().pipe(first()).subscribe(data => {
+      localStorage.setItem('config', JSON.stringify(data));
+      this.recordService.getRecordType().subscribe(
+        rata => {
+          if (rata['results']) {
+            let schema_uuid;
+            for (let i = 0; i < rata['results'].length; i++) {
+              if (rata['results'][i]['label'] == data['PRIMARY_LABEL']) {
+                schema_uuid = rata['results'][i]['current_schema'];
+              };
+            }
+            if (schema_uuid) {
+              this.recordService.getRecordSchema(schema_uuid).subscribe(
+                sata => {
+                  localStorage.setItem('record_schema', JSON.stringify(sata));
+                  this.recordSchema=sata
+                  //this.entering.emit(null)
+                  //this.router.navigateByUrl('/')
+                  this.afterInit()
+                }
+              )
+            } else {
+              alert("record schema not found for " + data['PRIMARY_LABEL']);
+            }
+          } else {
+            alert(data['PRIMARY_LABEL'] + " record type not found")
+          }
+        })
+    })
+  }
+  afterInit() {
     let w = document.cookie.match(/AuthService\.canWrite=([^ ;]*);/).pop()
     if (w && w.length) this.canWrite = true
     this.state = localStorage.getItem('state') || 'Map'
     this.popContent = $("#popup-content")[0]
-    this.config = JSON.parse(localStorage.getItem("config"))
+    this.config = (localStorage.getItem("config")) ? JSON.parse(localStorage.getItem("config")) : {}
     const mapillary_auth: string = this.route.snapshot.queryParamMap.get('code');
     if (mapillary_auth) {
       localStorage.setItem('mapillary_auth', mapillary_auth)
@@ -114,7 +145,7 @@ export class IndexComponent implements OnInit {
       this.weekdays[d.getDay()] = d.toLocaleDateString(this.locale, { weekday: 'long' })
       d.setDate(d.getDate() + 1)
     }
-    this.recordSchema = JSON.parse(localStorage.getItem("record_schema"))
+    //this.recordSchema = JSON.parse(localStorage.getItem("record_schema"))
     this.backend = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
 
     let tables = Object.keys(this.recordSchema['schema']['properties'])
@@ -300,7 +331,7 @@ export class IndexComponent implements OnInit {
               'occurred_min': df.toISOString()
             }
             this.setFilter(fu)
-          }else{
+          } else {
             //nothing to show
             this.loadRecords(true)
             this.refreshList()
@@ -386,9 +417,9 @@ export class IndexComponent implements OnInit {
     if (this.state == 'List') {
       this.spinner.show()
       if (this.boundary_polygon_uuid) this.filter["polygon_id"] = this.boundary_polygon_uuid
-      if(this.listPage && this.listPage>1){
-        this.filter['offset']=(this.listPage-1)*50
-      }else{
+      if (this.listPage && this.listPage > 1) {
+        this.filter['offset'] = (this.listPage - 1) * 50
+      } else {
         delete this.filter['offset']
       }
       this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"] }, { filter: this.filter }).pipe(first()).subscribe(
@@ -404,7 +435,7 @@ export class IndexComponent implements OnInit {
     console.log('setting filter')
     console.log(e)
     this.filter = e
-    this.filterObject = (this.filter && this.filter['jsonb'])?JSON.parse(this.filter['jsonb']):{}
+    this.filterObject = (this.filter && this.filter['jsonb']) ? JSON.parse(this.filter['jsonb']) : {}
     this.loadRecords(false)
     this.refreshList()
   }
@@ -419,19 +450,19 @@ export class IndexComponent implements OnInit {
     console.log('new record')
     console.log(v)
     this.listening = false
-    let d=new Date()
+    let d = new Date()
     this.record = {
-      'geom': {"type":"Point", "coordinates":[v.latlng.lng, v.latlng.lat]},
+      'geom': { "type": "Point", "coordinates": [v.latlng.lng, v.latlng.lat] },
       'occurred_from': d,
       'occurred_to': d,
       'data': {},
-      "schema":this.recordSchema["uuid"]
+      "schema": this.recordSchema["uuid"]
     }
     Object.entries(this.recordSchema['schema']['definitions']).forEach(k => {
       if (this.recordSchema['schema']['definitions'][k[0]].multiple) {
         this.record['data'][k[0]] = []
       } else {
-        this.record['data'][k[0]] = {'_localId':uuid.v4()}
+        this.record['data'][k[0]] = { '_localId': uuid.v4() }
         Object.keys(k[1]['properties']).forEach(l => {
           //this.record['data'][k[0]][l] = null
         })
@@ -595,10 +626,10 @@ export class IndexComponent implements OnInit {
     this.hasIrap = false
     this.removeIrapLayer()
   }
-  reloadRecords(e:any){
+  reloadRecords(e: any) {
     console.log("Reloading everything")
     console.log(e)
-    switch(this.state){
+    switch (this.state) {
       case 'List':
         this.refreshList()
         break
@@ -607,8 +638,8 @@ export class IndexComponent implements OnInit {
         break
     }
   }
-  setListPage(e:any){
-    this.listPage=e
+  setListPage(e: any) {
+    this.listPage = e
     this.refreshList()
   }
 }
