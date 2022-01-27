@@ -58,8 +58,7 @@ if [ "${EXISTE_DJANGO}" != "" ]; then
                * ) echo "Please answer yes or no.";;
           esac
      done
-
-
+     docker restart "driver-cron-${CONTAINER_NAME}"
 fi
 if [ $STATIC_ROOT != $WINDSHAFT_FILES ]; then
      sudo cp -r web "$STATIC_ROOT/"
