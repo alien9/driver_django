@@ -103,8 +103,6 @@ export class MapComponent implements OnInit {
   }
   clickMap(e: any) {
     $('.leaflet-container').css('cursor','grab');
-    console.log(e)
-    console.log(this.mapListening)
     if(this.mapListening){
       $('.leaflet-container').css('cursor','grab');
       this.newRecord.emit({
