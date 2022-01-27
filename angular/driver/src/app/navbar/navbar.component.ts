@@ -59,7 +59,7 @@ export class NavbarComponent implements OnInit {
   irap_email: string
   irap_password: string
   irap_err: string
-  qrvalue: string = ""
+  qrvalue: string
 
   constructor(
     private recordService: RecordService,

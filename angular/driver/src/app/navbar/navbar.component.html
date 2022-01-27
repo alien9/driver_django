@@ -340,7 +340,8 @@
 </ng-template>
 
 <ng-template #qrcode let-modal>
-    <div id="qrcode-content" style="text-align:center" class="mt-3 mb-3">
-        <qrcode [qrdata]="qrvalue" [width]="512" [errorCorrectionLevel]=" 'M'"></qrcode>
+    <div id="qrcode-content" style="text-align:center" class="mt-3 mb-3" *ngIf="qrvalue">
+        <h4>{{'Place the QR scanner to set up the Android app'|translate}}</h4>
+        <qrcode [qrdata]="qrvalue" [width]="512" [errorCorrectionLevel]="'M'"></qrcode>
     </div>
 </ng-template>
