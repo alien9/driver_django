@@ -58,6 +58,7 @@ import { ChartsComponent } from './charts/charts.component';
 import { IrapPopupComponent } from './irap-popup/irap-popup.component';
 import { AuthService } from './auth.service'
 import { map } from 'rxjs/operators';
+import { DuplicateComponent } from './duplicate/duplicate.component';
 
 const socialConfigFactory = (restService: AuthService) => {
   return restService.getGoogleClientId().pipe(map(config => {
@@ -126,6 +127,7 @@ const icons = {
     ReportComponent,
     ChartsComponent,
     IrapPopupComponent,
+    DuplicateComponent,
   ],
   imports: [
     BrowserModule,

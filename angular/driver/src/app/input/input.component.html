@@ -102,9 +102,7 @@
             </ng-template>
         </li>
     </ul>
-
     <div [ngbNavOutlet]="nav" class="mt-2"></div>
-
 </div>
 <div class="modal-footer">
     <button type="button" class="btn btn-dark" (click)="deleteRecord(modal)" *ngIf="editing">{{'Delete'|translate}}</button>

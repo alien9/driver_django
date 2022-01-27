@@ -147,13 +147,30 @@ export class RecordService {
   getSavedFilters(q: any): Observable<any[]> {
     return this.http.get<any[]>(`${this.getBackend()}/api/userfilters/?${Utils.toQueryString(q)}`, { headers: this.getHeaders() })
   }
-  saveFilter(data: any): Observable<object> {    
+  saveFilter(data: any): Observable<object> {
     return this.http.post(`${this.getBackend()}/api/userfilters/`, data, { headers: this.getHeaders() })
   }
-  deleteFilter(fud:string){
+  deleteFilter(fud: string) {
     return this.http.delete(`${this.getBackend()}/api/userfilters/${fud}/`, { headers: this.getHeaders() })
   }
-  getConfig(): Observable<any[]>{
+  getConfig(): Observable<any[]> {
     return this.http.get<any[]>(`${this.getBackend()}/get_config/`, { headers: this.getHeaders() })
+  }
+  getDuplicates(r, page): Observable<any[]> {
+    let q = {
+      record_type: r,
+      offset: page,
+      limit: 50,
+      resolved: 'False'
+    }
+    return this.http.get<any[]>(`${this.getBackend()}/api/duplicates/?${Utils.toQueryString(q)}`, { headers: this.getHeaders() })
+  }
+  resolveDuplicate(uuid: string, record_uuid: string) {
+    let params = {
+      'uuid': uuid
+    }
+    if(record_uuid) params['recordUUID']=record_uuid
+    let q = { limit: 'all', resolved: 'False' }
+    return this.http.patch(`${this.getBackend()}/api/duplicates/${uuid}/resolve/?${Utils.toQueryString(q)}`, params, { headers: this.getHeaders() })
   }
 }

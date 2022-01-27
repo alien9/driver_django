@@ -48,6 +48,7 @@ export class IndexComponent implements OnInit {
   public recordList: object
   public map: L.Map
   record_uuid: string
+  recordtype_uuid:string
   public critical: object = {}
   public report: object
   public editing: boolean = false
@@ -102,6 +103,7 @@ export class IndexComponent implements OnInit {
             for (let i = 0; i < rata['results'].length; i++) {
               if (rata['results'][i]['label'] == data['PRIMARY_LABEL']) {
                 schema_uuid = rata['results'][i]['current_schema'];
+                this.recordtype_uuid=rata['results'][i]['uuid']
               };
             }
             if (schema_uuid) {
@@ -124,8 +126,8 @@ export class IndexComponent implements OnInit {
     })
   }
   afterInit() {
-    let w = document.cookie.match(/AuthService\.canWrite=([^ ;]*);/).pop()
-    if (w && w.length) this.canWrite = true
+    let w = document.cookie.match(/AuthService\.canWrite=([^ ;]*);/)
+    if (w && w.length && w[0]=='true') this.canWrite = true
     this.state = localStorage.getItem('state') || 'Map'
     this.popContent = $("#popup-content")[0]
     this.config = (localStorage.getItem("config")) ? JSON.parse(localStorage.getItem("config")) : {}

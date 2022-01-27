@@ -1,0 +1,87 @@
+<div *ngIf="duplicates" class=scrollable-container>
+    <div class=m-2>
+        <h3>
+            {{'Potential duplicates'|translate}}
+        </h3>
+        <table class="table">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">{{'Date and time'|translate}}</th>
+                    <th scope="col">{{'Location'|translate}}</th>
+                    <th scope="col">{{'Date and time'|translate}}</th>
+                    <th scope="col">{{'Location'|translate}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let r of duplicates?duplicates['results']:[] ">
+                    <td><a href="#" (click)="view(r, viewdups)">{{r.record.occurred_from|date:"medium"}}</a></td>
+                    <td>{{r.record.location_text|firstpart}}</td>
+                    <td><a href="#" (click)="view(r, viewdups)">{{r.duplicate_record.occurred_from|date:"medium"}}</a>
+                    </td>
+                    <td>{{r.duplicate_record.location_text|firstpart}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class=list-footer *ngIf=duplicates>
+        <ngb-pagination class="d-flex justify-content-center" [boundaryLinks]="true" [maxSize]="5" [collectionSize]="duplicates['count']" [pageSize]=50 [(page)]="duplicatePage" (pageChange)=setPage()>
+        </ngb-pagination>
+    </div>
+
+    <ng-template #viewdups let-modal>
+        <div class="modal-header">
+            <h4 class="modal-title">{{'Record duplicates' | translate}}</h4>
+            <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="duplicate-form" *ngFor="let key of keys; let i=index">
+                <div class="small-map" *ngIf=options>
+                    <div class="input-map" leaflet [leafletLayers]=layers[i] [leafletLayersControl]="layersControl[i]" [leafletOptions]="options[i]" (leafletMapReady)=mapReady($event)></div>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <span>{{'Date and time'|translate}}</span>: {{record[key]["occurred_from"]|localizedDate }} {{record[key]["occurred_from"]|localizedDate:'shortTime' }}}
+                    </li>
+                    <li class="list-group-item">
+                        <span>{{'Location'|translate}}</span>: {{record[key]["location_text"] }}
+                    </li>
+                </ul>
+                <ul class="list-group list-group-flush mb-2" *ngFor="let k of recordSchema['schema']['definitions']|keyvalue|orderBy">
+                    <li class="list-group-item" ngbNavLink *ngIf="!k.value.multiple">{{k.value.title|translate}}</li>
+                    <li class="list-group-item" ngbNavLink *ngIf="k.value.multiple">{{k.value.plural_title|translate}}
+                    </li>
+                    <span *ngIf="!k.value.multiple">
+                        <li *ngFor="let f of k.value.properties|keyvalue|display|orderBy" class="list-group-item">
+                            {{f.key|translate}}:
+                            {{record[key]['data']|dict_dump:k.key:null:f.key|format:f.value|translate}}
+                        </li>
+                    </span>
+                    <span *ngIf="k.value.multiple">
+                        <span class="card" *ngFor="let kk of record[key]['data'][k.key]; let j = index">
+                            <li *ngFor="let f of k.value.properties|keyvalue|display|orderBy" class="list-group-item">
+                                <span *ngIf="(f.value.fieldType!='reference')">
+                                    {{f.key|translate}}:
+                                    {{record[key]['data']|dict_dump:k.key:j:f.key|format:f.value|translate}}
+                                </span>
+                    <span *ngIf="(f.value.fieldType=='reference') && record[key]['data'][k.key][i] && record[key]['data'][k.key][i][f.key]">
+                                    {{f.key|translate}}:
+                                    {{(record[key]['data'][f.value.watch.target]|related:record[key]['data'][k.key][i][f.key])[recordSchema['schema']['definitions'][f.value.watch.target].properties|keyvalue|arrayfirst]|translate}}
+                                </span>
+
+                    </li>
+                    </span>
+                    </span>
+                </ul>
+                <div class="p-1 sender">
+                    <button type="button" class="btn btn-dark" (click)="useRecord(modal, key)">{{'Use this
+                        record'|translate}}</button>
+                </div>
+            </div>
+            <div class="p-1 sender">
+                <button type="button" class="btn btn-dark" (click)="useBoth(modal)">{{'Keep both unique
+                    records'|translate}}</button>
+            </div>
+        </div>
+    </ng-template>
