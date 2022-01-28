@@ -79,17 +79,10 @@ services:
       - STATIC_URL=${PROTOCOL}://${HOST_NAME}/static/ 
       - OAUTH_CLIENT_ID=${CLIENTID}
       - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
-<<<<<<< HEAD
-    command: ["cron", "-f"]
+    command: "cron -f"
     container_name: driver-cron-${CONTAINER_NAME}
     image: alien9/driver-django
         
-=======
-    entrypoint: ["cron", "-f"]
-    container_name: driver-cron-${CONTAINER_NAME}
-    image: alien9/driver-django
-  
->>>>>>> be6c3f70812087612337fa89e5aa9737a5532439
   mapserver:
     container_name: mapserver-${CONTAINER_NAME}
     volumes:
