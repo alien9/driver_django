@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ParseError
 from rest_framework_gis.filters import InBBoxFilter
 from django.http import JsonResponse
+from django.db import connection
 
 from grout import exceptions
 from grout.models import (Boundary,
@@ -165,8 +166,22 @@ class BoundaryViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get', 'post'], detail=False)
     def mapfile(self, request):
-        print("keys")
-        print(request.data)
+
+        color=[0,0,0]
+        if self.color is not None:
+            h=self.color.lstrip('#')
+            color=tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+        t=render_to_string('boundary_theme.map', {
+            "connection":connection.settings_dict['HOST'],
+            "username":connection.settings_dict['USER'],
+            "dbname":connection.settings_dict['NAME'],
+            "password":connection.settings_dict['PASSWORD'],
+            "query":"geom from (select geom, uuid from grout_boundarypolygon where boundary_id='%s')as q using unique uuid using srid=4326" % (self.uuid,),
+            "color": "%s %s %s" % (color[0],color[1],color[2]),
+        })
+        with open("./mapserver/boundary_{boundary_id}_theme_.map" % (self.uuid), "w+") as m:
+            m.write(t)
+        #query="select geom, uuid from maps.bouundary_polygon
         return JsonResponse({'errors': {'uuid': 'Denied'}},
             status=status.HTTP_200_OK)
 
