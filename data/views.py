@@ -1436,6 +1436,7 @@ class DriverRecordDuplicateViewSet(viewsets.ModelViewSet):
     filter_class = filters.RecordDuplicateFilter
     @action(detail=True, methods=['patch'])
     def resolve(self, request, pk=None):
+        print("searching duplicated %s"%(pk))
         duplicate = self.queryset.get(pk=pk)
         recordUUID = request.data.get('recordUUID', None)
         if recordUUID is None:

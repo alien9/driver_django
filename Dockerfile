@@ -32,6 +32,7 @@ COPY find_segments.sql /opt/app/find_segments.sql
 COPY web /opt/app/web/dist
 COPY favicon.ico /opt/app/web/dist/favicon.ico
 COPY DriverData.apk /opt/app/web/DriverData.apk
+COPY crontab /opt/app/web/crontab
 
 RUN pip install --no-cache-dir gunicorn
 RUN pip install --no-cache-dir -r requirements.txt

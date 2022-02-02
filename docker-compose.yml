@@ -58,10 +58,10 @@ services:
     entrypoint: ["celery", "-A", "driver", "worker", "--queue=taskworker", "--loglevel=info", "--concurrency=4"]
     container_name: driver-celery-${CONTAINER_NAME}
     image: alien9/driver-django
-  
+
   driver-cron:
     volumes:
-      - ./zip:/var/www/media
+      - ./static/crontab:/var/spool/cron/crontabs/root
     depends_on:
       - redis-server
     environment:
@@ -79,10 +79,10 @@ services:
       - STATIC_URL=${PROTOCOL}://${HOST_NAME}/static/ 
       - OAUTH_CLIENT_ID=${CLIENTID}
       - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
-    entrypoint: ["cron", "-f"]
+    command: "cron -f"
     container_name: driver-cron-${CONTAINER_NAME}
     image: alien9/driver-django
-  
+        
   mapserver:
     container_name: mapserver-${CONTAINER_NAME}
     volumes:
