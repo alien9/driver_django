@@ -23,6 +23,18 @@ export class ChartsComponent implements OnInit, OnChanges {
   monthnames: object
   tip = 0
   barChart: object
+  palette = [
+    'e41a1c',
+    '377eb8',
+    '4daf4a',
+    'd55e00',
+    '2db9c7',
+    '9972b2',
+    'c0d442',
+    '449e73',
+    '32e4cc',
+    'e52a1d'
+  ]
   constructor(
     private recordService: RecordService,
     private cdr: ChangeDetectorRef,
@@ -148,7 +160,7 @@ export class ChartsComponent implements OnInit, OnChanges {
         let parameters = this.filter
         if (this.barChart['interval'] && this.barChart['field']) {
           this.spinner.show()
-          
+
           parameters['row_period_type'] = this.barChart['interval']
           parameters['col_choices_path'] = this.barChart['field']
           parameters['relate'] = this.barChart['field'] // the total count of related
@@ -157,13 +169,19 @@ export class ChartsComponent implements OnInit, OnChanges {
               this.spinner.hide()
               let h = []
               let m = 0
+              let totals={}
+              //Object.entries(data['tables'][0].data).sort((a,b)=>{return data['tables'][0][a[0]]}).forEach(k => {
+              
               Object.entries(data['tables'][0].data).forEach(k => {
                 let sum = Object.values(k[1]).reduce((a, b) => a + b)
                 if (sum > m) m = sum
                 k[1]['group'] = k[0]
                 h.push(k[1])
+                Object.entries(k[1]).forEach(l=>{
+                  totals[l[0]]=((totals[l[0]])?totals[l[0]]:0)+l[1]
+                })
               })
-              let subgroups = data['col_labels'].map(k => k.key) // field value
+              let subgroups = data['col_labels'].map(k => k.key).sort((a,b)=>totals[b]-totals[a]) // field value
               let groups = data['row_labels'].map(k => k.key) //interval
 
               const margin_bar = { top: 10, right: 30, bottom: 20, left: 50 },
@@ -211,19 +229,7 @@ export class ChartsComponent implements OnInit, OnChanges {
                 .call(d3.axisLeft(y));
               const color = d3.scaleOrdinal()
                 .domain(subgroups)
-                .range([
-                  parseInt('e41a1c', 16),
-                  parseInt('377eb8', 16),
-                  parseInt('4daf4a', 16),
-                  parseInt('d55e00', 16),
-                  parseInt('2db9c7', 16),
-                  parseInt('9972b2', 16),
-                  parseInt('c0d442', 16),
-                  parseInt('449e73', 16),
-                  parseInt('32e4cc', 16),
-                  parseInt('e52a1d', 16),
-
-                ])
+                .range(this.palette.map(p => parseInt(p, 16)))
               //stack the data? --> stack per subgroup
               const stackedData = d3.stack()
                 .keys(subgroups)
@@ -266,6 +272,7 @@ export class ChartsComponent implements OnInit, OnChanges {
             }
           })
         }
+        break
       case 3: //pieChart        
         const p_margin_bar = { top: 10, right: 30, bottom: 20, left: 50 },
           p_width_bar = 600,
@@ -276,7 +283,6 @@ export class ChartsComponent implements OnInit, OnChanges {
           return
         }
         this.spinner.show()
-        let ts = this.translateService
         parameters_pizza['row_period_type'] = 'all'
         parameters_pizza['col_choices_path'] = this.barChart['field']
         parameters_pizza['relate'] = this.barChart['field'] // the total count of related
@@ -286,7 +292,7 @@ export class ChartsComponent implements OnInit, OnChanges {
             this.spinner.hide()
             let h = []
             let m = 0
-            var p_data: SimpleDataModel[]=Object.entries(data['tables'][0].data["0"]).map(k=>{return {"name":ts.instant(k[0]),"value":k[1].toString()}})
+            var p_data: SimpleDataModel[] = Object.entries(data['tables'][0].data["0"]).map(k => { return { "name": ts.instant(k[0]), "value": k[1].toString() } })
             let enablePolylines = false
             let isPercentage = false
             var radius = Math.min(p_width_bar, p_height_bar) / 2 - p_margin_bar.top
@@ -312,25 +318,9 @@ export class ChartsComponent implements OnInit, OnChanges {
             let colors = d3
               .scaleOrdinal()
               .domain(p_data.map(d => d.value.toString()))
-              .range([
-                "#e41a1c",
-                "#377eb8",
-                "#4daf4a",
-                "#d55e00",
-                "#2db9c7",
-                "#9972b2",
-                "#c0d442",
-                "#449e73",
-                "#32e4cc",
-                "#e52a1d",
-                "#e41a1c",
-                "#32325d",
-                "#6162b5",
-                "#6586f6",
-                "#8b6ced",
-                "#1b1b1b",
-                "#e41a1c"
-              ]);
+              .range(
+                this.palette.map(p => `#${p}`)
+              )
             let ark: any = d3
               .arc()
               .innerRadius(0)
@@ -351,7 +341,7 @@ export class ChartsComponent implements OnInit, OnChanges {
 
             const labelLocation = d3
               .arc()
-              .innerRadius(radius/2)
+              .innerRadius(radius / 2)
               .outerRadius(radius);
             let dy = 0;
             let index = 0;
