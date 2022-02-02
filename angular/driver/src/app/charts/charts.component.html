@@ -34,6 +34,21 @@
             <div id="interval_legend" class="mr-3 ml-3"></div>
         </ng-template>
     </li>
+    <li [ngbNavItem]="3">
+        <a ngbNavLink>{{'Pie'| translate}}</a>
+        <ng-template ngbNavContent>
+            <h5 class="m-3">{{'Field'|translate}}:
+                <select class="custom-select" [(ngModel)]="barChart['field']" (change)=loadChart(active)>
+                    <option [value]="field['table']+',properties,'+field['title']"
+                        *ngFor="let field of reportFilters">
+                        {{field['title']|translate}}</option>
+                </select>
+            </h5>
+
+            <div id=pizza class="m-3"></div>
+            <div id="pizza_legend" class="mr-3 ml-3"></div>
+        </ng-template>
+    </li>
 </ul>
 
 <div [ngbNavOutlet]="nav" class="mt-2"></div>

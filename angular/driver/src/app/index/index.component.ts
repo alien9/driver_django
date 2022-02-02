@@ -13,7 +13,7 @@ import { NavbarComponent } from '../navbar/navbar.component'
 import { ChartsComponent } from '../charts/charts.component';
 import { IrapPopupComponent } from '../irap-popup/irap-popup.component';
 import * as uuid from 'uuid';
-
+import { of} from 'rxjs' 
 @Component({
   selector: 'app-index',
   templateUrl: './index.component.html',
@@ -126,8 +126,8 @@ export class IndexComponent implements OnInit {
     })
   }
   afterInit() {
-    let w = document.cookie.match(/AuthService\.canWrite=([^ ;]*);/)
-    if (w && w.length && w[0]=='true') this.canWrite = true
+    let w = document.cookie.match(/AuthService\.canWrite=([^;]*);/)
+    if (w && w.length && w[1]=='true') this.canWrite = true
     this.state = localStorage.getItem('state') || 'Map'
     this.popContent = $("#popup-content")[0]
     this.config = (localStorage.getItem("config")) ? JSON.parse(localStorage.getItem("config")) : {}

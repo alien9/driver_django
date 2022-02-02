@@ -38,7 +38,7 @@
                 <div *ngIf="!k.value.multiple">
                     <ul class="list-group list-group-flush" *ngFor="let f of k.value.properties|keyvalue|display|orderBy">
                         <li class="list-group-item">{{f.key|translate}}:
-                            <span *ngIf="!editing">{{record['data']|dict_dump:k.key:null:f.key|format:f.value}}</span>
+                            <span *ngIf="!editing">{{record['data']|dict_dump:k.key:null:f.key|format:f.value|translate}}</span>
                             <span *ngIf="editing">
                                 <select class="form-select" *ngIf="f.value.displayType=='select'"
                                     [(ngModel)]="record['data'][k.key][f.key]">
@@ -67,7 +67,7 @@
                                     <span *ngIf="!editing && (f.value.fieldType=='reference') && record['data'][k.key][i][f.key]">
                                         {{(record['data'][f.value.watch.target]|related:record['data'][k.key][i][f.key])[schema['definitions'][f.value.watch.target].properties|keyvalue|arrayfirst]|translate}}
                                     </span>
-                                    <span *ngIf="!editing && f.value.fieldType!='reference'">{{record['data']|dict_dump:k.key:i:f.key|format:f.value}}</span>
+                                    <span *ngIf="!editing && f.value.fieldType!='reference'">{{record['data']|dict_dump:k.key:i:f.key|format:f.value|translate}}</span>
                                     <span *ngIf="editing">
                                         <select class="form-select" *ngIf="f.value.displayType=='select'"
                                             [(ngModel)]="record['data'][k.key][i][f.key]">

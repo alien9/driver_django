@@ -11,8 +11,8 @@
                         <option [value]="report['relatable']">{{recordSchema['schema']['definitions'][report['relatable'][0]]['plural_title']|translate}}</option>
                     </select>                
                 </span>
-                <span *ngIf="!report['relatable']">{{config['PRIMARY_LABEL']|translate}}</span>
-                <span *ngIf="table['tablekey']">{{'for'|translate}} {{report['crosstabs']['table_labels'][table['tablekey']]}}</span> {{'by'|translate}} {{report['path']['row']|translate}} {{'and'|translate}} {{report['path']['col']|translate}}
+                <span *ngIf="!report['relatable']">{{config['PRIMARY_LABEL']|translate}} </span>
+                <span *ngIf="table['tablekey']"> {{'for'|translate}} {{report['crosstabs']['table_labels'][table['tablekey']]}}</span> {{'by'|translate}} {{report['path']['row']|translate}} {{'and'|translate}} {{report['path']['col']|translate}}
                 <span *ngIf=false><a href="#" (click)=showMap()>{{'Map'|translate}}</a></span>
             </h5>
         </div>
@@ -25,6 +25,7 @@
                         <span *ngIf="report['parameters']['col_choices_path']">{{col.key|translate}}</span>
                         <span *ngIf="report['parameters']['col_boundary_id']">{{report['crosstabs']['col_labels'][i].label[0].text}}</span>
                     </th>
+                    <th scope="col" *ngIf="!report['relatable']">{{'Total'|translate}}</th>
                 </tr>
             </thead>
             <tbody>
@@ -35,6 +36,9 @@
                         {{report['crosstabs']['row_labels'][i].label[0].text}}</th>
                     <td *ngFor="let col of report['crosstabs']['col_labels']">
                         {{report['crosstabs']['tables'][j]['data'][row.key]?(report['crosstabs']['tables'][j]['data'][row.key][col.key]?report['crosstabs']['tables'][j]['data'][row.key][col.key]:"0"):"0"}}
+                    </td>
+                    <td *ngIf="!report['relatable']">
+                        {{report['crosstabs']['tables'][j]['row_totals'][row.key]?report['crosstabs']['tables'][j]['row_totals'][row.key]:'0'}}
                     </td>
                 </tr>
             </tbody>

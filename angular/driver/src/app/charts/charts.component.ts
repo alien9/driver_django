@@ -35,7 +35,7 @@ export class ChartsComponent implements OnInit, OnChanges {
     this.barChart = { 'interval': 'year' }
     this.locale = localStorage.getItem("Language") || "en"
     this.weekdays = {}
-    this.monthnames={}
+    this.monthnames = {}
     let d = new Date()
     d.setDate(1)
     for (let i = 0; i < 7; i++) {
@@ -44,18 +44,20 @@ export class ChartsComponent implements OnInit, OnChanges {
     }
     for (let i = 0; i < 12; i++) {
       d.setMonth(i)
-      this.monthnames[i+1] = d.toLocaleDateString(this.locale, { month: 'short' })
+      this.monthnames[i + 1] = d.toLocaleDateString(this.locale, { month: 'short' })
     }
     this.loadChart(1)
   }
   ngOnChanges(changes: SimpleChanges) {
-    this.loadChart(this.active)
+    if (this.weekdays) //already initialized
+      this.loadChart(this.active)
   }
   loadChart(activeTab: any) {
     if (!this.filter) {
       this.filter = JSON.parse(localStorage.getItem("current_filter") || '{}')
     }
     this.filter['record_type'] = this.recordSchema['record_type']
+    let ts = this.translateService
     switch (activeTab) {
       case 1: // toddow
         this.spinner.show()
@@ -146,7 +148,7 @@ export class ChartsComponent implements OnInit, OnChanges {
         let parameters = this.filter
         if (this.barChart['interval'] && this.barChart['field']) {
           this.spinner.show()
-          let ts = this.translateService
+          
           parameters['row_period_type'] = this.barChart['interval']
           parameters['col_choices_path'] = this.barChart['field']
           parameters['relate'] = this.barChart['field'] // the total count of related
@@ -187,14 +189,14 @@ export class ChartsComponent implements OnInit, OnChanges {
                     if (parameters['row_period_type'] == 'month') {
                       let my = hg.match(/\((\d+), (\d+)\)/)
                       return `${this.monthnames[my[2]]} ${my[1]}`
-                    }else{
-                      if(parameters['row_period_type'] == 'week'){
+                    } else {
+                      if (parameters['row_period_type'] == 'week') {
                         let my = hg.match(/\((\d+), (\d+)\)/)
                         return `${my[2]} / ${my[1]}`
-                      }else{
-                        if(parameters['row_period_type'] == 'day'){
+                      } else {
+                        if (parameters['row_period_type'] == 'day') {
                           let myd = hg.match(/\((\d+), (\d+), (\d+)\)/)
-                          let d=new Date(parseInt(myd[1]), parseInt(myd[2])-1, parseInt(myd[3]))
+                          let d = new Date(parseInt(myd[1]), parseInt(myd[2]) - 1, parseInt(myd[3]))
                           return d.toLocaleDateString(this.locale)
                         }
                       }
@@ -253,7 +255,7 @@ export class ChartsComponent implements OnInit, OnChanges {
                 .style("fill", d => `#${Math.round(parseFloat(color(d.toString()).toString())).toString(16)}`)
               svg_bar_legend.selectAll("mydots").data(subgroups).enter().append("text")
                 .attr("x", 120)
-                .attr("y", function (d, i) { return 13 + i * 25 }) // 100 is where the first dot appears. 25 is the distance between dots
+                .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
                 .text(function (d) { return ts.instant(d.toString()) })
                 .attr("text-anchor", "left")
                 .style("alignment-baseline", "middle")
@@ -264,6 +266,125 @@ export class ChartsComponent implements OnInit, OnChanges {
             }
           })
         }
+      case 3: //pieChart        
+        const p_margin_bar = { top: 10, right: 30, bottom: 20, left: 50 },
+          p_width_bar = 600,
+          p_height_bar = p_width_bar
+
+        let parameters_pizza = this.filter
+        if (!this.barChart['field']) {
+          return
+        }
+        this.spinner.show()
+        let ts = this.translateService
+        parameters_pizza['row_period_type'] = 'all'
+        parameters_pizza['col_choices_path'] = this.barChart['field']
+        parameters_pizza['relate'] = this.barChart['field'] // the total count of related
+        this.recordService.getCrossTabs(this.recordSchema['record_type'], parameters_pizza).pipe(first()).subscribe({
+          next: data => {
+            $("#pizza").html('')
+            this.spinner.hide()
+            let h = []
+            let m = 0
+            var p_data: SimpleDataModel[]=Object.entries(data['tables'][0].data["0"]).map(k=>{return {"name":ts.instant(k[0]),"value":k[1].toString()}})
+            let enablePolylines = false
+            let isPercentage = false
+            var radius = Math.min(p_width_bar, p_height_bar) / 2 - p_margin_bar.top
+            var svg = d3
+              .select("#pizza")
+              .append("svg")
+              .attr("viewBox", `0 0 ${p_width_bar} ${p_height_bar}`)
+              .append("g")
+              .attr(
+                "transform",
+                "translate(" + p_width_bar / 2 + "," + p_height_bar / 2 + ")"
+              );
+            const pie = d3.pie<any>().value((d: any) => Number(d.value));
+            const data_ready = pie(p_data);
+            let outerArc = d3
+              .arc()
+              .innerRadius(radius * 0.9)
+              .outerRadius(radius * 0.9)
+            let arc = d3
+              .arc()
+              .innerRadius(radius * 0.5)
+              .outerRadius(radius * 0.8);
+            let colors = d3
+              .scaleOrdinal()
+              .domain(p_data.map(d => d.value.toString()))
+              .range([
+                "#e41a1c",
+                "#377eb8",
+                "#4daf4a",
+                "#d55e00",
+                "#2db9c7",
+                "#9972b2",
+                "#c0d442",
+                "#449e73",
+                "#32e4cc",
+                "#e52a1d",
+                "#e41a1c",
+                "#32325d",
+                "#6162b5",
+                "#6586f6",
+                "#8b6ced",
+                "#1b1b1b",
+                "#e41a1c"
+              ]);
+            let ark: any = d3
+              .arc()
+              .innerRadius(0)
+              .outerRadius(radius)
+
+            svg
+              .selectAll("pieces")
+              .data(data_ready)
+              .enter()
+              .append("path")
+              .attr(
+                "d",
+                ark
+              )
+              .attr("fill", (d, i) => (d.data.color ? d.data.color : colors(i.toString())))
+              .attr("stroke", "#ffffff")
+              .style("stroke-width", "1px")
+
+            const labelLocation = d3
+              .arc()
+              .innerRadius(radius/2)
+              .outerRadius(radius);
+            let dy = 0;
+            let index = 0;
+            svg
+              .selectAll("pieces")
+              .data(pie(p_data))
+              .enter()
+              .append("text")
+              .text(d => {
+                console.log(d)
+                if (
+                  ((d.endAngle - d.startAngle) / (2 * Math.PI)) * 100 > 5 ||
+                  enablePolylines
+                ) {
+                  return (
+                    d.data.name +
+                    " (" +
+                    d.data.value +
+                    (isPercentage ? "%" : "") +
+                    ")"
+                  );
+                }
+              })
+              .attr("transform", d => { let e: any = d; return "translate(" + labelLocation.centroid(e) + ")" })
+              .style("text-anchor", "middle")
+              .style("font-size", 22)
+              .attr("fill", "#333333");
+
+          }, error: err => {
+            console.log(err)
+            this.spinner.hide()
+          }
+        })
         break;
     }
   }
@@ -271,4 +392,9 @@ export class ChartsComponent implements OnInit, OnChanges {
     this.loadChart(e.nextId)
   }
 
+}
+export interface SimpleDataModel {
+  name: string;
+  value: string;
+  color?: string;
 }
