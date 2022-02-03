@@ -59,10 +59,9 @@ export class LoginComponent implements OnInit {
                 localStorage.setItem("position", `${position.coords.latitude}\t${position.coords.longitude}`)
             })
         }
-        // get return url from route parameters or default to '/'
         this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
-        //this.open(this.bcontent)
         this.backend = this.recordService.getBackend()
+        this.setCookie('sessionid', '', -1)
     }  
     loginWithGoogle(): void {
         window.location.href=`${this.authenticationService.getBackend()}/oidc/authenticate/`
