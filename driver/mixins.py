@@ -4,7 +4,6 @@ from django.db import connection
 class GenerateViewsetQuery(object):
     def generate_query_sql(self, request):
         qset = self.get_queryset()
-        print(qset.query)
         # apply filters
         # get sql for the query that should be run
         for backend in list(self.filter_backends):

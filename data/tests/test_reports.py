@@ -70,19 +70,19 @@ class ReportsTestCase(APITestCase):
         print(".", end='')
 
         self.assertEqual(response.json()['count'], 1)
-        # 2 crashes involv motorcycle
+        # 5 crashes involv motorcycle(s)
         response=self.client.get("/api/records/?archived=false&details_only=false&limit=50&record_type={record_type}&active=true&jsonb=%7B%22driverVehicle%22:%7B%22Vehicle%20type%22:%7B%22_rule_type%22:%22containment_multiple%22,%22contains%22:%5B%22Motorcycle%22%5D%7D%7D%7D&occurred_min=2021-10-01T03:00:37.291Z&occurred_max=2022-01-11T03:00:37.291Z".format(
                 record_type=self.record_type_uuid
             )
         )
         print("..", end='')
-        self.assertEqual(response.json()['count'], 2)
-        # 1 crash involves motorcycle(s) and a senior 44+
+        self.assertEqual(response.json()['count'], 5)
+        # 2 crash involves motorcycle(s) and a senior 44+
         response=self.client.get("/api/records/?archived=false&details_only=false&limit=50&record_type={record_type}&active=true&jsonb=%7B\"driverVehicle\":%7B\"Vehicle%20type\":%7B\"_rule_type\":\"containment_multiple\",\"contains\":%5B\"Motorcycle\"%5D%7D%7D,\"driverVictim\":%7B\"Age\":%7B\"_rule_type\":\"intrange_multiple\",\"min\":44%7D%7D%7D&occurred_min=2021-10-01T03:00:14.733Z&occurred_max=2022-01-11T03:00:14.733Z&".format(
                 record_type=self.record_type_uuid
             )
         )
-        self.assertEqual(response.json()['count'], 1) 
+        self.assertEqual(response.json()['count'], 2) 
         print(".", end='')
         response=self.client.get("/api/records/crosstabs/?archived=False&record_type={record_type}&calendar=gregorian&row_period_type=year&col_choices_path=driverAccidentDetails,properties,Accident%20type&jsonb=%7B%22driverVehicle%22:%7B%22Vehicle%20type%22:%7B%22_rule_type%22:%22containment_multiple%22,%22contains%22:%5B%22Motorcycle%22,%22Bus%22%5D%7D%7D,%22driverVictim%22:%7B%22Age%22:%7B%22_rule_type%22:%22intrange_multiple%22,%22max%22:80%7D%7D%7D&occurred_min=2021-10-01T03:00:21.183Z&occurred_max=2022-01-11T03:00:21.183Z&relate=".format(
                 record_type=self.record_type_uuid
@@ -102,14 +102,80 @@ class ReportsTestCase(APITestCase):
             )
         )
         j=response.json()
-        self.assertEqual(j['count'], 3)
-        self.assertEqual(len(j['results']), 3)
+        self.assertEqual(j['count'], 5)
+        self.assertEqual(len(j['results']), 5)
         print(".", end='')
         #second page for this will have 
         response=self.client.get("/api/records/?archived=false&details_only=false&limit=50&record_type={record_type}&active=true&jsonb=%7B%22driverVehicle%22:%7B%22Vehicle%20type%22:%7B%22_rule_type%22:%22containment_multiple%22,%22contains%22:%5B%22Bus%22,%22Motorcycle%22%5D%7D%7D%7D&occurred_min=2019-06-01T03:00:31.693Z&occurred_max=2022-01-14T03:00:31.693Z&offset=750".format(
-        record_type=self.record_type_uuid
+            record_type=self.record_type_uuid
+                )
             )
-        )
         j=response.json()
-        #self.assertEqual(len(j['results']), 42)
+        self.assertEqual(len(j['results']), 0)
         print("Reports tested.")
+
+    def test_reports(self):
+        # type of crash by the year
+        response=self.client.get("/api/records/crosstabs/?archived=False&record_type={record_type}&calendar=gregorian&jsonb=%7B%7D&occurred_min=2013-10-02T03:00:19.711Z&occurred_max=2022-01-13T03:00:19.711Z&row_period_type=year&col_choices_path=driverAccidentDetails,properties,Accident%20type&relate=driverAccidentDetails,properties,Accident%20type".format(
+            record_type=self.record_type_uuid
+                )
+            )
+        j=response.json()
+        self.assertEqual(j['tables'][0]['data']['2021']['Shock'], 3)
+        self.assertEqual(j['tables'][0]['data']['2021']['Collision'], 4)
+        #type of crash complete period
+        response=self.client.get("/api/records/crosstabs/?archived=False&record_type={record_type}&calendar=gregorian&jsonb=%7B%7D&occurred_min=2013-10-02T03:00:19.711Z&occurred_max=2022-01-13T03:00:19.711Z&row_period_type=all&col_choices_path=driverAccidentDetails,properties,Accident%20type&relate=driverAccidentDetails,properties,Accident%20type".format(
+            record_type=self.record_type_uuid
+                )
+            )
+        j=response.json()
+        self.assertEqual(j['tables'][0]['data']['0']['Collision'], 4)
+        
+        #type of crash complete period only for 1st half of Dec 2021
+        response=self.client.get("/api/records/crosstabs/?archived=False&record_type={record_type}&calendar=gregorian&jsonb=%7B%7D&occurred_min=2021-12-01T00:00:00.711Z&occurred_max=2021-12-14T23:59:19.711Z&row_period_type=all&col_choices_path=driverAccidentDetails,properties,Accident%20type&relate=driverAccidentDetails,properties,Accident%20type".format(
+            record_type=self.record_type_uuid
+                )
+            )
+        j=response.json()
+        self.assertEqual(j['tables'][0]['data']['0']['Collision'], 3)
+        self.assertEqual(j['tables'][0]['data']['0']['Others'], 1)
+
+        #type of crash organized by row
+        # count of vehicles
+        response=self.client.get("/api/records/crosstabs/?archived=False&record_type={record_type}&calendar=gregorian&jsonb=%7B%7D&col_period_type=all&row_choices_path=driverAccidentDetails,properties,Accident%20type&relate=driverAccidentDetails,properties,Accident%20type".format(
+            record_type=self.record_type_uuid
+                )
+            )
+        j=response.json()
+
+        self.assertEqual(j['tables'][0]['data']['Collision']['0'], 4)
+        self.assertEqual(j['tables'][0]['data']['Others']['0'], 1)
+        self.assertEqual(j['tables'][0]['row_totals']['Shock'], 3)
+
+
+        # count of vehicles
+        response=self.client.get("/api/records/crosstabs/?archived=False&record_type={record_type}&calendar=gregorian&jsonb=%7B%7D&occurred_min=2018-01-26T02:00:59.818Z&occurred_max=2022-01-31T03:00:59.818Z&row_period_type=year&col_choices_path=driverVehicle,properties,Vehicle%20type&relate=driverVehicle,properties,Vehicle%20type".format(
+            record_type=self.record_type_uuid
+                )
+            )
+        j=response.json()
+        self.assertEqual(j['tables'][0]['data']['2021']['Motorcycle'], 6) 
+        self.assertEqual(j['tables'][0]['row_totals']['2021'], 8)
+
+        # count of crashes for every kind of vehicle
+        response=self.client.get("/api/records/crosstabs/?archived=False&record_type={record_type}&calendar=gregorian&jsonb=%7B%7D&occurred_min=2018-01-26T02:00:59.818Z&occurred_max=2022-01-31T03:00:59.818Z&row_period_type=year&col_choices_path=driverVehicle,properties,Vehicle%20type&".format(
+            record_type=self.record_type_uuid
+                )
+            )
+        j=response.json()
+        self.assertEqual(j['tables'][0]['data']['2021']['Motorcycle'], 5)
+        
+        # count of crashes for every kind of vehicle - not grouped by year
+        response=self.client.get("/api/records/crosstabs/?archived=False&record_type={record_type}&calendar=gregorian&jsonb=%7B%7D&occurred_min=2018-01-26T02:00:59.818Z&occurred_max=2022-01-31T03:00:59.818Z&row_period_type=all&col_choices_path=driverVehicle,properties,Vehicle%20type&".format(
+            record_type=self.record_type_uuid
+                )
+            )
+        j=response.json()
+        self.assertEqual(j['tables'][0]['data']['0']['Motorcycle'], 5)
+        self.assertEqual(j['tables'][0]['row_totals']['0'], 7)
+        print(j)

@@ -557,7 +557,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         Requires the following query parameters:
         - Exactly one row specification parameter chosen from:
             - row_period_type: A time period to use as rows; valid choices are:
-                               {'hour', 'day', 'week_day', 'week', 'month', 'year'}
+                               {'hour', 'day', 'week_day', 'week', 'month', 'year', 'all'}
                                The value 'day' signifies day-of-month
             - row_boundary_id: Id of a Boundary whose BoundaryPolygons should be used as rows
             - row_choices_path: Path components to a schema property whose choices should be used
@@ -578,7 +578,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                                 BoundaryPolygon associated with the Boundary.
         - relate: Path for the multiple related table to aggregate into counts. If this isn't 
             provided, the method must return the counts of registries for each aggregation.
-            When the relate patrameter isd provided, the method must count the totals for that 
+            When the relate patrameter is provided, the method must count the totals for that 
             related information.
         - all other filter params accepted by the list endpoint; these will filter the set of
             records before any aggregation is applied. This may result in some rows / columns /
@@ -629,6 +629,8 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         # Validate there's exactly one row_* and one col_* parameter
         row_params = set(request.query_params) & valid_row_params
         col_params = set(request.query_params) & valid_col_params
+        print(row_params)
+        print(col_params)
         if len(row_params) != 1 or len(col_params) != 1:
             raise ParseError(detail='Exactly one col_* and row_* parameter required; options are {}'
                                     .format(list(valid_row_params | valid_col_params)))
@@ -726,7 +728,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             ]
             
             
-            
             # Perform a sum on each of the 'multi' columns, storing the data in a sum_* field
             annotated_qs = (
                 annotated_qs.values(single_label, *multi_labels)
@@ -736,6 +737,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             # Each object either has a 'row' and several 'col_*'s or a 'col' and several 'row_*'s.
             # Get the combinations accordingly and accumulate the appropriate stored value.
             for rd in annotated_qs:
+                print(rd)
                 for multi_label in multi_labels:
                     sum_val = rd['sum_{}'.format(multi_label)]
                     rd_row = rd['row'] if 'row' in rd else 'None'
@@ -745,7 +747,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                         data[str(multi_label[4:])][str(rd_col)] += sum_val
                     else:
                         data[str(rd_row)][str(multi_label[4:])] += sum_val
-
         row_totals = {row: sum(cols.values()) for (row, cols) in list(data.items())}
         return {'data': data, 'row_totals': row_totals}
 
@@ -778,6 +779,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
 
         if param.endswith('period_type'):
             query_calendar = request.query_params.get('calendar')
+            #period type can be "all"
             if (query_calendar == 'gregorian'):
                 return self._get_annotated_tuple(
                     queryset, annotation_id,
@@ -884,6 +886,16 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                     }
                 ]
             },
+            'all': { 
+                'range': range(0, 1),
+                'lookup': lambda x: {'archived': False},
+                'label': lambda x: [
+                    {
+                        'text': 'Records', 
+                        'translate': True
+                    }
+                ]
+            }
         }
 
         # Ranges are built below, partly based on the ranges in 'periodic_ranges' above.
