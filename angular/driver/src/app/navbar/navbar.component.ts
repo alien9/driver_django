@@ -48,6 +48,7 @@ export class NavbarComponent implements OnInit {
   public tabs = [
 
   ]
+  inserting:boolean
   public reportHeaders: object
   reportParameters: object
   public report: object
@@ -505,8 +506,8 @@ export class NavbarComponent implements OnInit {
     this.irapDataset['selected'] = []
   }
   createRecord(e: any) {
-    this.newRecord.emit(true)
-    $('.leaflet-container').css('cursor', 'crosshair');
+    this.newRecord.emit(this.inserting)
+    $('.leaflet-container').css('cursor', (this.inserting)?'crosshair':'grab');
   }
   qrCode(mod) {
     this.modalService.open(mod, { size: 'lg' });

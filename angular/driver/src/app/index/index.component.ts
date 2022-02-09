@@ -12,6 +12,7 @@ import { NgxSpinnerService } from "ngx-spinner";
 import { NavbarComponent } from '../navbar/navbar.component'
 import { ChartsComponent } from '../charts/charts.component';
 import { IrapPopupComponent } from '../irap-popup/irap-popup.component';
+
 import * as uuid from 'uuid';
 import { of} from 'rxjs' 
 @Component({
@@ -23,6 +24,7 @@ export class IndexComponent implements OnInit {
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
     if (event.key && event.key == 'Escape') {
+      this.navbar.inserting=false
       this.listening = false
       $('.leaflet-container').css('cursor', 'grab');
     }
@@ -58,20 +60,21 @@ export class IndexComponent implements OnInit {
   public mapillary_id: string
   public irapDataset
   listPage: number = 1
-  listening: boolean
+  listening: boolean=false
   hasIrap: boolean
   locale: string
   weekdays: object
   reportFilters: object[]
+  legends:object[]
   private irapColor = [
     '#000000',
     '#ff0000',
-    '#ff9900',
-    '#ffaa00',
-    '#ffff44',
+    '#ff9900',  
+    '#ffaa00',  
+    '#ffff44',  
     '#009900',
   ]
-
+  theme:object={}
   @ViewChild(NavbarComponent) navbar!: NavbarComponent;
   @ViewChild(ChartsComponent) charts!: ChartsComponent;
   popContent: any
@@ -214,11 +217,15 @@ export class IndexComponent implements OnInit {
                 $('.leaflet-grab').css('cursor', 'pointer')
               }
               else {
-                $('.leaflet-grab').css('cursor', 'grab')
+                this.zone.run(()=>{
+                  $('.leaflet-grab').css('cursor', (this.listening)?'crosshair':'grab')
+                })   
               }
             });
             gl.on('mouseout', (e) => {
-              $('.leaflet-grab').css('cursor', 'grab')
+              this.zone.run(()=>{
+                $('.leaflet-grab').css('cursor', (this.listening)?'crosshair':'grab')
+              })              
             });
             gl.on('click', (e: any) => {
               if (!e.data) return
@@ -227,11 +234,6 @@ export class IndexComponent implements OnInit {
                 .replace(/-name-/, e.data.name)
                 .replace(/-cost-/, e.data.cost)
               new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
-              /* if (e.data) {
-                this.record_uuid = e.data.uuid
-                gl.openPopup($("#popup-content")[0], e.latlng, {}) 
-                $("#map-popup-button").trigger('click')
-              } */
             })
             this.layersControl.overlays[rs["title"]] = new L.LayerGroup([
               L.tileLayer(`${this.backend}/maps/critical/${rs['uuid']}/critical/{z}/{x}/{y}.png`, {}),
@@ -255,7 +257,51 @@ export class IndexComponent implements OnInit {
             }
             this.setBoundary(this.boundary)
             this.boundaries.forEach(b => {
-              this.layersControl.overlays[b.label] = L.tileLayer(`${this.backend}/maps/boundary/${b.uuid}/boundary/{z}/{x}/{y}.png`, {});
+              let gl = utfGrid(`${this.backend}/grid/boundary/${b['uuid']}/boundary/{z}/{x}/{y}.json/`, {
+                resolution: 4,
+                pointerCursor: true,
+                mouseInterval: 66
+              })
+              console.log(b)
+              gl.on('mouseover', (e) => {
+                if (e.data) {
+                  $('.leaflet-grab').css('cursor', 'pointer')
+                  this.zone.run(()=>{
+                    let t=e.data['name'].replace(/^"|"$/g, "")
+                    if(this.theme && this.theme[b['uuid']] && this.theme[b['uuid']]['data'][e.data['uuid']] && this.theme[b['uuid']]['data'][e.data['uuid']]['data']){
+                      t=`${t} (${this.theme[b['uuid']]['data'][e.data['uuid']]['data']})`
+                    }
+                    e.sourceTarget.bindTooltip( t, {sticky:true});
+                  })
+                }
+                else {
+                  this.zone.run(()=>{
+                    $('.leaflet-grab').css('cursor', (this.listening)?'crosshair':'grab')
+                  })
+                }
+              });
+              gl.on('mouseout', (e) => {
+                this.zone.run(()=>{
+                  $('.leaflet-grab').css('cursor', (this.listening)?'crosshair':'grab')
+                })   
+              });
+              //let l=L.tileLayer(`${this.backend}/maps/boundary/${b.uuid}/boundary/{z}/{x}/{y}.png`, {})
+              gl.on('click', (e)=>{
+                console.log(e)
+              })
+              gl.on('add', lo=>{
+                this.zone.run(()=>{
+                  this.addThematic(b.uuid, b.label)
+                })
+              })
+              gl.on('remove', lo=>{
+                this.zone.run(()=>{
+                  delete this.theme[b.uuid]
+                  this.setLegends()
+                })
+              })
+              let g=new L.LayerGroup([gl])
+              this.layersControl.overlays[b.label] = g
             })
           }
         })
@@ -267,9 +313,39 @@ export class IndexComponent implements OnInit {
       }
     })
   }
+  addThematic(uuid, label){
+    let f=this.filter
+    f['aggregation_boundary']=uuid
+    let d=(new Date()).getTime()
+    this.recordService.getQuantiles(this.recordtype_uuid,f).pipe(first()).subscribe({
+      next: data=>{
+        console.log(data)
+        let l=L.tileLayer(`${this.backend}/maps/theme/${data['mapfile']}/theme/{z}/{x}/{y}.png?ts=${d}`, {})
+        console.log(this.layersControl.overlays[label])
+        if(this.layersControl.overlays[label].getLayers().length>1){
+          this.layersControl.overlays[label].removeLayer(this.layersControl.overlays[label].getLayers()[1])
+        }
+        this.layersControl.overlays[label].addLayer(l)
+        this.layersControl.overlays[label].setZIndex(999)
+        this.theme[uuid]={'label':label, 'data':{}}
+        data['sample'].forEach(k => {
+          this.theme[uuid]['data'][k[0]] = {'label':k[2], 'data':k[1]}
+        })
+        this.setLegends()
+      },error:err=>console.log(err)
+    })
+  }
   selectState(s: string) {
     this.lastState = this.state
     this.state = s
+  }
+  setLegends(){
+    this.legends=[]
+    Object.keys(this.theme).forEach(kt=>{
+      let imagePath="/legend/"
+      this.legends.push({"title":this.theme[kt]['label'], "uuid":kt, "layers":"theme", "ts":(new Date()).getTime()})
+    })
+
   }
 
   setBoundary(event: any) {
@@ -386,7 +462,9 @@ export class IndexComponent implements OnInit {
           }
         });
         cl.on('mouseout', (e) => {
-          $('.leaflet-grab').css('cursor', 'grab')
+          this.zone.run(()=>{
+            $('.leaflet-grab').css('cursor', (this.listening)?'crosshair':'grab')
+          })
         });
         cl.on('click', (e: any) => {
           if (e.data) {
@@ -405,12 +483,19 @@ export class IndexComponent implements OnInit {
             })
           }
         })
+        cl.on('remove', (e:any)=>{
+          this.zone.run(()=>{
+            delete this.recordsLayer
+          })
+        })
         this.layers = this.layers.filter(k => k != this.recordsLayer)
         this.recordsLayer = new L.LayerGroup([
           L.tileLayer(`${this.backend}/maps/records/${data["mapfile"]}/records/{z}/{x}/{y}.png/?${ts}`, {}),
           cl
         ])
-        this.layers.push(this.recordsLayer)
+        this.recordsLayer.setZIndex(1000)
+        if(show)
+          this.layers.push(this.recordsLayer)
         this.layersControl.overlays['Records'] = this.recordsLayer
       })
   }
@@ -435,23 +520,31 @@ export class IndexComponent implements OnInit {
   setFilter(e: any) {
     this.spinner.show
     console.log('setting filter')
-    console.log(e)
     this.filter = e
     this.filterObject = (this.filter && this.filter['jsonb']) ? JSON.parse(this.filter['jsonb']) : {}
+    console.log("this.layers")
+    console.log(this.layers)
+    console.log(this.layers.length)
     this.loadRecords(false)
     this.refreshList()
+    Object.keys(this.theme).forEach(tk=>{
+      this.addThematic(tk,this.theme[tk]['label'])
+    })
+    this.setLegends()
+    console.log(this.theme)
   }
   viewRecord(content: any, uuid: string) {
     this.record_uuid = uuid
     this.mapClick(content)
   }
-  startRecord(v: any) {
-    this.listening = v
+  startRecord(l:any) {
+    this.listening = l
   }
   newRecord(v: any, content: any) {
     console.log('new record')
     console.log(v)
     this.listening = false
+    this.navbar.inserting=false
     let d = new Date()
     this.record = {
       'geom': { "type": "Point", "coordinates": [v.latlng.lng, v.latlng.lat] },

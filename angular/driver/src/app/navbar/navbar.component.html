@@ -75,15 +75,15 @@
                 </li>
                 <li class="nav-item">
                     <form class="form-inline my-2 my-lg-0">
-                        <button (click)=startFilters(viewpoint) class="btn btn-outline-secondary mx-2" type="submit">
+                        <button (click)=startFilters(viewpoint) class="btn btn-outline-secondary mx-2" type="submit" placement="bottom" ngbTooltip="{{'Filters'|translate}}">
                             <i-bs name="funnel"></i-bs>
                         </button>
-                        <button *ngIf="stateSelected=='Reports'" (click)=startFilters(report) class="btn btn-outline-secondary mx-2" type="submit" id="report_button">
+                        <button *ngIf="stateSelected=='Reports'" (click)=startFilters(report) class="btn btn-outline-secondary mx-2" type="submit" id="report_button" placement="bottom" ngbTooltip="{{'Reports'|translate}}">
                             <i-bs name="text-paragraph"></i-bs>
                         </button>
-                        <button *ngIf="stateSelected=='Map'" (click)=createRecord($event) class="btn btn-outline-secondary mx-2" id="new_record_button">
-                            <i-bs name="pin-map-fill"></i-bs>
-                        </button>
+                        <label *ngIf="stateSelected=='Map'" class="btn btn-outline-secondary mx-2" placement="bottom" ngbTooltip="{{'Create Record'|translate}}" ngbButtonLabel>
+                            <input type="checkbox" ngbButton [(ngModel)]="inserting" [ngModelOptions]="{standalone: true}" (change)=createRecord($event)><i-bs name="pin-map-fill"></i-bs>
+                          </label>
                     </form>
                 </li>
                 <li class="nav-item">
@@ -200,7 +200,7 @@
     </div>
     <div class="modal-footer">
         <input type="text" [(ngModel)]=filterLabel placeholder="{{'Filter name'| translate}}">
-        <button type="button" class="btn btn-outline-secondary" (click)="saveFilter(modal);" [disabled]="filterLabel.length<1 && filtering">{{'Save'|translate}}</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="saveFilter(modal);" [disabled]="filterLabel.length<1 || filtering">{{'Save'|translate}}</button>
         <button type="button" class="btn btn-outline-secondary" (click)="applyFilter(modal);" [disabled]="filtering">{{'Apply'|translate}}</button>
         <button type="button" class="btn btn-outline-secondary" (click)="resetFilter()" [disabled]="filtering">{{'Reset'|translate}}</button>
         <button type="button" class="btn btn-outline-secondary" (click)="modal.close('Close click')">{{'Close'|translate}}</button>

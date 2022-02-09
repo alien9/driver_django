@@ -1,0 +1,6 @@
+<div class="legend" *ngIf=legends.length>
+    <div *ngFor="let legend of legends">
+        <div>{{legend['title']}}</div>
+        <img src="{{backend}}/legend/theme/{{legend['uuid']}}/?ts={{legend['ts']}}">
+    </div>
+</div>

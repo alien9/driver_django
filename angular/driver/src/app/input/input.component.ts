@@ -76,8 +76,7 @@ export class InputComponent implements OnInit {
         }
       })
     }
-    let d = this.record['occurred_from']
-    console.log("chega occurred from")
+
     let du = new Date(this.record['occurred_from'])
     this.occurred_date_ngb = this.asNgbDateStruct(du)
     this.occurred_time = {
