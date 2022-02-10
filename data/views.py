@@ -153,11 +153,11 @@ def legend(request, layer, mapfile):
             if settings.DEBUG:
                 tile_token="theme_%s_debug" % (mapfile)
             else:
-                tile_token=uuid.uuid4()
+                tile_token="theme_%s_%s" % (mapfile, uuid.uuid4())
             request.session["theme_%s" % (mapfile)]=str(tile_token)
             request.session.modified = True
-        path="?map=/etc/mapserver/{tile_token}.map&VERSION=1.1.1&LAYERS=theme&mode=legend".format(
-            tile_token=tile_token,
+        path="?map=/etc/mapserver/theme_{mapfile}.map&VERSION=1.1.1&LAYERS=theme&mode=legend".format(
+            mapfile=mapfile,
         )
         return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
 
@@ -732,7 +732,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         cursor.execute('SELECT "grout_boundarypolygon"."uuid", count(*) as c, "grout_boundarypolygon".data->\'{display_field}\' FROM  "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\'  LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") WHERE {where} GROUP BY "grout_boundarypolygon"."uuid", "grout_boundarypolygon".data->\'{display_field}\''.format(where=where, display_field=b.display_field))
         sample=sorted([r for r in cursor.fetchall()], key=lambda a: a[1])
         chunk=(len(sample)-1)/5.0
-        print("length is %s and chunk is %s" % (len(sample), chunk))
         i=0
         classes=[
 
@@ -769,7 +768,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             if settings.DEBUG:
                 tile_token="theme_%s_debug" % (tables_boundary)
             else:
-                tile_token=uuid.uuid4()
+                tile_token="%s_%s" % (tables_boundary, uuid.uuid4())
             request.session["theme_mapfile_%s" % (tables_boundary)]=str(tile_token)
             request.session.modified = True
         dbstring=connection.settings_dict['HOST']
@@ -777,9 +776,9 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             if hasattr(settings, 'CONTAINER_NAME'):
                 dbstring="database-{container}".format(container=settings.CONTAINER_NAME)
         
-        with open("./mapserver/%s.map" % (tile_token), "w+") as m:
+        with open("./mapserver/theme_%s.map" % (tile_token), "w+") as m:
                     m.write(t)
-        return Response({'query':query_sql, 'sample':sample, 'mapfile': "%s_debug" % (tables_boundary)})
+        return Response({'query':query_sql, 'sample':sample, 'mapfile': tile_token})
         
     def _fill_table(self, annotated_qs, row_multi, row_labels, col_multi, col_labels):
         """ Fill a nested dictionary with the counts and compute row totals. """
