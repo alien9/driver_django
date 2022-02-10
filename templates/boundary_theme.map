@@ -30,24 +30,27 @@ MAP
     END 
 
     LAYER
-        NAME        "boundary"
-        DATA        "{{query|safe}}"
+        NAME        "theme"
+        DATA        "geom from ({{query|safe}})as q using unique uuid using srid=4326"
         CONNECTIONTYPE  POSTGIS
         CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
-        UTFITEM   "uuid"
-        UTFDATA   "{\"uuid\":\"[uuid]\",\"name\":\"[label]\"}"
+        
         TYPE POLYGON
         PROJECTION
             "init=epsg:4326"
         END
+        {% for class in classes %}
         CLASS
+            EXPRESSION ([c]>={{class.min}} AND [c]<={{class.max}})
+            NAME "{{class.name}}"
             STYLE
-                OUTLINECOLOR {{color}}
-                WIDTH 2
-                OPACITY 70
-                COLOR 0 0 0
+                WIDTH 1
+                OUTLINECOLOR 120 102 120
+                OPACITY 50
+                COLOR {{class.color}}
             END
         END
+        {% endfor %}
     END
     SYMBOL
         NAME "circlef"
