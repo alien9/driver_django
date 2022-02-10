@@ -344,13 +344,12 @@ class Boundary(Imported):
         if self.color is not None:
             h=self.color.lstrip('#')
             color=tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
-        print("create mapserver file")
         t=render_to_string('boundary.map', {
             "connection":connection.settings_dict['HOST'],
             "username":connection.settings_dict['USER'],
             "dbname":connection.settings_dict['NAME'],
             "password":connection.settings_dict['PASSWORD'],
-            "query":"geom from (select geom, uuid from grout_boundarypolygon where boundary_id='%s')as q using unique uuid using srid=4326" % (self.uuid,),
+            "query":"geom from (select geom, uuid, data->'%s' as label from grout_boundarypolygon where boundary_id='%s')as q using unique uuid using srid=4326" % (self.display_field, self.uuid,),
             "color": "%s %s %s" % (color[0],color[1],color[2]),
         })
         with open("./mapserver/boundary_%s.map" % (self.uuid), "w+") as m:

@@ -1,5 +1,5 @@
 from collections import defaultdict
-import json, math
+import json, math, os, re
 import logging
 import uuid
 import calendar
@@ -12,13 +12,14 @@ from django.template.defaultfilters import date as template_date
 from rest_framework.decorators import api_view
 from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404,redirect
-
 from celery import states
 from django.http import JsonResponse
+from django.db.models.sql.datastructures import Join
 
 from django.conf import settings
 from django.db import transaction
 from django.db.models import (
+    FilteredRelation,
     Case,
     CharField,
     Count,
@@ -144,6 +145,23 @@ def mapserver(request):
     return proxy_view(request, "http://%s%s" % (config.MAPSERVER, request.path,))
 
 @csrf_exempt
+def legend(request, layer, mapfile):
+    if layer=='theme':
+        if "theme_%s" % (mapfile) in request.session:
+            tile_token = request.session["theme_%s" % (mapfile)]
+        else:
+            if settings.DEBUG:
+                tile_token="theme_%s_debug" % (mapfile)
+            else:
+                tile_token="theme_%s_%s" % (mapfile, uuid.uuid4())
+            request.session["theme_%s" % (mapfile)]=str(tile_token)
+            request.session.modified = True
+        path="?map=/etc/mapserver/theme_{mapfile}.map&VERSION=1.1.1&LAYERS=theme&mode=legend".format(
+            mapfile=mapfile,
+        )
+        return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
+
+@csrf_exempt
 def grid(request, geometry, mapfile, layer, z, x, y):
     num_sq=math.pow(2, int(z))
     size_sq=40075016.68557849/num_sq
@@ -151,8 +169,17 @@ def grid(request, geometry, mapfile, layer, z, x, y):
     x1=x0+size_sq
     y0=20037508.342789244-(int(y)+1)*size_sq
     y1=y0+size_sq
-    path="?map=/etc/mapserver/{geometry}_{mapfile}&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS={layer}&STYLES=&SRS=EPSG:3857&BBOX={x0},{y0},{x1},{y1}&WIDTH=250&HEIGHT=250&type=utfgrid&format=application/json".format(
-        mapfile="%s.map" % mapfile,
+    print("looking for")
+    filename="{geometry}_{mapfile}.map".format(geometry=geometry,mapfile=mapfile,)
+    if not os.path.exists("./mapserver/%s" % (filename)):
+        if geometry=='critical':
+            b=BlackSpotSet.objects.get(pk=mapfile)
+            b.write_mapfile()
+        if geometry=='boundary':
+            b=Boundary.objects.get(pk=mapfile)
+            b.write_mapfile()
+    path="?map=/etc/mapserver/{filename}&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS={layer}&STYLES=&SRS=EPSG:3857&BBOX={x0},{y0},{x1},{y1}&WIDTH=250&HEIGHT=250&type=utfgrid&format=application/json".format(
+        filename=filename,
         x0=x0,
         x1=x1,
         y0=y0,
@@ -164,6 +191,10 @@ def grid(request, geometry, mapfile, layer, z, x, y):
 
 @csrf_exempt
 def maps(request, geometry, mapfile, layer, z, x, y):
+    if geometry=='boundary' and not os.path.exists("./mapserver/boundary_%s.map" % (mapfile)):
+        b=Boundary.objects.get(pk=mapfile)
+        b.write_mapfile()
+    
     path="?map=/etc/mapserver/{geometry}_{mapfile}&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS={layer}&STYLES=&SRS=EPSG:3857&MODE=tile&TILEMODE=gmap&TILE={x}+{y}+{z}&WIDTH=250&HEIGHT=250&format=image/png".format(
         mapfile="%s.map" % mapfile,
         x=x,
@@ -172,7 +203,7 @@ def maps(request, geometry, mapfile, layer, z, x, y):
         geometry=geometry,
         layer=layer
     )
-    
+    print(path)    
     return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
  
 
@@ -629,8 +660,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         # Validate there's exactly one row_* and one col_* parameter
         row_params = set(request.query_params) & valid_row_params
         col_params = set(request.query_params) & valid_col_params
-        print(row_params)
-        print(col_params)
         if len(row_params) != 1 or len(col_params) != 1:
             raise ParseError(detail='Exactly one col_* and row_* parameter required; options are {}'
                                     .format(list(valid_row_params | valid_col_params)))
@@ -672,6 +701,85 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 annotated_qs, row_multi, row_labels, col_multi, col_labels))
         return Response(response)
 
+    @action(methods=['get'], detail=False)
+    def quantiles(self, request):
+        # this is a particular crosstabs request for aggregating by geo, and creating a mapfile
+        # the mapfile is indexed by the boundary uuid and the session id.
+        
+        tables_boundary = request.query_params.get('aggregation_boundary', None)
+        b=Boundary.objects.get(pk=tables_boundary)
+        color=[255,0,0]
+        if b.color is not None:
+            h=b.color.lstrip('#')
+            color=tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+        qset=BoundaryPolygon.objects.filter(boundary_id=tables_boundary).values('uuid','geom')
+        cursor = connection.cursor().cursor
+        fq=self.get_filtered_queryset(request).order_by().values('geom')
+        sql, params = fq.query.sql_with_params()
+        fq = cursor.mogrify(sql, params).decode('utf-8')
+        sql, params = qset.query.sql_with_params()
+        gq = cursor.mogrify(sql, params).decode('utf-8')
+        where=reduce((lambda a, b: "%s AND %s" % (a, b)),
+            map(
+                lambda x: re.search('WHERE (.*)$', x).group(1),
+                [fq, gq]
+            )
+        )
+        #the complete query is set to the mapfile
+        query_sql='SELECT "grout_boundarypolygon"."geom","grout_boundarypolygon"."uuid", count(*) as c FROM "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\'  LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") WHERE {where} GROUP BY "grout_boundarypolygon"."geom","grout_boundarypolygon"."uuid"'.format(where=where)
+        
+        #execute the small query
+        cursor.execute('SELECT "grout_boundarypolygon"."uuid", count(*) as c, "grout_boundarypolygon".data->\'{display_field}\' FROM  "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\'  LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") WHERE {where} GROUP BY "grout_boundarypolygon"."uuid", "grout_boundarypolygon".data->\'{display_field}\''.format(where=where, display_field=b.display_field))
+        sample=sorted([r for r in cursor.fetchall()], key=lambda a: a[1])
+        chunk=(len(sample)-1)/5.0
+        i=0
+        classes=[
+
+        ]
+        print(color)
+        last={'max':-1, 'min':-1}
+        while i<5:
+            min=sample[math.floor(i*chunk)][1]
+            max=sample[math.ceil((i+1)*chunk)][1]
+            cl={
+                'min':min,
+                'max':max,
+                'color':reduce(lambda a,b: "{a} {b}".format(a=a,b=b), map(
+                lambda c: 255-round(((255-c)/4)*i),
+                color)),
+                'name':"{min} ~ {max}".format(max=max,min=min)
+            }
+            if min!=max and (last['min']!=min or last['max']!=max):
+                classes.append(cl)
+            last={'max':cl['max'],'min':cl['min']}
+            i+=1
+        
+        t=render_to_string('boundary_theme.map', {
+                    "connection":connection.settings_dict['HOST'],
+                    "username":connection.settings_dict['USER'],
+                    "password":connection.settings_dict['PASSWORD'],
+                    "dbname":connection.settings_dict['NAME'],
+                    "query":query_sql.replace('"', '\\"'),
+                    "classes":classes,
+                })
+        if "theme_mapfile_%s" % (tables_boundary) in request.session:
+            tile_token = request.session["theme_mapfile_%s" % (tables_boundary)]
+        else:
+            if settings.DEBUG:
+                tile_token="theme_%s_debug" % (tables_boundary)
+            else:
+                tile_token="%s_%s" % (tables_boundary, uuid.uuid4())
+            request.session["theme_mapfile_%s" % (tables_boundary)]=str(tile_token)
+            request.session.modified = True
+        dbstring=connection.settings_dict['HOST']
+        if settings.DEBUG:
+            if hasattr(settings, 'CONTAINER_NAME'):
+                dbstring="database-{container}".format(container=settings.CONTAINER_NAME)
+        
+        with open("./mapserver/theme_%s.map" % (tile_token), "w+") as m:
+                    m.write(t)
+        return Response({'query':query_sql, 'sample':sample, 'mapfile': tile_token})
+        
     def _fill_table(self, annotated_qs, row_multi, row_labels, col_multi, col_labels):
         """ Fill a nested dictionary with the counts and compute row totals. """
 

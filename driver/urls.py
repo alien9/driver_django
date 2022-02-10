@@ -46,6 +46,7 @@ urlpatterns = [
     url(r'^editor/$', data_views.editor),
     url(r'^maps/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).png/$', data_views.maps),
     url(r'^grid/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).json/$', data_views.grid),
+    url(r'^legend/(?P<layer>[-\w]*)/(?P<mapfile>[-\w]*)/$', data_views.legend),
 
     url(r'^mapillary_callback/$', data_views.mapillary_callback),
     
