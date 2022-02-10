@@ -327,7 +327,7 @@ export class IndexComponent implements OnInit {
         }
         this.layersControl.overlays[label].addLayer(l)
         this.layersControl.overlays[label].setZIndex(999)
-        this.theme[uuid]={'label':label, 'data':{}}
+        this.theme[uuid]={'label':label, 'data':{}, 'mapfile': data['mapfile']}
         data['sample'].forEach(k => {
           this.theme[uuid]['data'][k[0]] = {'label':k[2], 'data':k[1]}
         })
@@ -343,7 +343,7 @@ export class IndexComponent implements OnInit {
     this.legends=[]
     Object.keys(this.theme).forEach(kt=>{
       let imagePath="/legend/"
-      this.legends.push({"title":this.theme[kt]['label'], "uuid":kt, "layers":"theme", "ts":(new Date()).getTime()})
+      this.legends.push({"title":this.theme[kt]['label'], "mapfile":this.theme[kt]['mapfile'], "uuid":kt, "layers":"theme", "ts":(new Date()).getTime()})
     })
 
   }
