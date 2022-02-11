@@ -14,7 +14,7 @@ import { ChartsComponent } from '../charts/charts.component';
 import { IrapPopupComponent } from '../irap-popup/irap-popup.component';
 
 import * as uuid from 'uuid';
-import { of} from 'rxjs' 
+import { of } from 'rxjs'
 @Component({
   selector: 'app-index',
   templateUrl: './index.component.html',
@@ -24,12 +24,12 @@ export class IndexComponent implements OnInit {
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
     if (event.key && event.key == 'Escape') {
-      this.navbar.inserting=false
+      this.navbar.inserting = false
       this.listening = false
       $('.leaflet-container').css('cursor', 'grab');
     }
   }
-  public config: object={}
+  public config: object = {}
   public boundaries: any[] = []
   public boundary: any
   public boundaryPolygons: any[]
@@ -50,7 +50,7 @@ export class IndexComponent implements OnInit {
   public recordList: object
   public map: L.Map
   record_uuid: string
-  recordtype_uuid:string
+  recordtype_uuid: string
   public critical: object = {}
   public report: object
   public editing: boolean = false
@@ -60,21 +60,21 @@ export class IndexComponent implements OnInit {
   public mapillary_id: string
   public irapDataset
   listPage: number = 1
-  listening: boolean=false
+  listening: boolean = false
   hasIrap: boolean
   locale: string
   weekdays: object
   reportFilters: object[]
-  legends:object[]
+  legends: object[]
   private irapColor = [
     '#000000',
     '#ff0000',
-    '#ff9900',  
-    '#ffaa00',  
-    '#ffff44',  
+    '#ff9900',
+    '#ffaa00',
+    '#ffff44',
     '#009900',
   ]
-  theme:object={}
+  theme: object = {}
   @ViewChild(NavbarComponent) navbar!: NavbarComponent;
   @ViewChild(ChartsComponent) charts!: ChartsComponent;
   popContent: any
@@ -106,14 +106,14 @@ export class IndexComponent implements OnInit {
             for (let i = 0; i < rata['results'].length; i++) {
               if (rata['results'][i]['label'] == data['PRIMARY_LABEL']) {
                 schema_uuid = rata['results'][i]['current_schema'];
-                this.recordtype_uuid=rata['results'][i]['uuid']
+                this.recordtype_uuid = rata['results'][i]['uuid']
               };
             }
             if (schema_uuid) {
               this.recordService.getRecordSchema(schema_uuid).subscribe(
                 sata => {
                   localStorage.setItem('record_schema', JSON.stringify(sata));
-                  this.recordSchema=sata
+                  this.recordSchema = sata
                   //this.entering.emit(null)
                   //this.router.navigateByUrl('/')
                   this.afterInit()
@@ -130,7 +130,7 @@ export class IndexComponent implements OnInit {
   }
   afterInit() {
     let w = document.cookie.match(/AuthService\.canWrite=([^;]*);/)
-    if (w && w.length && w[1]=='true') this.canWrite = true
+    if (w && w.length && w[1] == 'true') this.canWrite = true
     this.state = localStorage.getItem('state') || 'Map'
     this.popContent = $("#popup-content")[0]
     this.config = (localStorage.getItem("config")) ? JSON.parse(localStorage.getItem("config")) : {}
@@ -217,15 +217,15 @@ export class IndexComponent implements OnInit {
                 $('.leaflet-grab').css('cursor', 'pointer')
               }
               else {
-                this.zone.run(()=>{
-                  $('.leaflet-grab').css('cursor', (this.listening)?'crosshair':'grab')
-                })   
+                this.zone.run(() => {
+                  $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
+                })
               }
             });
             gl.on('mouseout', (e) => {
-              this.zone.run(()=>{
-                $('.leaflet-grab').css('cursor', (this.listening)?'crosshair':'grab')
-              })              
+              this.zone.run(() => {
+                $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
+              })
             });
             gl.on('click', (e: any) => {
               if (!e.data) return
@@ -266,41 +266,44 @@ export class IndexComponent implements OnInit {
               gl.on('mouseover', (e) => {
                 if (e.data) {
                   $('.leaflet-grab').css('cursor', 'pointer')
-                  this.zone.run(()=>{
-                    let t=e.data['name'].replace(/^"|"$/g, "")
-                    if(this.theme && this.theme[b['uuid']] && this.theme[b['uuid']]['data'][e.data['uuid']] && this.theme[b['uuid']]['data'][e.data['uuid']]['data']){
-                      t=`${t} (${this.theme[b['uuid']]['data'][e.data['uuid']]['data']})`
+                  this.zone.run(() => {
+                    let t = e.data['name'].replace(/^"|"$/g, "")
+                    if (this.theme && this.theme[b['uuid']] && this.theme[b['uuid']]['data'][e.data['uuid']] && this.theme[b['uuid']]['data'][e.data['uuid']]['data']) {
+                      t = `${t} (${this.theme[b['uuid']]['data'][e.data['uuid']]['data']})`
                     }
-                    e.sourceTarget.bindTooltip( t, {sticky:true});
+                    this.map.eachLayer(function (layer) {
+                      if (layer.options.pane === "tooltipPane") layer.removeFrom(this.map);
+                    });
+                    e.sourceTarget.bindTooltip(t, { sticky: true });
                   })
                 }
                 else {
-                  this.zone.run(()=>{
-                    $('.leaflet-grab').css('cursor', (this.listening)?'crosshair':'grab')
+                  this.zone.run(() => {
+                    $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
                   })
                 }
               });
               gl.on('mouseout', (e) => {
-                this.zone.run(()=>{
-                  $('.leaflet-grab').css('cursor', (this.listening)?'crosshair':'grab')
-                })   
+                this.zone.run(() => {
+                  $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
+                })
               });
               //let l=L.tileLayer(`${this.backend}/maps/boundary/${b.uuid}/boundary/{z}/{x}/{y}.png`, {})
-              gl.on('click', (e)=>{
+              gl.on('click', (e) => {
                 console.log(e)
               })
-              gl.on('add', lo=>{
-                this.zone.run(()=>{
+              gl.on('add', lo => {
+                this.zone.run(() => {
                   this.addThematic(b.uuid, b.label)
                 })
               })
-              gl.on('remove', lo=>{
-                this.zone.run(()=>{
+              gl.on('remove', lo => {
+                this.zone.run(() => {
                   delete this.theme[b.uuid]
                   this.setLegends()
                 })
               })
-              let g=new L.LayerGroup([gl])
+              let g = new L.LayerGroup([gl])
               this.layersControl.overlays[b.label] = g
             })
           }
@@ -313,37 +316,37 @@ export class IndexComponent implements OnInit {
       }
     })
   }
-  addThematic(uuid, label){
-    let f=this.filter
-    f['aggregation_boundary']=uuid
-    let d=(new Date()).getTime()
-    this.recordService.getQuantiles(this.recordtype_uuid,f).pipe(first()).subscribe({
-      next: data=>{
+  addThematic(uuid, label) {
+    let f = this.filter
+    f['aggregation_boundary'] = uuid
+    let d = (new Date()).getTime()
+    this.recordService.getQuantiles(this.recordtype_uuid, f).pipe(first()).subscribe({
+      next: data => {
         console.log(data)
-        let l=L.tileLayer(`${this.backend}/maps/theme/${data['mapfile']}/theme/{z}/{x}/{y}.png?ts=${d}`, {})
+        let l = L.tileLayer(`${this.backend}/maps/theme/${data['mapfile']}/theme/{z}/{x}/{y}.png?ts=${d}`, {})
         console.log(this.layersControl.overlays[label])
-        if(this.layersControl.overlays[label].getLayers().length>1){
+        if (this.layersControl.overlays[label].getLayers().length > 1) {
           this.layersControl.overlays[label].removeLayer(this.layersControl.overlays[label].getLayers()[1])
         }
         this.layersControl.overlays[label].addLayer(l)
         this.layersControl.overlays[label].setZIndex(999)
-        this.theme[uuid]={'label':label, 'data':{}, 'mapfile': data['mapfile']}
+        this.theme[uuid] = { 'label': label, 'data': {}, 'mapfile': data['mapfile'] }
         data['sample'].forEach(k => {
-          this.theme[uuid]['data'][k[0]] = {'label':k[2], 'data':k[1]}
+          this.theme[uuid]['data'][k[0]] = { 'label': k[2], 'data': k[1] }
         })
         this.setLegends()
-      },error:err=>console.log(err)
+      }, error: err => console.log(err)
     })
   }
   selectState(s: string) {
     this.lastState = this.state
     this.state = s
   }
-  setLegends(){
-    this.legends=[]
-    Object.keys(this.theme).forEach(kt=>{
-      let imagePath="/legend/"
-      this.legends.push({"title":this.theme[kt]['label'], "mapfile":this.theme[kt]['mapfile'], "uuid":kt, "layers":"theme", "ts":(new Date()).getTime()})
+  setLegends() {
+    this.legends = []
+    Object.keys(this.theme).forEach(kt => {
+      let imagePath = "/legend/"
+      this.legends.push({ "title": this.theme[kt]['label'], "mapfile": this.theme[kt]['mapfile'], "uuid": kt, "layers": "theme", "ts": (new Date()).getTime() })
     })
 
   }
@@ -462,8 +465,8 @@ export class IndexComponent implements OnInit {
           }
         });
         cl.on('mouseout', (e) => {
-          this.zone.run(()=>{
-            $('.leaflet-grab').css('cursor', (this.listening)?'crosshair':'grab')
+          this.zone.run(() => {
+            $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
           })
         });
         cl.on('click', (e: any) => {
@@ -483,8 +486,8 @@ export class IndexComponent implements OnInit {
             })
           }
         })
-        cl.on('remove', (e:any)=>{
-          this.zone.run(()=>{
+        cl.on('remove', (e: any) => {
+          this.zone.run(() => {
             delete this.recordsLayer
           })
         })
@@ -494,7 +497,7 @@ export class IndexComponent implements OnInit {
           cl
         ])
         this.recordsLayer.setZIndex(1000)
-        if(show)
+        if (show)
           this.layers.push(this.recordsLayer)
         this.layersControl.overlays['Records'] = this.recordsLayer
       })
@@ -527,8 +530,8 @@ export class IndexComponent implements OnInit {
     console.log(this.layers.length)
     this.loadRecords(false)
     this.refreshList()
-    Object.keys(this.theme).forEach(tk=>{
-      this.addThematic(tk,this.theme[tk]['label'])
+    Object.keys(this.theme).forEach(tk => {
+      this.addThematic(tk, this.theme[tk]['label'])
     })
     this.setLegends()
     console.log(this.theme)
@@ -537,14 +540,14 @@ export class IndexComponent implements OnInit {
     this.record_uuid = uuid
     this.mapClick(content)
   }
-  startRecord(l:any) {
+  startRecord(l: any) {
     this.listening = l
   }
   newRecord(v: any, content: any) {
     console.log('new record')
     console.log(v)
     this.listening = false
-    this.navbar.inserting=false
+    this.navbar.inserting = false
     let d = new Date()
     this.record = {
       'geom': { "type": "Point", "coordinates": [v.latlng.lng, v.latlng.lat] },

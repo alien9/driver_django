@@ -35,6 +35,7 @@ export class LoginComponent implements OnInit {
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
             expires = "; expires=" + date.toUTCString();
         }
+        console.log(name + "=" + (value || "") + expires + "; path=/");
         document.cookie = name + "=" + (value || "") + expires + "; path=/";
     }
     getCookie(name) {
@@ -61,7 +62,7 @@ export class LoginComponent implements OnInit {
         }
         this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
         this.backend = this.recordService.getBackend()
-        this.setCookie('sessionid', '', -1)
+        this.setCookie('sessionid', '', -10)
     }  
     loginWithGoogle(): void {
         window.location.href=`${this.authenticationService.getBackend()}/oidc/authenticate/`
