@@ -490,16 +490,15 @@ export class IndexComponent implements OnInit {
           this.zone.run(() => {
           })
         })
-        if(this.recordsLayer)
+        if(this.recordsLayer && this.map.hasLayer(this.recordsLayer))
           this.map.removeLayer(this.recordsLayer)
-        this.layers = this.layers.filter(k => k != this.recordsLayer)
         this.recordsLayer = new L.LayerGroup([
           L.tileLayer(`${this.backend}/maps/records/${data["mapfile"]}/records/{z}/{x}/{y}.png/?${ts}`, {}),
           cl
         ])
         this.recordsLayer.setZIndex(8000)
         if(show)
-          this.layers.push(this.recordsLayer)
+          this.map.addLayer(this.recordsLayer)
         this.layersControl.overlays['Records'] = this.recordsLayer
       })
   }
@@ -714,7 +713,7 @@ export class IndexComponent implements OnInit {
       return l
     }))
     this.layersControl.overlays['iRap'] = lg
-    this.layers.push(lg)
+    this.map.addLayer(lg)
   }
   removeIrap() {
     console.log('removeIrap')
