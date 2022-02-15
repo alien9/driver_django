@@ -413,10 +413,9 @@ export class IndexComponent implements OnInit {
             }
             this.setFilter(fu)
           } else {
-            //nothing to show
-            this.loadRecords(true)
             this.refreshList()
           }
+          this.loadRecords(true)
         }
       })
     } else {
@@ -490,14 +489,14 @@ export class IndexComponent implements OnInit {
           this.zone.run(() => {
           })
         })
-        if(this.recordsLayer && this.map.hasLayer(this.recordsLayer))
+        if (this.recordsLayer && this.map.hasLayer(this.recordsLayer))
           this.map.removeLayer(this.recordsLayer)
         this.recordsLayer = new L.LayerGroup([
           L.tileLayer(`${this.backend}/maps/records/${data["mapfile"]}/records/{z}/{x}/{y}.png/?${ts}`, {}),
           cl
         ])
         this.recordsLayer.setZIndex(8000)
-        if(show)
+        if (show)
           this.map.addLayer(this.recordsLayer)
         this.layersControl.overlays['Records'] = this.recordsLayer
       })
