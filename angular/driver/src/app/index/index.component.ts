@@ -323,7 +323,7 @@ export class IndexComponent implements OnInit {
     this.recordService.getQuantiles(this.recordtype_uuid, f).pipe(first()).subscribe({
       next: data => {
         console.log(data)
-        let l = L.tileLayer(`${this.backend}/maps/theme/${data['mapfile']}/theme/{z}/{x}/{y}.png?ts=${d}`, {})
+        let l = L.tileLayer(`${this.backend}/maps/theme/${data['mapfile']}/theme%20border/{z}/{x}/{y}.png?ts=${d}`, {})
         console.log(this.layersControl.overlays[label])
         if (this.layersControl.overlays[label].getLayers().length > 1) {
           this.layersControl.overlays[label].removeLayer(this.layersControl.overlays[label].getLayers()[1])
@@ -488,16 +488,17 @@ export class IndexComponent implements OnInit {
         })
         cl.on('remove', (e: any) => {
           this.zone.run(() => {
-            delete this.recordsLayer
           })
         })
+        if(this.recordsLayer)
+          this.map.removeLayer(this.recordsLayer)
         this.layers = this.layers.filter(k => k != this.recordsLayer)
         this.recordsLayer = new L.LayerGroup([
           L.tileLayer(`${this.backend}/maps/records/${data["mapfile"]}/records/{z}/{x}/{y}.png/?${ts}`, {}),
           cl
         ])
-        this.recordsLayer.setZIndex(1000)
-        if (show)
+        this.recordsLayer.setZIndex(8000)
+        if(show)
           this.layers.push(this.recordsLayer)
         this.layersControl.overlays['Records'] = this.recordsLayer
       })
@@ -522,13 +523,9 @@ export class IndexComponent implements OnInit {
   }
   setFilter(e: any) {
     this.spinner.show
-    console.log('setting filter')
     this.filter = e
     this.filterObject = (this.filter && this.filter['jsonb']) ? JSON.parse(this.filter['jsonb']) : {}
-    console.log("this.layers")
-    console.log(this.layers)
-    console.log(this.layers.length)
-    this.loadRecords(false)
+    this.loadRecords(this.map.hasLayer(this.recordsLayer))
     this.refreshList()
     Object.keys(this.theme).forEach(tk => {
       this.addThematic(tk, this.theme[tk]['label'])
@@ -739,5 +736,16 @@ export class IndexComponent implements OnInit {
   setListPage(e: any) {
     this.listPage = e
     this.refreshList()
+  }
+  download(e: any) {
+    switch (this.state) {
+      case 'Reports':
+        console.log(this.report)
+        break
+      case 'Map':
+      case 'List':
+        console.log('download should start')
+        break
+    }
   }
 }

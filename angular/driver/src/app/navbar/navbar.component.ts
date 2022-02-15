@@ -32,6 +32,7 @@ export class NavbarComponent implements OnInit {
   @Output() goBack = new EventEmitter<string>()
   @Output() iRapChange = new EventEmitter<object>()
   @Output() newRecord = new EventEmitter<boolean>()
+  @Output() startDownload = new EventEmitter<object>()
   @Input() recordSchema: object
   @Input() stateSelected
   public authenticated: boolean = true
@@ -253,7 +254,7 @@ export class NavbarComponent implements OnInit {
     this.router.navigateByUrl('/login')
   }
   download() {
-
+    this.startDownload.emit({})
   }
   setlang(code: string) {
     localStorage.setItem("Language", code)
