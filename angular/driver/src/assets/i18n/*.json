@@ -74,6 +74,7 @@
 	"day_of_week": "",
 	"dusk": "",
 	"for": "",
+	"from": "",
 	"hour_of_day": "",
 	"month": "",
 	"night": "",
@@ -82,6 +83,8 @@
 	},
 	"shortTime": "",
 	"to": "",
+	"up to": "",
+	"upto": "",
 	"week": "",
 	"year": ""
 }

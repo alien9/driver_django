@@ -74,6 +74,7 @@
     "day_of_week": "Day of week",
     "dusk": "Dusk",
     "for": "for",
+    "from": "from",
     "hour_of_day": "Hour of the day",
     "month": "Month",
     "night": "Night",
@@ -82,6 +83,8 @@
     },
     "shortTime": "shortTime",
     "to": "to",
+    "up to": "up to",
+    "upto": "upto",
     "week": "Week",
     "year": "Year"
 }

@@ -74,6 +74,7 @@
     "day_of_week": "Dia da semana",
     "dusk": "Crepúsculo",
     "for": "para",
+    "from": "de",
     "hour_of_day": "Hora do dia",
     "month": "Mês",
     "night": "Noite",
@@ -82,6 +83,8 @@
     },
     "shortTime": "Tempo",
     "to": "a",
+    "up to": "até",
+    "upto": "até",
     "week": "Semana",
     "year": "Ano"
 }

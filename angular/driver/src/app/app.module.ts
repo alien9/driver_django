@@ -25,6 +25,8 @@ import { OrderPipe } from './navbar/order-field.pipe'
 import { EnumPipe } from './enum.pipe'
 import { DisplayPipe } from './navbar/display.pipe'
 import { FormatPipe } from './navbar/format.pipe'
+import { FilterAsTextPipe } from './report/filterAsText.pipe'
+
 import { DictDumpPipe } from './navbar/dict_dump.pipe'
 import { FirstPipe } from './list/first.pipe'
 import { RelatedPipe } from './input/related.pipe'
@@ -119,6 +121,7 @@ const icons = {
     DisplayPipe,
     FormatPipe,
     DictDumpPipe,
+    FilterAsTextPipe,
     FirstPipe,
     ArrayFirstPipe,
     IsDatePipe,

@@ -13,8 +13,9 @@
                 </span>
                 <span *ngIf="!report['relatable']">{{config['PRIMARY_LABEL']|translate}} </span>
                 <span *ngIf="table['tablekey']"> {{'for'|translate}} {{report['crosstabs']['table_labels'][table['tablekey']]}}</span> {{'by'|translate}} {{report['path']['row']|translate}} {{'and'|translate}} {{report['path']['col']|translate}}
-                <span *ngIf=false><a href="#" (click)=showMap()>{{'Map'|translate}}</a></span>
+
             </h5>
+            <h5 *ngIf="report['parameters']">{{report['parameters']|filterAsText}}</h5>
         </div>
         <table class="table" *ngIf=report>
             <thead>

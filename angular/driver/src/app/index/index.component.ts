@@ -12,9 +12,10 @@ import { NgxSpinnerService } from "ngx-spinner";
 import { NavbarComponent } from '../navbar/navbar.component'
 import { ChartsComponent } from '../charts/charts.component';
 import { IrapPopupComponent } from '../irap-popup/irap-popup.component';
-
+import writeXlsxFile from 'write-excel-file'
+import { TranslateService } from '@ngx-translate/core';
 import * as uuid from 'uuid';
-import { of } from 'rxjs'
+
 @Component({
   selector: 'app-index',
   templateUrl: './index.component.html',
@@ -88,7 +89,8 @@ export class IndexComponent implements OnInit {
     private spinner: NgxSpinnerService,
     private zone: NgZone,
     private injector: Injector,
-    private resolver: ComponentFactoryResolver
+    private resolver: ComponentFactoryResolver,
+    private translateService: TranslateService
   ) { }
 
   ngOnInit(): void {
@@ -170,7 +172,7 @@ export class IndexComponent implements OnInit {
     let fu = localStorage.getItem("current_filter")
     if (fu) {
       this.filter = JSON.parse(fu)
-      this.filterObject = JSON.parse(this.filter['jsonb'])
+      this.filterObject = (this.filter['jsonb']) ? JSON.parse(this.filter['jsonb']) : {}
     }
 
     let str = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
@@ -341,6 +343,10 @@ export class IndexComponent implements OnInit {
   selectState(s: string) {
     this.lastState = this.state
     this.state = s
+    if (s == 'Map') {
+      if (this.recordsLayer && this.map && !this.map.hasLayer(this.recordsLayer))
+        this.map.addLayer(this.recordsLayer)
+    }
   }
   setLegends() {
     this.legends = []
@@ -411,6 +417,7 @@ export class IndexComponent implements OnInit {
               'occurred_max': di.toISOString(),
               'occurred_min': df.toISOString()
             }
+            localStorage.setItem("current_filter", JSON.stringify(fu))
             this.setFilter(fu)
           } else {
             this.refreshList()
@@ -443,6 +450,7 @@ export class IndexComponent implements OnInit {
     )
   }
   loadRecords(show: boolean) {
+    console.log("loading records")
     this.recordService.getMapFileKey({ 'uuid': this.recordSchema["record_type"] }, {
       filter: this.filter
     }).pipe(first()).subscribe(
@@ -487,18 +495,26 @@ export class IndexComponent implements OnInit {
         })
         cl.on('remove', (e: any) => {
           this.zone.run(() => {
+            delete this.recordsLayer
           })
         })
-        if (this.recordsLayer && this.map.hasLayer(this.recordsLayer))
+        if (this.recordsLayer && this.map && this.map.hasLayer(this.recordsLayer))
           this.map.removeLayer(this.recordsLayer)
         this.recordsLayer = new L.LayerGroup([
           L.tileLayer(`${this.backend}/maps/records/${data["mapfile"]}/records/{z}/{x}/{y}.png/?${ts}`, {}),
           cl
         ])
         this.recordsLayer.setZIndex(8000)
-        if (show)
-          this.map.addLayer(this.recordsLayer)
+        console.log("records loaded")
         this.layersControl.overlays['Records'] = this.recordsLayer
+        if (show && this.map) {
+          console.log('map add layer')
+          this.map.addLayer(this.recordsLayer)
+        }
+        if (!this.map) {
+          console.log('no map yet')
+          this.layers.push(this.recordsLayer)
+        }
       })
   }
   refreshList() {
@@ -523,7 +539,7 @@ export class IndexComponent implements OnInit {
     this.spinner.show
     this.filter = e
     this.filterObject = (this.filter && this.filter['jsonb']) ? JSON.parse(this.filter['jsonb']) : {}
-    this.loadRecords(this.map.hasLayer(this.recordsLayer))
+    this.loadRecords(this.map && this.map.hasLayer(this.recordsLayer))
     this.refreshList()
     Object.keys(this.theme).forEach(tk => {
       this.addThematic(tk, this.theme[tk]['label'])
@@ -579,6 +595,7 @@ export class IndexComponent implements OnInit {
 
   }
   setMap(e: L.Map) {
+    console.log("map is ready")
     this.map = e
   }
   popClick(e: any) {
@@ -735,10 +752,57 @@ export class IndexComponent implements OnInit {
     this.listPage = e
     this.refreshList()
   }
-  download(e: any) {
+  async download(e: any) {
     switch (this.state) {
       case 'Reports':
         console.log(this.report)
+        let filename = this.translateService.instant(this.config['PRIMARY_LABEL'])
+        if (this.report['parameters']['relate'])
+          filename = this.translateService.instant(this.report['parameters']['relate'].split(/,/).pop())
+        //Sheet header
+        let line = 0
+        let data: Object[][] = [[
+        ]]
+        // Table Headers
+        data[line].push({'value': this.translateService.instant(this.report['path']['row']), 'type': String})
+        this.report['crosstabs']['col_labels'].forEach(gk => {
+          data[line].push({
+            value: this.translateService.instant(gk['label'][0]['text']), type: String
+          })
+        })
+        if (!this.report['parameters']['relate'] || !this.report['parameters']['relate'].length) {
+          data[line].push({
+            value: this.translateService.instant('Total'),
+            type: String
+          })
+        }
+        line++
+        //table content
+        this.report['crosstabs']['row_labels'].forEach(l => {
+          data.push([{ value: this.translateService.instant(l['label'][0]['text']), type: String }])
+          this.report['crosstabs']['col_labels'].forEach(col => {
+            let v: Number
+            if (this.report['crosstabs']['tables'][0]['data'][l.key] && this.report['crosstabs']['tables'][0]['data'][l.key][col.key])
+              v = this.report['crosstabs']['tables'][0]['data'][l.key][col.key]
+            data[line].push({
+              value: (v) ? v : 0,
+              type: Number
+            })
+          })
+          if (!this.report['parameters']['relate'] || !this.report['parameters']['relate'].length) {
+            let v: Number
+            if (this.report['crosstabs']['tables'][0]['row_totals'][l.key])
+              v = this.report['crosstabs']['tables'][0]['row_totals'][l.key]
+            data[line].push({
+              value: (v) ? v : 0,
+              type: Number
+            })
+          }
+          line++
+        })
+        await writeXlsxFile(data, {
+          fileName: `${filename}.xlsx`
+        })
         break
       case 'Map':
       case 'List':

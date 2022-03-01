@@ -51,10 +51,8 @@ export class MapComponent implements OnInit {
       return
     }
     this.recordSchema = JSON.parse(localStorage.getItem("record_schema"))
-    let config = JSON.parse(localStorage.getItem("config"))
     let bp = localStorage.getItem("boundary_polygon")
     if (bp) this.boundary_polygon_uuid = bp
-    let fu = localStorage.getItem("current_filter")
     if (this.polygon) this.drawnItems.addLayer(this.polygon)
     this.drawOptions = {
       position: 'topright',
