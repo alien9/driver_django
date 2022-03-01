@@ -51,6 +51,7 @@ export class LoginComponent implements OnInit {
 
     ngOnInit() {
         localStorage.removeItem('token');
+        console.log("removed session id")
         this.loginForm = this.formBuilder.group({
             username: ['', Validators.required],
             password: ['', Validators.required]
