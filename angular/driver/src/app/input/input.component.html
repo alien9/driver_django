@@ -16,7 +16,8 @@
                         <span>{{'Longitude'|translate}}</span>: {{record['geom'].coordinates[0]}}
                     </li>
                     <li class="list-group-item">
-                        <span>{{'Location'|translate}}</span>: {{record["location_text"] }}
+                        <span>{{'Location'|translate}}</span>: <span *ngIf="!editing">{{record["location_text"] }}</span>
+                        <input class="form-control" *ngIf="editing" [(ngModel)]="record['location_text']">
                     </li>
                     <li class="list-group-item">
                         <input class="form-control" type=hidden placeholder="yyyy-mm-dd" name="occurred_date" [(ngModel)]="occurred_date_ngb" ngbDatepicker #df="ngbDatepicker" (dateSelect)="setDate($event)">
@@ -29,7 +30,6 @@
                     </li>
                     <li class="list-group-item">
                         <span>{{'Weather'|translate}}</span>: <span *ngIf="!editing">{{record["weather"]|translate}}</span>
-
                         <select *ngIf="editing" class="form-select" [(ngModel)]="record['weather']">
                             <!--possible values: 
                                 {{'clear-day'|translate}},{{'clear-night'|translate}},{{'cloudy'|translate}},{{'fog'|translate}},{{'hail'|translate}},{{'partly-cloudy-day'|translate}},{{'partly-cloudy-night'|translate}},{{'rain'|translate}},{{'sleet'|translate}},{{'snow'|translate}},{{'thunderstorm'|translate}},{{'tornado'|translate}},{{'wind'|translate}}
