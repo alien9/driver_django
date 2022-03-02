@@ -88,7 +88,10 @@ export class InputComponent implements OnInit {
     if (this.record['geom'].coordinates && !this.record['location_text']) {
       this.webService.getReverse(this.record['geom'].coordinates[1], this.record['geom'].coordinates[0]).pipe(first()).subscribe(address => {
         if (address && address['address']) {
-          this.record['location_text'] = `${address['address']['road']}, ${address['address']['city']}`
+          let lt=[]
+          if(address['address']['road']) lt.push(address['address']['road'])
+          if(address['address']['city']) lt.push(address['address']['city'])
+          this.record['location_text'] = lt.join(", ")
         }
       })
     }
@@ -221,7 +224,10 @@ export class InputComponent implements OnInit {
         this.zone.run(() => {
           this.webService.getReverse(e.target.getLatLng().lat, e.target.getLatLng().lng).pipe(first()).subscribe(address => {
             if (address && address['address']) {
-              this.record['location_text'] = `${address['address']['road']}, ${address['address']['city']}`
+              let lt=[]
+              if(address['address']['road']) lt.push(address['address']['road'])
+              if(address['address']['city']) lt.push(address['address']['city'])
+              this.record['location_text'] = lt.join(", ")
             }
           })
           this.record['geom'] = { "type": "Point", "coordinates": [e.target.getLatLng().lng, e.target.getLatLng().lat] }
