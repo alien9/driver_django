@@ -52,6 +52,7 @@ export class LoginComponent implements OnInit {
     ngOnInit() {
         localStorage.removeItem('token');
         console.log("removed session id")
+        this.setCookie('sessionid', '', -10)
         this.loginForm = this.formBuilder.group({
             username: ['', Validators.required],
             password: ['', Validators.required]
@@ -63,7 +64,6 @@ export class LoginComponent implements OnInit {
         }
         this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
         this.backend = this.recordService.getBackend()
-        this.setCookie('sessionid', '', -10)
     }  
     loginWithGoogle(): void {
         window.location.href=`${this.authenticationService.getBackend()}/oidc/authenticate/`

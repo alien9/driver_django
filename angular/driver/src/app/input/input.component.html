@@ -28,11 +28,11 @@
                         </span>
                     </li>
                     <li class="list-group-item">
-                        <span>{{'Weather'|translate}}</span>: <span *ngIf="!editing">{{record["weather"]}}</span>
+                        <span>{{'Weather'|translate}}</span>: <span *ngIf="!editing">{{record["weather"]|translate}}</span>
 
                         <select *ngIf="editing" class="form-select" [(ngModel)]="record['weather']">
                             <!--possible values: 
-                                {{'clear-day'||translate}},{{'clear-night'|translate}},{{'cloudy'|translate}},{{'fog'|translate}},{{'hail'|translate}},{{'partly-cloudy-day'|translate}},{{'partly-cloudy-night'|translate}},{{'rain'|translate}},{{'sleet'|translate}},{{'snow'|translate}},{{'thunderstorm'|translate}},{{'tornado'|translate}},{{'wind'|translate}}
+                                {{'clear-day'|translate}},{{'clear-night'|translate}},{{'cloudy'|translate}},{{'fog'|translate}},{{'hail'|translate}},{{'partly-cloudy-day'|translate}},{{'partly-cloudy-night'|translate}},{{'rain'|translate}},{{'sleet'|translate}},{{'snow'|translate}},{{'thunderstorm'|translate}},{{'tornado'|translate}},{{'wind'|translate}}
                             -->
                             <option [ngValue]="v" *ngFor="let v of weatherValues">{{v|translate}}</option>
                         </select>
