@@ -37,7 +37,23 @@ export class InputComponent implements OnInit {
   latitude: number
   longitude: number
   occurred_date_ngb: NgbDateStruct
-  occurred_time: any
+  occurred_time: any            
+  weatherValues=[
+      '',
+      'clear-day',
+      'clear-night',
+      'cloudy',
+      'fog',
+      'hail',
+      'partly-cloudy-day',
+      'partly-cloudy-night',
+      'rain',
+      //'sleet',
+      //'snow',
+      'thunderstorm',
+      //'tornado',
+      'wind'
+  ]
   constructor(
     private webService: WebService,
     private zone: NgZone,
