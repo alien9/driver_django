@@ -273,10 +273,11 @@ export class IndexComponent implements OnInit {
                     if (this.theme && this.theme[b['uuid']] && this.theme[b['uuid']]['data'][e.data['uuid']] && this.theme[b['uuid']]['data'][e.data['uuid']]['data']) {
                       t = `${t} (${this.theme[b['uuid']]['data'][e.data['uuid']]['data']})`
                     }
+                    let m=this.map
                     this.map.eachLayer(function (layer) {
-                      if (layer.options.pane === "tooltipPane") layer.removeFrom(this.map);
+                      if (layer.options.pane === "tooltipPane") layer.removeFrom(m);
                     });
-                    e.sourceTarget.bindTooltip(t, { sticky: true });
+                    e.sourceTarget.bindTooltip(t, { sticky: true, permanent:false });
                   })
                 }
                 else {
@@ -319,7 +320,7 @@ export class IndexComponent implements OnInit {
     })
   }
   addThematic(uuid, label) {
-    let f = this.filter
+    let f = this.filter||{}
     f['aggregation_boundary'] = uuid
     let d = (new Date()).getTime()
     this.recordService.getQuantiles(this.recordtype_uuid, f).pipe(first()).subscribe({

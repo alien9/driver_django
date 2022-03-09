@@ -69,16 +69,16 @@
                     </div>
                     <div *ngIf="pair.value.fieldType==='selectlist'">
                         <div *ngIf="pair.value.displayType==='select'">
-                            <div class="tag"><a href="javascript:void(0)" (click)="newOption(pair.value)"> + </a></div>
+                            <div class="tag"><a href="javascript:void(0)" (click)="newOption(pair.value,item.key,pair.key)"> + </a></div>
                             <div class="tag" *ngFor="let a of pair.value.enum; let i = index">
-                                <input [value]="dict.definitions[item.key].properties[pair.key].enum[i]" (change)="setPropertyValue(pair.value.enum, i, $event)">
+                                <input id="{{item.key}}_{{pair.key}}_{{i}}" [value]="a" (change)="setPropertyValue(pair.value.enum, i, $event)">
                                 <a (click)="removeOption(pair.value, i)"> - </a>
                             </div>
                         </div>
                         <div *ngIf="pair.value.format==='checkbox'">
-                            <div class="tag"><a href="javascript:void(0)" (click)="newOption(pair.value)"> + </a></div>
+                            <div class="tag"><a href="javascript:void(0)" (click)="newOption(pair.value,item.key,pair.key)"> + </a></div>
                             <div class="tag" *ngFor="let a of pair.value.items.enum; let i = index">
-                                <input [value]="dict.definitions[item.key].properties[pair.key].items.enum[i]" (change)="setPropertyValue(pair.value.items.enum, i, $event)">
+                                <input id="{{item.key}}_{{pair.key}}_{{i}}" [value]="a" (change)="setPropertyValue(pair.value.items.enum, i, $event)">
                                 <a (click)="removeOption(pair.value, i)"> - </a>
                             </div>
                         </div>
