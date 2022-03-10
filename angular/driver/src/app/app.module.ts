@@ -42,6 +42,7 @@ import { IndexComponent } from './index/index.component';
 import { RouterModule } from '@angular/router';
 
 import { IsDatePipe } from './report/isdate.pipe';
+import { ArrayJoinPipe } from './input/arrayjoin.pipe';
 import { LocalizedDatePipe } from './report/localized.date.pipe';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { MultiTranslateHttpLoader } from 'ngx-translate-multi-http-loader';
@@ -125,6 +126,7 @@ const icons = {
     FirstPipe,
     ArrayFirstPipe,
     IsDatePipe,
+    ArrayJoinPipe,
     LocalizedDatePipe,
     ListComponent,
     IndexComponent,

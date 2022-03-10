@@ -9,9 +9,12 @@ import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap'
 import { NgxSpinnerService } from "ngx-spinner";
 import * as uuid from 'uuid';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
+import { Observable, of, OperatorFunction } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, tap, switchMap } from 'rxjs/operators';
 
 import "leaflet.vectorgrid";
 import { DYNAMIC_TYPE } from '@angular/compiler';
+import { textChangeRangeIsUnchanged } from 'typescript';
 
 @Component({
   selector: 'app-input',
@@ -37,23 +40,25 @@ export class InputComponent implements OnInit {
   latitude: number
   longitude: number
   occurred_date_ngb: NgbDateStruct
-  occurred_time: any            
-  weatherValues=[
-      '',
-      'clear-day',
-      'clear-night',
-      'cloudy',
-      'fog',
-      'hail',
-      'partly-cloudy-day',
-      'partly-cloudy-night',
-      'rain',
-      //'sleet',
-      //'snow',
-      'thunderstorm',
-      //'tornado',
-      'wind'
+  occurred_time: any
+  weatherValues = [
+    '',
+    'clear-day',
+    'clear-night',
+    'cloudy',
+    'fog',
+    'hail',
+    'partly-cloudy-day',
+    'partly-cloudy-night',
+    'rain',
+    //'sleet',
+    //'snow',
+    'thunderstorm',
+    //'tornado',
+    'wind'
   ]
+  geocoding = false
+  geocodeFailed = false
   constructor(
     private webService: WebService,
     private zone: NgZone,
@@ -63,7 +68,6 @@ export class InputComponent implements OnInit {
 
   ngOnInit(): void {
     let locale = localStorage.getItem("Language") || "en"
-    console.log(this.record)
     this.schema = this.recordSchema['schema']
     let osm = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
     let sat = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {});
@@ -88,9 +92,9 @@ export class InputComponent implements OnInit {
     if (this.record['geom'].coordinates && !this.record['location_text']) {
       this.webService.getReverse(this.record['geom'].coordinates[1], this.record['geom'].coordinates[0]).pipe(first()).subscribe(address => {
         if (address && address['address']) {
-          let lt=[]
-          if(address['address']['road']) lt.push(address['address']['road'])
-          if(address['address']['city']) lt.push(address['address']['city'])
+          let lt = []
+          if (address['address']['road']) lt.push(address['address']['road'])
+          if (address['address']['city']) lt.push(address['address']['city'])
           this.record['location_text'] = lt.join(", ")
         }
       })
@@ -144,7 +148,7 @@ export class InputComponent implements OnInit {
         this.loadMapillary(imagery)
       })
     }
-    
+
   }
   loadMapillary(imagery: any) {
     imagery['data'].forEach(img => {
@@ -224,9 +228,9 @@ export class InputComponent implements OnInit {
         this.zone.run(() => {
           this.webService.getReverse(e.target.getLatLng().lat, e.target.getLatLng().lng).pipe(first()).subscribe(address => {
             if (address && address['address']) {
-              let lt=[]
-              if(address['address']['road']) lt.push(address['address']['road'])
-              if(address['address']['city']) lt.push(address['address']['city'])
+              let lt = []
+              if (address['address']['road']) lt.push(address['address']['road'])
+              if (address['address']['city']) lt.push(address['address']['city'])
               this.record['location_text'] = lt.join(", ")
             }
           })
@@ -282,5 +286,52 @@ export class InputComponent implements OnInit {
     d.setSeconds(0)
     this.record['occurred_from'] = d
     this.record['occurred_to'] = d
+  }
+  geocode: OperatorFunction<string, readonly { text, lat, lon }[]> = (text$: Observable<string>) =>
+    text$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(() => this.geocoding = true),
+      switchMap(term =>
+        this.webService.getForward({
+          'key': this.config['NOMINATIM'],
+          'country_code': this.config['COUNTRY_CODE'],
+          'term': term,
+          'bbox': `${this.map.getBounds().getSouth()},${this.map.getBounds().getEast()},${this.map.getBounds().getNorth()},${this.map.getBounds().getWest()}`,
+          'limit': 5
+        }).pipe(
+          tap(() => this.geocodeFailed = false),
+          catchError(() => {
+            this.geocodeFailed = true;
+            return of([]);
+          }))
+      ),
+      tap(() => this.geocoding = false)
+    )
+  geoFormatter = (x: any) => {
+    console.log("geoformatter")
+    console.log(x)
+    return x['display_name']
+  }
+  onCheckChange(e: any, f: any) {
+    let k = e.srcElement.value
+    if (e.srcElement.checked) {
+      f.push(k)
+    } else {
+      f.splice(f.indexOf(k), 1)
+    }
+  }
+  selectGeocodedOption(e: any): any {
+    console.log(e)
+    if (!e.item) return
+    this.record['location_text']=e.item.display_name
+    this.record['geom']['coordinates'] = [e.item.lon, e.item.lat]
+    let latlng = new L.latLng(e.item.lat, e.item.lon)
+    if (latlng) {
+      this.marker.remove()
+      this.setMarker(latlng)
+      this.marker.addTo(this.map)
+      this.map.panTo(latlng)
+    }
   }
 }

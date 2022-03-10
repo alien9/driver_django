@@ -16,16 +16,20 @@
                         <span>{{'Longitude'|translate}}</span>: {{record['geom'].coordinates[0]}}
                     </li>
                     <li class="list-group-item">
-                        <span>{{'Location'|translate}}</span>: <span *ngIf="!editing">{{record["location_text"] }}</span>
-                        <input class="form-control" *ngIf="editing" [(ngModel)]="record['location_text']">
+                        <span>{{'Location'|translate}}</span>: <span *ngIf="!editing">{{record["location_text"]
+                            }}</span>
+                        <input class="form-control" *ngIf="editing" [(ngModel)]="record['location_text']" [ngbTypeahead]="geocode" [inputFormatter]="geoFormatter" (selectItem)="selectGeocodedOption($event)" [resultFormatter]="geoFormatter">
+                        <small *ngIf="geocoding" class="form-text text-muted">{{'searching'|translate}}...</small>
                     </li>
                     <li class="list-group-item">
                         <input class="form-control" type=hidden placeholder="yyyy-mm-dd" name="occurred_date" [(ngModel)]="occurred_date_ngb" ngbDatepicker #df="ngbDatepicker" (dateSelect)="setDate($event)">
                         <span>{{'Date and time'|translate}}</span>:
-                        <span *ngIf=!editing>{{record["occurred_from"]|localizedDate }} {{record["occurred_from"]|localizedDate:'shortTime' }}</span>
+                        <span *ngIf=!editing>{{record["occurred_from"]|localizedDate }}
+                            {{record["occurred_from"]|localizedDate:'shortTime' }}</span>
                         <span *ngIf=editing>
                             <a href="#" (click)=df.toggle()>{{record["occurred_from"]|localizedDate }}</a>
-                            <ngb-timepicker [(ngModel)]="occurred_time" [spinners]=false [meridian]=false *ngIf=editing  (change)=setDate($event)></ngb-timepicker>
+                            <ngb-timepicker [(ngModel)]="occurred_time" [spinners]=false [meridian]=false *ngIf=editing
+                                (change)=setDate($event)></ngb-timepicker>
                         </span>
                     </li>
                     <li class="list-group-item">
@@ -64,35 +68,42 @@
                     </ul>
                 </div>
                 <div *ngIf="k.value.multiple">
-                    <button *ngIf=editing type="button" class="btn btn-light float-right" (click)="addElement(k.key)"> + </button>
+                    <button *ngIf=editing type="button" class="btn btn-light float-right" (click)="addElement(k.key)"> +
+                    </button>
                     <div class="card" *ngFor="let kk of record['data'][k.key]; let i = index">
                         <div class="card-body">
                             <h5 class="card-title">{{k.value.title|translate}}</h5>
                             <h6 class="card-subtitle mb-2 text-muted">{{k.value.description|translate}}</h6>
                             <ul class="list-group list-group-flush" *ngFor="let f of k.value.properties|keyvalue|display|orderBy">
                                 <li class="list-group-item">{{f.key|translate}}:
-                                    <span *ngIf="!editing && (f.value.fieldType=='reference') && record['data'][k.key][i][f.key]">
+                                    <span *ngIf="!editing && (f.value.fieldType=='reference') && record['data'][k.key][i] && record['data'][k.key][i][f.key]">
                                         {{(record['data'][f.value.watch.target]|related:record['data'][k.key][i][f.key])[schema['definitions'][f.value.watch.target].properties|keyvalue|arrayfirst]|translate}}
                                     </span>
-                                    <span *ngIf="!editing && f.value.fieldType!='reference'">{{record['data']|dict_dump:k.key:i:f.key|format:f.value|translate}}</span>
+                                    <span *ngIf="!editing && f.value.fieldType!='reference' && f.value.type!='array'">{{record['data']|dict_dump:k.key:i:f.key|format:f.value|translate}}</span>
+                                    <span *ngIf="!editing && f.value.type=='array'">{{record['data']|dict_dump:k.key:i:f.key|format:f.value|arrayjoin}}</span>
                                     <span *ngIf="editing">
-                                        <select class="form-select" *ngIf="f.value.displayType=='select'"
+                                        <select class="form-select"
+                                            *ngIf="(f.value.fieldType=='text' || f.value.fieldType=='selectlist') && f.value.displayType=='select'"
                                             [(ngModel)]="record['data'][k.key][i][f.key]">
                                             <option></option>
                                             <option *ngFor="let o of f.value.enum" [ngValue]="o">{{o|translate}}
                                             </option>
                                         </select>
-                                        <input class="form-control" type="text"
-                                            [(ngModel)]="record['data'][k.key][i][f.key]"
-                                            *ngIf="f.value.fieldType=='text' && f.value.type=='string'">
-                                        <input class="form-control" type="number"
-                                            [(ngModel)]="record['data'][k.key][i][f.key]"
-                                            *ngIf="f.value.fieldType=='integer'">
-                                        <input class="form-control" type="number"
-                                            [(ngModel)]="record['data'][k.key][i][f.key]"
-                                            *ngIf="f.value.fieldType=='number'">
-                                        <select class="form-select" *ngIf="f.value.fieldType=='reference'"
-                                            [(ngModel)]="record['data'][k.key][i][f.key]">
+                                        <span *ngIf="f.value.items">
+                                    <span *ngFor="let o of f.value.items.enum">
+                                                <label class="form-check-label">
+                                                    <input class="form-check-input" type="checkbox" [value]="o"
+                                                        checked="{{record['data'][k.key][i][f.key].includes(o) ? 'checked' : null}}"
+                                                        (change)="onCheckChange($event, record['data'][k.key][i][f.key])">
+
+                                                    {{o|translate}}
+                                                </label>&nbsp;
+                                            </span>
+                                    </span>
+                                    <input class="form-control" type="text" [(ngModel)]="record['data'][k.key][i][f.key]" *ngIf="f.value.fieldType=='text' && f.value.type=='string'">
+                                    <input class="form-control" type="number" [(ngModel)]="record['data'][k.key][i][f.key]" *ngIf="f.value.fieldType=='integer'">
+                                    <input class="form-control" type="number" [(ngModel)]="record['data'][k.key][i][f.key]" *ngIf="f.value.fieldType=='number'">
+                                    <select class="form-select" *ngIf="f.value.fieldType=='reference'" [(ngModel)]="record['data'][k.key][i][f.key]">
                                             <option></option>
                                             <option *ngFor="let related of record['data'][f.value.watch.target]"
                                                 [ngValue]="related['_localId']">
