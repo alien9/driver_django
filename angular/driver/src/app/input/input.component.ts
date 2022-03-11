@@ -308,12 +308,16 @@ export class InputComponent implements OnInit {
       ),
       tap(() => this.geocoding = false)
     )
-  geoFormatter = (x: any) => {
-    console.log("geoformatter")
-    console.log(x)
-    return x['display_name']
-  }
-  onCheckChange(e: any, f: any) {
+    geoResultFormatter = (x: any) => {
+      return x['display_name']
+    }
+    geoInputFormatter = (x: any) => {
+      if(typeof x=='object'){
+        return x['display_name']
+      }
+      return x
+    }
+      onCheckChange(e: any, f: any) {
     let k = e.srcElement.value
     if (e.srcElement.checked) {
       f.push(k)
@@ -322,7 +326,6 @@ export class InputComponent implements OnInit {
     }
   }
   selectGeocodedOption(e: any): any {
-    console.log(e)
     if (!e.item) return
     this.record['location_text']=e.item.display_name
     this.record['geom']['coordinates'] = [e.item.lon, e.item.lat]

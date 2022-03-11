@@ -10,15 +10,16 @@
                 </div>
                 <ul class="list-group list-group-flush" *ngIf="k.value.details">
                     <li class="list-group-item">
-                        <span>{{'Latitude'|translate}}</span>: {{record['geom'].coordinates[1]}}
+                        <span>{{'Latitude'|translate}}</span>: <span *ngIf="!editing">{{record['geom'].coordinates[1]}}</span>
+                        <input class="form-control" *ngIf="editing" [(ngModel)]="record['geom'].coordinates[1]">
                     </li>
                     <li class="list-group-item">
-                        <span>{{'Longitude'|translate}}</span>: {{record['geom'].coordinates[0]}}
+                        <span>{{'Longitude'|translate}}</span>: <span *ngIf="!editing">{{record['geom'].coordinates[0]}}</span>
+                        <input class="form-control" *ngIf="editing" [(ngModel)]="record['geom'].coordinates[0]">
                     </li>
                     <li class="list-group-item">
-                        <span>{{'Location'|translate}}</span>: <span *ngIf="!editing">{{record["location_text"]
-                            }}</span>
-                        <input class="form-control" *ngIf="editing" [(ngModel)]="record['location_text']" [ngbTypeahead]="geocode" [inputFormatter]="geoFormatter" (selectItem)="selectGeocodedOption($event)" [resultFormatter]="geoFormatter">
+                        <span>{{'Location'|translate}}</span>: <span *ngIf="!editing">{{record["location_text"]}}</span>
+                        <input class="form-control" *ngIf="editing" [(ngModel)]="record['location_text']" [ngbTypeahead]="geocode" [inputFormatter]="geoInputFormatter" (selectItem)="selectGeocodedOption($event)" [resultFormatter]="geoResultFormatter">
                         <small *ngIf="geocoding" class="form-text text-muted">{{'searching'|translate}}...</small>
                     </li>
                     <li class="list-group-item">
