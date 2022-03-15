@@ -14,7 +14,7 @@ export class AuthService {
     localStorage.removeItem('config');
     localStorage.removeItem('token');
     localStorage.removeItem('record_schema');
-    return;
+    window.location.href=`${this.getBackend()}/api-auth/logout/?next=${window.location.href}`
   }
   constructor(private http: HttpClient) { }
   login(user, pass) {
