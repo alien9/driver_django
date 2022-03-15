@@ -6,6 +6,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { RecordService } from './../record.service'
 import { first } from 'rxjs/operators';
 import { NgxSpinnerService } from "ngx-spinner";
+import { AuthService } from '../auth.service';
 
 @Component({
   selector: 'app-navbar',
@@ -64,6 +65,7 @@ export class NavbarComponent implements OnInit {
   qrvalue: string
 
   constructor(
+    private authService: AuthService,
     private recordService: RecordService,
     public readonly translate: TranslateService,
     private router: Router,
@@ -247,11 +249,7 @@ export class NavbarComponent implements OnInit {
     })
   }
   logout() {
-    document.cookie.split(/; /).map(k => k.split(/=/)).forEach(k => {
-      document.cookie = `${k[0]}=; expires=Thu, 01 Jan 1970 00:00:00 UTC;`
-    })
-    localStorage.clear()
-    this.router.navigateByUrl('/login')
+    this.authService.logout()
   }
   download() {
     this.startDownload.emit({})

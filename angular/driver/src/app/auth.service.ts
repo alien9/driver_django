@@ -11,10 +11,9 @@ export class AuthService {
     return localStorage.getItem("backend")||(('api' in environment)?environment.api:'')
   }
   logout() {
-    localStorage.removeItem('config');
-    localStorage.removeItem('token');
-    localStorage.removeItem('record_schema');
-    window.location.href=`${this.getBackend()}/api-auth/logout/?next=${window.location.href}`
+    localStorage.clear()
+    let next=encodeURIComponent("/login")
+    window.location.href=`${this.getBackend()}/api-auth/logout/?next=${next}`
   }
   constructor(private http: HttpClient) { }
   login(user, pass) {

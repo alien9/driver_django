@@ -50,7 +50,7 @@ export class LoginComponent implements OnInit {
     }
 
     ngOnInit() {
-        let c=this.getCookie('sessionid')
+        let c=this.getCookie('AuthService.token')
         if(c) this.authenticationService.logout()
         localStorage.removeItem('token');
         this.loginForm = this.formBuilder.group({
