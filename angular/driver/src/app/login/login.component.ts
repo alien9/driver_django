@@ -52,7 +52,8 @@ export class LoginComponent implements OnInit {
     ngOnInit() {
         let c=this.getCookie('AuthService.token')
         if(c) this.authenticationService.logout()
-        localStorage.removeItem('token');
+        localStorage.clear()
+        this.setCookie('AuthService.token', '', -1)
         this.loginForm = this.formBuilder.group({
             username: ['', Validators.required],
             password: ['', Validators.required]
