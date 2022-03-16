@@ -35,7 +35,6 @@ export class LoginComponent implements OnInit {
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
             expires = "; expires=" + date.toUTCString();
         }
-        console.log(name + "=" + (value || "") + expires + "; path=/");
         document.cookie = name + "=" + (value || "") + expires + "; path=/";
     }
     getCookie(name) {

@@ -50,9 +50,6 @@
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li>
-                            <a class="dropdown-item" (click)="logout()" href="#">{{'Exit'|translate}} </a>
-                        </li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown px-2">
@@ -99,21 +96,22 @@
                 <button class="btn btn-outline-success" type="submit">Search</button>
             </form-->
             <form class="d-flex">
-                <div class="dropdown dropstart" *ngIf="config['LANGUAGES']">
-                    <button class="btn btn-light" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i-bs name="three-dots-vertical"></i-bs>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton1">
-                        <li *ngFor="let l of config['LANGUAGES']; let i=index">
-                            <div class="dropdown-item">
-                                <input class="form-check-input" [(ngModel)]="language" (change)="setlang(l['code'])" type="radio" name="language" id="lannguageSelector{{i}}" [value]="l['code']"> &nbsp;
-                                <label class="form-check-label" for="lannguageSelector{{i}}">
-                                    {{l['name']|translate}}
-                                </label>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
+                <button class="btn btn-light" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i-bs name="three-dots-vertical"></i-bs>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton1">
+                    <li *ngFor="let l of config['LANGUAGES']; let i=index">
+                        <div class="dropdown-item">
+                            <input class="form-check-input" [(ngModel)]="language" (change)="setlang(l['code'])" type="radio" name="language" id="lannguageSelector{{i}}" [value]="l['code']"> &nbsp;
+                            <label class="form-check-label" for="lannguageSelector{{i}}">
+                                {{l['name']|translate}}
+                            </label>
+                        </div>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" (click)="logout()" href="#">{{'Exit'|translate}} </a>
+                    </li>
+                </ul>
             </form>
         </div>
     </div>

@@ -136,6 +136,8 @@ export class IndexComponent implements OnInit {
     this.state = localStorage.getItem('state') || 'Map'
     this.popContent = $("#popup-content")[0]
     this.config = (localStorage.getItem("config")) ? JSON.parse(localStorage.getItem("config")) : {}
+    if (!this.config['LANGUAGES'])
+      this.config['LANGUAGES'] = []
     const mapillary_auth: string = this.route.snapshot.queryParamMap.get('code');
     if (mapillary_auth) {
       localStorage.setItem('mapillary_auth', mapillary_auth)
@@ -273,11 +275,11 @@ export class IndexComponent implements OnInit {
                     if (this.theme && this.theme[b['uuid']] && this.theme[b['uuid']]['data'][e.data['uuid']] && this.theme[b['uuid']]['data'][e.data['uuid']]['data']) {
                       t = `${t} (${this.theme[b['uuid']]['data'][e.data['uuid']]['data']})`
                     }
-                    let m=this.map
+                    let m = this.map
                     this.map.eachLayer(function (layer) {
                       if (layer.options.pane === "tooltipPane") layer.removeFrom(m);
                     });
-                    e.sourceTarget.bindTooltip(t, { sticky: true, permanent:false });
+                    e.sourceTarget.bindTooltip(t, { sticky: true, permanent: false });
                   })
                 }
                 else {
@@ -320,7 +322,7 @@ export class IndexComponent implements OnInit {
     })
   }
   addThematic(uuid, label) {
-    let f = this.filter||{}
+    let f = this.filter || {}
     f['aggregation_boundary'] = uuid
     let d = (new Date()).getTime()
     this.recordService.getQuantiles(this.recordtype_uuid, f).pipe(first()).subscribe({
@@ -760,49 +762,56 @@ export class IndexComponent implements OnInit {
         let filename = this.translateService.instant(this.config['PRIMARY_LABEL'])
         if (this.report['parameters']['relate'])
           filename = this.translateService.instant(this.report['parameters']['relate'].split(/,/).pop())
-        //Sheet header
-        let line = 0
-        let data: Object[][] = [[
-        ]]
-        // Table Headers
-        data[line].push({'value': this.translateService.instant(this.report['path']['row']), 'type': String})
-        this.report['crosstabs']['col_labels'].forEach(gk => {
-          data[line].push({
-            value: this.translateService.instant(gk['label'][0]['text']), type: String
-          })
-        })
-        if (!this.report['parameters']['relate'] || !this.report['parameters']['relate'].length) {
-          data[line].push({
-            value: this.translateService.instant('Total'),
-            type: String
-          })
-        }
-        line++
-        //table content
-        this.report['crosstabs']['row_labels'].forEach(l => {
-          data.push([{ value: this.translateService.instant(l['label'][0]['text']), type: String }])
-          this.report['crosstabs']['col_labels'].forEach(col => {
-            let v: Number
-            if (this.report['crosstabs']['tables'][0]['data'][l.key] && this.report['crosstabs']['tables'][0]['data'][l.key][col.key])
-              v = this.report['crosstabs']['tables'][0]['data'][l.key][col.key]
+        filename = `${filename} by ${this.report['path']['row']} by ${this.report['path']['col']}`
+        let book = []
+        this.report['crosstabs']['tables'].forEach(t => {
+          //Sheet header
+          let line = 0
+          let data: Object[][] = [[
+          ]]
+          data['title']=this.report['crosstabs']['table_labels'][t['tablekey']]
+          // Table Headers
+          data[line].push({ 'value': this.translateService.instant(this.report['path']['row']), 'type': String })
+          this.report['crosstabs']['col_labels'].forEach(gk => {
             data[line].push({
-              value: (v) ? v : 0,
-              type: Number
+              value: this.translateService.instant(gk['label'][0]['text']), type: String
             })
           })
           if (!this.report['parameters']['relate'] || !this.report['parameters']['relate'].length) {
-            let v: Number
-            if (this.report['crosstabs']['tables'][0]['row_totals'][l.key])
-              v = this.report['crosstabs']['tables'][0]['row_totals'][l.key]
             data[line].push({
-              value: (v) ? v : 0,
-              type: Number
+              value: this.translateService.instant('Total'),
+              type: String
             })
           }
           line++
+          //table content
+          this.report['crosstabs']['row_labels'].forEach(l => {
+            data.push([{ value: this.translateService.instant(l['label'][0]['text']), type: String }])
+            this.report['crosstabs']['col_labels'].forEach(col => {
+              let v: Number
+              if (t['data'][l.key] && t['data'][l.key][col.key])
+                v = t['data'][l.key][col.key]
+              data[line].push({
+                value: (v) ? v : 0,
+                type: Number
+              })
+            })
+            if (!this.report['parameters']['relate'] || !this.report['parameters']['relate'].length) {
+              let v: Number
+              if (t['row_totals'][l.key])
+                v = t['row_totals'][l.key]
+              data[line].push({
+                value: (v) ? v : 0,
+                type: Number
+              })
+            }
+            line++
+          })
+          book.push(data)
         })
-        await writeXlsxFile(data, {
-          fileName: `${filename}.xlsx`
+        await writeXlsxFile(book, {
+          fileName: `${filename}.xlsx`,
+          sheets: (book.length>1)?book.map(b=>b['title']):['Sheet 1']
         })
         break
       case 'Map':
