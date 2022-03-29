@@ -49,6 +49,28 @@
             <div id="pizza_legend" class="mr-3 ml-3"></div>
         </ng-template>
     </li>
+    <li [ngbNavItem]="4">
+        <a ngbNavLink>{{'Treemap'| translate}}</a>
+        <ng-template ngbNavContent>
+            <h5 class="m-3">{{'Field'|translate}}:
+                <select class="custom-select" [(ngModel)]="barChart['field']" (change)=loadChart(active)>
+                    <option></option>
+                    <option [value]="field['table']+',properties,'+field['title']"
+                        *ngFor="let field of reportFilters">
+                        {{field['title']|translate}}</option>
+                </select>
+                <select class="custom-select" [(ngModel)]="barChart['parent_field']" (change)=loadChart(active) style="display:none">
+                    <option></option>
+                    <option [value]="field['table']+',properties,'+field['title']"
+                        *ngFor="let field of reportFilters">
+                        {{field['title']|translate}}</option>
+                </select>
+            </h5>
+
+            <div id=treemap class="m-3"></div>
+            <div id="treemap_legend" class="mr-3 ml-3"></div>
+        </ng-template>
+    </li>
 </ul>
 
 <div [ngbNavOutlet]="nav" class="mt-2"></div>

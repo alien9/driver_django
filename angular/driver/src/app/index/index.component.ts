@@ -22,6 +22,7 @@ import * as uuid from 'uuid';
   styleUrls: ['./index.component.scss']
 })
 export class IndexComponent implements OnInit {
+  private mapfile: string;
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
     if (event.key && event.key == 'Escape') {
@@ -458,6 +459,7 @@ export class IndexComponent implements OnInit {
       filter: this.filter
     }).pipe(first()).subscribe(
       data => {
+        this.mapfile = data['mapfile']
         this.spinner.hide()
         let ts = (new Date()).getTime()
         this.layersControl.overlays['Heatmap'] = L.tileLayer(`${this.backend}/maps/records/${data["mapfile"]}/heatmap/{z}/{x}/{y}.png/?${ts}`, {})
@@ -755,6 +757,7 @@ export class IndexComponent implements OnInit {
     this.listPage = e
     this.refreshList()
   }
+
   async download(e: any) {
     switch (this.state) {
       case 'Reports':
@@ -769,7 +772,7 @@ export class IndexComponent implements OnInit {
           let line = 0
           let data: Object[][] = [[
           ]]
-          data['title']=this.report['crosstabs']['table_labels'][t['tablekey']]
+          data['title'] = this.report['crosstabs']['table_labels'][t['tablekey']]
           // Table Headers
           data[line].push({ 'value': this.translateService.instant(this.report['path']['row']), 'type': String })
           this.report['crosstabs']['col_labels'].forEach(gk => {
@@ -811,7 +814,7 @@ export class IndexComponent implements OnInit {
         })
         await writeXlsxFile(book, {
           fileName: `${filename}.xlsx`,
-          sheets: (book.length>1)?book.map(b=>b['title']):['Sheet 1']
+          sheets: (book.length > 1) ? book.map(b => b['title']) : ['Sheet 1']
         })
         break
       case 'Map':

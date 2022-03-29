@@ -35,6 +35,7 @@ export class ChartsComponent implements OnInit, OnChanges {
     '32e4cc',
     'e52a1d'
   ]
+  barChartParent: any;
   constructor(
     private recordService: RecordService,
     private cdr: ChangeDetectorRef,
@@ -65,9 +66,9 @@ export class ChartsComponent implements OnInit, OnChanges {
       this.loadChart(this.active)
   }
   loadChart(activeTab: any) {
-    if (!this.filter) {
-      this.filter = JSON.parse(localStorage.getItem("current_filter") || '{}')
-    }
+    //if (!this.filter) {
+    this.filter = JSON.parse(localStorage.getItem("current_filter") || '{}')
+    //}
     this.filter['record_type'] = this.recordSchema['record_type']
     let ts = this.translateService
     switch (activeTab) {
@@ -169,19 +170,19 @@ export class ChartsComponent implements OnInit, OnChanges {
               this.spinner.hide()
               let h = []
               let m = 0
-              let totals={}
+              let totals = {}
               //Object.entries(data['tables'][0].data).sort((a,b)=>{return data['tables'][0][a[0]]}).forEach(k => {
-              
+
               Object.entries(data['tables'][0].data).forEach(k => {
                 let sum = Object.values(k[1]).reduce((a, b) => a + b)
                 if (sum > m) m = sum
                 k[1]['group'] = k[0]
                 h.push(k[1])
-                Object.entries(k[1]).forEach(l=>{
-                  totals[l[0]]=((totals[l[0]])?totals[l[0]]:0)+l[1]
+                Object.entries(k[1]).forEach(l => {
+                  totals[l[0]] = ((totals[l[0]]) ? totals[l[0]] : 0) + l[1]
                 })
               })
-              let subgroups = data['col_labels'].map(k => k.key).sort((a,b)=>totals[b]-totals[a]) // field value
+              let subgroups = data['col_labels'].map(k => k.key).sort((a, b) => totals[b] - totals[a]) // field value
               let groups = data['row_labels'].map(k => k.key) //interval
 
               const margin_bar = { top: 10, right: 30, bottom: 20, left: 50 },
@@ -376,6 +377,139 @@ export class ChartsComponent implements OnInit, OnChanges {
           }
         })
         break;
+      case 4: // treemap
+        const t_margin_bar = { top: 10, right: 30, bottom: 20, left: 50 },
+          t_width_bar = 600,
+          t_height_bar = t_width_bar
+        $("#treemap").html('')
+        let parameters_treemap = this.filter
+        if (!this.barChart['field']) {
+          return
+        }
+        this.spinner.show()
+
+        parameters_treemap['col_choices_path'] = this.barChart['field']
+        if (this.barChart['parent_field']) {
+          parameters_treemap['row_choices_path'] = this.barChart['parent_field']
+        } else {
+          parameters_treemap['row_period_type'] = 'all'
+        }
+        parameters_treemap['relate'] = this.barChart['field'] // the total count of related
+
+        var svg = d3.select("#treemap")
+          .append("svg")
+          .attr("width", t_width_bar + t_margin_bar.left + t_margin_bar.right)
+          .attr("height", t_height_bar + t_margin_bar.top + t_margin_bar.bottom)
+          .append("g")
+          .attr("transform",
+            `translate(${t_margin_bar.left}, ${t_margin_bar.top})`);
+
+        this.recordService.getCrossTabs(this.recordSchema['record_type'], parameters_treemap).pipe(first()).subscribe({
+          next: data => {
+            let du = []
+            if (this.barChart['parent_field']) {
+              Object.entries(data['tables'][0]['data']).forEach(col => {
+                du.push({
+                  'name': col[0],
+                  'parent': 'all',
+                  'value': ''
+                })
+                Object.entries(col[1]).forEach(row => {
+                  du.push({
+                    'name': row[0],
+                    'value': row[1],
+                    'parent': col[0]
+                  })
+                })
+              }
+
+              )
+            } else {
+              du = Object.entries(data['tables'][0]['data'][0]).map(k => {
+                return {
+                  'name': k[0],
+                  'value': k[1],
+                  'parent': 'all'
+                }
+              })
+            }
+            du.push({ 'name': 'all', 'parent': '', 'value': '' })
+
+            // prepare a color scale
+            const color = d3.scaleOrdinal()
+              .domain(["boss1", "boss2", "boss3"])
+              .range(["#402D54", "#D18975", "#8FD175"])
+
+            // And a opacity scale
+            const opacity = d3.scaleLinear()
+              .domain([10, 30])
+              .range([.5, 1])
+            const root = d3.stratify()
+              .id(function (d) {
+                return d['name'];
+              })   // Name of the entity (column name is name in csv)
+              .parentId(function (d) {
+                console.log(d)
+                return d['parent'];
+              })   // Name of the parent (column name is parent in csv)
+              (du);
+            root.sum(function (d) { return +d['value'] })   // Compute the numeric value for each entity
+
+            // Then d3.treemap computes the position of each element of the hierarchy
+            // The coordinates are added to the root object above
+            d3.treemap()
+              .size([t_width_bar, t_height_bar])
+              .paddingTop(28)
+              .paddingRight(7)
+              .paddingInner(3)
+              (root);
+
+            // use this information to add rectangles:
+            svg
+              .selectAll("rect")
+              .data(root.leaves())
+              .join("rect")
+              .attr('x', function (d) { return d['x0']; })
+              .attr('y', function (d) { return d['y0']; })
+              .attr('width', function (d) { return d['x1'] - d['x0']; })
+              .attr('height', function (d) { return d['y1'] - d['y0']; })
+              .style("stroke", "black")
+              .style("fill", "#69b3a2");
+
+            // and to add the text labels
+            svg
+              .selectAll("text")
+              .data(root.leaves())
+              .join("text")
+              .attr("x", function (d) { return d['x0'] + 10 })    // +10 to adjust position (more right)
+              .attr("y", function (d) { return d['y0'] + 20 })    // +20 to adjust position (lower)
+              .text(function (d) { return d.data['name'] })
+              .attr("font-size", "15px")
+              .attr("fill", "white")
+
+            // Add title for the 3 groups
+            if (this.barChart['parent_field']) {
+              svg
+                .selectAll("titles")
+                .data(root.descendants().filter(function (d) { return d.depth == 1 }))
+                .enter()
+                .append("text")
+                .attr("x", function (d) { return d['x0'] })
+                .attr("y", function (d) { return d['y0'] + 21 })
+                .text(function (d) { return d.data['name'] })
+                .attr("font-size", "19px")
+                .attr("fill", d => `${color(d.data['name'])}`)
+            }
+            this.spinner.hide()
+          }, error: err => {
+            console.log(err)
+            this.spinner.hide()
+          }
+
+        })
+
+
+
     }
   }
   activeIdChange(e: any) {

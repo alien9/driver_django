@@ -107,7 +107,7 @@ export class RecordService {
   getCritical() {
     return this.http.get<any[]>(`${this.getBackend()}/api/blackspotsets/`, { headers: this.getHeaders() })
   }
-  getCrossTabs(o: string, q: object) {
+  getCrossTabs(o: string, q: object): Observable<object> {
     let params = new HttpParams()
       .set('archived', 'False')
       .set('record_type', o)
@@ -182,5 +182,12 @@ export class RecordService {
     if(record_uuid) params['recordUUID']=record_uuid
     let q = { limit: 'all', resolved: 'False' }
     return this.http.patch(`${this.getBackend()}/api/duplicates/${uuid}/resolve/?${Utils.toQueryString(q)}`, params, { headers: this.getHeaders() })
+  }
+  postCsv(tilekey:string){
+    let data={"tilekey":tilekey}
+    return this.http.post(`${this.getBackend()}/api/csv-export/`, data, { headers: this.getHeaders() })
+  }
+  getCsv(tilekey:string){
+    return this.http.get<any[]>(`${this.getBackend()}/api/csv-export/${tilekey}/`, { headers: this.getHeaders() })
   }
 }

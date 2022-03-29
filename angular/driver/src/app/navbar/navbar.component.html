@@ -23,12 +23,6 @@
                             <hr class="dropdown-divider">
                         </li>
                         <li>
-                            <a class="dropdown-item" (click)="download()" href="#">{{'Download' | translate}}</a>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li>
                             <a class="dropdown-item" (click)="onStateSelected('Duplicates')" href="#">{{'Duplicates' |
                                 translate}}</a>
                         </li>
@@ -91,15 +85,11 @@
                 </li>
             </ul>
 
-            <!--form class="d-flex">
-                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-success" type="submit">Search</button>
-            </form-->
-            <form class="d-flex">
-                <button class="btn btn-light" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="btn-group">
+                <button class="btn btn-light" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i-bs name="three-dots-vertical"></i-bs>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton1">
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
                     <li *ngFor="let l of config['LANGUAGES']; let i=index">
                         <div class="dropdown-item">
                             <input class="form-check-input" [(ngModel)]="language" (change)="setlang(l['code'])" type="radio" name="language" id="lannguageSelector{{i}}" [value]="l['code']"> &nbsp;
@@ -108,11 +98,23 @@
                             </label>
                         </div>
                     </li>
+                    <li *ngIf="config['LANGUAGES'].length>0">
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li style="display: flex;" *ngIf="hasDownload()">
+                        <a class="dropdown-item" (click)="preDownload()" href="#">{{'Download' | translate}}
+                            <div class="spinner-border spinner-border-sm" role="status" *ngIf="downloading">
+                            </div>
+                        </a>
+                    </li>
+                    <li *ngIf="hasDownload()">
+                        <hr class="dropdown-divider">
+                    </li>
                     <li>
                         <a class="dropdown-item" (click)="logout()" href="#">{{'Exit'|translate}} </a>
                     </li>
                 </ul>
-            </form>
+            </div>
         </div>
     </div>
 </nav>

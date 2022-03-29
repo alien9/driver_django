@@ -7,6 +7,7 @@ import { RecordService } from './../record.service'
 import { first } from 'rxjs/operators';
 import { NgxSpinnerService } from "ngx-spinner";
 import { AuthService } from '../auth.service';
+import { saveAs } from "file-saver"
 
 @Component({
   selector: 'app-navbar',
@@ -45,12 +46,12 @@ export class NavbarComponent implements OnInit {
   public tables: any[]
   public reportFilters: any[]
   public savedFilters: any[]
-  public filterLabel:string=""
-  public filtering:boolean=false
+  public filterLabel: string = ""
+  public filtering: boolean = false
   public tabs = [
 
   ]
-  inserting:boolean
+  inserting: boolean
   public reportHeaders: object
   reportParameters: object
   public report: object
@@ -63,6 +64,7 @@ export class NavbarComponent implements OnInit {
   irap_password: string
   irap_err: string
   qrvalue: string
+  downloading: boolean;
 
   constructor(
     private authService: AuthService,
@@ -91,7 +93,7 @@ export class NavbarComponent implements OnInit {
     console.log(this.schema)
     this.initDataFrame()
     this.qrvalue = this.recordService.getBackend()
-    if(!this.qrvalue.length) this.qrvalue=window.document.location.href
+    if (!this.qrvalue.length) this.qrvalue = window.document.location.href
   }
   onStateSelected(state) {
     this.stateSelected = state
@@ -251,8 +253,46 @@ export class NavbarComponent implements OnInit {
   logout() {
     this.authService.logout()
   }
-  download() {
-    this.startDownload.emit({})
+  collectCsv(task: string) {
+    this.recordService.getCsv(task).pipe(first()).subscribe(d => {
+      console.log(d)
+      if (d['status'] != "SUCCESS") {
+        setTimeout(() => this.collectCsv(task), 3000)
+      } else {
+        this.downloading = false
+        let filename = d['result'].match(/[^\/]+$/).pop()
+        let blob = new Blob([d['result']], { type: 'application/zip' })
+        saveAs(blob, filename)
+      }
+    })
+  }
+  preDownload() {
+    switch (this.stateSelected) {
+      case 'Reports':
+        this.startDownload.emit({ "state": this.stateSelected })
+        break
+      case 'List':
+      case 'Map':
+        if (this.downloading)
+          return
+        this.downloading = true
+        this.recordService.getTileKey({ 'uuid': this.recordSchema["record_type"] }, {
+          filter: this.filter
+        }).pipe(first()).subscribe(t => {
+          console.log(t)
+          this.recordService.postCsv(t['tilekey']).pipe(first()).subscribe(data => {
+            console.log(data)
+            if (data['success']) {
+              setTimeout(() => this.collectCsv(data['taskid']), 1000)
+            }
+          })
+
+        })
+        break
+    }
+  }
+  hasDownload(){
+    return ['List', 'Map', 'Reports'].indexOf(this.stateSelected) >= 0
   }
   setlang(code: string) {
     localStorage.setItem("Language", code)
@@ -360,10 +400,10 @@ export class NavbarComponent implements OnInit {
             })
           }
           if (f[`${v[0]}#${k}`]['max']) {
-            v[1][k]['maximum']=f[`${v[0]}#${k}`]['max']
+            v[1][k]['maximum'] = f[`${v[0]}#${k}`]['max']
           }
           if (f[`${v[0]}#${k}`]['min']) {
-            v[1][k]['minimum']=f[`${v[0]}#${k}`]['min']
+            v[1][k]['minimum'] = f[`${v[0]}#${k}`]['min']
           }
 
         }
@@ -372,36 +412,36 @@ export class NavbarComponent implements OnInit {
     //['filter_json']
     //this.applyFilter(m)
   }
-  loadSavedFilters(){
+  loadSavedFilters() {
     this.recordService.getSavedFilters({ limit: 50 }).pipe(first()).subscribe({
-          next: data => {
-            this.savedFilters = data['results']
-            this.spinner.hide()
-            this.filtering=false
-          }
-        })
+      next: data => {
+        this.savedFilters = data['results']
+        this.spinner.hide()
+        this.filtering = false
+      }
+    })
   }
   saveFilter(m: any) {
     this.applyFilter(null)
     this.spinner.show()
-    this.filtering=true
-    var p={}
-    Object.keys(this.filterObject).forEach(k=>{
-      Object.keys(this.filterObject[k]).forEach(j=>{
-        p[`${k}#${j}`]=this.filterObject[k][j]
+    this.filtering = true
+    var p = {}
+    Object.keys(this.filterObject).forEach(k => {
+      Object.keys(this.filterObject[k]).forEach(j => {
+        p[`${k}#${j}`] = this.filterObject[k][j]
       })
     })
-    this.recordService.saveFilter({'label':this.filterLabel, filter_json:p}).pipe(first()).subscribe({
-      next: data=>{
+    this.recordService.saveFilter({ 'label': this.filterLabel, filter_json: p }).pipe(first()).subscribe({
+      next: data => {
         this.loadSavedFilters()
-      }, error: err=>{
-        console.log(err)  
+      }, error: err => {
+        console.log(err)
       }
     })
   }
 
-  deleteFilter(fu:object){
-    this.filtering=true
+  deleteFilter(fu: object) {
+    this.filtering = true
     this.recordService.deleteFilter(fu['uuid']).pipe(first()).subscribe({
       next: data => {
         this.loadSavedFilters()
@@ -506,7 +546,7 @@ export class NavbarComponent implements OnInit {
   }
   createRecord(e: any) {
     this.newRecord.emit(this.inserting)
-    $('.leaflet-container').css('cursor', (this.inserting)?'crosshair':'grab');
+    $('.leaflet-container').css('cursor', (this.inserting) ? 'crosshair' : 'grab');
   }
   qrCode(mod) {
     this.modalService.open(mod, { size: 'lg' });
