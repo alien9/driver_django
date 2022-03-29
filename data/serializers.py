@@ -32,7 +32,8 @@ class BaseDriverRecordSerializer(serializers.RecordSerializer):
 
 class DriverRecordSerializer(BaseDriverRecordSerializer):
     modified_by = SerializerMethodField(method_name='get_latest_change_email')
-
+    related_fields=['mapillary']
+    read_only_fields = ('uuid', 'segment', 'mapillary')
     def get_latest_change_email(self, record):
         """Returns the email of the user who has most recently modified this Record"""
         latest_audit_entry = (RecordAuditLogEntry.objects
@@ -44,6 +45,8 @@ class DriverRecordSerializer(BaseDriverRecordSerializer):
                 return latest_audit_entry.user.email
             return latest_audit_entry.username
         return None
+    def update(self, instance, validated_data):
+        return super(DriverRecordSerializer, self).update(instance, validated_data)
 
 
 class DetailsReadOnlyRecordSerializer(BaseDriverRecordSerializer):

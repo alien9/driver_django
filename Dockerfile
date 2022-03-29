@@ -29,7 +29,7 @@ COPY user_filters /opt/app/user_filters
 COPY manage.py /opt/app/
 COPY requirements-production.txt /opt/app/requirements.txt
 COPY find_segments.sql /opt/app/find_segments.sql
-COPY web /opt/app/web/dist
+COPY angular/driver/dist/driver /opt/app/web/dist
 COPY favicon.ico /opt/app/web/dist/favicon.ico
 COPY DriverData.apk /opt/app/web/DriverData.apk
 COPY crontab /opt/app/web/crontab

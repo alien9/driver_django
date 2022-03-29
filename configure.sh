@@ -68,6 +68,8 @@ if [ $STATIC_ROOT != $WINDSHAFT_FILES ]; then
      sudo cp -r static "$STATIC_ROOT/"
 fi
 
+sudo rm mapserver/*
+
 if [ -h "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf" ]; then
      sudo rm "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
 else

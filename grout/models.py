@@ -349,7 +349,7 @@ class Boundary(Imported):
             "username":connection.settings_dict['USER'],
             "dbname":connection.settings_dict['NAME'],
             "password":connection.settings_dict['PASSWORD'],
-            "query":"geom from (select geom, uuid, data->'%s' as label from grout_boundarypolygon where boundary_id='%s')as q using unique uuid using srid=4326" % (self.display_field, self.uuid,),
+            "query":"geom from (select geom, uuid, data->'%s' as label from grout_boundarypolygon where st_intersects(geom, !BOX!) AND boundary_id='%s')as q using unique uuid using srid=4326" % (self.display_field, self.uuid,),
             "color": "%s %s %s" % (color[0],color[1],color[2]),
         })
         with open("./mapserver/boundary_%s.map" % (self.uuid), "w+") as m:

@@ -15,6 +15,7 @@ from django.shortcuts import get_object_or_404,redirect
 from celery import states
 from django.http import JsonResponse
 from django.db.models.sql.datastructures import Join
+from django.http import HttpResponse, Http404
 
 from django.conf import settings
 from django.db import transaction
@@ -169,7 +170,6 @@ def grid(request, geometry, mapfile, layer, z, x, y):
     x1=x0+size_sq
     y0=20037508.342789244-(int(y)+1)*size_sq
     y1=y0+size_sq
-    print("looking for")
     filename="{geometry}_{mapfile}.map".format(geometry=geometry,mapfile=mapfile,)
     if not os.path.exists("./mapserver/%s" % (filename)):
         if geometry=='critical':
@@ -226,6 +226,15 @@ def retrieve_blackspots(request, pk):
 def segment_sets(request):
     s=SegmentSet.objects.all()
     return JsonResponse({"result":[{"id":segment.id, "name":segment.name} for segment in s]})
+
+def download(request, filename):
+    file_path = os.path.join('zip', filename)
+    if os.path.exists(file_path):
+        with open(file_path, 'rb') as fh:
+            response = HttpResponse(fh.read(), content_type="application/zip")
+            response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
+            return response
+    raise Http404
 
 def build_toddow(queryset):
     """
@@ -362,16 +371,16 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             if not len(s):
                 #throw an error
                 response.data['mapfile'] = None
-            else:
+            else:   
                 schema=s[0]
                 g=Record.objects.filter(schema=schema)
                 
-                query_sql = self.generate_mapserver_query_sql(request).replace('"', '\\"')
-                cursor = connection.cursor()
-                query_sql=cursor.mogrify(query_sql,[recordtype_uuid]).decode("utf-8")
+                query_sql = self.generate_mapserver_query_sql(request)
                 
-                cursor.close()
-                
+                query_sql=query_sql.replace('::bytea', '::geometry')
+                query_sql=query_sql.replace('\'\\x', '\'')
+                query_sql=query_sql.replace('"', '\\"')
+
                 if 'records_mapfile' in request.session:
                     tile_token = request.session['records_mapfile']
                 else:
@@ -381,23 +390,28 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                         tile_token=uuid.uuid4()
                     request.session['records_mapfile']=str(tile_token)
                     request.session.modified = True
+
+                self._cache_tile_sql(tile_token, query_sql)
+
+                query_sql=query_sql.replace(') WHERE (', ') WHERE st_intersects(geom, !BOX!) AND (')
                 dbstring=connection.settings_dict['HOST']
                 if settings.DEBUG:
                     if hasattr(settings, 'CONTAINER_NAME'):
                         dbstring="database-{container}".format(container=settings.CONTAINER_NAME)
+                d="0"
+                if settings.DEBUG:
+                    d="5"
                 t=render_to_string('records.map', {
                     "connection":connection.settings_dict['HOST'],
                     "username":connection.settings_dict['USER'],
                     "password":connection.settings_dict['PASSWORD'],
                     "dbname":connection.settings_dict['NAME'],
-                    "query":query_sql
+                    "query":query_sql,
+                    "debug":d,
                 })
                 with open("./mapserver/records_%s.map" % tile_token, "w+") as m:
                     m.write(t)
                 response.data['mapfile'] = tile_token
-        elif 'theme' in request.query_params:
-            print('request data')
-            print(request.data)
         else:
             response = super(DriverRecordViewSet, self).list(self, request, *args, **kwargs)
         return response
@@ -707,6 +721,10 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         # the mapfile is indexed by the boundary uuid and the session id.
         
         tables_boundary = request.query_params.get('aggregation_boundary', None)
+        if tables_boundary is None or not re.match(r'^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', tables_boundary, flags=re.IGNORECASE):
+            return JsonResponse({
+                "mapfile":None, "error": "uuid %s not valid" % (tables_boundary)
+            })
         b=Boundary.objects.get(pk=tables_boundary)
         color=[255,0,0]
         if b.color is not None:
@@ -729,15 +747,14 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         query_sql='SELECT "grout_boundarypolygon"."geom","grout_boundarypolygon"."uuid", count(*) as c FROM "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\'  LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") WHERE {where} GROUP BY "grout_boundarypolygon"."geom","grout_boundarypolygon"."uuid"'.format(where=where)
         
         #execute the small query
-        cursor.execute('SELECT "grout_boundarypolygon"."uuid", count(*) as c, "grout_boundarypolygon".data->\'{display_field}\' FROM  "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\'  LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") WHERE {where} GROUP BY "grout_boundarypolygon"."uuid", "grout_boundarypolygon".data->\'{display_field}\''.format(where=where, display_field=b.display_field))
+        cursor.execute('SELECT "grout_boundarypolygon"."uuid", case when c.c is null then 0 else c.c end, "grout_boundarypolygon".data->\'{display_field}\' from "grout_boundarypolygon" left join (SELECT "grout_boundarypolygon"."uuid", count(*) as c, "grout_boundarypolygon".data->\'{display_field}\' as name FROM  "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\'  LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") WHERE {where} GROUP BY "grout_boundarypolygon"."uuid") c on c.uuid="grout_boundarypolygon"."uuid" WHERE "grout_boundarypolygon"."boundary_id" = \'{boundary_id}\''.format(where=where, display_field=b.display_field, boundary_id=tables_boundary))
         sample=sorted([r for r in cursor.fetchall()], key=lambda a: a[1])
         chunk=(len(sample)-1)/5.0
         i=0
         classes=[
-
         ]
-        print(color)
         last={'max':-1, 'min':-1}
+        print(sample)
         while i<5:
             min=sample[math.floor(i*chunk)][1]
             max=sample[math.ceil((i+1)*chunk)][1]
@@ -753,7 +770,9 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 classes.append(cl)
             last={'max':cl['max'],'min':cl['min']}
             i+=1
-        
+        d="0"
+        if settings.DEBUG:
+            d="5"
         t=render_to_string('boundary_theme.map', {
                     "connection":connection.settings_dict['HOST'],
                     "username":connection.settings_dict['USER'],
@@ -761,6 +780,8 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                     "dbname":connection.settings_dict['NAME'],
                     "query":query_sql.replace('"', '\\"'),
                     "classes":classes,
+                    "boundary_id":tables_boundary,
+                    "debug": d,
                 })
         if "theme_mapfile_%s" % (tables_boundary) in request.session:
             tile_token = request.session["theme_mapfile_%s" % (tables_boundary)]

@@ -83,35 +83,32 @@ class DriverRecord(Record):
     road = models.CharField(max_length=200, null=True, blank=True)
     state = models.CharField(max_length=50, null=True, blank=True)
     segment = models.ManyToManyField(RecordSegment, null=True, blank=True)
-    mapillary = models.TextField(null=True, blank=True)
+    mapillary=models.OneToOneField('MapillaryData', on_delete=models.CASCADE, null=True, blank=True)
 
     def geocode(self, roadmap_uuid, size):
-        with connection.cursor() as cursor:
-            if self.geom:
-                
+        if self.geom:
+            row=[None]
+            with connection.cursor() as cursor:
                 cursor.execute("select * from works.find_segment(%s, %s, %s)", [self.geom.ewkt, size, str(roadmap_uuid)])
                 row = cursor.fetchone()
-                if row[0] is not None:
-                    s=RecordSegment.objects.filter(
-                        geom=GEOSGeometry(row[0]),
+            if row[0] is not None:
+                s=RecordSegment.objects.filter(
+                    geom=GEOSGeometry(row[0]),
+                    size=size,
+                    roadmap_id=roadmap_uuid
+                )
+                if not len(s):
+                    seg=RecordSegment(
+                        roadmap_id=roadmap_uuid, 
+                        data={},
                         size=size,
-                        roadmap_id=roadmap_uuid
+                        name=row[1],
+                        geom=GEOSGeometry(row[0])
                     )
-                    if not len(s):
-                        seg=RecordSegment(
-                            roadmap_id=roadmap_uuid, 
-                            data={},
-                            size=size,
-                            name=row[1],
-                            geom=GEOSGeometry(row[0])
-                        )
-                        seg.save()
-                    else:
-                        seg=s[0]
-                    self.segment.add(seg)
-                    return seg
+                    seg.save()
                 else:
-                    return None
+                    seg=s[0]
+                self.segment.add(seg)
                     
     def save(self, *args, **kwargs):
         if not self.light:
@@ -143,6 +140,10 @@ def record_after_save(sender, instance, **kwargs):
             instance.location_text="%s, %s" % (j['address']['road'],j['address']['city']) [0:199]
             instance.save()
 
+
+class MapillaryData(models.Model):
+    record=models.OneToOneField(DriverRecord, on_delete=models.CASCADE, primary_key=True)
+    data=models.TextField(null=True, blank=True)
 
 def get_image_path(instance, filename):
     return os.path.join('photos', str(instance.id), filename)

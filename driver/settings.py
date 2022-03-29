@@ -533,7 +533,7 @@ CONSTANCE_CONFIG = {
     "SECONDARY_LABEL": (os.getenv('PRIMARYLABEL', "Intervention"), _("Intervention")),
     "WINDSHAFT": ("http://windshaft-%s" % (os.getenv("CONTAINER_NAME", 'driver')), "WindShaft"),
     "LANGUAGES": ('[{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}]', _("Languages")),
-    "HOSTNAME": ("%s://%s" % ((os.getenv('PROTOCOL', "https"), os.getenv('HOSTNAME', "localhost:8000"))), _("Host Name")),
+    "HOSTNAME": (os.getenv('HOST_URL', os.getenv('PROTOCOL', "https")+"://"+os.getenv('HOSTNAME', "localhost:8000")), _("Host Name")),
     "COUNTRY_CODE": (os.getenv('COUNTRY', "ic"), _("Country Code")),
     "MAPSERVER": ("http://mapserver-%s" % (os.getenv('CONTAINER_NAME', 'driver')), "MapServer"),
     'TIMEZONE': ('America/Sao_Paulo', 'Time Zone', 'tzselect'),

@@ -1,5 +1,5 @@
 MAP
-    DEBUG 5
+    DEBUG {{debug}}
     IMAGECOLOR 0 255 0
     OUTPUTFORMAT
         NAME "PNG24"
@@ -28,7 +28,24 @@ MAP
             "tile_metatile_level" "0"
         END
     END 
-
+    LAYER
+        NAME        "border"
+        DATA        "geom from (select geom, uuid from grout_boundarypolygon where st_intersects(geom, !BOX!) AND boundary_id='{{boundary_id}}') c using unique uuid using srid=4326"
+        CONNECTIONTYPE  POSTGIS 
+        CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
+        
+        TYPE POLYGON
+        PROJECTION
+            "init=epsg:4326"
+        END
+        CLASS
+            STYLE
+                WIDTH 1
+                OUTLINECOLOR 200 200 200
+                OPACITY 50
+            END
+        END
+    END
     LAYER
         NAME        "theme"
         DATA        "geom from ({{query|safe}})as q using unique uuid using srid=4326"
@@ -45,7 +62,6 @@ MAP
             NAME "{{class.name}}"
             STYLE
                 WIDTH 1
-                OUTLINECOLOR 120 102 120
                 OPACITY 50
                 COLOR {{class.color}}
             END

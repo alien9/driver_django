@@ -63,11 +63,12 @@ class ReportsTestCase(APITestCase):
         
         
         # 1 crash involves a minor
-        response=self.client.get("/api/records/?archived=False&details_only=False&jsonb=%7B\"driverVictim\":%7B\"Age\":%7B\"_rule_type\":\"intrange_multiple\",\"max\":7%7D%7D%7D&limit=50&occurred_max=2022-01-13T01:59:59.999Z&occurred_min=2021-10-14T02:00:00.000Z&record_type={record_type}".format(
+        response=self.client.get("/api/records/?archived=False&details_only=False&jsonb=%7B\"driverVictim\":%7B\"Age\":%7B\"_rule_type\":\"intrange_multiple\",\"max\":17%7D%7D%7D&limit=50&occurred_max=2022-01-13T01:59:59.999Z&occurred_min=2021-10-14T02:00:00.000Z&record_type={record_type}".format(
                 record_type=self.record_type_uuid
             )
         )
         print(".", end='')
+        print(response.json())
 
         self.assertEqual(response.json()['count'], 1)
         # 5 crashes involv motorcycle(s)

@@ -44,7 +44,7 @@ urlpatterns = [
     url(r'^api/', include(router.urls)),
     url(r'^legacy/', data_views.index),
     url(r'^editor/$', data_views.editor),
-    url(r'^maps/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).png/$', data_views.maps),
+    url(r'^maps/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w\s]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).png/$', data_views.maps),
     url(r'^grid/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).json/$', data_views.grid),
     url(r'^legend/(?P<layer>[-\w]*)/(?P<mapfile>[-\w]*)/$', data_views.legend),
 
@@ -65,6 +65,7 @@ urlpatterns = [
     url(r'^oidc/', include('mozilla_django_oidc.urls')),
     url('i18n/', include('django.conf.urls.i18n')),
     url(r'^config/', data_views.get_config),
+    url(r'^download/(?P<filename>[^\/]*)$', data_views.download),
     url('tiles/', data_views.proxy),
     url('mapserver/', data_views.mapserver),
     url('segments/', data_views.segment_sets),    

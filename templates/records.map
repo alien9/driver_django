@@ -1,5 +1,5 @@
 MAP
-    DEBUG 0
+    DEBUG {{debug}}
     IMAGECOLOR 0 255 0
     OUTPUTFORMAT
         NAME "PNG24"
@@ -70,11 +70,11 @@ MAP
 
     LAYER
         NAME        "records"
-        DATA        "geom from (select geom::geometry, uuid, occurred_from from ({{query|safe}}) as q) as rq using unique uuid using srid=4326"
+        DATA       "geom from ({{query|safe}}) as c using unique record_ptr_id using srid=4326"
         CONNECTIONTYPE  POSTGIS
         CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
-        UTFITEM   "uuid"
-        UTFDATA   "{\"uuid\":\"[uuid]\",\"occurred_from\":\"[occurred_from]\"}"
+        UTFITEM   "record_ptr_id"
+        UTFDATA   "{\"uuid\":\"[record_ptr_id]\",\"occurred_from\":\"[occurred_from]\"}"
         PROCESSING "KERNELDENSITY_RADIUS=10"
         
         TYPE POINT
@@ -95,11 +95,11 @@ MAP
     END
     LAYER
         NAME        "records_offset"
-        DATA        "geom from (select geom::geometry, uuid, occurred_from, location_text from ({{query|safe}}) as q) as rq using unique uuid using srid=4326"
+        DATA        "geom from ({{query|safe}}) as c using unique record_ptr_id using srid=4326"
         CONNECTIONTYPE  POSTGIS
         CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
-        UTFITEM   "uuid"
-        UTFDATA   "{\"uuid\":\"[uuid]\",\"occurred_from\":\"[occurred_from]\", \"location_text\":\"[location_text]\"}"
+        UTFITEM   "record_ptr_id"
+        UTFDATA   "{\"uuid\":\"[record_ptr_id]\",\"occurred_from\":\"[occurred_from]\", \"location_text\":\"[location_text]\"}"
         PROCESSING "KERNELDENSITY_RADIUS=10"
         
         TYPE POINT
