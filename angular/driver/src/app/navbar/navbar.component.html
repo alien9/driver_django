@@ -247,7 +247,7 @@
             </div>
             <select class="custom-select" [(ngModel)]=reportHeaders[tab.key] (change)=setReportHeaders($event) id="{{tab.key}}_header">
                 <optgroup label="{{ 'Geography'|translate}}" *ngIf=boundaries.length>
-                    <option [value]=" 'boundary_id,'+item.uuid" *ngFor="let item of boundaries">{{item.label}}
+                    <option [value]="'boundary_id,'+item.uuid" *ngFor="let item of boundaries">{{item.label}}
                     </option>
                 </optgroup>
                 <optgroup label="{{ 'Time'|translate}}" *ngIf=wantsTime(tab.key)>

@@ -16,6 +16,7 @@ export class ChartsComponent implements OnInit, OnChanges {
   @Input() boundary_polygon_uuid: string
   @Input() recordSchema: object
   @Input() reportFilters: object[]
+  @Input() boundaries:object[]
   active = 1
   toddow: any
   locale: string
@@ -126,7 +127,6 @@ export class ChartsComponent implements OnInit, OnChanges {
               .domain([0, max])
             svg.selectAll()
               .data(data, function (d) {
-                console.log("counting " + d.count)
                 return d.count
               })
               .enter()
@@ -378,10 +378,9 @@ export class ChartsComponent implements OnInit, OnChanges {
         })
         break;
       case 4: // treemap
-        const t_margin_bar = { top: 10, right: 30, bottom: 20, left: 50 },
+        const t_margin_bar = { top: 0, right: 50, bottom: 0, left: 50 },
           t_width_bar = 600,
           t_height_bar = t_width_bar
-        $("#treemap").html('')
         let parameters_treemap = this.filter
         if (!this.barChart['field']) {
           return
@@ -396,16 +395,18 @@ export class ChartsComponent implements OnInit, OnChanges {
         }
         parameters_treemap['relate'] = this.barChart['field'] // the total count of related
 
-        var svg = d3.select("#treemap")
-          .append("svg")
-          .attr("width", t_width_bar + t_margin_bar.left + t_margin_bar.right)
-          .attr("height", t_height_bar + t_margin_bar.top + t_margin_bar.bottom)
-          .append("g")
-          .attr("transform",
-            `translate(${t_margin_bar.left}, ${t_margin_bar.top})`);
+
 
         this.recordService.getCrossTabs(this.recordSchema['record_type'], parameters_treemap).pipe(first()).subscribe({
           next: data => {
+            $("#treemap").html('')
+            var svg = d3.select("#treemap")
+              .append("svg")
+              .attr("width", t_width_bar + t_margin_bar.left + t_margin_bar.right)
+              .attr("height", t_height_bar + t_margin_bar.top + t_margin_bar.bottom)
+              .append("g")
+              .attr("transform",
+                `translate(${t_margin_bar.left}, ${t_margin_bar.top})`);
             let du = []
             if (this.barChart['parent_field']) {
               Object.entries(data['tables'][0]['data']).forEach(col => {
@@ -415,17 +416,21 @@ export class ChartsComponent implements OnInit, OnChanges {
                   'value': ''
                 })
                 Object.entries(col[1]).forEach(row => {
-                  du.push({
-                    'name': row[0],
-                    'value': row[1],
-                    'parent': col[0]
-                  })
+                  if (row[1] > 0) {
+                    du.push({
+                      'name': row[0],
+                      'value': row[1],
+                      'parent': col[0]
+                    })
+                  }
                 })
               }
 
               )
             } else {
-              du = Object.entries(data['tables'][0]['data'][0]).map(k => {
+              du = Object.entries(data['tables'][0]['data'][0]).filter(k=>{
+                return k[1]>0
+              }).map(k => {
                 return {
                   'name': k[0],
                   'value': k[1],
@@ -485,7 +490,7 @@ export class ChartsComponent implements OnInit, OnChanges {
               .attr("y", function (d) { return d['y0'] + 20 })    // +20 to adjust position (lower)
               .text(function (d) { return d.data['name'] })
               .attr("font-size", "15px")
-              .attr("fill", "white")
+              .attr("fill", "#ccc")
 
             // Add title for the 3 groups
             if (this.barChart['parent_field']) {
