@@ -16,7 +16,7 @@ services:
     dns-name-label: "driver-django-vidasegura"
     ports: 4000
     protocol: "TCP"
-    command: "gunicorn driver.wsgi -w3 -b:4000 -kgevent --timeout 4000"]
+    command: "gunicorn driver.wsgi -w3 -b:4000 -kgevent --timeout 4000"
     volumes:
       - /opt/vidasegura/static:/var/www/static
       - /opt/vidasegura/mapserver:/opt/app/mapserver
@@ -38,8 +38,9 @@ services:
       - STATIC_ROOT=/var/www/static/
       - STATIC_URL=/static/ 
       - CONTAINER_NAME=vidasegura
+      - MAPSERVER=mapserver-vidasegura
     name: driver-django-vidasegura
-    name: driver-django-vidasegura
+    name: django-vidasegura
     image: alien9/driver-django
       
   driver-celery:

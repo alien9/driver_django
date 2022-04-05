@@ -1,84 +1,23 @@
 #!/bin/bash
 
-docker-compose up -d
-if [[ ! -d "zip" ]]; then
-     mkdir zip
-fi
-
-while read line; do export "$line"; done < .env
-
-while read line; do echo "$line"; done < .env
-
-echo ${CONTAINER_NAME}
-
-EXISTE_DJANGO=$(docker ps | grep driver-django-${CONTAINER_NAME})
-EXISTE_CELERY=$(docker ps | grep driver-celery-${CONTAINER_NAME})
-DJANGO_HOST="localhost"
-if [ "${EXISTE_DJANGO}" != "" ]; then
-     DJANGO_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-django-${CONTAINER_NAME})
-fi
-CELERY_HOST="localhost"
-if [ "${EXISTE_CELERY}" != "" ]; then
-     CELERY_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-celery-${CONTAINER_NAME})
-fi
-WINDSHAFT_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' windshaft-${CONTAINER_NAME})
-if [ "${WINDSHAFT_HOST}" == "" ]; then
-     echo "Windshaft did not start."
-     exit
-fi
-
-if [[ ! -f driver-${CONTAINER_NAME}.conf ]]; then
-     cp driver.conf driver-${CONTAINER_NAME}.conf
+DJANGO_HOST=driver-django-vidasegura
+CELERY_HOST=driver-celery-vidasegura
+HOST_NAME=vidasegura.cetsp.com.br
+STATIC_ROOT=/opt/vidasegura/static
+if [[ ! -f driver-vidasegura.conf ]]; then
+     cp driver.conf driver-vidasegura.conf
 fi
 sed -i -e "s/\s[^ ]*\s*#HOST_NAME$/ ${HOST_NAME}; #HOST_NAME/g" \
 -e "s,\s[^ ]*\s*#STATIC_ROOT$, ${STATIC_ROOT}; #STATIC_ROOT,g" \
 -e "s,\s[^ ]*\s*#STATIC_ROOT_MEDIA$, ${STATIC_ROOT}/zip/; #STATIC_ROOT_MEDIA,g" \
 -e "s/http.*#driver-django$/http:\/\/${DJANGO_HOST}:4000; #driver-django/g" \
--e "s/\s[^ ]*\s*#windshaft$/ http:\/\/${WINDSHAFT_HOST}:5000; #windshaft/g" \
 -e "s,\s[^ ]*\s*#ALPHA_ROOT$, ${STATIC_ROOT}/static/dist/; #ALPHA_ROOT,g" \
 -e "s,\s[^ ]*\s*#FAVICON$, ${STATIC_ROOT}/static/dist/favicon.ico; #FAVICON,g" \
-driver-${CONTAINER_NAME}.conf
+driver-vidasegura.conf
 
-#docker exec driver-nginx sed -i -e "s/HOST_NAME/${HOST_NAME}/g" /etc/nginx/conf.d/driver-app.conf
+docker exec "driver-django-vidasegura" ./manage.py collectstatic --noinput
+docker exec "driver-django-vidasegura" ./manage.py migrate
 
-if [ $PROTOCOL == "http" ]
-then
-     echo "HTTP"
-else
-     echo "HTTPS"
- #    docker exec driver-nginx certbot
-fi
-if [ "${EXISTE_DJANGO}" != "" ]; then 
-     docker stop "driver-cron-${CONTAINER_NAME}"
-     docker rm -v "driver-cron-${CONTAINER_NAME}"
-     docker exec "driver-django-${CONTAINER_NAME}" ./manage.py collectstatic --noinput
-     docker exec "driver-django-${CONTAINER_NAME}" ./manage.py migrate
-#     while true; do
-#          read -p "Create superuser?" yn
-#          case $yn in
-#               [Yy]* ) docker exec -it $(docker inspect -f '{{.ID}}' driver-django-${CONTAINER_NAME}) python manage.py createsuperuser; break;;
-#               [Nn]* ) break;;
-#               * ) echo "Please answer yes or no.";;
-#          esac
-#     done
-     docker-compose up -d
-fi
-if [ $STATIC_ROOT != $WINDSHAFT_FILES ]; then
-     sudo cp -r web "$STATIC_ROOT/"
-     sudo cp -r static "$STATIC_ROOT/"
-fi
-
-sudo rm mapserver/*
-
-if [ -h "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf" ]; then
-     sudo rm "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
-else
-     if [ $PROTOCOL == "http" ]
-     then
-          echo "Remember to run certbot now."
-     fi
-fi
-sudo ln -s "$(pwd)/driver-${CONTAINER_NAME}.conf" "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
+sudo ln -s "$(pwd)/driver-vidasegura.conf" "/etc/nginx/sites-enabled/driver-vidasegura.conf"
 sudo service nginx restart
 
-#docker-compose restart driver-nginx 
