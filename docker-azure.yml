@@ -1,0 +1,115 @@
+version: '3'
+services:
+  redis-server:
+    image: redis
+    container_name: "redis-server-${CONTAINER_NAME}"
+
+  driver-django:
+    build:
+      context: ./
+    volumes:
+      - ./static:/var/www/static
+      - ./mapserver:/opt/app/mapserver
+    depends_on:
+      - redis-server
+      - mapserver
+    environment:
+      - CENTER_LATITUDE=${CENTER_LATITUDE}
+      - CENTER_LONGITUDE=${CENTER_LONGITUDE}
+      - ZOOM=${ZOOM}
+      - HOST_URL=${PROTOCOL}://${HOST_NAME}
+      - HOSTNAME=${HOST_NAME}
+      - TIMEZONE=${TIMEZONE}
+      - DJANGO_ENV=production
+      - DRIVER_DB_HOST=${DATABASE_HOST}
+      - DRIVER_DB_NAME=${DATABASE_NAME}
+      - DRIVER_DB_USER=${DATABASE_USERNAME}
+      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
+      - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
+      - STATIC_ROOT=/var/www/static/
+      - STATIC_URL=${PROTOCOL}://${HOST_NAME}/static/ 
+      - OAUTH_CLIENT_ID=${CLIENTID}
+      - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
+      - DRIVER_ADMIN_PASSWORD=${DRIVER_ADMIN_PASSWORD}
+      - CONTAINER_NAME=${CONTAINER_NAME}
+    container_name: driver-django-${CONTAINER_NAME}
+    image: alien9/driver-django
+      
+  driver-celery:
+    volumes:
+      - ./zip:/var/www/media
+    depends_on:
+      - redis-server
+    environment:
+      - HOST_URL=${PROTOCOL}://${HOST_NAME}
+      - HOSTNAME=${HOST_NAME}
+      - COUNTRY_CODE=${COUNTRY_CODE}
+      - TIMEZONE=${TIMEZONE}
+      - DJANGO_ENV=production
+      - DRIVER_DB_HOST=${DATABASE_HOST}
+      - DRIVER_DB_NAME=${DATABASE_NAME}
+      - DRIVER_DB_USER=${DATABASE_USERNAME}
+      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
+      - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
+      - STATIC_ROOT=/var/www/static/
+      - STATIC_URL=${PROTOCOL}://${HOST_NAME}/static/ 
+      - OAUTH_CLIENT_ID=${CLIENTID}
+      - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
+    entrypoint: ["celery", "-A", "driver", "worker", "--queue=taskworker", "--loglevel=info", "--concurrency=4"]
+    container_name: driver-celery-${CONTAINER_NAME}
+    image: alien9/driver-django
+
+  driver-cron:
+    volumes:
+      - ./static/crontab:/var/spool/cron/crontabs/root
+    depends_on:
+      - redis-server
+    environment:
+      - HOST_URL=${PROTOCOL}://${HOST_NAME}
+      - HOSTNAME=${HOST_NAME}
+      - COUNTRY_CODE=${COUNTRY_CODE}
+      - TIMEZONE=${TIMEZONE}
+      - DJANGO_ENV=production
+      - DRIVER_DB_HOST=${DATABASE_HOST}
+      - DRIVER_DB_NAME=${DATABASE_NAME}
+      - DRIVER_DB_USER=${DATABASE_USERNAME}
+      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
+      - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
+      - STATIC_ROOT=/var/www/static/
+      - STATIC_URL=${PROTOCOL}://${HOST_NAME}/static/ 
+      - OAUTH_CLIENT_ID=${CLIENTID}
+      - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
+    command: "cron -f"
+    container_name: driver-cron-${CONTAINER_NAME}
+    image: alien9/driver-django
+        
+  mapserver:
+    container_name: mapserver-${CONTAINER_NAME}
+    volumes:
+      - ./mapserver/:/etc/mapserver
+    image: geodata/mapserver
+
+  windshaft:
+    command: server.js
+    container_name: windshaft-${CONTAINER_NAME}
+    links:
+      - redis-server:redis
+    depends_on:
+      - redis-server
+    volumes:
+      - ./windshaft/driver.js:/opt/windshaft/driver.js
+      - ./windshaft/healthCheck.js:/opt/windshaft/healthCheck.js
+      - ./windshaft/alphamarker.png:/opt/windshaft/alphamarker.png
+      - ./windshaft/server.js:/opt/windshaft/server.js
+    environment:
+      - DRIVER_DB_NAME=${DATABASE_NAME}
+      - DRIVER_DB_USER=${DATABASE_USERNAME}
+      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
+      - WINDSHAFT_DB_USER=${DATABASE_USERNAME}
+      - WINDSHAFT_DB_PASSWORD=${DATABASE_PASSWORD}
+      - DRIVER_DB_HOST=${DATABASE_HOST}
+      - DRIVER_DB_PORT=5432
+      - DRIVER_APP_HOST=${PROTOCOL}://${HOST_NAME}
+      - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
+      - DRIVER_REDIS_PORT=6379
+    image: quay.io/azavea/windshaft:0.1.0
