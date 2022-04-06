@@ -75,7 +75,9 @@ urlpatterns = [
     url('api/irap-fatalitydata/', fatalitydata),
     url(r'^get_config/', auth_views.get_config)
 ]
-
+urlpatterns += [
+    path('captcha/', include('captcha.urls')),
+]
 # i18n for django-admin
 from django.conf.urls.i18n import i18n_patterns
 
