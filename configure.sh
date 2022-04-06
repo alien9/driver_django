@@ -17,6 +17,7 @@ driver-vidasegura.conf
 
 docker exec "driver-django-vidasegura" ./manage.py collectstatic --noinput
 docker exec "driver-django-vidasegura" ./manage.py migrate
+az container exec --name driver-django-vidasegura --exec-command "./manage.py collectstatic --noinput"
 
 sudo ln -s "$(pwd)/driver-vidasegura.conf" "/etc/nginx/sites-enabled/driver-vidasegura.conf"
 sudo service nginx restart
