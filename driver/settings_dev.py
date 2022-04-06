@@ -8,9 +8,9 @@ DEVELOP = True
 STAGING = True if os.environ.get('DJANGO_ENV', 'staging') == 'staging' else False
 PRODUCTION = not DEVELOP and not STAGING
 
-
+DATABASE_NAME='driver_sp'
 DRIVER_DB_HOST='localhost'
-WINDSHAFT_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-vidasegura"]).decode('utf8').strip()
+WINDSHAFT_HOST='localhost'#subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-vidasegura"]).decode('utf8').strip()
 MAPSERVER_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "mapserver-vidasegura"]).decode('utf8').strip()
 REDIS_HOST = subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "redis-server-vidasegura"]).decode('utf8').strip()
 CONTAINER_NAME='vidasegura'
@@ -30,11 +30,11 @@ DEBUG = DEVELOP
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': e['DATABASE_NAME'],
+        'NAME': DATABASE_NAME,
         'HOST': DRIVER_DB_HOST,
         'PORT': os.environ.get('DRIVER_DB_PORT', 5432),
         'USER': os.environ.get('DRIVER_DB_USER', 'driver'),
-        'PASSWORD': e['DATABASE_PASSWORD'],
+        'PASSWORD': os.environ.get('DRIVER_DB_PASSWORD', 'driver'),
         'CONN_MAX_AGE': 3600,  # in seconds
         'OPTIONS': {
         #    'sslmode': 'require'
