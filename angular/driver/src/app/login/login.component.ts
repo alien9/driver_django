@@ -19,6 +19,7 @@ export class LoginComponent implements OnInit {
     errorMessage: string;
     @Output() entering = new EventEmitter<any>()
     backend: string = ""
+    primeiro_acesso: boolean;
 
     constructor(
         private formBuilder: FormBuilder,
@@ -130,5 +131,8 @@ export class LoginComponent implements OnInit {
                     }
                 }, complete: () => console.log('HTTP request completed.')
             })
+    }
+    primeiroAcesso(){
+        this.primeiro_acesso=true
     }
 }

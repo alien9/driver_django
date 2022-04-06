@@ -1,1 +1,18 @@
 @charset "UTF-8";
+.login-header {
+    background-image: url(/assets/img/logo-prefeitura-g.png);
+    background-repeat: no-repeat;
+    height: 112px;
+    background-position: right;
+    border-bottom: 5px solid gray;
+    background-color: white;
+}
+
+.mat-typography {
+    background-color: rgb(255, 0, 0) !important;
+}
+
+.board {
+    max-width: 600px;
+    margin: 0 auto 25px;
+}
