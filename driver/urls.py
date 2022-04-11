@@ -73,20 +73,22 @@ urlpatterns = [
     url('api/irap-getdataset/', getdataset),
     url('api/irap-getlat_lon/', getlat_lon),
     url('api/irap-fatalitydata/', fatalitydata),
-    url(r'^get_config/', auth_views.get_config)
+    url(r'^get_config/', auth_views.get_config),
+    url(r'^signup$', auth_views.signup),
 ]
-urlpatterns += [
-    path('captcha/', include('captcha.urls')),
-]
+
 # i18n for django-admin
 from django.conf.urls.i18n import i18n_patterns
 
 # Allow login to the browseable API
 urlpatterns.append(url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')))
 
-if settings.DEBUG or settings.TESTING:
+if settings.DEBUG:
     import debug_toolbar
     urlpatterns = [
         url(r'^api/__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
 
+urlpatterns += [
+    path('captcha/', include('captcha.urls')),
+]

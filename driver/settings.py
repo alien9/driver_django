@@ -47,7 +47,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:8000',
     'http://localhost:4200',
 ]
-
+CORS_ALLOW_HEADERS = ('content-disposition', 'accept-encoding', 'responsetype',
+                      'content-type', 'accept', 'origin', 'authorization')
 #LANGUAGE_CODE = 'pt-br'
 USE_I18N = False
 USE_L10N = False
@@ -103,6 +104,7 @@ MIDDLEWARE = (
 )
 
 if DEBUG:
+    print("WILLL SET TOOLBAR")
     # Perform set up for Django Debug Toolbar
     INSTALLED_APPS += (
         'debug_toolbar',
@@ -548,3 +550,4 @@ CONSTANCE_CONFIG = {
     'IRAP_PRIVATE_KEY': ("", _("iRAP Private key")),
     'OPENWEATHER_RAPID_KEY':((os.getenv('OPENWEATHER_RAPID_KEY', '')), _("Open Weather API")),
 }
+CAPTCHA_OUTPUT_FORMAT=u'%(image)s %(hidden_field)s %(text_field)s'
