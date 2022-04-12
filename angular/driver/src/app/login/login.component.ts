@@ -13,6 +13,7 @@ import { RecordService } from '../record.service';
 
 export class LoginComponent implements OnInit {
     loginForm: FormGroup;
+    captchaForm: FormGroup;
     loading = false;
     submitted = false;
     returnUrl: string;
@@ -20,6 +21,8 @@ export class LoginComponent implements OnInit {
     @Output() entering = new EventEmitter<any>()
     backend: string = ""
     primeiro_acesso: boolean;
+    captcha_id: string;
+    captcha_image: string;
 
     constructor(
         private formBuilder: FormBuilder,
@@ -50,8 +53,8 @@ export class LoginComponent implements OnInit {
     }
 
     ngOnInit() {
-        let c=this.getCookie('AuthService.token')
-        if(c){ 
+        let c = this.getCookie('AuthService.token')
+        if (c) {
             this.setCookie('AuthService.token', '', -1)
             this.authenticationService.logout()
         }
@@ -67,10 +70,10 @@ export class LoginComponent implements OnInit {
         }
         this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
         this.backend = this.recordService.getBackend()
-    }  
+    }
     loginWithGoogle(): void {
-        window.location.href=`${this.authenticationService.getBackend()}/oidc/authenticate/`
-      }
+        window.location.href = `${this.authenticationService.getBackend()}/oidc/authenticate/`
+    }
 
     get f() { return this.loginForm.controls; }
 
@@ -81,58 +84,74 @@ export class LoginComponent implements OnInit {
         this.submitted = true;
         this.loading = true;
         this.errorMessage = null;
-        this.authenticationService.login(this.f.username.value, this.f.password.value)
-            .pipe(first())
-            .subscribe({
-                next: data => {
-                    if (data.hasOwnProperty('token')) {
-                        this.setCookie('AuthService.canWrite', data["groups_name"].indexOf('admin') > 0 || data["groups_name"].indexOf('analyst') > 0);
-                        this.setCookie('AuthService.token', data['token'])
-                        this.setCookie('AuthService.userId', data['user'])
-                        this.setCookie('AuthService.isAdmin', data["groups_name"].indexOf('admin') > 0)
-                        localStorage.setItem('token', data['token']);
-                        localStorage.setItem('config', JSON.stringify(data['config']));
-                        this.entering.emit(null)
-                        this.loading = false;
-                        this.router.navigateByUrl('/')
-                        /* this.recordService.getRecordType().subscribe(
-                            rata => {
-                                if (rata['results']) {
-                                    let schema_uuid;
-                                    for (let i = 0; i < rata['results'].length; i++) {
-                                        if (rata['results'][i]['label'] == data['config'].PRIMARY_LABEL) {
-                                            schema_uuid = rata['results'][i]['current_schema'];
-                                        };
-                                    }
-                                    if (schema_uuid) {
-                                        this.recordService.getRecordSchema(schema_uuid).subscribe(
-                                            sata => {
-                                                localStorage.setItem('record_schema', JSON.stringify(sata));
-                                                this.entering.emit(null)
-                                                this.router.navigateByUrl('/')
-                                            }
-                                        )
+        if (this.f.password) {
+            this.authenticationService.login(this.f.username.value, this.f.password.value)
+                .pipe(first())
+                .subscribe({
+                    next: data => {
+                        if (data.hasOwnProperty('token')) {
+                            this.setCookie('AuthService.canWrite', data["groups_name"].indexOf('admin') > 0 || data["groups_name"].indexOf('analyst') > 0);
+                            this.setCookie('AuthService.token', data['token'])
+                            this.setCookie('AuthService.userId', data['user'])
+                            this.setCookie('AuthService.isAdmin', data["groups_name"].indexOf('admin') > 0)
+                            localStorage.setItem('token', data['token']);
+                            localStorage.setItem('config', JSON.stringify(data['config']));
+                            this.entering.emit(null)
+                            this.loading = false;
+                            this.router.navigateByUrl('/')
+                            /* this.recordService.getRecordType().subscribe(
+                                rata => {
+                                    if (rata['results']) {
+                                        let schema_uuid;
+                                        for (let i = 0; i < rata['results'].length; i++) {
+                                            if (rata['results'][i]['label'] == data['config'].PRIMARY_LABEL) {
+                                                schema_uuid = rata['results'][i]['current_schema'];
+                                            };
+                                        }
+                                        if (schema_uuid) {
+                                            this.recordService.getRecordSchema(schema_uuid).subscribe(
+                                                sata => {
+                                                    localStorage.setItem('record_schema', JSON.stringify(sata));
+                                                    this.entering.emit(null)
+                                                    this.router.navigateByUrl('/')
+                                                }
+                                            )
+                                        } else {
+                                            this.errorMessage = "record schema not found for " + data['config'].PRIMARY_LABEL;
+                                        }
                                     } else {
-                                        this.errorMessage = "record schema not found for " + data['config'].PRIMARY_LABEL;
+                                        this.errorMessage = data['config'].PRIMARY_LABEL + " record type not found";
                                     }
-                                } else {
-                                    this.errorMessage = data['config'].PRIMARY_LABEL + " record type not found";
-                                }
-                                this.loading = false;
-                            }) */
-                    }
+                                    this.loading = false;
+                                }) */
+                        }
 
-                }, error: err => {
-                    this.loading = false;
-                    if (err.error && err.error['non_field_errors']) {
-                        this.errorMessage = err.error['non_field_errors'][0]
-                    } else {
-                        this.errorMessage = err.message
-                    }
-                }, complete: () => console.log('HTTP request completed.')
-            })
+                    }, error: err => {
+                        this.loading = false;
+                        if (err.error && err.error['non_field_errors']) {
+                            this.errorMessage = err.error['non_field_errors'][0]
+                        } else {
+                            this.errorMessage = err.message
+                        }
+                    }, complete: () => console.log('HTTP request completed.')
+                })
+        }
+        if (this.f.captcha_1) {
+            console.log("will do")
+        }
     }
-    primeiroAcesso(){
-        this.primeiro_acesso=true
+    primeiroAcesso() {
+        this.authenticationService.getSignupForm().subscribe(data => {
+            console.log(data)
+            this.captcha_id = data.match(/<input [^>]+>/g).filter(k => { return k.match(/name="captcha_0"/) }).pop().match(/value="([^"]+)"/).pop()
+            this.captcha_image = `${this.recordService.getBackend()}/captcha/image/${this.captcha_id}/`
+            this.errorMessage = ''
+            this.primeiro_acesso = true
+            this.loginForm = this.formBuilder.group({
+                username: ['', Validators.required],
+                captcha_1: ['', Validators.required],
+                captcha_0: ['', Validators.required],
+            });
+        })
     }
 }
