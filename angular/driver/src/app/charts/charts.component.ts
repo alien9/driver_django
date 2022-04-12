@@ -16,7 +16,7 @@ export class ChartsComponent implements OnInit, OnChanges {
   @Input() boundary_polygon_uuid: string
   @Input() recordSchema: object
   @Input() reportFilters: object[]
-  @Input() boundaries:object[]
+  @Input() boundaries: object[]
   active = 1
   toddow: any
   locale: string
@@ -171,17 +171,21 @@ export class ChartsComponent implements OnInit, OnChanges {
               let h = []
               let m = 0
               let totals = {}
-              //Object.entries(data['tables'][0].data).sort((a,b)=>{return data['tables'][0][a[0]]}).forEach(k => {
-
               Object.entries(data['tables'][0].data).forEach(k => {
                 let sum = Object.values(k[1]).reduce((a, b) => a + b)
                 if (sum > m) m = sum
                 k[1]['group'] = k[0]
-                h.push(k[1])
+                if (k[0] != "None")
+                  h.push(k[1])
                 Object.entries(k[1]).forEach(l => {
                   totals[l[0]] = ((totals[l[0]]) ? totals[l[0]] : 0) + l[1]
                 })
               })
+              let domain:any=100
+              let t=Object.entries(data['tables'][0]['row_totals']).filter(rt=>rt[0]!="None").map(rt=>rt[1]).sort()
+              if(t.length){
+                domain=t.pop()
+              }              
               let subgroups = data['col_labels'].map(k => k.key).sort((a, b) => totals[b] - totals[a]) // field value
               let groups = data['row_labels'].map(k => k.key) //interval
 
@@ -224,7 +228,7 @@ export class ChartsComponent implements OnInit, OnChanges {
                   }
                 }));
               let y = d3.scaleLinear()
-                .domain([0, m])
+                .domain([0, domain])
                 .range([height_bar, 0]);
               svg_bar.append("g")
                 .call(d3.axisLeft(y));
@@ -235,6 +239,7 @@ export class ChartsComponent implements OnInit, OnChanges {
               const stackedData = d3.stack()
                 .keys(subgroups)
                 (h)
+
               svg_bar.append("g")
                 .selectAll("g")
                 // Enter in the stack data = loop key per key = group per group
@@ -428,8 +433,8 @@ export class ChartsComponent implements OnInit, OnChanges {
 
               )
             } else {
-              du = Object.entries(data['tables'][0]['data'][0]).filter(k=>{
-                return k[1]>0
+              du = Object.entries(data['tables'][0]['data'][0]).filter(k => {
+                return k[1] > 0
               }).map(k => {
                 return {
                   'name': k[0],

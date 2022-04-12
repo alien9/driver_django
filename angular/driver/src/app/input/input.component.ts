@@ -142,7 +142,7 @@ export class InputComponent implements OnInit {
     if (!mapillary && this.config['MAPILLARY_TOKEN']) {
       let c = this.record['geom'].coordinates
       this.webService.getMapillaryImages(this.config['MAPILLARY_TOKEN'], `${c[0] - 0.005},${c[1] - 0.0015},${c[0] + 0.005},${c[1] + 0.0015}`).pipe(first()).subscribe(imagery => {
-        this.record['mapillary'] = JSON.stringify(imagery)
+        //this.record['mapillary'] = JSON.stringify(imagery)
         this.layersControl.overlays['Mapillary'] = L.layerGroup()
         this.options.layers.push(this.layersControl.overlays['Mapillary'])
         this.loadMapillary(imagery)
@@ -179,12 +179,11 @@ export class InputComponent implements OnInit {
     this.recordService.upload(this.record).pipe(first()).subscribe({
       next: data => {
         this.reloadRecords.emit(this.record)
-        console.log('data')
-        console.log(data)
         modal.dismiss()
         this.spinner.hide()
       }, error: err => {
         console.log(err)
+        alert(err['error']['data'])
         this.spinner.hide()
       }
     })
@@ -308,26 +307,49 @@ export class InputComponent implements OnInit {
       ),
       tap(() => this.geocoding = false)
     )
-    geoResultFormatter = (x: any) => {
+  geoResultFormatter = (x: any) => {
+    return x['display_name']
+  }
+  geoInputFormatter = (x: any) => {
+    if (typeof x == 'object') {
       return x['display_name']
     }
-    geoInputFormatter = (x: any) => {
-      if(typeof x=='object'){
-        return x['display_name']
+    return x
+  }
+  loadFile(e: any, table: any, field: string) {
+    if (e.srcElement['files'] && e.srcElement['files'].length) {
+      let file = e.srcElement['files'][0]
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = event => {
+        table[field] = reader.result
       }
-      return x
     }
-      onCheckChange(e: any, f: any) {
+  }
+  onMultipleCheckChange(e: any, t: string, idx: number, f: any) {
+    if (!this.record['data'][t][idx][f])
+      this.record['data'][t][idx][f] = []
+
     let k = e.srcElement.value
     if (e.srcElement.checked) {
-      f.push(k)
+      this.record['data'][t][idx][f].push(k)
     } else {
-      f.splice(f.indexOf(k), 1)
+      this.record['data'][t][idx][f].splice(f.indexOf(k), 1)
+    }
+  }
+  onSingleCheckChange(e: any, t: string, f: string) {
+    if (!this.record['data'][t][f])
+      this.record['data'][t][f] = []
+    let k = e.srcElement.value
+    if (e.srcElement.checked) {
+      this.record['data'][t][f].push(k)
+    } else {
+      this.record['data'][t][f].splice(f.indexOf(k), 1)
     }
   }
   selectGeocodedOption(e: any): any {
     if (!e.item) return
-    this.record['location_text']=e.item.display_name
+    this.record['location_text'] = e.item.display_name
     this.record['geom']['coordinates'] = [e.item.lon, e.item.lat]
     let latlng = new L.latLng(e.item.lat, e.item.lon)
     if (latlng) {

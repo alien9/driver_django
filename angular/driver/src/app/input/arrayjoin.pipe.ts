@@ -7,8 +7,10 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class ArrayJoinPipe implements PipeTransform {
     constructor(private translateService: TranslateService) {
-}
+    }
     transform(all: string[]): string {
-        return all.map(k=>this.translateService.instant(k)).join(", ")
+        if (!all.length)
+            return ""
+        return all.map(k => this.translateService.instant(k)).join(", ")
     }
 }
