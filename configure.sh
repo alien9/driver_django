@@ -26,7 +26,7 @@ if [ "${WINDSHAFT_HOST}" == "" ]; then
      echo "Windshaft did not start."
      exit
 fi
-
+STATIC_ROOT=$(pwd)
 if [[ ! -f driver-${CONTAINER_NAME}.conf ]]; then
      cp driver.conf driver-${CONTAINER_NAME}.conf
 fi
@@ -63,12 +63,8 @@ if [ "${EXISTE_DJANGO}" != "" ]; then
 #     done
      docker-compose up -d
 fi
-if [ $STATIC_ROOT != $WINDSHAFT_FILES ]; then
-     sudo cp -r web "$STATIC_ROOT/"
-     sudo cp -r static "$STATIC_ROOT/"
-fi
 
-sudo rm mapserver/*
+[ -e mapserver/* ] && sudo rm mapserver/*
 
 if [ -h "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf" ]; then
      sudo rm "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
