@@ -8,8 +8,13 @@ DEVELOP = True
 STAGING = True if os.environ.get('DJANGO_ENV', 'staging') == 'staging' else False
 PRODUCTION = not DEVELOP and not STAGING
 
+f = open(".env", "r")
+e={}
+for k in [ t.split('=') for t in f.readlines() ]:
+    e[k[0]]=k[1].replace("\n", "")
+
 DATABASE_NAME='driver_sp'
-DRIVER_DB_HOST='localhost'
+DRIVER_DB_HOST=e['DATABASE_HOST']
 WINDSHAFT_HOST='localhost'#subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-vidasegura"]).decode('utf8').strip()
 MAPSERVER_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "mapserver-vidasegura"]).decode('utf8').strip()
 REDIS_HOST = subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "redis-server-vidasegura"]).decode('utf8').strip()
