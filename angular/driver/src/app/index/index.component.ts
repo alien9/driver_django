@@ -95,15 +95,17 @@ export class IndexComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    console.log("this is loading")
     let cu = document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")
     if (!cu.length) {
       this.router.navigateByUrl('/login')
       return
     }
     this.recordService.getConfig().pipe(first()).subscribe(data => {
+      console.log("got config")
       localStorage.setItem('config', JSON.stringify(data));
-      this.recordService.getRecordType().subscribe(
-        rata => {
+      this.recordService.getRecordType().subscribe({
+        next:rata => {
           if (rata['results']) {
             let schema_uuid;
             for (let i = 0; i < rata['results'].length; i++) {
@@ -128,10 +130,14 @@ export class IndexComponent implements OnInit {
           } else {
             alert(data['PRIMARY_LABEL'] + " record type not found")
           }
-        })
+        },error:err=>{
+          this.router.navigateByUrl('/login')
+        }
+      })
     })
   }
   afterInit() {
+    console.log("this is afterinit")
     let w = document.cookie.match(/AuthService\.canWrite=([^;]*);/)
     if (w && w.length && w[1] == 'true') this.canWrite = true
     this.state = localStorage.getItem('state') || 'Map'
