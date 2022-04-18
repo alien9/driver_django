@@ -260,6 +260,7 @@ export class NavbarComponent implements OnInit {
         setTimeout(() => this.collectCsv(task), 3000)
       } else {
         this.downloading = false
+        console.log(d['result'].replace(/^[\w]+:/, location.protocol))
         window.location.href=d['result'].replace(/^[\w]+:/, location.protocol)
       }
     })

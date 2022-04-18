@@ -9,6 +9,7 @@ while read line; do export "$line"; done < .env
 
 while read line; do echo "$line"; done < .env
 
+
 echo ${CONTAINER_NAME}
 
 EXISTE_DJANGO=$(docker ps | grep driver-django-${CONTAINER_NAME})
@@ -49,8 +50,7 @@ else
  #    docker exec driver-nginx certbot
 fi
 if [ "${EXISTE_DJANGO}" != "" ]; then 
-     docker stop "driver-cron-${CONTAINER_NAME}"
-     docker rm -v "driver-cron-${CONTAINER_NAME}"
+     [ -e "${STATIC_ROOT}/static/*" ] && sudo rm -rf ${STATIC_ROOT}/static/*
      docker exec "driver-django-${CONTAINER_NAME}" ./manage.py collectstatic --noinput
      docker exec "driver-django-${CONTAINER_NAME}" ./manage.py migrate
 #     while true; do
@@ -64,7 +64,7 @@ if [ "${EXISTE_DJANGO}" != "" ]; then
      docker-compose up -d
 fi
 
-[ -e mapserver/* ] && sudo rm mapserver/*
+[ -e "./mapserver/*" ] && sudo rm ./mapserver/*
 
 if [ -h "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf" ]; then
      sudo rm "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
