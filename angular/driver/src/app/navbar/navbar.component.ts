@@ -256,12 +256,11 @@ export class NavbarComponent implements OnInit {
   }
   collectCsv(task: string) {
     this.recordService.getCsv(task).pipe(first()).subscribe(d => {
-      console.log(d)
       if (d['status'] != "SUCCESS") {
         setTimeout(() => this.collectCsv(task), 3000)
       } else {
         this.downloading = false
-        window.location.href=d['result']
+        window.location.href=d['result'].replace(/^[\w]+:/, location.protocol)
       }
     })
   }
