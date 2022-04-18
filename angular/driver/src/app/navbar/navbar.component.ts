@@ -277,12 +277,7 @@ export class NavbarComponent implements OnInit {
         if (this.downloading)
           return
         this.downloading = true
-        let csrf = document.cookie.match(/csrftoken=(\w*)?/)
-        let head = { 'uuid': this.recordSchema["record_type"] }
-        if (csrf) {
-          head['csrfmiddlewaretoken'] = csrf.pop()
-        }
-        this.recordService.getTileKey(head, {
+        this.recordService.getTileKey({ 'uuid': this.recordSchema["record_type"] }, {
           filter: this.filter
         }).pipe(first()).subscribe(t => {
           console.log(t)

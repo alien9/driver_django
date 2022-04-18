@@ -185,6 +185,10 @@ export class RecordService {
   }
   postCsv(tilekey:string){
     let data={"tilekey":tilekey}
+    let csrf = document.cookie.match(/csrftoken=(\w*)?/)
+    if (csrf) {
+      data['csrfmiddlewaretoken'] = csrf.pop()
+    }    
     return this.http.post(`${this.getBackend()}/api/csv-export/`, data, { headers: this.getHeaders() })
   }
   getCsv(tilekey:string){
