@@ -102,7 +102,7 @@ export class IndexComponent implements OnInit {
     }
     this.recordService.getConfig().pipe(first()).subscribe(data => {
       localStorage.setItem('config', JSON.stringify(data));
-      this.recordService.getRecordType().subscribe(
+      this.recordService.getRecordType().subscribe({next:
         rata => {
           if (rata['results']) {
             let schema_uuid;
@@ -128,7 +128,9 @@ export class IndexComponent implements OnInit {
           } else {
             alert(data['PRIMARY_LABEL'] + " record type not found")
           }
-        })
+        },error:err=>{
+          this.router.navigateByUrl('/login')
+        }})
     })
   }
   afterInit() {
