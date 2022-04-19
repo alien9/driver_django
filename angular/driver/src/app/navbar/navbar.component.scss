@@ -1,6 +1,6 @@
 @media only screen and (min-width: 960px) {
     .nav-item:first-of-type {
-        border-left: 2px solid white;
+        border-left: 2px solid #999;
     }
 }
 
@@ -19,4 +19,10 @@
     opacity: 0;
     left: 0;
     top: 0;
+}
+
+.navbar {
+    background-repeat: no-repeat;
+    background-image: url(/assets/img/logo-prefeitura-g.png);
+    background-position: right;
 }

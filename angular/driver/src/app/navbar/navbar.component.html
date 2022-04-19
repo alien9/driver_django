@@ -1,6 +1,8 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="z-index:9999">
+<nav class="navbar navbar-expand-lg navbar-light bg-light" style="z-index:9999;padding-top: 0px;padding-bottom: 0px;height:82px;">
     <div class="container-fluid">
-        <a class="navbar-brand px-1" href="#">DRIVER</a>
+        <a class="navbar-brand px-1" href="#">
+            <a href="/"><img src="/assets/img/vida_segura_1.png"></a>
+        </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -44,6 +46,18 @@
                         <li>
                             <hr class="dropdown-divider">
                         </li>
+                        <li *ngIf="hasDownload()">
+                            <a class="dropdown-item" (click)="preDownload()" href="#">{{'Download' | translate}}
+                                <div class="spinner-border spinner-border-sm" role="status" *ngIf="downloading">
+                                </div>
+                            </a>
+                        </li>
+                        <li *ngIf="hasDownload()">
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" (click)="logout()" href="#">{{'Exit'|translate}} </a>
+                        </li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown px-2">
@@ -85,7 +99,7 @@
                 </li>
             </ul>
 
-            <div class="btn-group">
+            <div class="btn-group" style="display:none">
                 <button class="btn btn-light" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i-bs name="three-dots-vertical"></i-bs>
                 </button>
@@ -98,21 +112,7 @@
                             </label>
                         </div>
                     </li>
-                    <li *ngIf="config['LANGUAGES'].length>0">
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li style="display: flex;" *ngIf="hasDownload()">
-                        <a class="dropdown-item" (click)="preDownload()" href="#">{{'Download' | translate}}
-                            <div class="spinner-border spinner-border-sm" role="status" *ngIf="downloading">
-                            </div>
-                        </a>
-                    </li>
-                    <li *ngIf="hasDownload()">
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li>
-                        <a class="dropdown-item" (click)="logout()" href="#">{{'Exit'|translate}} </a>
-                    </li>
+
                 </ul>
             </div>
         </div>

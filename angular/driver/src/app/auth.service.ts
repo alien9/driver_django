@@ -13,7 +13,8 @@ export class AuthService {
   }
   logout() {
     localStorage.clear()
-    let next = encodeURIComponent("/login")
+    window.document.cookie='AuthService.token=; expires=Thu, 01 Jan 1970 00:00:01 GMT'
+    let next = `${window.location.protocol}//${window.location.host}/login`
     window.location.href = `${this.getBackend()}/api-auth/logout/?next=${next}`
   }
   constructor(private http: HttpClient) { }
