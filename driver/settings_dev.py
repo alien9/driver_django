@@ -13,7 +13,7 @@ e={}
 for k in [ t.split('=') for t in f.readlines() ]:
     e[k[0]]=k[1].replace("\n", "")
 
-DATABASE_NAME='driver_sp'
+DATABASE_NAME=e['DATABASE_NAME']
 DRIVER_DB_HOST=e['DATABASE_HOST']
 WINDSHAFT_HOST='localhost'#subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-vidasegura"]).decode('utf8').strip()
 MAPSERVER_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "mapserver-vidasegura"]).decode('utf8').strip()
