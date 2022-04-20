@@ -30,8 +30,11 @@
                         <div class="form-group mb-3" *ngIf="captcha_id">
                             <label for="password">Texto na Imagem</label>
                             <img [src]="captcha_image">
+                            <button type="button" class="btn btn-default btn-sm" (click)="primeiroAcesso()">
+                                <i-bs name="arrow-repeat"></i-bs><i class="bi bi-arrow-repeat"></i>
+                              </button>
                             <input type="text" formControlName="captcha_1" class="form-control" />
-                            <input type="text" formControlName="captcha_0" [(ngModel)]="captcha_id" class="form-control" />
+                            <input type="hidden" formControlName="captcha_0" [(ngModel)]="captcha_id" class="form-control" />
                         </div>
                         <div class="form-group" *ngIf="errorMessage">
                             <div>

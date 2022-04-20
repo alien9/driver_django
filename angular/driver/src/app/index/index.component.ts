@@ -105,7 +105,7 @@ export class IndexComponent implements OnInit {
       console.log("got config")
       localStorage.setItem('config', JSON.stringify(data));
       this.recordService.getRecordType().subscribe({
-        next:rata => {
+        next: rata => {
           if (rata['results']) {
             let schema_uuid;
             for (let i = 0; i < rata['results'].length; i++) {
@@ -130,7 +130,7 @@ export class IndexComponent implements OnInit {
           } else {
             alert(data['PRIMARY_LABEL'] + " record type not found")
           }
-        },error:err=>{
+        }, error: err => {
           this.router.navigateByUrl('/login')
         }
       })
@@ -183,7 +183,12 @@ export class IndexComponent implements OnInit {
       this.filter = JSON.parse(fu)
       this.filterObject = (this.filter['jsonb']) ? JSON.parse(this.filter['jsonb']) : {}
     }
-
+    let ofi = new L.tileLayer("https://vidasegura.cetsp.com.br/geoserver/gwc/service/wmts?layer=driver%3ABase&style=&tilematrixset=EPSG%3A900913&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fpng&TileMatrix=EPSG%3A900913%3A{z}&TileCol={x}&TileRow={y}",
+      {
+        attribution: "&copy; <a href='http://geosampa.prefeitura.sp.gov.br/PaginasPublicas/_SBC.aspx'>GeoSampa</a> | Prefeitura de São Paulo",
+        detectRetina: !1,
+        zIndex: 1
+      })
     let str = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
       {
         attribution: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors, &copy; <a href='https://cartodb.com/attributions'>CartoDB</a>",
@@ -202,6 +207,7 @@ export class IndexComponent implements OnInit {
     this.backend = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
     this.layersControl = {
       baseLayers: {
+        'Mapa Oficial': ofi,
         'CartoDB': str,
         'No Labels': str_nolabel,
         'Open Street Map': osm,
@@ -210,7 +216,7 @@ export class IndexComponent implements OnInit {
       overlays: {
       }
     }
-    this.layers = [str]
+    this.layers = [ofi]
     this.options = {
       layers: this.layers
     }

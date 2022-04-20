@@ -23,7 +23,7 @@ export class LoginComponent implements OnInit {
     primeiro_acesso: boolean;
     captcha_id: string;
     captcha_image: string;
-
+    messages={"LOGIN.CAPTCHA_ERROR":"Erro de captcha"}
     constructor(
         private formBuilder: FormBuilder,
         private route: ActivatedRoute,
@@ -99,31 +99,6 @@ export class LoginComponent implements OnInit {
                             this.entering.emit(null)
                             this.loading = false;
                             this.router.navigateByUrl('/')
-                            /* this.recordService.getRecordType().subscribe(
-                                rata => {
-                                    if (rata['results']) {
-                                        let schema_uuid;
-                                        for (let i = 0; i < rata['results'].length; i++) {
-                                            if (rata['results'][i]['label'] == data['config'].PRIMARY_LABEL) {
-                                                schema_uuid = rata['results'][i]['current_schema'];
-                                            };
-                                        }
-                                        if (schema_uuid) {
-                                            this.recordService.getRecordSchema(schema_uuid).subscribe(
-                                                sata => {
-                                                    localStorage.setItem('record_schema', JSON.stringify(sata));
-                                                    this.entering.emit(null)
-                                                    this.router.navigateByUrl('/')
-                                                }
-                                            )
-                                        } else {
-                                            this.errorMessage = "record schema not found for " + data['config'].PRIMARY_LABEL;
-                                        }
-                                    } else {
-                                        this.errorMessage = data['config'].PRIMARY_LABEL + " record type not found";
-                                    }
-                                    this.loading = false;
-                                }) */
                         }
 
                     }, error: err => {
@@ -137,12 +112,29 @@ export class LoginComponent implements OnInit {
                 })
         }
         if (this.f.captcha_1) {
-            console.log("will do")
+            this.authenticationService.createUser({
+                'email': this.f.username.value,
+                'captcha_0': this.f.captcha_0.value,
+                'captcha_1': this.f.captcha_1.value,
+            }).pipe(first()).subscribe({
+                next: data => {
+                    console.log(data)
+                },
+                error: err => {
+                    console.log(err)
+
+                    if(err['error'] && err["error"]['captcha_1']){
+                        this.errorMessage=(this.messages[err["error"]['captcha_1']])?this.messages[err["error"]['captcha_1']]:err["error"]['captcha_1']
+                    }
+                    this.loading=false
+                    this.reloadCaptcha()
+                }
+
+            })
         }
     }
     primeiroAcesso() {
         this.authenticationService.getSignupForm().subscribe(data => {
-            console.log(data)
             this.captcha_id = data.match(/<input [^>]+>/g).filter(k => { return k.match(/name="captcha_0"/) }).pop().match(/value="([^"]+)"/).pop()
             this.captcha_image = `${this.recordService.getBackend()}/captcha/image/${this.captcha_id}/`
             this.errorMessage = ''
@@ -152,6 +144,12 @@ export class LoginComponent implements OnInit {
                 captcha_1: ['', Validators.required],
                 captcha_0: ['', Validators.required],
             });
+        })
+    }
+    reloadCaptcha(){
+        this.authenticationService.getSignupForm().subscribe(data => {
+            this.captcha_id = data.match(/<input [^>]+>/g).filter(k => { return k.match(/name="captcha_0"/) }).pop().match(/value="([^"]+)"/).pop()
+            this.captcha_image = `${this.recordService.getBackend()}/captcha/image/${this.captcha_id}/`
         })
     }
 }

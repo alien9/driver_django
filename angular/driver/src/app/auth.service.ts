@@ -40,6 +40,6 @@ export class AuthService {
     let headers = new HttpHeaders({
       'Content-Type': 'application/json',
     })
-    return this.http.post(`${this.getBackend()}/api-token-auth/`, data, { headers: headers });
+    return this.http.post(`${this.getBackend()}/api/create-user/`, data, { headers: headers });
   }
 }
