@@ -1,4 +1,5 @@
 <div class="login-header">
+    <a href="/"><img src="/assets/img/vida_segura_1.png"></a>
 </div>
 <div class="container">
 
@@ -16,15 +17,24 @@
                             <label for="username">Email</label>
                             <input autocapitalize="none" type="text" formControlName="username" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.username.errors }" />
                             <div *ngIf="submitted && f.username.errors" class="invalid-feedback">
-                                <div *ngIf="f.username.errors.required">Username is required</div>
+                                <div *ngIf="f.username.errors.required">Email é requerido</div>
                             </div>
                         </div>
                         <div class="form-group mb-3" *ngIf="!primeiro_acesso">
                             <label for="password">Senha</label>
                             <input type="password" formControlName="password" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.password.errors }" />
                             <div *ngIf="submitted && f.password.errors" class="invalid-feedback">
-                                <div *ngIf="f.password.errors.required">Password is required</div>
+                                <div *ngIf="f.password.errors.required">Senha é necessária</div>
                             </div>
+                        </div>
+                        <div class="form-group mb-3" *ngIf="captcha_id">
+                            <label for="password">Texto na Imagem</label>
+                            <img [src]="captcha_image">
+                            <button type="button" class="btn btn-default btn-sm" (click)="primeiroAcesso()">
+                                <i-bs name="arrow-repeat"></i-bs><i class="bi bi-arrow-repeat"></i>
+                              </button>
+                            <input type="text" formControlName="captcha_1" class="form-control" />
+                            <input type="hidden" formControlName="captcha_0" [(ngModel)]="captcha_id" class="form-control" />
                         </div>
                         <div class="form-group" *ngIf="errorMessage">
                             <div>
@@ -33,7 +43,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body" style="display:none">
                     <div class="form-group mb-3" *ngIf="!primeiro_acesso">
                         <button type="button" class="btn btn-link" (click)="primeiroAcesso()">Primeiro Acesso? Inscreva-se!</button>
                     </div>
@@ -43,11 +53,11 @@
                 </div>
                 <div class="modal-footer">
                     <div class="form-group" *ngIf="!primeiro_acesso">
-                        <span *ngIf="loading" class="spinner-border spinner-border-sm ml-3"></span>
+                        <span *ngIf="loading" class="spinner-border spinner-border-sm ml-3 mr-3"></span>
                         <button [disabled]="loading" class="btn btn-primary btn-block mr-2">Log in</button>
                     </div>
                     <div class="form-group" *ngIf="primeiro_acesso">
-                        <span *ngIf="loading" class="spinner-border spinner-border-sm ml-3"></span>
+                        <span *ngIf="loading" class="spinner-border spinner-border-sm ml-3 mr-3"></span>
                         <button [disabled]="loading" class="btn btn-primary btn-block mr-2">Registrar</button>
                     </div>
                 </div>

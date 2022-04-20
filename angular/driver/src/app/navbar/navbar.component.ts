@@ -261,9 +261,7 @@ export class NavbarComponent implements OnInit {
         setTimeout(() => this.collectCsv(task), 3000)
       } else {
         this.downloading = false
-        let filename = d['result'].match(/[^\/]+$/).pop()
-        let blob = new Blob([d['result']], { type: 'application/zip' })
-        saveAs(blob, filename)
+        window.location.href=d['result'].replace(/^\w+:/, window.location.protocol)
       }
     })
   }
