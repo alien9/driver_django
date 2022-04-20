@@ -2,8 +2,11 @@
 
 DJANGO_HOST=driver-django-vidasegura
 CELERY_HOST=driver-celery-vidasegura
-HOST_NAME=vidasegura.cetsp.com.br
-STATIC_ROOT=/opt/vidasegura/static
+HOST_NAME=sp.driver.net
+STATIC_ROOT=/home/tiago/works/driver_django
+DJANGO_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-django-vidasegura)
+CELERY_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-celery-vidasegura)
+
 if [[ ! -f driver-vidasegura.conf ]]; then
      cp driver.conf driver-vidasegura.conf
 fi
@@ -17,8 +20,7 @@ driver-vidasegura.conf
 
 docker exec "driver-django-vidasegura" ./manage.py collectstatic --noinput
 docker exec "driver-django-vidasegura" ./manage.py migrate
-az container exec --name driver-django-vidasegura --exec-command "./manage.py collectstatic --noinput"
-
+sudo rm /etc/nginx/sites-enabled/driver-vidasegura.conf
 sudo ln -s "$(pwd)/driver-vidasegura.conf" "/etc/nginx/sites-enabled/driver-vidasegura.conf"
 sudo service nginx restart
 

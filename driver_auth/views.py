@@ -7,6 +7,10 @@ from django.contrib.auth.models import User, Group
 from data.models import Dictionary
 from django.http import JsonResponse
 from django.shortcuts import redirect
+from django import forms
+from captcha.fields import CaptchaField
+from captcha.models import CaptchaStore
+from django.http import HttpResponse
 
 from oauth2client import client, crypt
 from django.urls import reverse
@@ -190,4 +194,17 @@ def get_config(request):
     for ds in Dictionary.objects.all():
         conf['LANGUAGES'].append({"code":ds.language_code, "name":ds.name})
     return JsonResponse(conf)
-    
+
+@csrf_exempt
+def signup(request):
+    if request.POST:
+        nop
+    else:
+        form = CaptchaSignupForm()
+        r=HttpResponse(form.as_p())
+        
+        return r
+
+class CaptchaSignupForm(forms.Form):
+    email = forms.CharField()
+    captcha = CaptchaField()
