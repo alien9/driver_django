@@ -30,7 +30,7 @@ services:
       - DRIVER_ADMIN_PASSWORD=${DRIVER_ADMIN_PASSWORD}
       - CONTAINER_NAME=vidasegura
     container_name: driver-django-vidasegura
-    image: alien9/vidasegura
+    image: alien9/driver-django:vidasegura
       
   driver-celery:
     volumes:
@@ -54,7 +54,7 @@ services:
       - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
     entrypoint: ["celery", "-A", "driver", "worker", "--queue=taskworker", "--loglevel=info", "--concurrency=4"]
     container_name: driver-celery-vidasegura
-    image: alien9/vidasegura
+    image: alien9/driver-django:vidasegura
 
        
   mapserver:
