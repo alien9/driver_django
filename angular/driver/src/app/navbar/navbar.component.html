@@ -87,7 +87,7 @@
                         <button *ngIf="stateSelected=='Reports'" (click)=startFilters(report) class="btn btn-outline-secondary mx-2" type="submit" id="report_button" placement="bottom" ngbTooltip="{{'Reports'|translate}}">
                             <i-bs name="text-paragraph"></i-bs>
                         </button>
-                        <label *ngIf="stateSelected=='Map'" class="btn btn-outline-secondary mx-2" placement="bottom" ngbTooltip="{{'Create Record'|translate}}" ngbButtonLabel>
+                        <label *ngIf="stateSelected=='Map' && canWrite" class="btn btn-outline-secondary mx-2" placement="bottom" ngbTooltip="{{'Create Record'|translate}}" ngbButtonLabel>
                             <input type="checkbox" ngbButton [(ngModel)]="inserting"
                                 [ngModelOptions]="{standalone: true}" (change)=createRecord($event)>
                             <i-bs name="pin-map-fill"></i-bs>

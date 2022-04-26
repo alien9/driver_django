@@ -48,6 +48,7 @@ export class NavbarComponent implements OnInit {
   public savedFilters: any[]
   public filterLabel: string = ""
   public filtering: boolean = false
+  canWrite:boolean=false
   public tabs = [
 
   ]

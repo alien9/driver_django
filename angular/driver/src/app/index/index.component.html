@@ -1,6 +1,6 @@
 <app-navbar *ngIf=recordSchema [recordSchema]=recordSchema class=navbar-fixed [config]=config [filter]=filter [filterObject]=filterObject [boundaries]=boundaries (boundaryChange)=setBoundary($event) (boundaryPolygonChange)=setBoundaryPolygon($event) [boundary]=boundary
     [boundaryPolygons]=boundaryPolygons [boundaryPolygon]=boundaryPolygon (filterChange)=setFilter($event) (stateChange)=selectState($event) (reportChange)=setReport($event) [stateSelected]=state (goBack)=goBack($event) (iRapChange)=setIrap($event) [iRap]=iRap
-    [irapDataset]=irapDataset (newRecord)=startRecord($event) [inserting]=listening (startDownload)=download($event)>
+    [irapDataset]=irapDataset (newRecord)=startRecord($event) [inserting]=listening (startDownload)=download($event) [canWrite]="canWrite">
 </app-navbar>
 <app-list *ngIf="state=='List'" [filter]=filter [listPage]=listPage (setListPage)=setListPage($event) [boundary_polygon_uuid]=boundary_polygon_uuid [recordSchema]=recordSchema [recordList]=recordList (viewRecord)="viewRecord(viewpoint, $event)"></app-list>
 <app-map *ngIf="state=='Map'" (setDrawing)=setDrawing($event) [fitBounds]=fitBounds [options]=options [layers]=layers [layersControl]=layersControl [boundary_polygon_uuid]=boundary_polygon_uuid (map)=setMap($event) (onSetPolygon)=setPolygon($event) [polygon]=polygon
