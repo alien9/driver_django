@@ -42,7 +42,7 @@ urlpatterns = i18n_patterns(
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
     url(r'^api/', include(router.urls)),
-    url(r'^legacy/', data_views.index),
+    url(r'^api/create-user/', auth_views.user_create),
     url(r'^editor/$', data_views.editor),
     url(r'^maps/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w\s]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).png/$', data_views.maps),
     url(r'^grid/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).json/$', data_views.grid),

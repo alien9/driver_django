@@ -50,8 +50,7 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_HEADERS = ('content-disposition', 'accept-encoding', 'responsetype',
                       'content-type', 'accept', 'origin', 'authorization')
 #LANGUAGE_CODE = 'pt-br'
-USE_I18N = False
-USE_L10N = False
+
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 # Application definition
@@ -173,10 +172,6 @@ POSTGIS_VERSION = tuple(
 
 from django.utils.translation import ugettext_lazy as _
 LANGUAGES = ( 
-   ('de', _('German')),
-   ('en', _('English')),
-   ('fr', _('French')),
-   ('es', _('Spanish')),
    ('pt-br', _('Portuguese'))
 )
 
