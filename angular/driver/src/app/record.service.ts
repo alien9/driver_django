@@ -38,7 +38,7 @@ export class RecordService {
     let params = new HttpParams()
       .set('archived', 'false')
       .set('details_only', 'false')
-      .set('limit', '50')
+      .set('limit', o['limit']?o['limit']:'50')
       .set('record_type', o['uuid'])
       .set('active', 'true')
     if (q) {

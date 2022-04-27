@@ -42,4 +42,15 @@ export class AuthService {
     })
     return this.http.post(`${this.getBackend()}/api/create-user/`, data, { headers: headers });
   }
+  getResetPasswordForm(): Observable<any>{
+    return this.http.get(`${this.getBackend()}/password_reset/`, { 'responseType': 'text' })
+  }
+  resetPassword(data: object): Observable<any> {
+    let headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'X-CSRFToken': data['csrfmiddlewaretoken']
+    })
+    return this.http.post(`${this.getBackend()}/password_reset/`, data, { headers: headers });
+  }
+  
 }

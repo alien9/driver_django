@@ -21,9 +21,14 @@ export class LoginComponent implements OnInit {
     @Output() entering = new EventEmitter<any>()
     backend: string = ""
     primeiro_acesso: boolean;
+    reset_password: boolean
     captcha_id: string;
     captcha_image: string;
-    messages={"LOGIN.CAPTCHA_ERROR":"Erro de captcha"}
+    private csrf:string
+    messages={
+        "LOGIN.CAPTCHA_ERROR":"Erro de captcha",
+         "A user with that username already exists.":"Um usuário com este login já existe"
+    }
     constructor(
         private formBuilder: FormBuilder,
         private route: ActivatedRoute,
@@ -84,7 +89,7 @@ export class LoginComponent implements OnInit {
         this.submitted = true;
         this.loading = true;
         this.errorMessage = null;
-        if (this.f.password) {
+        if (this.f.password && !this.reset_password) {
             this.authenticationService.login(this.f.username.value, this.f.password.value)
                 .pipe(first())
                 .subscribe({
@@ -123,11 +128,32 @@ export class LoginComponent implements OnInit {
                 error: err => {
                     console.log(err)
 
-                    if(err['error'] && err["error"]['captcha_1']){
-                        this.errorMessage=(this.messages[err["error"]['captcha_1']])?this.messages[err["error"]['captcha_1']]:err["error"]['captcha_1']
-                    }
+                    if(err['error']){
+                        if(err["error"]['captcha_1']){
+                            this.errorMessage=(this.messages[err["error"]['captcha_1']])?this.messages[err["error"]['captcha_1']]:err["error"]['captcha_1']
+                        }
+                        if(err["error"]['username']){
+                            this.errorMessage=(this.messages[err["error"]['username']])?this.messages[err["error"]['username']]:err["error"]['username']
+                        }
+                    } 
                     this.loading=false
                     this.reloadCaptcha()
+                }
+
+            })
+        }
+        if(this.reset_password){
+            this.authenticationService.resetPassword({
+                'email': this.f.username.value,
+                'csrfmiddlewaretoken':this.csrf
+            }).pipe(first()).subscribe({
+                next: data => {
+                    console.log(data)
+                },
+                error: err => {
+                    console.log(err)
+                    this.loading=false
+                    //this.forgotPassword()
                 }
 
             })
@@ -139,6 +165,7 @@ export class LoginComponent implements OnInit {
             this.captcha_image = `${this.recordService.getBackend()}/captcha/image/${this.captcha_id}/`
             this.errorMessage = ''
             this.primeiro_acesso = true
+            this.reset_password=false
             this.loginForm = this.formBuilder.group({
                 username: ['', Validators.required],
                 captcha_1: ['', Validators.required],
@@ -151,5 +178,16 @@ export class LoginComponent implements OnInit {
             this.captcha_id = data.match(/<input [^>]+>/g).filter(k => { return k.match(/name="captcha_0"/) }).pop().match(/value="([^"]+)"/).pop()
             this.captcha_image = `${this.recordService.getBackend()}/captcha/image/${this.captcha_id}/`
         })
+    }
+    forgotPassword(){
+        this.authenticationService.getResetPasswordForm().pipe(first()).subscribe({next:html=>{
+            let vu=html.match(/csrfmiddlewaretoken" value="([^"]+)"/)
+            if(vu){
+                this.csrf=vu.pop()
+                document.cookie=`csrftoken=${this.csrf}; domain=${this.authenticationService.getBackend().replace(/https?:\/\//, '').replace(/:\d+/, '')}`
+                this.reset_password=true
+                this.primeiro_acesso=false
+            }
+        }})
     }
 }

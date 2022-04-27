@@ -21,27 +21,12 @@
                                 translate}}</a></li>
                         <li><a class="dropdown-item" href="#" (click)="onStateSelected('Charts')">{{'Charts' |
                                 translate}}</a></li>
-                        <li>
+                        <li *ngIf="canWrite">
                             <hr class="dropdown-divider">
                         </li>
-                        <li>
+                        <li *ngIf="canWrite">
                             <a class="dropdown-item" (click)="onStateSelected('Duplicates')" href="#">{{'Duplicates' |
                                 translate}}</a>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="/static/DriverData.apk">{{'Android app' | translate}}</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="#" (click)=qrCode(qrcode)>{{'Android code' | translate}}</a>
-                        </li>
-                        <li *ngIf="config['IRAP_AUTH_ID']!=''">
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li *ngIf="config['IRAP_AUTH_ID']!=''">
-                            <a class="dropdown-item" (click)="startIrap(vida)" href="#">ViDA</a>
                         </li>
                         <li>
                             <hr class="dropdown-divider">
@@ -290,7 +275,7 @@
         </button>
     </div>
     <div class="modal-body">
-        <div class="card" style=" max-width:300px;margin:auto;background-color:black;" *ngIf="!iRap">
+        <div class="card" style=" max-width:300px;margin:auto;background-color:black;" *ngIf="iRap">
             <div class="card-body">
                 <div class="text-center">
                     <form>

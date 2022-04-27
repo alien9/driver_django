@@ -20,7 +20,7 @@
                                 <div *ngIf="f.username.errors.required">Email é requerido</div>
                             </div>
                         </div>
-                        <div class="form-group mb-3" *ngIf="!primeiro_acesso">
+                        <div class="form-group mb-3" *ngIf="!primeiro_acesso && !reset_password">
                             <label for="password">Senha</label>
                             <input type="password" formControlName="password" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.password.errors }" />
                             <div *ngIf="submitted && f.password.errors" class="invalid-feedback">
@@ -44,21 +44,25 @@
                     </div>
                 </div>
                 <div class="card-body" style="display:block">
-                    <div class="form-group mb-3" *ngIf="!primeiro_acesso">
+                    <div class="form-group mb-3" *ngIf="!primeiro_acesso && !reset_password">
                         <button type="button" class="btn btn-link" (click)="primeiroAcesso()">Primeiro Acesso? Inscreva-se!</button>
                     </div>
-                    <div class="form-group mb-3" *ngIf="!primeiro_acesso">
-                        <button type="button" class="btn btn-link">Esqueceu a Senha?</button>
+                    <div class="form-group mb-3" *ngIf="!primeiro_acesso && !reset_password">
+                        <button type="button" class="btn btn-link" (click)="forgotPassword()">Esqueceu a Senha?</button>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <div class="form-group" *ngIf="!primeiro_acesso">
+                    <div class="form-group" *ngIf="!primeiro_acesso && !reset_password">
                         <span *ngIf="loading" class="spinner-border spinner-border-sm ml-3 mr-3"></span>
                         <button [disabled]="loading" class="btn btn-primary btn-block mr-2">Log in</button>
                     </div>
                     <div class="form-group" *ngIf="primeiro_acesso">
                         <span *ngIf="loading" class="spinner-border spinner-border-sm ml-3 mr-3"></span>
                         <button [disabled]="loading" class="btn btn-primary btn-block mr-2">Registrar</button>
+                    </div>
+                    <div class="form-group" *ngIf="reset_password">
+                        <span *ngIf="loading" class="spinner-border spinner-border-sm ml-3 mr-3"></span>
+                        <button [disabled]="loading" class="btn btn-primary btn-block mr-2">Redefinir</button>
                     </div>
                 </div>
             </form>

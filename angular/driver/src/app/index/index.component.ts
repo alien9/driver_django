@@ -154,7 +154,7 @@ export class IndexComponent implements OnInit {
       this.irapDataset = JSON.parse(localStorage.getItem("irapDataset"))
       if (!this.irapDataset['selected']) this.irapDataset['selected'] = {}
     }
-    this.locale = localStorage.getItem("Language") || "en"
+    this.locale = localStorage.getItem("Language") || "pt"
     this.weekdays = {}
     let d = new Date()
     for (let i = 0; i < 7; i++) {

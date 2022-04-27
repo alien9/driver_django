@@ -48,7 +48,7 @@ export class NavbarComponent implements OnInit {
   public savedFilters: any[]
   public filterLabel: string = ""
   public filtering: boolean = false
-  canWrite:boolean=false
+  @Input() canWrite:boolean
   public tabs = [
 
   ]
@@ -90,7 +90,7 @@ export class NavbarComponent implements OnInit {
           return
         } */
     this.schema = this.recordSchema['schema']
-    this.language = localStorage.getItem("Language") || 'en'
+    this.language = localStorage.getItem("Language") || 'pt'
     console.log(this.schema)
     this.initDataFrame()
     this.qrvalue = this.recordService.getBackend()
