@@ -41,6 +41,7 @@ urlpatterns = i18n_patterns(
 
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
+    url('^', include('django.contrib.auth.urls')),
     url(r'^api/', include(router.urls)),
     url(r'^api/create-user/', auth_views.user_create),
     url(r'^editor/$', data_views.editor),

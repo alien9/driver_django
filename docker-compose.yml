@@ -17,7 +17,7 @@ services:
       - HOST_URL=${PROTOCOL}://${HOST_NAME}
       - HOSTNAME=${HOST_NAME}
       - TIMEZONE=${TIMEZONE}
-      - DJANGO_ENV=production
+      - DJANGO_ENV=development
       - DRIVER_DB_HOST=${DATABASE_HOST}
       - DRIVER_DB_NAME=${DATABASE_NAME}
       - DRIVER_DB_USER=${DATABASE_USERNAME}

@@ -12,7 +12,7 @@ from captcha.fields import CaptchaField
 from captcha.models import CaptchaStore
 from django.http import HttpResponse
 from django.utils import  timezone
-
+import hashlib, datetime, random
 from oauth2client import client, crypt
 from django.urls import reverse
 
@@ -208,11 +208,12 @@ def user_create(request):
     except CaptchaStore.DoesNotExist:
         return JsonResponse({'captcha_1': 'LOGIN.CAPTCHA_ERROR'}, status=status.HTTP_400_BAD_REQUEST)
 
-    from os import urandom
-    chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    
+    chars = hashlib.sha1()
+    chars.update(("%s%s" % (datetime.datetime.now(), str(random.random()*99999))).encode('utf8'))
     d['groups']=[]
     d['username']=d['email']
-    d['password'] = "".join(chars[ord(str(c)) % len(chars)] for c in urandom(64))
+    d['password'] = chars.hexdigest()
 
     serialized = UserSerializer(data=d, context={"request": request})
     if serialized.is_valid():

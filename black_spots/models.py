@@ -63,8 +63,8 @@ class RoadMap(Imported):
                         j+=1
                         k+=1
                 cursor.execute("INSERT INTO public.black_spots_road(\
-	uuid, created, modified, data, geom, roadmap_id, name) \
-	select uuid_generate_v1(), now(), now(), row_to_json(temp_table), st_geometryn(temp_table.geom,1), %s, name from temp_table",(self.uuid,))
+	uuid, created, modified, data, geom, roadmap_id) \
+	select uuid_generate_v1(), now(), now(), row_to_json(temp_table), st_geometryn(temp_table.geom,1), %s from temp_table",(self.uuid,))
             self.status = self.StatusTypes.COMPLETE
             self.save()
         except Exception as e:

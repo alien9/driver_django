@@ -270,12 +270,12 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         if details_only_param == 'True' or details_only_param == 'true':
             requested_details_only = True
 
-        if is_admin_or_writer(self.request.user):
-            if requested_details_only:
-                return DetailsReadOnlyRecordNonPublicSerializer
-            else:
-                return DriverRecordSerializer
-        return DetailsReadOnlyRecordSerializer
+        #if is_admin_or_writer(self.request.user):
+        if requested_details_only:
+            return DetailsReadOnlyRecordNonPublicSerializer
+        #else:
+        return DriverRecordSerializer
+        #return DetailsReadOnlyRecordSerializer
     
     def get_super_queryset(self):
         return super(DriverRecordViewSet, self).get_queryset()
@@ -1548,9 +1548,9 @@ class DriverRecordSchemaViewSet(RecordSchemaViewSet):
 
     # Filter out everything except details for read-only users
     def get_serializer_class(self):
-        if is_admin_or_writer(self.request.user):
-            return RecordSchemaSerializer
-        return DetailsReadOnlyRecordSchemaSerializer
+        #if is_admin_or_writer(self.request.user):
+        return RecordSchemaSerializer
+        #return DetailsReadOnlyRecordSchemaSerializer
 
     def perform_create(self, serializer):
         instance = serializer.save()

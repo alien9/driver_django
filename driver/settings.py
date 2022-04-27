@@ -48,8 +48,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:4200',
 ]
 CORS_ALLOW_HEADERS = ('content-disposition', 'accept-encoding', 'responsetype',
-                      'content-type', 'accept', 'origin', 'authorization')
-#LANGUAGE_CODE = 'pt-br'
+                      'content-type', 'accept', 'origin', 'authorization', 'x-csrftoken')
+LANGUAGE_CODE = 'pt-br'
 
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
@@ -103,7 +103,6 @@ MIDDLEWARE = (
 )
 
 if DEBUG:
-    print("WILLL SET TOOLBAR")
     # Perform set up for Django Debug Toolbar
     INSTALLED_APPS += (
         'debug_toolbar',
@@ -159,7 +158,7 @@ DATABASES = {
         }
     }
 }
-
+print("Version after pull")
 POSTGIS_VERSION = tuple(
     map(int, os.environ.get('DJANGO_POSTGIS_VERSION', '2.1.3').split("."))
 )
@@ -171,9 +170,9 @@ POSTGIS_VERSION = tuple(
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
 from django.utils.translation import ugettext_lazy as _
-LANGUAGES = ( 
+LANGUAGES = [ 
    ('pt-br', _('Portuguese'))
-)
+]
 
 TIME_ZONE = os.environ.get("DRIVER_LOCAL_TIME_ZONE", 'America/Sao_Paulo')
 
@@ -526,10 +525,9 @@ CONSTANCE_CONFIG = {
     'MAP_CENTER_LATITUDE': (os.getenv('CENTER_LATITUDE', -23.5), _("Latitude")),
     'MAP_CENTER_LONGITUDE': (os.getenv('CENTER_LONGITUDE', -46.7), _("Longitude")),
     'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
-    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Accident"), _("Accident")),
-    "SECONDARY_LABEL": (os.getenv('PRIMARYLABEL', "Intervention"), _("Intervention")),
+    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Incidente"), _("Accident")),
+    "SECONDARY_LABEL": (os.getenv('SECONDARYLABEL', "Intervention"), _("Intervention")),
     "WINDSHAFT": ("http://windshaft-%s" % (os.getenv("CONTAINER_NAME", 'driver')), "WindShaft"),
-    "LANGUAGES": ('[{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}]', _("Languages")),
     "HOSTNAME": (os.getenv('HOST_URL', os.getenv('PROTOCOL', "https")+"://"+os.getenv('HOSTNAME', "localhost:8000")), _("Host Name")),
     "COUNTRY_CODE": (os.getenv('COUNTRY', "ic"), _("Country Code")),
     "MAPSERVER": ("http://mapserver-%s" % (os.getenv('CONTAINER_NAME', 'driver')), "MapServer"),
@@ -546,3 +544,15 @@ CONSTANCE_CONFIG = {
     'OPENWEATHER_RAPID_KEY':((os.getenv('OPENWEATHER_RAPID_KEY', '')), _("Open Weather API")),
 }
 CAPTCHA_OUTPUT_FORMAT=u'%(image)s %(hidden_field)s %(text_field)s'
+
+
+EMAIL_HOST = os.environ.get("EMAIL_HOST", 'localhost')
+EMAIL_PORT = os.environ.get('EMAIL_PORT', 25)
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 0) == '1'
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL','vidasegura@vidasegura.cetsp.com.br')
+
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', None)
+if EMAIL_HOST_USER:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', None)

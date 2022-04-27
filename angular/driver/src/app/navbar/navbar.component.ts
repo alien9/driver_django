@@ -451,8 +451,25 @@ export class NavbarComponent implements OnInit {
 
   resetFilter() {
     localStorage.removeItem("current_filter")
-    this.filterChange.emit({})
-    this.loadFilter()
+    this.recordService.getRecords({ 'uuid': this.recordSchema['record_type'] }, { 'filter': { 'limit': 1 } }).pipe(first()).subscribe({
+      next: data => {
+        // set filter: last 3 months from latest found data
+        if (data['results'] && data['results'].length) {
+          let di = new Date(data['results'][0].occurred_from)
+          let df = new Date(data['results'][0].occurred_from)
+          df.setMonth(di.getMonth() - 3)
+          this.occurred_max=di
+          this.occurred_max=df
+          this.occurred_min_ngb = this.asNgbDateStruct(this.occurred_min)
+          this.occurred_max_ngb = this.asNgbDateStruct(this.occurred_max)
+          let fu = {
+            'occurred_max': di.toISOString(),
+            'occurred_min': df.toISOString()
+          }
+          this.filterChange.emit(fu)
+        }
+      }
+    })
   }
   cancelReport(modal: any) {
     this.goBack.emit('Reports')

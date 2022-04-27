@@ -49,13 +49,13 @@ DATABASES = {
 
 
 from django.utils.translation import ugettext_lazy as _
-LANGUAGES = ( 
+LANGUAGES = [
    ('de', _('German')),
    ('en', _('English')),
    ('fr', _('French')),
    ('es', _('Spanish')),
    ('pt-br', _('Portuguese'))
-)
+]
 
 TIME_ZONE = os.environ.get("DRIVER_LOCAL_TIME_ZONE", 'America/La_Paz')
 
