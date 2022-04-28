@@ -458,15 +458,16 @@ export class NavbarComponent implements OnInit {
           let di = new Date(data['results'][0].occurred_from)
           let df = new Date(data['results'][0].occurred_from)
           df.setMonth(di.getMonth() - 3)
+          this.occurred_min=df
           this.occurred_max=di
-          this.occurred_max=df
           this.occurred_min_ngb = this.asNgbDateStruct(this.occurred_min)
           this.occurred_max_ngb = this.asNgbDateStruct(this.occurred_max)
-          let fu = {
+          this.filter = {
             'occurred_max': di.toISOString(),
             'occurred_min': df.toISOString()
           }
-          this.filterChange.emit(fu)
+          this.applyFilter(null)
+          //this.filterChange.emit(fu)
         }
       }
     })

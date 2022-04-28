@@ -88,9 +88,11 @@ class DriverRecord(Record):
     def geocode(self, roadmap_uuid, size):
         if self.geom:
             row=[None]
+            print("getting segment")
             with connection.cursor() as cursor:
                 cursor.execute("select * from works.find_segment(%s, %s, %s)", [self.geom.ewkt, size, str(roadmap_uuid)])
                 row = cursor.fetchone()
+                print(row)
             if row[0] is not None:
                 s=RecordSegment.objects.filter(
                     geom=GEOSGeometry(row[0]),
@@ -98,6 +100,7 @@ class DriverRecord(Record):
                     roadmap_id=roadmap_uuid
                 )
                 if not len(s):
+                    print("inedito segmento")
                     seg=RecordSegment(
                         roadmap_id=roadmap_uuid, 
                         data={},
@@ -108,6 +111,7 @@ class DriverRecord(Record):
                     seg.save()
                 else:
                     seg=s[0]
+                    print("reaproveita")
                 self.segment.add(seg)
                     
     def save(self, *args, **kwargs):
