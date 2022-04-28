@@ -69,11 +69,18 @@ export class InputComponent implements OnInit {
   ngOnInit(): void {
     let locale = localStorage.getItem("Language") || "en"
     this.schema = this.recordSchema['schema']
-    let osm = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
-    let sat = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {});
+    let ofi = new L.tileLayer("https://vidasegura.cetsp.com.br/geoserver/gwc/service/wmts?layer=driver%3ABase&style=&tilematrixset=EPSG%3A900913&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fpng&TileMatrix=EPSG%3A900913%3A{z}&TileCol={x}&TileRow={y}",
+    {
+      attribution: "&copy; <a href='http://geosampa.prefeitura.sp.gov.br/PaginasPublicas/_SBC.aspx'>GeoSampa</a> | Prefeitura de São Paulo",
+      detectRetina: !1,
+      zIndex: 1
+    })
+    let osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
+    let sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {});
     this.backend = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
     this.layersControl = {
       baseLayers: {
+        'Mapa Oficial': ofi,
         'Open Street Map': osm,
         'Satellite Map': sat
       },
@@ -119,7 +126,7 @@ export class InputComponent implements OnInit {
     }
 
 
-    this.layers = [osm,
+    this.layers = [ofi,
       this.marker
     ]
     this.options = {

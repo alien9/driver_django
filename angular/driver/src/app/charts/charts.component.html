@@ -34,7 +34,7 @@
             <div id="interval_legend" class="mr-3 ml-3"></div>
         </ng-template>
     </li>
-    <li [ngbNavItem]="3">
+    <li [ngbNavItem]="3" *ngIf="wants_pizza">
         <a ngbNavLink>{{'Pie'| translate}}</a>
         <ng-template ngbNavContent>
             <h5 class="m-3">{{'Field'|translate}}:

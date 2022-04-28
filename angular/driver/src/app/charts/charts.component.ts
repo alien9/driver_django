@@ -24,6 +24,7 @@ export class ChartsComponent implements OnInit, OnChanges {
   monthnames: object
   tip = 0
   barChart: object
+  wants_pizza:boolean
   palette = [
     'e41a1c',
     '377eb8',
@@ -47,7 +48,8 @@ export class ChartsComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.barChart = { 'interval': 'year' }
-    this.locale = localStorage.getItem("Language") || "en"
+    this.locale = localStorage.getItem("Language") || "pt"
+    this.wants_pizza = localStorage.getItem("pizza") != null
     this.weekdays = {}
     this.monthnames = {}
     let d = new Date()

@@ -201,8 +201,8 @@ export class IndexComponent implements OnInit {
         detectRetina: false,
         zIndex: 1
       })
-    let osm = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
-    let sat = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {});
+    let osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
+    let sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {});
 
     this.backend = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
     this.layersControl = {
@@ -360,8 +360,7 @@ export class IndexComponent implements OnInit {
     this.lastState = this.state
     this.state = s
     if (s == 'Map') {
-      if (this.recordsLayer && this.map && !this.map.hasLayer(this.recordsLayer))
-        this.map.addLayer(this.recordsLayer)
+      this.loadRecords(true)
     }
   }
   setLegends() {
@@ -523,7 +522,7 @@ export class IndexComponent implements OnInit {
         ])
         this.recordsLayer.setZIndex(8000)
         console.log("records loaded")
-        this.layersControl.overlays['Records'] = this.recordsLayer
+        this.layersControl.overlays["Incidentes"] = this.recordsLayer
         if (show && this.map) {
           console.log('map add layer')
           this.map.addLayer(this.recordsLayer)
@@ -836,3 +835,4 @@ export class IndexComponent implements OnInit {
     }
   }
 }
+
