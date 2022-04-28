@@ -34,7 +34,7 @@ export class AuthService {
       'responseType': 'text',
       'Content-Type': 'text/plain; charset=utf-8'
     })
-    return this.http.get(`${this.getBackend()}/signup`, { 'responseType': 'text' })
+    return this.http.get(`${this.getBackend()}/signup/`, { 'responseType': 'text' })
   }
   createUser(data: object): Observable<any> {
     let headers = new HttpHeaders({
