@@ -466,8 +466,9 @@ export class NavbarComponent implements OnInit {
             'occurred_max': di.toISOString(),
             'occurred_min': df.toISOString()
           }
-          this.applyFilter(null)
-          //this.filterChange.emit(fu)
+          jQuery('.modal-content input[type=checkbox]').prop('checked', false)
+          this.filterObject={}
+          this.loadFilter()
         }
       }
     })
