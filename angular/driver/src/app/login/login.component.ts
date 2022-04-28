@@ -89,7 +89,7 @@ export class LoginComponent implements OnInit {
         this.submitted = true;
         this.loading = true;
         this.errorMessage = null;
-        if (this.f.password && !this.reset_password) {
+        if (this.f.password && !this.reset_password) { // normal login
             this.authenticationService.login(this.f.username.value, this.f.password.value)
                 .pipe(first())
                 .subscribe({
@@ -116,7 +116,7 @@ export class LoginComponent implements OnInit {
                     }, complete: () => console.log('HTTP request completed.')
                 })
         }
-        if (this.f.captcha_1) {
+        if (this.f.captcha_1) {  //create user
             this.authenticationService.createUser({
                 'email': this.f.username.value,
                 'captcha_0': this.f.captcha_0.value,
@@ -124,6 +124,13 @@ export class LoginComponent implements OnInit {
             }).pipe(first()).subscribe({
                 next: data => {
                     console.log(data)
+                    if(data['username']){
+                        this.errorMessage=`Um link para ativação foi enviado para .${data['username']}`
+                    }
+                    this.loading=false
+                    this.primeiro_acesso=false
+                    this.reset_password=false
+                    this.captcha_id=null
                 },
                 error: err => {
                     console.log(err)
@@ -149,11 +156,13 @@ export class LoginComponent implements OnInit {
             }).pipe(first()).subscribe({
                 next: data => {
                     console.log(data)
+                    this.errorMessage=`Um link para ativação foi enviado para ${this.f.username.value}`
+                    this.loading=false
                 },
                 error: err => {
                     console.log(err)
                     this.loading=false
-                    //this.forgotPassword()
+                    this.errorMessage=err
                 }
 
             })
@@ -161,6 +170,8 @@ export class LoginComponent implements OnInit {
     }
     primeiroAcesso() {
         this.authenticationService.getSignupForm().subscribe(data => {
+            console.log(data)
+            data=data.toString()
             this.captcha_id = data.match(/<input [^>]+>/g).filter(k => { return k.match(/name="captcha_0"/) }).pop().match(/value="([^"]+)"/).pop()
             this.captcha_image = `${this.recordService.getBackend()}/captcha/image/${this.captcha_id}/`
             this.errorMessage = ''
