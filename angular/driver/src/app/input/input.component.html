@@ -33,7 +33,7 @@
                                 (change)=setDate($event)></ngb-timepicker>
                         </span>
                     </li>
-                    <li class="list-group-item">
+                    <li class="list-group-item" *ngIf="has_weather">
                         <span>{{'Weather'|translate}}</span>: <span *ngIf="!editing">{{record["weather"]|translate}}</span>
                         <select *ngIf="editing" class="form-select" [(ngModel)]="record['weather']">
                             <!--possible values: 

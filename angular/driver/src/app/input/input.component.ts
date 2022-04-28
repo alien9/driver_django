@@ -41,6 +41,7 @@ export class InputComponent implements OnInit {
   longitude: number
   occurred_date_ngb: NgbDateStruct
   occurred_time: any
+  has_weather:boolean
   weatherValues = [
     '',
     'clear-day',
@@ -67,11 +68,12 @@ export class InputComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    let locale = localStorage.getItem("Language") || "en"
+    let locale = localStorage.getItem("Language") || "br"
     this.schema = this.recordSchema['schema']
+    this.has_weather=localStorage.getItem("weather")!=null
     let ofi = new L.tileLayer("https://vidasegura.cetsp.com.br/geoserver/gwc/service/wmts?layer=driver%3ABase&style=&tilematrixset=EPSG%3A900913&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fpng&TileMatrix=EPSG%3A900913%3A{z}&TileCol={x}&TileRow={y}",
     {
-      attribution: "&copy; <a href='http://geosampa.prefeitura.sp.gov.br/PaginasPublicas/_SBC.aspx'>GeoSampa</a> | Prefeitura de São Paulo",
+      attribution: "&copy; <a href='https://geosampa.prefeitura.sp.gov.br/PaginasPublicas/_SBC.aspx'>GeoSampa</a> | Prefeitura de São Paulo",
       detectRetina: !1,
       zIndex: 1
     })
