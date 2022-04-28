@@ -47,7 +47,6 @@ DATABASES = {
     }
 }
 
-
 from django.utils.translation import ugettext_lazy as _
 LANGUAGES = [
    ('de', _('German')),

@@ -2,7 +2,7 @@ import uuid as uuidlib
 
 from django.contrib.auth.models import User
 from django.db import models
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 
 class SavedFilter(models.Model):
     """A filter saved by the user for later reference"""

@@ -40,7 +40,7 @@ TESTING = 'test' in sys.argv
 
 ALLOWED_HOSTS = ['*']
 # TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "%s://%s" % (os.environ.get('PROTOCOL', 'http'), os.environ.get("HOST_NAME", "localhost"),),
