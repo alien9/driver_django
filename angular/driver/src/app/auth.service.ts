@@ -47,7 +47,7 @@ export class AuthService {
   }
   resetPassword(data: object): Observable<any> {
     let headers = new HttpHeaders({
-      'Content-Type': 'application/json',
+      'Content-Type': 'text/html',
       'X-CSRFToken': data['csrfmiddlewaretoken']
     })
     return this.http.post(`${this.getBackend()}/password_reset/`, data, { headers: headers });

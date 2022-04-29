@@ -68,6 +68,7 @@ export class IndexComponent implements OnInit {
   weekdays: object
   reportFilters: object[]
   legends: object[]
+  counts:object
   private irapColor = [
     '#000000',
     '#ff0000',
@@ -465,7 +466,6 @@ export class IndexComponent implements OnInit {
     )
   }
   loadRecords(show: boolean) {
-    console.log("loading records")
     this.recordService.getMapFileKey({ 'uuid': this.recordSchema["record_type"] }, {
       filter: this.filter
     }).pipe(first()).subscribe(
@@ -531,6 +531,12 @@ export class IndexComponent implements OnInit {
           console.log('no map yet')
           this.layers.push(this.recordsLayer)
         }
+        this.recordService.getRecordCosts({ 'uuid': this.recordSchema["record_type"] }, {
+          filter: this.filter
+        }).pipe(first()).subscribe({next:data=>{
+          console.log(data)
+          this.counts=data
+        }})
       })
   }
   refreshList() {
@@ -753,8 +759,6 @@ export class IndexComponent implements OnInit {
     this.removeIrapLayer()
   }
   reloadRecords(e: any) {
-    console.log("Reloading everything")
-    console.log(e)
     switch (this.state) {
       case 'List':
         this.refreshList()
