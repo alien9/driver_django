@@ -531,6 +531,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         numeric = schema.schema['definitions'][path[0]]['properties'][path[2]]['type']=="number"
         if numeric:
             counts_queryset = self.get_filtered_queryset(request)
+            res['total_crashes']=counts_queryset.count()
             res=counts_queryset.annotate(
                 val=RawSQL("((data->%s->%s)::numeric)", (path[0],path[2]))
             ).aggregate(total=Sum('val'))
@@ -547,6 +548,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         # alias instead.
         choice_indices = {str(idx): choice for idx, choice in enumerate(choices)}
         counts_queryset = self.get_filtered_queryset(request)
+        total_crashes=counts_queryset.count()
         for idx, choice in list(choice_indices.items()):
             filter_rule = self._make_djsonb_containment_filter(path, choice, multiple)
             # We want a column for each enum choice with a binary 1/0 indication of whether the row
@@ -559,7 +561,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             annotate_params[idx] = choice_case
             counts_queryset = counts_queryset.annotate(**annotate_params)
         output_data = {'prefix': cost_config.cost_prefix, 'suffix': cost_config.cost_suffix}
-        if counts_queryset.count() < 1:  # Short-circuit if no events at all
+        if total_crashes < 1:  # Short-circuit if no events at all
             output_data.update({'total': 0, 'subtotals': {choice: 0 for choice in choices},
                                 'outdated_cost_config': False})
             return Response(output_data)
@@ -591,7 +593,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 subtotals[key] = 0
         total = sum(subtotals.values())
         # Return breakdown costs and sum
-        output_data.update({'total': total, 'subtotals': subtotals,
+        output_data.update({'total': total, 'total_crashes': total_crashes, 'subtotals': subtotals,
                             'outdated_cost_config': found_missing_choices})
         return Response(output_data)
 

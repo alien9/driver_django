@@ -546,6 +546,7 @@ CONSTANCE_CONFIG = {
 CAPTCHA_OUTPUT_FORMAT=u'%(image)s %(hidden_field)s %(text_field)s'
 
 
+
 EMAIL_HOST = os.environ.get("EMAIL_HOST", 'localhost')
 EMAIL_PORT = os.environ.get('EMAIL_PORT', 25)
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 0) == '1'
