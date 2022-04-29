@@ -206,6 +206,9 @@ export class LoginComponent implements OnInit {
     }
     forgotPassword(){
         this.authenticationService.getResetPasswordForm().pipe(first()).subscribe({next:html=>{
+            this.loginForm = this.formBuilder.group({
+                username: ['', Validators.required],
+            });
             let vu=html.match(/csrfmiddlewaretoken" value="([^"]+)"/)
             if(vu){
                 this.csrf=vu.pop()
