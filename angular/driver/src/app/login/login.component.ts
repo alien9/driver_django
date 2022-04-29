@@ -125,7 +125,21 @@ export class LoginComponent implements OnInit {
                 next: data => {
                     console.log(data)
                     if(data['username']){
-                        this.errorMessage=`Um link para ativação foi enviado para .${data['username']}`
+                        this.authenticationService.resetPassword({
+                            'email': this.f.username.value,
+                            'csrfmiddlewaretoken':this.csrf
+                        }).pipe(first()).subscribe({
+                            next: data => {
+                                console.log(data)
+                                this.errorMessage=`Um link para ativação foi enviado para ${this.f.username.value}`
+                                this.loading=false
+                            },
+                            error: err => {
+                                this.loading=false
+                                this.errorMessage="Um erro ocorreu."
+                            }
+            
+                        })
                     }
                     this.loading=false
                     this.primeiro_acesso=false
@@ -149,7 +163,7 @@ export class LoginComponent implements OnInit {
 
             })
         }
-        if(this.reset_password){
+        if(this.reset_password){ //resetting password
             this.authenticationService.resetPassword({
                 'email': this.f.username.value,
                 'csrfmiddlewaretoken':this.csrf
@@ -160,9 +174,9 @@ export class LoginComponent implements OnInit {
                     this.loading=false
                 },
                 error: err => {
-                    console.log(err)
+                    console.log(err.message)
                     this.loading=false
-                    this.errorMessage=err
+                    this.errorMessage=`Um link para ativação foi enviado para ${this.f.username.value}`
                 }
 
             })

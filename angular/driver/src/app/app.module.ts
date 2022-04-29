@@ -63,6 +63,7 @@ import { AuthService } from './auth.service'
 import { map } from 'rxjs/operators';
 import { DuplicateComponent } from './duplicate/duplicate.component';
 import { LegendComponent } from './legend/legend.component';
+import { CounterComponent } from './counter/counter.component';
 
 const socialConfigFactory = (restService: AuthService) => {
   return restService.getGoogleClientId().pipe(map(config => {
@@ -136,6 +137,7 @@ const icons = {
     IrapPopupComponent,
     DuplicateComponent,
     LegendComponent,
+    CounterComponent,
   ],
   imports: [
     BrowserModule,
