@@ -29,6 +29,12 @@ services:
       - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
       - DRIVER_ADMIN_PASSWORD=${DRIVER_ADMIN_PASSWORD}
       - CONTAINER_NAME=vidasegura
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USE_TLS=${EMAIL_USE_TLS}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
     container_name: driver-django-vidasegura
     image: alien9/driver-django:vidasegura
       

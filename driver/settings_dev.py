@@ -11,7 +11,8 @@ PRODUCTION = not DEVELOP and not STAGING
 f = open(".env", "r")
 e={}
 for k in [ t.split('=') for t in f.readlines() ]:
-    e[k[0]]=k[1].replace("\n", "")
+    if len(k)>1:
+        e[k[0]]=k[1].replace("\n", "")
 
 DATABASE_NAME=e['DATABASE_NAME']
 DRIVER_DB_HOST=e['DATABASE_HOST']
@@ -22,6 +23,7 @@ CONTAINER_NAME='vidasegura'
 CONSTANCE_CONFIG['WINDSHAFT']=("http://%s" % (WINDSHAFT_HOST,), "WindShaft")
 CONSTANCE_CONFIG['MAPSERVER']=("http://%s" % (MAPSERVER_HOST,), "Mapserver")
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Quick-start development settings - unsuitable for production
 
@@ -47,7 +49,6 @@ DATABASES = {
         }
     }
 }
-
 
 from django.utils.translation import ugettext_lazy as _
 LANGUAGES = [

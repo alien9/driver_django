@@ -194,6 +194,17 @@ def get_config(request):
     conf['LANGUAGES']=[]
     for ds in Dictionary.objects.all():
         conf['LANGUAGES'].append({"code":ds.language_code, "name":ds.name})
+    for k in [
+        'MAPILLARY_CLIENT_TOKEN',
+        'MAPILLARY_SECRET',
+        'MAPILLARY_TOKEN',
+        'IRAP_API_KEY',
+        'IRAP_AUTH_ID',
+        'IRAP_PRIVATE_KEY',
+    ]:
+        if k in conf:
+            del conf[k]
+    
     return JsonResponse(conf)
 
 @csrf_exempt
