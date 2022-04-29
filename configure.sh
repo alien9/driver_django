@@ -19,6 +19,7 @@ sed -i -e "s/\s[^ ]*\s*#HOST_NAME$/ ${HOST_NAME}; #HOST_NAME/g" \
 driver-vidasegura.conf
 
 docker exec "driver-django-vidasegura" ./manage.py collectstatic --noinput
+docker exec "driver-django-vidasegura" ./manage.py makemigrations
 docker exec "driver-django-vidasegura" ./manage.py migrate
 if [[ -f /etc/nginx/sites-enabled/driver-vidasegura.conf ]]; then
      sudo rm /etc/nginx/sites-enabled/driver-vidasegura.conf
