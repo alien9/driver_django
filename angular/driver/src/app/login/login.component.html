@@ -48,7 +48,8 @@
                         <button type="button" class="btn btn-link" (click)="primeiroAcesso()">Primeiro Acesso? Inscreva-se!</button>
                     </div>
                     <div class="form-group mb-3" *ngIf="!primeiro_acesso && !reset_password">
-                        <button type="button" class="btn btn-link" (click)="forgotPassword()">Esqueceu a Senha?</button>
+                        <a [href]="forgotPasswordLink" class="btn btn-link">Esqueceu a Senha?</a>
+
                     </div>
                 </div>
                 <div class="modal-footer">

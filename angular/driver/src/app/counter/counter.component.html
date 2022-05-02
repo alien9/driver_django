@@ -1,6 +1,17 @@
 <div class="counter">
     <div>
-        {{counts['total_crashes']}}
-        <div>Incidentes</div>
+        {{filter['occurred_min']|date:'shortDate':'America/Sao_Paulo':'pt-BR'}} a {{filter['occurred_max']|date:'shortDate':'America/Sao_Paulo':'pt-BR'}}
+        <br>
+    </div>
+    <div class="filter">
+        <div *ngFor="let fld of fields">
+            {{fld}}
+        </div>
+    </div>
+    <div>
+
+    </div>
+    <div>
+        <div>{{counts['total_crashes']}} Incidentes</div>
     </div>
 </div>

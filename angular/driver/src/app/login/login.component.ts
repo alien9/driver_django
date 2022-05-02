@@ -25,6 +25,7 @@ export class LoginComponent implements OnInit {
     captcha_id: string;
     captcha_image: string;
     private csrf:string
+    forgotPasswordLink:string
     messages={
         "LOGIN.CAPTCHA_ERROR":"Erro de captcha",
          "A user with that username already exists.":"Um usuário com este login já existe"
@@ -75,6 +76,7 @@ export class LoginComponent implements OnInit {
         }
         this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
         this.backend = this.recordService.getBackend()
+        this.forgotPasswordLink=`${this.recordService.getBackend()}/password_reset`
     }
     loginWithGoogle(): void {
         window.location.href = `${this.authenticationService.getBackend()}/oidc/authenticate/`
@@ -124,6 +126,7 @@ export class LoginComponent implements OnInit {
             }).pipe(first()).subscribe({
                 next: data => {
                     console.log(data)
+                    alert('criou user')
                     if(data['username']){
                         this.authenticationService.resetPassword({
                             'email': this.f.username.value,
@@ -136,15 +139,16 @@ export class LoginComponent implements OnInit {
                             },
                             error: err => {
                                 this.loading=false
+                                console.log(err)
                                 this.errorMessage="Um erro ocorreu."
                             }
             
                         })
                     }
                     this.loading=false
-                    this.primeiro_acesso=false
-                    this.reset_password=false
-                    this.captcha_id=null
+                    //this.primeiro_acesso=false
+                    //this.reset_password=false
+                    //this.captcha_id=null
                 },
                 error: err => {
                     console.log(err)

@@ -466,6 +466,7 @@ export class IndexComponent implements OnInit {
     )
   }
   loadRecords(show: boolean) {
+    this.counts=null
     this.recordService.getMapFileKey({ 'uuid': this.recordSchema["record_type"] }, {
       filter: this.filter
     }).pipe(first()).subscribe(
