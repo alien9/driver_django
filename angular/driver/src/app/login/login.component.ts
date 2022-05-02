@@ -24,11 +24,11 @@ export class LoginComponent implements OnInit {
     reset_password: boolean
     captcha_id: string;
     captcha_image: string;
-    private csrf:string
-    forgotPasswordLink:string
-    messages={
-        "LOGIN.CAPTCHA_ERROR":"Erro de captcha",
-         "A user with that username already exists.":"Um usuário com este login já existe"
+    private csrf: string
+    forgotPasswordLink: string
+    messages = {
+        "LOGIN.CAPTCHA_ERROR": "Erro de captcha",
+        "A user with that username already exists.": "Um usuário com este login já existe"
     }
     constructor(
         private formBuilder: FormBuilder,
@@ -76,7 +76,7 @@ export class LoginComponent implements OnInit {
         }
         this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
         this.backend = this.recordService.getBackend()
-        this.forgotPasswordLink=`${this.recordService.getBackend()}/password_reset`
+        this.forgotPasswordLink = `${this.recordService.getBackend()}/password_reset`
     }
     loginWithGoogle(): void {
         window.location.href = `${this.authenticationService.getBackend()}/oidc/authenticate/`
@@ -127,60 +127,76 @@ export class LoginComponent implements OnInit {
                 next: data => {
                     console.log(data)
                     alert('criou user')
-                    if(data['username']){
-                        this.authenticationService.resetPassword({
-                            'email': this.f.username.value,
-                            'csrfmiddlewaretoken':this.csrf
-                        }).pipe(first()).subscribe({
-                            next: data => {
-                                console.log(data)
-                                this.errorMessage=`Um link para ativação foi enviado para ${this.f.username.value}`
-                                this.loading=false
+                    if (data['username']) {
+                        this.authenticationService.getResetPasswordForm().pipe(first()).subscribe({
+                            next: html => {
+                                console.log(html)
+                                let vu = html.match(/csrfmiddlewaretoken" value="([^"]+)"/)
+                                if (vu) {
+                                    this.csrf = vu.pop()
+                                    document.cookie = `csrftoken=${this.csrf};`
+                                    this.reset_password = true
+                                    this.primeiro_acesso = false
+                                    this.authenticationService.resetPassword({
+                                        'email': this.f.username.value,
+                                        'csrfmiddlewaretoken': this.csrf
+                                    }).pipe(first()).subscribe({
+                                        next: data => {
+                                            console.log(data)
+                                            this.errorMessage = `Um link para ativação foi enviado para ${this.f.username.value}`
+                                            this.loading = false
+                                        },
+                                        error: err => {
+                                            this.loading = false
+                                            console.log(err)
+                                            this.errorMessage = "Um erro ocorreu."
+                                        }
+
+                                    })
+                                }
                             },
                             error: err => {
-                                this.loading=false
                                 console.log(err)
-                                this.errorMessage="Um erro ocorreu."
                             }
-            
                         })
+                        /*  */
                     }
-                    this.loading=false
-                    //this.primeiro_acesso=false
-                    //this.reset_password=false
-                    //this.captcha_id=null
+                    this.loading = false
+                    this.primeiro_acesso = false
+                    this.reset_password = false
+                    this.captcha_id = null
                 },
                 error: err => {
                     console.log(err)
 
-                    if(err['error']){
-                        if(err["error"]['captcha_1']){
-                            this.errorMessage=(this.messages[err["error"]['captcha_1']])?this.messages[err["error"]['captcha_1']]:err["error"]['captcha_1']
+                    if (err['error']) {
+                        if (err["error"]['captcha_1']) {
+                            this.errorMessage = (this.messages[err["error"]['captcha_1']]) ? this.messages[err["error"]['captcha_1']] : err["error"]['captcha_1']
                         }
-                        if(err["error"]['username']){
-                            this.errorMessage=(this.messages[err["error"]['username']])?this.messages[err["error"]['username']]:err["error"]['username']
+                        if (err["error"]['username']) {
+                            this.errorMessage = (this.messages[err["error"]['username']]) ? this.messages[err["error"]['username']] : err["error"]['username']
                         }
-                    } 
-                    this.loading=false
+                    }
+                    this.loading = false
                     this.reloadCaptcha()
                 }
 
             })
         }
-        if(this.reset_password){ //resetting password
+        if (this.reset_password) { //resetting password
             this.authenticationService.resetPassword({
                 'email': this.f.username.value,
-                'csrfmiddlewaretoken':this.csrf
+                'csrfmiddlewaretoken': this.csrf
             }).pipe(first()).subscribe({
                 next: data => {
                     console.log(data)
-                    this.errorMessage=`Um link para ativação foi enviado para ${this.f.username.value}`
-                    this.loading=false
+                    this.errorMessage = `Um link para ativação foi enviado para ${this.f.username.value}`
+                    this.loading = false
                 },
                 error: err => {
                     console.log(err.message)
-                    this.loading=false
-                    this.errorMessage=`Um link para ativação foi enviado para ${this.f.username.value}`
+                    this.loading = false
+                    this.errorMessage = `Um link para ativação foi enviado para ${this.f.username.value}`
                 }
 
             })
@@ -189,12 +205,12 @@ export class LoginComponent implements OnInit {
     primeiroAcesso() {
         this.authenticationService.getSignupForm().subscribe(data => {
             console.log(data)
-            data=data.toString()
+            data = data.toString()
             this.captcha_id = data.match(/<input [^>]+>/g).filter(k => { return k.match(/name="captcha_0"/) }).pop().match(/value="([^"]+)"/).pop()
             this.captcha_image = `${this.recordService.getBackend()}/captcha/image/${this.captcha_id}/`
             this.errorMessage = ''
             this.primeiro_acesso = true
-            this.reset_password=false
+            this.reset_password = false
             this.loginForm = this.formBuilder.group({
                 username: ['', Validators.required],
                 captcha_1: ['', Validators.required],
@@ -202,24 +218,26 @@ export class LoginComponent implements OnInit {
             });
         })
     }
-    reloadCaptcha(){
+    reloadCaptcha() {
         this.authenticationService.getSignupForm().subscribe(data => {
             this.captcha_id = data.match(/<input [^>]+>/g).filter(k => { return k.match(/name="captcha_0"/) }).pop().match(/value="([^"]+)"/).pop()
             this.captcha_image = `${this.recordService.getBackend()}/captcha/image/${this.captcha_id}/`
         })
     }
-    forgotPassword(){
-        this.authenticationService.getResetPasswordForm().pipe(first()).subscribe({next:html=>{
-            this.loginForm = this.formBuilder.group({
-                username: ['', Validators.required],
-            });
-            let vu=html.match(/csrfmiddlewaretoken" value="([^"]+)"/)
-            if(vu){
-                this.csrf=vu.pop()
-                document.cookie=`csrftoken=${this.csrf}; domain=${this.authenticationService.getBackend().replace(/https?:\/\//, '').replace(/:\d+/, '')}`
-                this.reset_password=true
-                this.primeiro_acesso=false
+    forgotPassword() {
+        this.authenticationService.getResetPasswordForm().pipe(first()).subscribe({
+            next: html => {
+                this.loginForm = this.formBuilder.group({
+                    username: ['', Validators.required],
+                });
+                let vu = html.match(/csrfmiddlewaretoken" value="([^"]+)"/)
+                if (vu) {
+                    this.csrf = vu.pop()
+                    document.cookie = `csrftoken=${this.csrf}; domain=${this.authenticationService.getBackend().replace(/https?:\/\//, '').replace(/:\d+/, '')}`
+                    this.reset_password = true
+                    this.primeiro_acesso = false
+                }
             }
-        }})
+        })
     }
 }
