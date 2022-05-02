@@ -126,40 +126,8 @@ export class LoginComponent implements OnInit {
             }).pipe(first()).subscribe({
                 next: data => {
                     console.log(data)
-                    alert('criou user')
                     if (data['username']) {
-                        this.authenticationService.getResetPasswordForm().pipe(first()).subscribe({
-                            next: html => {
-                                console.log(html)
-                                let vu = html.match(/csrfmiddlewaretoken" value="([^"]+)"/)
-                                if (vu) {
-                                    this.csrf = vu.pop()
-                                    document.cookie = `csrftoken=${this.csrf};`
-                                    this.reset_password = true
-                                    this.primeiro_acesso = false
-                                    this.authenticationService.resetPassword({
-                                        'email': this.f.username.value,
-                                        'csrfmiddlewaretoken': this.csrf
-                                    }).pipe(first()).subscribe({
-                                        next: data => {
-                                            console.log(data)
-                                            this.errorMessage = `Um link para ativação foi enviado para ${this.f.username.value}`
-                                            this.loading = false
-                                        },
-                                        error: err => {
-                                            this.loading = false
-                                            console.log(err)
-                                            this.errorMessage = "Um erro ocorreu."
-                                        }
-
-                                    })
-                                }
-                            },
-                            error: err => {
-                                console.log(err)
-                            }
-                        })
-                        /*  */
+                        window.location.href=`${this.recordService.getBackend()}/password_reset/?username=${data['username']}`
                     }
                     this.loading = false
                     this.primeiro_acesso = false
