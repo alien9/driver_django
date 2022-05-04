@@ -9,6 +9,7 @@ export class CounterComponent implements OnInit {
   @Input() counts: object
   @Input() filter: object
   fields: any[] = []
+  subtotals:boolean=false
   constructor() { }
 
   ngOnInit(): void {
@@ -24,6 +25,9 @@ export class CounterComponent implements OnInit {
         })
       })
     }
+  }
+  flipTotals(){
+    this.subtotals=!this.subtotals
   }
 
 }
