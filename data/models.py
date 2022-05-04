@@ -89,6 +89,9 @@ class DriverRecord(Record):
         if self.geom:
             row=[None]
             print("getting segment")
+            seg=self.segment.filter(size=size)
+            if seg.count():
+                return seg[0]
             with connection.cursor() as cursor:
                 cursor.execute("select * from works.find_segment(%s, %s, %s)", [self.geom.ewkt, size, str(roadmap_uuid)])
                 row = cursor.fetchone()
