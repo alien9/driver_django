@@ -7,7 +7,7 @@
             <h5>
                 <span *ngIf="report['relatable']">
                     <select [(ngModel)]="report['parameters']['relate']" (change)=setRelate()>
-                        <option value="">{{config['PRIMARY_LABEL']|translate}}</option>
+                        <option value="">{{config['PRIMARY_LABEL_PLURAL']|translate}}</option>
                         <option [value]="report['relatable']">{{recordSchema['schema']['definitions'][report['relatable'][0]]['plural_title']|translate}}</option>
                     </select>                
                 </span>

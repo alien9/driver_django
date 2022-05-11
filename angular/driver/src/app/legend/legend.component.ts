@@ -8,10 +8,10 @@ import { RecordService } from '../record.service'
 })
 export class LegendComponent implements OnInit {
   @Input() legends
+  @Input() config: object
   backend:string
   constructor(private recordService: RecordService) { }
   ngOnInit(): void {
     this.backend=this.recordService.getBackend()
   }
-
 }

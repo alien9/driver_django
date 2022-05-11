@@ -12,7 +12,8 @@
 
     </div>
     <div>
-        <div>{{counts['total_crashes']}} Incidentes</div>
+        <div>{{counts['total_crashes']}} <span *ngIf="counts['total_crashes']==1">{{config['PRIMARY_LABEL']}}</span>
+            <span *ngIf="counts['total_crashes']!=1">{{config['PRIMARY_LABEL_PLURAL']}}</span></div>
     </div>
     <div *ngIf="counts['total']" class="filter">
         <div *ngIf="!subtotals" class="filter-details" (click)="flipTotals()">

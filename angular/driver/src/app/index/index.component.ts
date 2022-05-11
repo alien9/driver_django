@@ -97,14 +97,15 @@ export class IndexComponent implements OnInit {
 
   ngOnInit(): void {
     console.log("this is loading")
+
     let cu = document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")
     if (!cu.length) {
       this.router.navigateByUrl('/login')
       return
     }
+    
     this.recordService.getConfig().pipe(first()).subscribe(data => {
-      console.log("got config")
-      localStorage.setItem('config', JSON.stringify(data));
+      this.config=data
       this.recordService.getRecordType().subscribe({
         next: rata => {
           if (rata['results']) {
@@ -113,6 +114,7 @@ export class IndexComponent implements OnInit {
               if (rata['results'][i]['label'] == data['PRIMARY_LABEL']) {
                 schema_uuid = rata['results'][i]['current_schema'];
                 this.recordtype_uuid = rata['results'][i]['uuid']
+                this.config['PRIMARY_LABEL_PLURAL']=rata['results'][i]['plural_label']
               };
             }
             if (schema_uuid) {
@@ -120,8 +122,6 @@ export class IndexComponent implements OnInit {
                 sata => {
                   localStorage.setItem('record_schema', JSON.stringify(sata));
                   this.recordSchema = sata
-                  //this.entering.emit(null)
-                  //this.router.navigateByUrl('/')
                   this.afterInit()
                 }
               )
@@ -138,12 +138,11 @@ export class IndexComponent implements OnInit {
     })
   }
   afterInit() {
-    console.log("this is afterinit")
     let w = document.cookie.match(/AuthService\.canWrite=([^;]*);/)
     if (w && w.length && w[1] == 'true') this.canWrite = true
     this.state = localStorage.getItem('state') || 'Map'
     this.popContent = $("#popup-content")[0]
-    this.config = (localStorage.getItem("config")) ? JSON.parse(localStorage.getItem("config")) : {}
+    
     if (!this.config['LANGUAGES'])
       this.config['LANGUAGES'] = []
     const mapillary_auth: string = this.route.snapshot.queryParamMap.get('code');
@@ -162,7 +161,6 @@ export class IndexComponent implements OnInit {
       this.weekdays[d.getDay()] = d.toLocaleDateString(this.locale, { weekday: 'long' })
       d.setDate(d.getDate() + 1)
     }
-    //this.recordSchema = JSON.parse(localStorage.getItem("record_schema"))
     this.backend = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
 
     let tables = Object.keys(this.recordSchema['schema']['properties'])
@@ -497,8 +495,9 @@ export class IndexComponent implements OnInit {
           if (e.data) {
             if (this.isDrawing) return
             let du = new Date(Date.parse(e.data['occurred_from']))
+            console.log(e.data)
             let t = $("#record-popup-content").html()
-              .replace(/-date-/, `${du.toLocaleDateString()}, ${du.toLocaleTimeString()}`)
+              .replace(/-date-/, `${du.toLocaleDateString('pt-BR')}, ${du.toLocaleTimeString('pt-BR').replace(/:00$/, '')}`)
               .replace(/-location-/, e.data['location_text'])
               .replace(/-uuid-/, e.data['uuid'])
             new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)

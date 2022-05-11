@@ -8,14 +8,15 @@ import { Component, OnInit, Input } from '@angular/core';
 export class CounterComponent implements OnInit {
   @Input() counts: object
   @Input() filter: object
+  @Input() config: object
   fields: any[] = []
-  subtotals:boolean=false
+  subtotals: boolean = false
   constructor() { }
-
+  
   ngOnInit(): void {
 
     if (this.filter['jsonb']) {
-      this.fields=[]
+      this.fields = []
       let j = JSON.parse(this.filter['jsonb'])
       Object.values(j).forEach(value => {
         Object.entries(value).forEach(fields => {
@@ -26,8 +27,8 @@ export class CounterComponent implements OnInit {
       })
     }
   }
-  flipTotals(){
-    this.subtotals=!this.subtotals
+  flipTotals() {
+    this.subtotals = !this.subtotals
   }
 
 }
