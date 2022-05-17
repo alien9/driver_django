@@ -127,6 +127,16 @@ export class RecordService {
     })
     return this.http.get<any[]>(`${this.getBackend()}/api/records/quantiles/`, { headers: this.getHeaders(), params: params })
   }
+  getSegmentQuantiles(o: string, q: object) {
+    let params = new HttpParams()
+      .set('archived', 'False')
+      .set('record_type', o)
+      .set('calendar', 'gregorian')
+    Object.keys(q).forEach(k => {
+      params = params.set(k, q[k])
+    })
+    return this.http.get<any[]>(`${this.getBackend()}/api/records/quantiles/`, { headers: this.getHeaders(), params: params })
+  }
   iRapLogin(data) {
     return this.http.post(`${this.getBackend()}/api/irap-login/`, data, { headers: this.getHeaders() });
   }

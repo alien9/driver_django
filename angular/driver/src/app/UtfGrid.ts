@@ -86,9 +86,14 @@ L.UTFGrid = L.TileLayer.extend({
         self.fire('error', { error: err });
         return;
       }
+      try{
       var data = JSON.parse(response.responseText);
       self._cache[key] = data;
       L.Util.bind(self._handleTileLoad, self)(key, data);
+      }catch(e){
+        console.log("Error parsing json")
+        console.log(response.responseText)
+      }
     }, true);
   },
 

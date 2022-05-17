@@ -380,7 +380,7 @@ export class ChartsComponent implements OnInit, OnChanges {
         })
         break;
       case 4: // treemap
-        const t_margin_bar = { top: 0, right: 50, bottom: 0, left: 50 },
+        const t_margin_bar = { top: 0, right: 150, bottom: 0, left: 150 },
           t_width_bar = 600,
           t_height_bar = t_width_bar
         let parameters_treemap = this.filter
@@ -492,7 +492,7 @@ export class ChartsComponent implements OnInit, OnChanges {
               .attr("y", function (d) { return d['y0'] + 20 })    // +20 to adjust position (lower)
               .text(function (d) { return d.data['name'] })
               .attr("font-size", "15px")
-              .attr("fill", "#ccc")
+              .attr("fill", "#666")
 
             // Add title for the 3 groups
             if (this.barChart['parent_field']) {

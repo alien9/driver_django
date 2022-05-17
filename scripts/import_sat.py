@@ -264,11 +264,11 @@ schema=None
 for i in range(0, len(j['results'])):
     print(i)
     print( j['results'][i]['current_schema'])
-    if j['results'][i]['label']=='Incidente':
+    if j['results'][i]['label']=='Sinistro':
         schema = j['results'][i]['current_schema']
 if not schema:
     print("schema não existe. Criando.")
-    schema=create_schema('schema.json', URL + "/api", client, headers, r.cookies, "Incidente", "Incidentes")
+    schema=create_schema('sp/schema.json', URL + "/api", client, headers, r.cookies, "Sinistro", "Sinistros")
 else:
     print("Schema já existe")
 
@@ -285,7 +285,7 @@ else:
 
 
 def is_incident(thing):
-    return re.match('Incide.*', thing['label'])
+    return re.match('Sinistr.*', thing['label'])
 
 data_type = list(filter(is_incident, j['results']))[0]
 r=client.get(URL+"/api/recordschemas/%s/"%(data_type["current_schema"]),cookies=r.cookies,headers={"referer":URL+"/api/recordtypes/?active=True&format=json"})

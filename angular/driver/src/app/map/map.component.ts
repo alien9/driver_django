@@ -75,14 +75,15 @@ export class MapComponent implements OnInit {
     this.router.navigateByUrl('/login')
   }
   onDrawCreated(e: any) {
-    this.drawnItems = featureGroup()
     const layer = (e as DrawEvents.Created).layer;
     this.drawnItems.addLayer(layer);
-    this.onSetPolygon.emit(layer)
+    this.onSetPolygon.emit(this.drawnItems)
     this.setDrawing.emit(false)
   }
   onDrawDeleted(e: any) {
-    this.onSetPolygon.emit(null)
+    const layer = (e as DrawEvents.Deleted).layer;
+    this.drawnItems.removeLayer(layer);
+    this.onSetPolygon.emit(this.drawnItems)
     this.setDrawing.emit(false)
   }
   onMapReady(e: any) {
