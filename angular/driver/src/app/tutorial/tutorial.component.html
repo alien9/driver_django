@@ -1,0 +1,89 @@
+<div id="tutorial-content" class="mt-3 mb-3">
+    <ngb-carousel [interval]="false">
+        <ng-template ngbSlide>
+            <div class="carousel-content">
+                <p>A plataforma VIDA SEGURA é uma aplicação web para visualização, análise e disponibilização de dados de sinistros de trânsito consolidados anualmente na cidade de São Paulo, com interfaces gráficas, mapa, lista de registros e exportação
+                    de conjuntos de dados via arquivo csv.</p>
+                <p>Os dados disponibilizados são referentes aos sinistros, veículos e vítimas organizados pela CET nos anos de 2015 a 2021.</p>
+                <p>
+                    As fontes utilizadas para obtenção dos dados presentes na plataforma foram: o INFOCRIM (Sistema de Informação Criminal), uma ferramenta de acesso ao Registro Digital de Ocorrências (RDO) da Polícia Civil, cujas consultas foram disponibilizadas à CET pela
+                    Secretaria de Segurança Pública do Estado de São Paulo; os registros do Instituto Médico Legal - IML, que complementaram as informações do INFOCRIM na identificação das vítimas que perderam a vida em acidentes de trânsito.
+                    <p>Este tutorial mostra as três principais interações possíveis com os dados dentro da plataforma – via Painel, Mapa e Lista de Registros –, bem como as funcionalidades de filtragem pelas características e local do acidente.
+                    </p>
+                    <p>Para avançar no tutorial, basta utilizar a seta à direita.
+                    </p>
+            </div>
+        </ng-template>
+        <ng-template ngbSlide>
+            <div class="carousel-content">
+                <h4>Mapa</h4>
+                <p>Após acessar o mapa, é possível visualizar os detalhes do sinistro clicando no respectivo ponto azul, e a seguir clicando em “Ver” no pop-up que aparece na tela.</p>
+                <img src="assets/img/clickmap.gif">
+            </div>
+        </ng-template>
+        <ng-template ngbSlide>
+            <div class="carousel-content">
+                <h4>Mapa</h4>
+                <img src="assets/img/all_layers.gif">
+                <p>É possível alternar a visualização entre as camadas mostrando os sinistros, e a agregação dos mesmos por subprefeitura ou distrito, além do mapa de calor das ocorrências e a renderização temática dos segmentos mais afetados.</p>
+            </div>
+        </ng-template>
+        <ng-template ngbSlide>
+            <div class="carousel-content">
+                <h4>Mapa</h4>
+                <img src="assets/img/filters.gif">
+                <p>
+                    Pode-se filtrar os registros por meio da seleção de valores dos campos e selecionar o período a ser avaliado.
+                    <br> A interface possibilita salvar filtros para utilização posterior.
+                </p>
+            </div>
+        </ng-template>
+        <ng-template ngbSlide>
+            <div class="carousel-content">
+                <h4>Mapa</h4>
+                <img src="assets/img/geo_filters.gif">
+                <p>Pode-se selecionar uma subprefeitura ou distrito para visualizar os dados de sinistros.
+                </p>
+            </div>
+        </ng-template>
+        <ng-template ngbSlide>
+            <div class="carousel-content">
+                <h4>Mapa</h4>
+                <img src="assets/img/poly_filters.gif">
+                <p>É possível utilizar a ferramenta de desenho sobre o mapa para selecionar uma região.
+                </p>
+            </div>
+        </ng-template>
+        <ng-template ngbSlide>
+            <div class="carousel-content">
+                <h4>Lista</h4>
+                <img src="assets/img/lista.gif">
+                <p>Pode-se visualizar a lista de endereços e datas dos sinistros que estão sendo mostrados no mapa.
+                    <br> Nesta tela, pode-se baixar a base no formato CSV.</p>
+            </div>
+        </ng-template>
+        <ng-template ngbSlide>
+            <div class="carousel-content">
+                <h4>Relatórios</h4>
+                <img src="assets/img/reports.gif">
+                <p>Os relatórios são elaborados levando em conta o filtro selecionado e os campos que podem ser escolhidos pelo usuário.
+                    <br> É possível agregar os sinsitros por distrito e subprefeitura.
+                    <br> Os relatórios podem ser baixados no formato .xlsx.
+                </p>
+            </div>
+        </ng-template>
+        <ng-template ngbSlide>
+            <div class="carousel-content">
+                <h4>Gráficos</h4>
+                <img src="assets/img/charts.gif">
+                <p>O sistema pode elaborar três tipos de gráficos a partir dos campos selecionados na interface:
+                </p>
+                <ul>
+                    <li>Mapa de calor de sinistros por hora do dia e dia da semana</li>
+                    <li>Gráfico de barras para avaliação da evolução de sinistros ao longo do tempo</li>
+                    <li>Gráfico de áreas para comparação de valores de campos</li>
+                </ul>
+            </div>
+        </ng-template>
+    </ngb-carousel>
+</div>

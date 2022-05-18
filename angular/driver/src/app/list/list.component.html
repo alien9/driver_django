@@ -5,13 +5,13 @@
             <tr>
                 <th scope="col">{{'Date and time'|translate}}</th>
                 <th scope="col">{{'Location'|translate}}</th>
-                <td *ngIf="field">{{field}}</td>
+                <!--td *ngIf="field">{{field}}</td-->
             </tr>
         </thead>
         <tbody>
             <tr *ngFor=" let r of recordList?recordList[ 'results']:[] ">
                 <th scope="row "><a href="#" (click)="view(r.uuid)">{{r.occurred_from|date:"medium"}}</a></th>
-                <td>{{r.location_text|firstpart}}</td>
+                <!--td>{{r.location_text|firstpart}}</td-->
                 <td *ngIf="field && r.data">{{r.data[table]?r.data[table][field]:" "}}</td>
             </tr>
         </tbody>

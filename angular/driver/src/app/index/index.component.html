@@ -7,7 +7,7 @@
     [mapListening]=listening (newRecord)=newRecord($event,viewpoint)></app-map>
 
 <app-legend [config]="config" [legends]=legends *ngIf=legends></app-legend>
-<app-counter [config]="config" [counts]=counts [filter]="filter" *ngIf="counts && state=='Map'"></app-counter>
+<app-counter [config]="config" [counts]=counts [filter]="filter" [fields]="filterAsText" *ngIf="counts && state=='Map'"></app-counter>
 
 <button (click)=mapClick(viewpoint) [hidden]="true" id="map-popup-button"></button>
 <ng-template #viewpoint let-modal>

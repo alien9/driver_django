@@ -77,6 +77,10 @@
                                 [ngModelOptions]="{standalone: true}" (change)=createRecord($event)>
                             <i-bs name="pin-map-fill"></i-bs>
                         </label>
+                        <button (click)=startHelp(tutorial) class="btn btn-outline-secondary mx-2" type="submit" triggers="hover" id="question_button" placement="bottom" ngbTooltip="{{'Help'|translate}}">
+                            <i-bs name="question-lg"></i-bs>
+                        </button>
+
                     </form>
                 </li>
                 <li class="nav-item">
@@ -330,5 +334,17 @@
     <div id="qrcode-content" style="text-align:center" class="mt-3 mb-3" *ngIf="qrvalue">
         <h4>{{'Place the QR scanner to set up the Android app'|translate}}</h4>
         <qrcode [qrdata]="qrvalue" [width]="512" [errorCorrectionLevel]="'M'"></qrcode>
+    </div>
+</ng-template>
+
+<ng-template #tutorial let-modal class="help-popup">
+    <div class="modal-header">
+        <h4 class="modal-title">{{'Help'|translate}}</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <app-tutorial></app-tutorial>
     </div>
 </ng-template>

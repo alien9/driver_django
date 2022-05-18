@@ -111,6 +111,9 @@ export class NavbarComponent implements OnInit {
   selectBoundaryPolygon(b: any) {
     this.boundaryPolygonChange.emit(b)
   }
+  startHelp(content:any){
+    this.modalService.open(content, { size: 'xl', scrollable: true});
+  }
   startFilters(content: any) {
     this.modalService.open(content, { size: 'lg' });
     this.recordService.getSavedFilters({ limit: 50 }).pipe(first()).subscribe({
@@ -276,12 +279,11 @@ export class NavbarComponent implements OnInit {
         if (this.downloading)
           return
         this.downloading = true
+        setTimeout('$("#navbarDropdown")[0].click()', 200)
         this.recordService.getTileKey({ 'uuid': this.recordSchema["record_type"] }, {
           filter: this.filter
         }).pipe(first()).subscribe(t => {
-          console.log(t)
           this.recordService.postCsv(t['tilekey']).pipe(first()).subscribe(data => {
-            console.log(data)
             if (data['success']) {
               setTimeout(() => this.collectCsv(data['taskid']), 1000)
             }

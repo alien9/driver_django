@@ -23,6 +23,7 @@ import * as uuid from 'uuid';
 })
 export class IndexComponent implements OnInit {
   private mapfile: string;
+  filterAsText: any[]=[]
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
     if (event.key && event.key == 'Escape') {
@@ -523,7 +524,7 @@ export class IndexComponent implements OnInit {
     )
   }
   loadRecords(show: boolean) {
-    this.counts = null
+    this.counts = {'total':null,'total_crashes':'?','subtotals':[]}
     this.recordService.getMapFileKey({ 'uuid': this.recordSchema["record_type"] }, {
       filter: this.filter
     }).pipe(first()).subscribe(
@@ -588,6 +589,17 @@ export class IndexComponent implements OnInit {
         if (!this.map) {
           console.log('error:no map yet')
           this.layers.push(this.recordsLayer)
+        }
+        if (this.filter['jsonb']) {
+          this.filterAsText = []
+          let j = JSON.parse(this.filter['jsonb'])
+          Object.values(j).forEach(value => {
+            Object.entries(value).forEach(fields => {
+              if (fields[1].contains) {
+                this.filterAsText.push(`${fields[0]}: ${fields[1].contains.join(", ")}`)
+              }
+            })
+          })
         }
         this.recordService.getRecordCosts({ 'uuid': this.recordSchema["record_type"] }, {
           filter: this.filter
@@ -717,9 +729,10 @@ export class IndexComponent implements OnInit {
         let co=lk.toGeoJSON()['geometry']
         ply["coordinates"].push([co["coordinates"][0]])
       })
-      this.filter['polygon'] = JSON.stringify(ply)
-      //this.polygon = ply
+      if (!ply["coordinates"].length) delete this.filter['polygon']
+      else this.filter['polygon'] = JSON.stringify(ply)
     }
+   
     this.loadRecords(true)
   }
   setDrawing(e: boolean) {
