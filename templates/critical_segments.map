@@ -35,37 +35,33 @@ MAP
             "tile_metatile_level" "0"
         END
     END
+    LAYER
 
     LAYER
         NAME        "critical"
-        DATA        "geom from ({{query|safe}})as q using unique id using srid=4326"
+        DATA "geom from ({{query|safe}})as q using unique uuid using srid=4326"
         CONNECTIONTYPE  POSTGIS
         CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
         
-        UTFITEM   "id"
-        UTFDATA   "{\"id\":\"[id]\",\"name\":\"[name]\", \"num_records\":\"[c]\"}"
+        UTFITEM   "uuid"
+        UTFDATA   "{\"uuid\":\"[uuid]\",\"name\":\"[name]\",\"num_records\":\"[num_records]\"}"
         PROCESSING "KERNELDENSITY_RADIUS=10"
         
         TYPE LINE
         PROJECTION
             "init=epsg:4326"
         END
-        {% for class in classes %}
         CLASS
-            EXPRESSION ([c]>={{class.min}} AND [c]<={{class.max}})
-            NAME "{{class.name}}"
             STYLE
+                COLOR 250 0 0
                 WIDTH 10
-                OPACITY {{class.opacity}}
-                COLOR {{class.color}}
+                OPACITY 70
             END
         END
-        {% endfor %}
     END
-
     LAYER
-        NAME        "critical_offset"
-        DATA        "{{query|safe}}"
+        NAME        "segments"
+        DATA "geom from data_recordsegment using unique uuid using srid=4326"
         CONNECTIONTYPE  POSTGIS
         CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
         
@@ -83,29 +79,6 @@ MAP
                 WIDTH 10
                 OPACITY 70
                 OFFSET 3 3
-            END
-        END
-    END
-
-    LAYER
-        NAME        "segments"
-        DATA "geom from (select id, geom, name from data_recordsegment where size={{size}} and st_intersects(geom, !BOX!)) as a using unique id using srid=4326"
-        CONNECTIONTYPE  POSTGIS
-        CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
-        
-        UTFITEM   "id"
-        UTFDATA   "{\"id\":\"[id]\",\"name\":\"[name]\"}"
-        PROCESSING "KERNELDENSITY_RADIUS=10"
-        
-        TYPE LINE
-        PROJECTION
-            "init=epsg:4326"
-        END
-        CLASS
-            STYLE
-                COLOR 250 0 0
-                WIDTH 10
-                OPACITY 70
             END
         END
     END

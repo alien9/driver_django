@@ -148,7 +148,7 @@ class BlackSpotSet(GroutModel):
     display = models.BooleanField(default=True)
     #: The record type these black spots are associated with
     record_type = models.ForeignKey('grout.RecordType', on_delete=models.PROTECT)
-
+    color = models.CharField(max_length=64, default="#ff0000")
     def write_mapfile(self):
         t=render_to_string('critical.map', {
             "connection":connection.settings_dict['HOST'],
@@ -156,13 +156,14 @@ class BlackSpotSet(GroutModel):
             "password":connection.settings_dict['PASSWORD'],
             "dbname":connection.settings_dict['NAME'],
             "query":"the_geom from (select the_geom, uuid, name, num_records, severity_score from black_spots_blackspot where black_spot_set_id='%s')as q using unique uuid using srid=4326" % (self.uuid,),
+            "size": self.size,
         })
         with open("./mapserver/critical_%s.map" % (self.uuid), "w+") as m:
             m.write(t)
 @receiver(post_save, sender=BlackSpotSet, dispatch_uid="save_blackspotset")
 def post_save_blackspotset(sender, instance, created, **kwargs):
     if instance.display:
-        alters=BlackSpotSet.objects.filter(~Q(uuid=instance.uuid))
+        alters=BlackSpotSet.objects.filter(Q(uuid=instance.uuid))
         for b in alters:
             b.display=False
             b.save()
@@ -177,6 +178,8 @@ def post_save_blackspotset(sender, instance, created, **kwargs):
     })
     with open("./mapserver/critical_%s.map" % (instance.uuid), "w+") as m:
         m.write(t)
+    from data.tasks import geocode_records
+    geocode_records.delay(instance.uuid)
 
 
 class BlackSpotConfig(GroutModel):

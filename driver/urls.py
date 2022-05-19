@@ -69,7 +69,7 @@ urlpatterns = [
     url(r'^download/(?P<filename>[^\/]*)$', data_views.download),
     url('tiles/', data_views.proxy),
     url('mapserver/', data_views.mapserver),
-    url('segments/', data_views.segment_sets),    
+    #url('segments/', data_views.segment_sets),    
     url('api/irap-login/', login_irap),
     url('api/irap-getdataset/', getdataset),
     url('api/irap-getlat_lon/', getlat_lon),

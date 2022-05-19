@@ -268,9 +268,9 @@ LOGGING = {
 }
 DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 # user and group settings
-DEFAULT_ADMIN_EMAIL = os.environ.get("DRIVER_ADMIN_EMAIL", 'systems+driver@azavea.com')
-DEFAULT_ADMIN_USERNAME = os.environ.get("DRIVER_ADMIN_USERNAME", 'admin')
-DEFAULT_ADMIN_PASSWORD = os.environ.get("DRIVER_ADMIN_PASSWORD", 'admin')
+DEFAULT_ADMIN_EMAIL = os.environ.get("DRIVER_ADMIN_EMAIL", 'vdasegura@cetsp.com.br')
+DEFAULT_ADMIN_USERNAME = os.environ.get("DRIVER_ADMIN_USERNAME", None)
+DEFAULT_ADMIN_PASSWORD = os.environ.get("DRIVER_ADMIN_PASSWORD", None)
 # the client keeps these group names in the editor's config.js
 DRIVER_GROUPS = {
     'READ_ONLY': os.environ.get('DRIVER_READ_ONLY_GROUP', 'public'),
@@ -525,7 +525,7 @@ CONSTANCE_CONFIG = {
     'MAP_CENTER_LATITUDE': (os.getenv('CENTER_LATITUDE', -23.5), _("Latitude")),
     'MAP_CENTER_LONGITUDE': (os.getenv('CENTER_LONGITUDE', -46.7), _("Longitude")),
     'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
-    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Incidente"), _("Accident")),
+    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Sinistro"), _("Accident")),
     "SECONDARY_LABEL": (os.getenv('SECONDARYLABEL', "Intervention"), _("Intervention")),
     "WINDSHAFT": ("http://windshaft-%s" % (os.getenv("CONTAINER_NAME", 'driver')), "WindShaft"),
     "HOSTNAME": (os.getenv('HOST_URL', os.getenv('PROTOCOL', "https")+"://"+os.getenv('HOSTNAME', "localhost:8000")), _("Host Name")),
@@ -555,5 +555,7 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL','vidasegura@vidasegura.
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', None)
 if EMAIL_HOST_USER:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL','vidasegura@vidasegura.cetsp.com.br')
 
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', None)

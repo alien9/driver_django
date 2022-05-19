@@ -187,12 +187,16 @@ def grid(request, geometry, mapfile, layer, z, x, y):
         geometry=geometry,
         layer=layer
     )
+
     return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
 
 @csrf_exempt
 def maps(request, geometry, mapfile, layer, z, x, y):
     if geometry=='boundary' and not os.path.exists("./mapserver/boundary_%s.map" % (mapfile)):
         b=Boundary.objects.get(pk=mapfile)
+        b.write_mapfile()
+    if geometry=='critical' and not os.path.exists("./mapserver/critical_%s.map" % (mapfile)):
+        b=BlackSpotSet.objects.get(pk=mapfile)
         b.write_mapfile()
     
     path="?map=/etc/mapserver/{geometry}_{mapfile}&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS={layer}&STYLES=&SRS=EPSG:3857&MODE=tile&TILEMODE=gmap&TILE={x}+{y}+{z}&WIDTH=250&HEIGHT=250&format=image/png".format(
@@ -385,7 +389,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                     tile_token = request.session['records_mapfile']
                 else:
                     if settings.DEBUG:
-                        tile_token="records_debug"
+                        tile_token="debug"
                     else:
                         tile_token=uuid.uuid4()
                     request.session['records_mapfile']=str(tile_token)
@@ -717,21 +721,112 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 annotated_qs, row_multi, row_labels, col_multi, col_labels))
         return Response(response)
 
+    def thematic(self, request, b): # b is a blackspotset
+        if b.color is not None:
+            h=b.color.lstrip('#')
+            color=tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+        cor=reduce(lambda a,b: "{a} {b}".format(a=a,b=b),color)
+        cursor = connection.cursor().cursor
+        fq=self.get_filtered_queryset(request).order_by().values('geom')
+        sql, params = fq.query.sql_with_params()
+        fq = cursor.mogrify(sql, params).decode('utf-8')
+        display_field=b.roadmap.display_field
+        where=re.search('WHERE (.*)$', fq).group(1)
+        print(where)
+        query_sql="select r.id, count(*) as c, r.name, r.geom \
+         from data_recordsegment r\
+            join data_driverrecord_segment dr on dr.recordsegment_id =r.id\
+             join data_driverrecord drs on dr.driverrecord_id=drs.record_ptr_id\
+             join grout_record on grout_record.uuid=dr.driverrecord_id \
+             LEFT JOIN grout_recordschema ON (grout_record.schema_id = grout_recordschema.uuid) \
+             where r.size={size} and {where} group by r.id, r.geom, r.name".format(where=where, display_field=display_field, size=b.size)
+        print(query_sql)
+        #the complete query is set to the mapfile
+        
+        #execute the small query
+        cursor.execute(query_sql)
+
+        query_sql="select r.id, count(*) as c, r.name, r.geom \
+         from data_recordsegment r\
+            join data_driverrecord_segment dr on dr.recordsegment_id =r.id\
+             join data_driverrecord drs on dr.driverrecord_id=drs.record_ptr_id\
+             join grout_record on grout_record.uuid=dr.driverrecord_id \
+             LEFT JOIN grout_recordschema ON (grout_record.schema_id = grout_recordschema.uuid) \
+             where st_intersects(!BOX!, r.geom) AND st_intersects(!BOX!, grout_record.geom) AND r.size={size} and {where} group by r.id, r.geom, r.name".format(where=where, display_field=display_field, size=b.size)
+        print(query_sql)
+
+        sample=list(set(map(lambda x: x[1], [r for r in cursor.fetchall()])))
+        print(sample)
+        #sample=sorted([r for r in cursor.fetchall()], key=lambda a: a[1])
+
+        chunk=(len(sample)-1)/5.0
+        i=0
+        classes=[]
+        sample.sort()
+        while i<len(sample):
+            min=sample[i]
+            max=sample[i]
+            opacity=round(100*i/len(sample))
+            cl={
+                'min':min,
+                'max':max,
+                'color':cor,
+                'name':"{min}".format(min=min),
+                'opacity':opacity
+            }
+            classes.append(cl)
+            i+=1
+        print(classes)
+        d="0"
+        if settings.DEBUG:
+            d="5"
+        t=render_to_string('critical.map', {
+                    "connection":connection.settings_dict['HOST'],
+                    "username":connection.settings_dict['USER'],
+                    "password":connection.settings_dict['PASSWORD'],
+                    "dbname":connection.settings_dict['NAME'],
+                    "query":query_sql.replace('"', '\\"'),
+                    "classes":classes,
+                    "debug": d,
+                })
+        if "critical_mapfile_%s" % (b.uuid) in request.session:
+            tile_token = request.session["critical_mapfile_%s" % (b.uuid)]
+        else:
+            if settings.DEBUG:
+                tile_token="critical_%s_debug" % (b.uuid)
+            else:
+                tile_token="%s_%s" % (b.uuid, uuid.uuid4())
+            request.session["critical_mapfile_%s" % (b.uuid)]=str(tile_token)
+            request.session.modified = True
+        dbstring=connection.settings_dict['HOST']
+        if settings.DEBUG:
+            if hasattr(settings, 'CONTAINER_NAME'):
+                dbstring="database-{container}".format(container=settings.CONTAINER_NAME)
+        
+        with open("./mapserver/critical_%s.map" % (tile_token), "w+") as m:
+                    m.write(t)
+        return Response({'query':query_sql, 'sample':sample, 'mapfile': tile_token})        
+
     @action(methods=['get'], detail=False)
     def quantiles(self, request):
         # this is a particular crosstabs request for aggregating by geo, and creating a mapfile
         # the mapfile is indexed by the boundary uuid and the session id.
-        
+        blackspotset_uuid=request.query_params.get('critical', None)
         tables_boundary = request.query_params.get('aggregation_boundary', None)
-        if tables_boundary is None or not re.match(r'^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', tables_boundary, flags=re.IGNORECASE):
+        if (tables_boundary is None or not re.match(r'^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', tables_boundary, flags=re.IGNORECASE)) and (blackspotset_uuid is None or not re.match(r'^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', blackspotset_uuid, flags=re.IGNORECASE)):
             return JsonResponse({
-                "mapfile":None, "error": "uuid %s not valid" % (tables_boundary)
+                "mapfile":None, "error": "uuid not valid"
             })
-        b=Boundary.objects.get(pk=tables_boundary)
+        if blackspotset_uuid is not None:
+            b=BlackSpotSet.objects.get(pk=blackspotset_uuid)
+            return self.thematic(request, b)
+        else:
+            b=Boundary.objects.get(pk=tables_boundary)
         color=[255,0,0]
         if b.color is not None:
             h=b.color.lstrip('#')
             color=tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+
         qset=BoundaryPolygon.objects.filter(boundary_id=tables_boundary).values('uuid','geom')
         cursor = connection.cursor().cursor
         fq=self.get_filtered_queryset(request).order_by().values('geom')
@@ -753,8 +848,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         sample=sorted([r for r in cursor.fetchall()], key=lambda a: a[1])
         chunk=(len(sample)-1)/5.0
         i=0
-        classes=[
-        ]
+        classes=[]
         last={'max':-1, 'min':-1}
         print(sample)
         while i<5:
