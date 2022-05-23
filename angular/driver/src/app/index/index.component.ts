@@ -185,7 +185,6 @@ export class IndexComponent implements OnInit {
       this.filterObject = (this.filter['jsonb']) ? JSON.parse(this.filter['jsonb']) : {}
     }
     let geoserver=this.config["GEOSERVER"] || "https://vidasegura.cetsp.com.br/geoserver"
-    alert(geoserver)
     let ofi = new L.tileLayer(`${geoserver}/gwc/service/wmts?layer=driver%3ABase&style=&tilematrixset=EPSG%3A900913&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fpng&TileMatrix=EPSG%3A900913%3A{z}&TileCol={x}&TileRow={y}`,
       {
         attribution: "&copy; <a href='https://geosampa.prefeitura.sp.gov.br/PaginasPublicas/_SBC.aspx'>GeoSampa</a> | Prefeitura de São Paulo",
