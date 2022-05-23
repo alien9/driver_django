@@ -476,7 +476,7 @@ for filename in glob.glob("%s/incidentes.csv" % (carrega_csv.directory)):
                         'Gênero':sexo,
                         'Condição':condicao,
                         'Tipo de Vítima':tipo_vitima,
-                        'Faixa':faixa,
+                        'Faixa etária':faixa,
                         'Data de Óbito':obito,
                     }
                     if re.match("\\d+",v['id_veiculo']):

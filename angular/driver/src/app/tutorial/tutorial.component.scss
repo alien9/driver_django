@@ -3,8 +3,9 @@
     filter: invert(1) !important;
 }
 
-.carousel-inner {
+.carousel-inner div.fit {
     padding: 0px 100px 0 100px;
+    background-color: white;
 }
 
 .sr-only {
