@@ -22,8 +22,6 @@ import * as uuid from 'uuid';
   styleUrls: ['./index.component.scss']
 })
 export class IndexComponent implements OnInit {
-  private mapfile: string;
-  filterAsText: any[]=[]
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
     if (event.key && event.key == 'Escape') {
@@ -70,6 +68,13 @@ export class IndexComponent implements OnInit {
   reportFilters: object[]
   legends: object[]
   counts: object
+  filterAsText: any[] = []
+  subtitles: object[];
+  loading: object = {
+    "segment": [],
+    "theme": []
+  }
+
   private irapColor = [
     '#000000',
     '#ff0000',
@@ -184,7 +189,7 @@ export class IndexComponent implements OnInit {
       this.filter = JSON.parse(fu)
       this.filterObject = (this.filter['jsonb']) ? JSON.parse(this.filter['jsonb']) : {}
     }
-    let geoserver=this.config["GEOSERVER"] || "https://vidasegura.cetsp.com.br/geoserver"
+    let geoserver = this.config["GEOSERVER"] || "https://vidasegura.cetsp.com.br/geoserver"
     let ofi = new L.tileLayer(`${geoserver}/gwc/service/wmts?layer=driver%3ABase&style=&tilematrixset=EPSG%3A900913&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fpng&TileMatrix=EPSG%3A900913%3A{z}&TileCol={x}&TileRow={y}`,
       {
         attribution: "&copy; <a href='https://geosampa.prefeitura.sp.gov.br/PaginasPublicas/_SBC.aspx'>GeoSampa</a> | Prefeitura de São Paulo",
@@ -226,6 +231,7 @@ export class IndexComponent implements OnInit {
       next: critical_data => {
         if (critical_data['results']) {
           critical_data['results'].forEach(rs => {
+
             let gl = utfGrid(`${this.backend}/grid/critical/${rs['uuid']}/segments/{z}/{x}/{y}.json/`, {
               resolution: 4,
               pointerCursor: true,
@@ -249,11 +255,8 @@ export class IndexComponent implements OnInit {
             gl.on('add', (e: any) => {
               this.zone.run(() => {
                 this.addSegment(rs['uuid'], rs['title'])
-              })
-            })
-            gl.on('remove', lo => {
-              this.zone.run(() => {
-                delete this.segment[rs['uuid']]
+                this.loading['segment'].push(rs['uuid'])
+                $('.leaflet-grab').css('cursor', 'progress')
               })
             })
             this.layersControl.overlays[rs["title"]] = new L.LayerGroup([
@@ -314,6 +317,7 @@ export class IndexComponent implements OnInit {
               })
               gl.on('add', lo => {
                 this.zone.run(() => {
+                  $('.leaflet-grab').css('cursor', 'progress')
                   this.addThematic(b.uuid, b.label)
                 })
               })
@@ -352,7 +356,7 @@ export class IndexComponent implements OnInit {
             $('.leaflet-grab').css('cursor', 'pointer')
             this.zone.run(() => {
               let t = e.data['name'].replace(/^"|"$/g, "")
-              if(e.data['num_records']) t=`${t} (${e.data['num_records']})`
+              if (e.data['num_records']) t = `${t} (${e.data['num_records']})`
               let m = this.map
               this.map.eachLayer(function (layer) {
                 if (layer.options.pane === "tooltipPane") layer.removeFrom(m);
@@ -371,13 +375,29 @@ export class IndexComponent implements OnInit {
             $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
           })
         });
+        gl.on('remove', (e) => {
+          this.zone.run(() => {
+            delete this.segment[uuid]
+            this.setLegends()
+          })
+        });
+        gl.on('add', (e) => {
+          this.zone.run(() => {
+            // add to the legends as well
+            this.segment[uuid] = { 'label': label, 'data': {}, 'mapfile': data['mapfile'] }
+            this.setLegends()
+            this.loading['segment'] = this.loading['segment'].filter(jt => jt != uuid)
+            if (!this.loading['segment'].length && !this.loading['theme'].length)
+              $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
+          })
+        });
+
         gl.on('click', (e: any) => {
           if (!e.data) return
-          console.log(e.data)
           let t = this.popContent.innerHTML
             .replace(/-total-/, e.data.num_records)
             .replace(/-name-/, e.data.name)
-//            .replace(/-cost-/, e.data.cost)
+          //            .replace(/-cost-/, e.data.cost)
           new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
         })
         let l = L.tileLayer(`${this.backend}/maps/critical/${data['mapfile']}/critical/{z}/{x}/{y}.png?ts=${d}`, {})
@@ -387,10 +407,6 @@ export class IndexComponent implements OnInit {
         this.layersControl.overlays[label].addLayer(gl)
         this.layersControl.overlays[label].addLayer(l)
         this.layersControl.overlays[label].setZIndex(999)
-        this.segment[uuid] = { 'label': label, 'data': {}, 'mapfile': data['mapfile'] }
-        data['sample'].forEach(k => {
-          this.segment[uuid]['data'][k[0]] = { 'label': k[2], 'data': k[1] }
-        })
       }, error: err => console.log(err)
     })
   }
@@ -400,12 +416,17 @@ export class IndexComponent implements OnInit {
     let d = (new Date()).getTime()
     this.recordService.getQuantiles(this.recordtype_uuid, f).pipe(first()).subscribe({
       next: data => {
-        console.log(data)
         let l = L.tileLayer(`${this.backend}/maps/theme/${data['mapfile']}/theme%20border/{z}/{x}/{y}.png?ts=${d}`, {})
-        console.log(this.layersControl.overlays[label])
         if (this.layersControl.overlays[label].getLayers().length > 1) {
           this.layersControl.overlays[label].removeLayer(this.layersControl.overlays[label].getLayers()[1])
         }
+        l.on('add', (e) => {
+          this.zone.run(() => {
+            this.loading['theme'] = this.loading['theme'].filter(jt => jt != uuid)
+            if (!this.loading['segment'].length && !this.loading['theme'].length)
+              $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
+          })
+        })
         this.layersControl.overlays[label].addLayer(l)
         this.layersControl.overlays[label].setZIndex(999)
         this.theme[uuid] = { 'label': label, 'data': {}, 'mapfile': data['mapfile'] }
@@ -425,9 +446,13 @@ export class IndexComponent implements OnInit {
   }
   setLegends() {
     this.legends = []
+    this.subtitles = []
     Object.keys(this.theme).forEach(kt => {
       let imagePath = "/legend/"
       this.legends.push({ "title": this.theme[kt]['label'], "mapfile": this.theme[kt]['mapfile'], "uuid": kt, "layers": "theme", "ts": (new Date()).getTime() })
+    })
+    Object.keys(this.segment).forEach(kt => {
+      this.subtitles.push({ "title": this.segment[kt]['label'], "mapfile": this.segment[kt]['mapfile'], "uuid": kt, "layers": "theme", "ts": (new Date()).getTime() })
     })
 
   }
@@ -525,12 +550,11 @@ export class IndexComponent implements OnInit {
     )
   }
   loadRecords(show: boolean) {
-    this.counts = {'total':null,'total_crashes':'?','subtotals':[]}
+    this.counts = { 'total': null, 'total_crashes': null, 'subtotals': [] }
     this.recordService.getMapFileKey({ 'uuid': this.recordSchema["record_type"] }, {
       filter: this.filter
     }).pipe(first()).subscribe(
       data => {
-        this.mapfile = data['mapfile']
         this.spinner.hide()
         let ts = (new Date()).getTime()
         this.layersControl.overlays['Heatmap'] = L.tileLayer(`${this.backend}/maps/records/${data["mapfile"]}/heatmap/{z}/{x}/{y}.png/?${ts}`, {})
@@ -722,18 +746,18 @@ export class IndexComponent implements OnInit {
   setPolygon(p: any) {
     if (!p) delete this.filter['polygon']
     else {
-      let ply={
-        "type":"MultiPolygon",
-        "coordinates":[]
+      let ply = {
+        "type": "MultiPolygon",
+        "coordinates": []
       }
-      p.getLayers().forEach(lk=>{
-        let co=lk.toGeoJSON()['geometry']
+      p.getLayers().forEach(lk => {
+        let co = lk.toGeoJSON()['geometry']
         ply["coordinates"].push([co["coordinates"][0]])
       })
       if (!ply["coordinates"].length) delete this.filter['polygon']
       else this.filter['polygon'] = JSON.stringify(ply)
     }
-   
+
     this.loadRecords(true)
   }
   setDrawing(e: boolean) {

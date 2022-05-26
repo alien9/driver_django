@@ -1,6 +1,11 @@
-<div class="legend" *ngIf=legends.length>
+<div class="legend">
     <div *ngFor="let legend of legends">
         <div>{{config['PRIMARY_LABEL_PLURAL']}} <br>por {{legend['title']}}</div>
         <img src="{{backend}}/legend/theme/{{legend['mapfile']}}/?ts={{legend['ts']}}">
     </div>
+    <div *ngFor="let sub of subtitles">
+        <div>{{sub['title']}}</div>
+        <img src="{{backend}}/legend/critical/{{sub['mapfile']}}/?ts={{sub['ts']}}">
+    </div>
+
 </div>
