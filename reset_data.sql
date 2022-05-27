@@ -1,3 +1,4 @@
+create schema if not exists works;
 create or replace function works.find_segment(point_geometry varchar, size_std numeric, roadmap varchar) returns table(
 	geom varchar,
 	road_name varchar

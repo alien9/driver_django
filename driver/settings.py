@@ -531,6 +531,7 @@ CONSTANCE_CONFIG = {
     "HOSTNAME": (os.getenv('HOST_URL', os.getenv('PROTOCOL', "https")+"://"+os.getenv('HOSTNAME', "localhost:8000")), _("Host Name")),
     "COUNTRY_CODE": (os.getenv('COUNTRY', "ic"), _("Country Code")),
     "MAPSERVER": ("http://mapserver-%s" % (os.getenv('CONTAINER_NAME', 'driver')), "MapServer"),
+    "GEOSERVER": (os.getenv('GEOSERVER', ''), "GeoServer"),
     'TIMEZONE': ('America/Sao_Paulo', 'Time Zone', 'tzselect'),
     'MAPILLARY_CLIENT_TOKEN': ("", _("Mapillary Client token")),
     'MAPILLARY_CLIENT_ID': ("", _("Mapillary Client")),

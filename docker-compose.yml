@@ -69,4 +69,12 @@ services:
       - ./mapserver/:/etc/mapserver
     image: geodata/mapserver
 
- 
+  geoserver:
+    container_name: driver-geoserver-vidasegura
+    volumes:
+      - /home/tiago/data_dir:/opt/data_dir
+    environment:
+      - GEOSERVER_DATA_DIR=/opt/data_dir
+      - GEOSERVER_ADMIN_USER=admin
+      - GEOSERVER_ADMIN_PASSWORD=geoserver
+    image: kartoza/geoserver

@@ -22,6 +22,7 @@ REDIS_HOST = subprocess.check_output(["docker", "inspect", "-f", "{{range.Networ
 CONTAINER_NAME='vidasegura'
 CONSTANCE_CONFIG['WINDSHAFT']=("http://%s" % (WINDSHAFT_HOST,), "WindShaft")
 CONSTANCE_CONFIG['MAPSERVER']=("http://%s" % (MAPSERVER_HOST,), "Mapserver")
+CONSTANCE_CONFIG['GEOSERVER']=("http://%s" % (e['GEOSERVER'],), "GeoServer")
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
