@@ -1,5 +1,5 @@
 #!/bin/bash
-
+docker-compose up -d
 DJANGO_HOST=driver-django-vidasegura
 CELERY_HOST=driver-celery-vidasegura
 HOST_NAME=sp.driver.net
@@ -7,6 +7,10 @@ STATIC_ROOT=/home/tiago/works/driver_django
 DJANGO_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-django-vidasegura)
 CELERY_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-celery-vidasegura)
 GEOSERVER=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-geoserver-vidasegura)
+
+if [[ -d static ]]; then
+     sudo rm -fr static/*
+fi
 
 if [[ ! -f driver-vidasegura.conf ]]; then
      cp driver.conf driver-vidasegura.conf
