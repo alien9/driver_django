@@ -66,10 +66,10 @@ export class IndexComponent implements OnInit {
   locale: string
   weekdays: object
   reportFilters: object[]
-  legends: object[]
+  legends: object[]=[]
   counts: object
   filterAsText: any[] = []
-  subtitles: object[];
+  subtitles: object[]=[]
   loading: object = {
     "segment": [],
     "theme": []
