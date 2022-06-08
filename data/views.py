@@ -148,16 +148,12 @@ def mapserver(request):
 @csrf_exempt
 def legend(request, layer, mapfile):
     if layer=='theme':
-        if "theme_%s" % (mapfile) in request.session:
-            tile_token = request.session["theme_%s" % (mapfile)]
-        else:
-            if settings.DEBUG:
-                tile_token="theme_%s_debug" % (mapfile)
-            else:
-                tile_token="theme_%s_%s" % (mapfile, uuid.uuid4())
-            request.session["theme_%s" % (mapfile)]=str(tile_token)
-            request.session.modified = True
         path="?map=/etc/mapserver/theme_{mapfile}.map&VERSION=1.1.1&LAYERS=theme&mode=legend".format(
+            mapfile=mapfile,
+        )
+        return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
+    if layer=='critical':
+        path="?map=/etc/mapserver/critical_{mapfile}.map&VERSION=1.1.1&LAYERS=critical&mode=legend".format(
             mapfile=mapfile,
         )
         return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
