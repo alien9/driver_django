@@ -348,6 +348,6 @@ class Irap(models.Model):
     keys=HStoreField()
     settings=JSONField()
 
-class CachedRecord(models.Model)
-    record=models.ForeignKey(Record, on_delete=CASCADE)
-    token=models.ForeignKey(Token, on_delete=CASCADE)
+class CachedRecord(models.Model):
+    record=models.ForeignKey(Record, on_delete=models.CASCADE)
+    token=models.ForeignKey(Token, on_delete=models.CASCADE)
