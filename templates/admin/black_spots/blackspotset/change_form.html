@@ -69,16 +69,21 @@ a.calculating{
                             }, success:function(data_retrieve){
                                 console.log('veio');
                                 console.log(data_retrieve);
+                                if(data_retrieve.status=="FAILURE"){
+                                    return;
+                                }
                                 if(data_retrieve.status!="SUCCESS"){
-                                    k=setTimeout(fu, 3000)
+                                    if(data_retrieve.status!="FAILURE"){
+                                        k=setTimeout(fu, 3000);
+                                    }
                                 }else{
                                     $('.calculate').removeClass('calculating');
                                     calculating=false;
                                 }
                                 $("#retrieve_message").text(data_retrieve.status)
                             }, error:function(d){
-                                console.log(d)
                                 $("#retrieve_message").text("Error: "+d.status)
+
                             }
                         })
                     };

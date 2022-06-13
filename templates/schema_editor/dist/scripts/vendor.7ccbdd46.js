@@ -17396,7 +17396,13 @@ function(a, b) {
                 },
                 getObject: function(a) {
                     var c = this.get(a);
-                    return c ? b.fromJson(c) : c
+                    if(!c) 
+                        return null;
+                    if(c.match(/"\w+"/)){
+                        return c ? b.fromJson(c) : c
+                    }else{
+                        return c;
+                    }
                 },
                 getAll: function() {
                     return c()

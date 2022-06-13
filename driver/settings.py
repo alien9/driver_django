@@ -40,20 +40,23 @@ TESTING = 'test' in sys.argv
 
 ALLOWED_HOSTS = ['*']
 # TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
+    "%s://%s" % (os.environ.get('PROTOCOL', 'http'), os.environ.get("HOST_NAME", "localhost"),),
     'http://localhost:8000',
     'http://localhost:4200',
 ]
+CORS_ALLOW_HEADERS = ('content-disposition', 'accept-encoding', 'responsetype',
+                      'content-type', 'accept', 'origin', 'authorization', 'x-csrftoken')
+LANGUAGE_CODE = 'pt-br'
 
-#LANGUAGE_CODE = 'pt-br'
-USE_I18N = False
-USE_L10N = False
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 # Application definition
 
 INSTALLED_APPS = (
+    'grout',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -66,13 +69,12 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework.authtoken',
     'storages',
-
+    'captcha',
     'django_extensions',
 
     'django_filters',
     'rest_framework_gis',
-    'grout',
-
+    
     'driver',
     'driver_auth',
     'data',
@@ -99,8 +101,7 @@ MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
 )
-print(DEBUG)
-print("is debug")
+
 if DEBUG:
     # Perform set up for Django Debug Toolbar
     INSTALLED_APPS += (
@@ -157,7 +158,7 @@ DATABASES = {
         }
     }
 }
-
+print("Version after pull")
 POSTGIS_VERSION = tuple(
     map(int, os.environ.get('DJANGO_POSTGIS_VERSION', '2.1.3').split("."))
 )
@@ -169,13 +170,9 @@ POSTGIS_VERSION = tuple(
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
 from django.utils.translation import ugettext_lazy as _
-LANGUAGES = ( 
-   ('de', _('German')),
-   ('en', _('English')),
-   ('fr', _('French')),
-   ('es', _('Spanish')),
+LANGUAGES = [ 
    ('pt-br', _('Portuguese'))
-)
+]
 
 TIME_ZONE = os.environ.get("DRIVER_LOCAL_TIME_ZONE", 'America/Sao_Paulo')
 
@@ -198,6 +195,7 @@ STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/driver/static/')
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'templates/dist'),
     os.path.join(BASE_DIR, 'templates/schema_editor/dist'),
+    os.path.join(BASE_DIR, 'web'),
 )
 
 # Media files (uploaded via API)
@@ -270,9 +268,9 @@ LOGGING = {
 }
 DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 # user and group settings
-DEFAULT_ADMIN_EMAIL = os.environ.get("DRIVER_ADMIN_EMAIL", 'systems+driver@azavea.com')
-DEFAULT_ADMIN_USERNAME = os.environ.get("DRIVER_ADMIN_USERNAME", 'admin')
-DEFAULT_ADMIN_PASSWORD = os.environ.get("DRIVER_ADMIN_PASSWORD", 'admin')
+DEFAULT_ADMIN_EMAIL = os.environ.get("DRIVER_ADMIN_EMAIL", 'vdasegura@cetsp.com.br')
+DEFAULT_ADMIN_USERNAME = os.environ.get("DRIVER_ADMIN_USERNAME", None)
+DEFAULT_ADMIN_PASSWORD = os.environ.get("DRIVER_ADMIN_PASSWORD", None)
 # the client keeps these group names in the editor's config.js
 DRIVER_GROUPS = {
     'READ_ONLY': os.environ.get('DRIVER_READ_ONLY_GROUP', 'public'),
@@ -398,7 +396,7 @@ GROUT = {
 }
 
 ## django-oidc settings
-HOST_URL = os.environ.get('HOST_URL', 'https://titopop.com')
+HOST_URL = os.environ.get('HOST_URL', '')
 
 # TODO: conditionally set for GLUU in production
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get('OAUTH_CLIENT_ID', '418431456233-i69dc0paqp9ujj40gha8ru5a1tflbjl2.apps.googleusercontent.com')
@@ -414,11 +412,10 @@ AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
 
 if GOOGLE_OAUTH_CLIENT_ID:
     AUTHENTICATION_BACKENDS += ('mozilla_django_oidc.auth.OIDCAuthenticationBackend',)
-    #AUTHENTICATION_BACKENDS += ('driver_auth.oidc_callback.OIDC_Callback',)
     OIDC_OP_AUTHORIZATION_ENDPOINT='https://accounts.google.com/o/oauth2/v2/auth'
     OIDC_OP_TOKEN_ENDPOINT='https://www.googleapis.com/oauth2/v4/token'
     OIDC_OP_USER_ENDPOINT="https://www.googleapis.com/oauth2/v3/userinfo"
-    #OIDC_REDIRECT_REQUIRE_HTTPS=True
+    OIDC_REDIRECT_REQUIRE_HTTPS=not DEBUG
     OIDC_RP_SIGN_ALGO="RS256"
     OIDC_OP_JWKS_ENDPOINT="https://www.googleapis.com/oauth2/v3/certs"
     LOGIN_REDIRECT_URL="/"
@@ -518,6 +515,9 @@ CONSTANCE_ADDITIONAL_FIELDS = {
         'widget': 'django.forms.Select',
         'choices': list(map(lambda x: [x, x], TZ_LIST))
     }],
+    'locales': ['django.forms.fields.ChoiceField',{
+
+    }]
 }
 
 CONSTANCE_CONFIG = {
@@ -525,11 +525,38 @@ CONSTANCE_CONFIG = {
     'MAP_CENTER_LATITUDE': (os.getenv('CENTER_LATITUDE', -23.5), _("Latitude")),
     'MAP_CENTER_LONGITUDE': (os.getenv('CENTER_LONGITUDE', -46.7), _("Longitude")),
     'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
-    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Accident"), _("Accident")),
-    "WINDSHAFT": ("", "WindShaft"),
-    "LANGUAGES": ('[{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}]', _("Languages")),
-    "HOSTNAME": ("%s://%s" % ((os.getenv('PROTOCOL', "http"), os.getenv('HOSTNAME', "localhost:8000"))), _("Host Name")),
+    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Sinistro"), _("Accident")),
+    "SECONDARY_LABEL": (os.getenv('SECONDARYLABEL', "Intervention"), _("Intervention")),
+    "WINDSHAFT": ("http://windshaft-%s" % (os.getenv("CONTAINER_NAME", 'driver')), "WindShaft"),
+    "HOSTNAME": (os.getenv('HOST_URL', os.getenv('PROTOCOL', "https")+"://"+os.getenv('HOSTNAME', "localhost:8000")), _("Host Name")),
     "COUNTRY_CODE": (os.getenv('COUNTRY', "ic"), _("Country Code")),
-    "MAPSERVER": ("mapserver-%s" % (os.getenv('CONTAINER_NAME', 'driver')), "MapServer"),
-    'TIMEZONE': ('America/Sao_Paulo', 'Time Zone', 'tzselect')
-}   
+    "MAPSERVER": ("http://mapserver-%s" % (os.getenv('CONTAINER_NAME', 'driver')), "MapServer"),
+    "GEOSERVER": (os.getenv('GEOSERVER', ''), "GeoServer"),
+    'TIMEZONE': ('America/Sao_Paulo', 'Time Zone', 'tzselect'),
+    'MAPILLARY_CLIENT_TOKEN': ("", _("Mapillary Client token")),
+    'MAPILLARY_CLIENT_ID': ("", _("Mapillary Client")),
+    'MAPILLARY_SECRET': ("", _("Mapillary secret")),
+    'MAPILLARY_TOKEN': ("", _("Mapillary token")),
+    'MAPILLARY_EXPIRES': ("", _("Mapillary expiry date")),
+    'NOMINATIM': ("", _("Nominatim key")),
+    'IRAP_AUTH_ID': ("", _("iRAP Auth ID")),
+    'IRAP_API_KEY': ("", _("iRAP API key")),
+    'IRAP_PRIVATE_KEY': ("", _("iRAP Private key")),
+    'OPENWEATHER_RAPID_KEY':((os.getenv('OPENWEATHER_RAPID_KEY', '')), _("Open Weather API")),
+}
+CAPTCHA_OUTPUT_FORMAT=u'%(image)s %(hidden_field)s %(text_field)s'
+
+
+
+EMAIL_HOST = os.environ.get("EMAIL_HOST", 'localhost')
+EMAIL_PORT = os.environ.get('EMAIL_PORT', 25)
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 0) == '1'
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL','vidasegura@vidasegura.cetsp.com.br')
+
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', None)
+if EMAIL_HOST_USER:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL','vidasegura@vidasegura.cetsp.com.br')
+
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', None)

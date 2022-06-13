@@ -209,6 +209,7 @@ class DriverRecordViewTestCase(APITestCase, ViewTestSetUpMixin):
     def test_created_by_admin_client_username(self):
         url = '/api/records/{uuid}/?details_only=True'.format(uuid=self.record3.uuid)
         response_data = json.loads(self.admin_client.get(url).content)
+        print(response_data)
         self.assertEqual(response_data['created_by'], self.audit_log_entry2.username)
 
     def test_created_by_public_client(self):
@@ -410,7 +411,7 @@ class DriverCustomReportViewTestCase(APITestCase, ViewTestSetUpMixin):
         self.assertEqual(response_data['2016']['Multi1'], 1)
         self.assertTrue('Multi2' in response_data['2016'], 'No key for Multi2')
         print(response_data['2016'])
-        self.assertEqual(response_data['2016']['Multi2'], 2)
+        self.assertEqual(response_data['2016']['Multi2'], 1)
 
         # Add another Multi1 and verify counts
         DriverRecord.objects.create(
@@ -429,7 +430,7 @@ class DriverCustomReportViewTestCase(APITestCase, ViewTestSetUpMixin):
         self.assertTrue('Multi1' in response_data['2016'], 'No key for Multi1')
         self.assertEqual(response_data['2016']['Multi1'], 2)
         self.assertTrue('Multi2' in response_data['2016'], 'No key for Multi2')
-        self.assertEqual(response_data['2016']['Multi2'], 2)
+        self.assertEqual(response_data['2016']['Multi2'], 1)
 
         # Add another Multi1/Multi2 and verify counts
         DriverRecord.objects.create(
@@ -451,7 +452,7 @@ class DriverCustomReportViewTestCase(APITestCase, ViewTestSetUpMixin):
         self.assertTrue('Multi1' in response_data['2016'], 'No key for Multi1')
         self.assertEqual(response_data['2016']['Multi1'], 3)
         self.assertTrue('Multi2' in response_data['2016'], 'No key for Multi2')
-        self.assertEqual(response_data['2016']['Multi2'], 3)
+        self.assertEqual(response_data['2016']['Multi2'], 2)
 
 
 class DriverRecordSchemaViewTestCase(APITestCase):

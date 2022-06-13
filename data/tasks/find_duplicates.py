@@ -140,6 +140,7 @@ def find_duplicate_records(self, time_allowance=None, distance_allowance=None, t
     if the celery worker itself goes down.  Otherwise, the task status should be
     set properly
     """
+    
     if time_allowance is None:
         time_allowance = datetime.timedelta(hours=settings.DEDUPE_TIME_RANGE_HOURS)
     if distance_allowance is None:

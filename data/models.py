@@ -1,13 +1,13 @@
 import uuid
 import hashlib
-import os 
+import os,json
 from django import forms
 from django.db import models
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.gis.db import models as g
-from grout.models import GroutModel, Record, RecordType
+from grout.models import GroutModel, Record, RecordType, RecordSchema, BoundaryPolygon
 from django.db.models.signals import pre_save, post_save
 from driver import settings
 from django.dispatch import receiver
@@ -16,6 +16,11 @@ from django.contrib.gis.geos import GEOSGeometry
 from constance import config
 from model_utils import FieldTracker
 from django_redis import get_redis_connection
+from django.db.models import JSONField
+from grout.models import Boundary
+from astral import sun, LocationInfo
+import requests
+from rest_framework.authtoken.models import Token
 
 class SegmentSet(models.Model):
     class Meta(object):
@@ -67,9 +72,6 @@ class RecordSegment(models.Model):
                 self.delete()
             return self.data
 
-
-
-
 class DriverRecord(Record):
     """Extend Grout Record model with custom fields"""
     weather = models.CharField(max_length=50, null=True, blank=True)
@@ -81,61 +83,76 @@ class DriverRecord(Record):
     neighborhood = models.CharField(max_length=50, null=True, blank=True)
     road = models.CharField(max_length=200, null=True, blank=True)
     state = models.CharField(max_length=50, null=True, blank=True)
-    segment = models.ManyToManyField(RecordSegment)
-    
+    segment = models.ManyToManyField(RecordSegment, blank=True)
+    mapillary=models.OneToOneField('MapillaryData', on_delete=models.CASCADE, null=True, blank=True)
+
     def geocode(self, roadmap_uuid, size):
-        with connection.cursor() as cursor:
-            if self.geom:
+        if self.geom:
+            row=[None]
+            print("getting segment")
+            seg=self.segment.filter(size=size)
+            if seg.count():
+                return seg[0]
+            with connection.cursor() as cursor:
                 cursor.execute("select * from works.find_segment(%s, %s, %s)", [self.geom.ewkt, size, str(roadmap_uuid)])
                 row = cursor.fetchone()
-                if row[0] is not None:
-                    s=RecordSegment.objects.filter(
-                        geom=GEOSGeometry(row[0]),
+                print(row)
+            if row[0] is not None:
+                s=RecordSegment.objects.filter(
+                    geom=GEOSGeometry(row[0]),
+                    size=size,
+                    roadmap_id=roadmap_uuid
+                )
+                if not len(s):
+                    print("inedito segmento")
+                    seg=RecordSegment(
+                        roadmap_id=roadmap_uuid, 
+                        data={},
                         size=size,
-                        roadmap_id=roadmap_uuid
+                        name=row[1],
+                        geom=GEOSGeometry(row[0])
                     )
-                    if not len(s):
-                        seg=RecordSegment(
-                            roadmap_id=roadmap_uuid, 
-                            data={},
-                            size=size,
-                            name=row[1],
-                            geom=GEOSGeometry(row[0])
-                        )
-                        seg.save()
-                    else:
-                        seg=s[0]
-                    self.segment.add(seg)
-                    self.save()
-                    return seg
+                    seg.save()
                 else:
-                    print("Road not found.")
-                    return None
-"""
+                    seg=s[0]
+                    print("reaproveita")
+                self.segment.add(seg)
+                    
     def save(self, *args, **kwargs):
-        self.geocode()
+        if not self.light:
+            city=LocationInfo("","",config.TIMEZONE, self.geom.y, self.geom.x)
+            s=sun.sun(city.observer, date=self.occurred_from,tzinfo=city.timezone)
+            if abs((s['dawn']-self.occurred_from).seconds)<1800:
+                self.light='dawn'
+            else:
+                if abs((s['sunset']-self.occurred_from).seconds)<1800:
+                    self.light='dusk'
+                else:
+                    if self.occurred_from > s['dawn'] and self.occurred_from < s['sunset']:
+                        self.light='day'
+                    else:
+                        self.light='night'
         super(DriverRecord, self).save(*args, **kwargs)
-        
 
+""" @receiver(post_save, sender=DriverRecord)
+def record_after_save(sender, instance, **kwargs):
+    if instance.location_text is None and config.NOMINATIM!='':
+        r=requests.get("https://api.pickpoint.io/v1/reverse?format=json&key={key}&lat={lat}&lon={lon}".format(
+            key=config.NOMINATIM,
+            lat=instance.geom.y,
+            lon=instance.geom.x
+        ))
+        j=r.json()
+        print(j)
+        print("%s, %s" % (j['address']['road'],j['address']['city']))
+        if j:
+            instance.location_text="%s, %s" % (j['address']['road'],j['address']['city']) [0:199]
+            instance.save()
+ """
 
-
-    cost=RecordCostConfig.objects.last()
-    if cost is not None:
-        n=0
-        price=0
-        if instance.tracker.previous('segment') is not None:
-            s=RecordSegment.objects.get(pk=instance.tracker.previous('segment'))
-            if s != instance.segment:
-                s.calculate_cost(instance.data)
-        if instance.segment is not None:
-            instance.segment.calculate_cost(instance.data)
-
-@receiver(pre_save, sender=DriverRecord)
-def record_before_save(sender, instance, **kwargs):
-  
-
-"""
-
+class MapillaryData(models.Model):
+    record=models.OneToOneField(DriverRecord, on_delete=models.CASCADE, primary_key=True)
+    data=models.TextField(null=True, blank=True)
 
 def get_image_path(instance, filename):
     return os.path.join('photos', str(instance.id), filename)
@@ -212,7 +229,7 @@ class DedupeJob(models.Model):
             (SUCCESS, 'Success'),
             (ERROR, 'Error'),
         )
-
+ 
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     datetime = models.DateTimeField(auto_now_add=True, db_index=True)
     status = models.CharField(max_length=8, choices=Status.CHOICES, default=Status.PENDING)
@@ -273,6 +290,13 @@ class RecordCostConfig(GroutModel):
     # This should be auto-populated by the front-end once a property_key is selected.
     enum_costs = HStoreField()
 
+def add_term(l, t):
+    try:
+        a=l.index(t)
+    except ValueError:
+        l.append(t)
+    return l
+
 class Dictionary(models.Model):
     class Meta(object):
         verbose_name = _('Dictionary')
@@ -282,4 +306,48 @@ class Dictionary(models.Model):
 
     language_code=models.TextField(max_length=8)
     name=models.TextField(max_length=100)
-    content=HStoreField()
+    content=HStoreField(null=True, blank=True)
+    def save(self, *args, **kwargs):
+        terms=[]
+        rt=RecordType.objects.all()
+        for b in Boundary.objects.all():
+            add_term(terms, b.label)
+        for r in rt:
+            add_term(terms,r.label)
+            add_term(terms,r.plural_label)
+        for sd in Dictionary.objects.all():
+            add_term(terms,sd.name)
+        rs=RecordSchema.objects.all()
+        for r in rs:
+            for k, value in r.schema['definitions'].items():
+                add_term(terms,value['title'])
+                add_term(terms,value['plural_title'])
+                add_term(terms,value['description'])
+                for u, t in value['properties'].items():
+                    add_term(terms,u)
+                    if 'enum' in t:
+                        for e in t['enum']:
+                            add_term(terms,e)
+                    if 'items' in t:
+                        if 'enum' in t['items']:
+                            for e in t['items']['enum']:
+                                add_term(terms,e)
+
+            for t in terms:
+                if t not in self.content:
+                    self.content[t]=t
+        h={}
+        for k in sorted(self.content):
+            h[k]=self.content[k]
+        self.content=h
+        super(Dictionary, self).save(*args, **kwargs)
+
+
+class Irap(models.Model):
+    user=models.OneToOneField(User, on_delete=models.CASCADE)
+    keys=HStoreField()
+    settings=JSONField()
+
+class CachedRecord(models.Model)
+    record=models.ForeignKey(Record, on_delete=CASCADE)
+    token=models.ForeignKey(Token, on_delete=CASCADE)

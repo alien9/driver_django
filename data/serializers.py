@@ -12,7 +12,7 @@ from rest_framework.serializers import (
 from grout import serializers
 from grout import serializer_fields
 
-from data.models import DriverRecord, RecordAuditLogEntry, RecordDuplicate, RecordCostConfig
+from data.models import DriverRecord, RecordAuditLogEntry, RecordDuplicate, RecordCostConfig, Dictionary
 
 from django.conf import settings
 from constance import config
@@ -32,7 +32,8 @@ class BaseDriverRecordSerializer(serializers.RecordSerializer):
 
 class DriverRecordSerializer(BaseDriverRecordSerializer):
     modified_by = SerializerMethodField(method_name='get_latest_change_email')
-
+    related_fields=['mapillary']
+    read_only_fields = ('uuid', 'segment', 'mapillary')
     def get_latest_change_email(self, record):
         """Returns the email of the user who has most recently modified this Record"""
         latest_audit_entry = (RecordAuditLogEntry.objects
@@ -44,6 +45,8 @@ class DriverRecordSerializer(BaseDriverRecordSerializer):
                 return latest_audit_entry.user.email
             return latest_audit_entry.username
         return None
+    def update(self, instance, validated_data):
+        return super(DriverRecordSerializer, self).update(instance, validated_data)
 
 
 class DetailsReadOnlyRecordSerializer(BaseDriverRecordSerializer):
@@ -145,5 +148,10 @@ class RecordCostConfigSerializer(ModelSerializer):
 
 class PictureSerializer(ModelSerializer):
     record = DriverRecordSerializer(required=False, allow_null=True)
+
+class DictionarySerializer(ModelSerializer):
+    class Meta:
+        model = Dictionary
+        fields = '__all__'
 
 

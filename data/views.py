@@ -1,5 +1,5 @@
 from collections import defaultdict
-import json
+import json, math, os, re
 import logging
 import uuid
 import calendar
@@ -10,13 +10,17 @@ from constance import config
 from dateutil.parser import parse as parse_date
 from django.template.defaultfilters import date as template_date
 from rest_framework.decorators import api_view
-
+from django.template.loader import render_to_string
+from django.shortcuts import get_object_or_404,redirect
 from celery import states
 from django.http import JsonResponse
+from django.db.models.sql.datastructures import Join
+from django.http import HttpResponse, Http404
 
 from django.conf import settings
 from django.db import transaction
 from django.db.models import (
+    FilteredRelation,
     Case,
     CharField,
     Count,
@@ -32,6 +36,8 @@ from django.db.models import (
     F,
     Func
 )
+
+from django.db import connection
 from django.db.models.functions import Coalesce, Cast
 from django.core import serializers
 from django_redis import get_redis_connection
@@ -60,7 +66,7 @@ from driver_auth.permissions import (IsAdminOrReadOnly,
                                      IsAdminAndReadOnly,
                                      is_admin_or_writer)
 from data.tasks import export_csv, generate_blackspots
-from data.models import DriverRecord, SegmentSet, Picture
+from data.models import DriverRecord, SegmentSet, Picture, Dictionary
 from black_spots.models import BlackSpotSet
 from data.localization.date_utils import (
     hijri_day_range,
@@ -74,7 +80,8 @@ from .models import RecordAuditLogEntry, RecordDuplicate, RecordCostConfig
 from .serializers import (DriverRecordSerializer, DetailsReadOnlyRecordSerializer,
                          DetailsReadOnlyRecordSchemaSerializer, RecordAuditLogEntrySerializer,
                          RecordDuplicateSerializer, RecordCostConfigSerializer,
-                         DetailsReadOnlyRecordNonPublicSerializer, PictureSerializer)
+                         DetailsReadOnlyRecordNonPublicSerializer, PictureSerializer, 
+                         DictionarySerializer)
 #import transformers
 from driver import mixins
 from functools import reduce
@@ -97,9 +104,41 @@ def index(request):
 def editor(request):
     return render(request, 'schema_editor/dist/index.html', {"config":config})
 
+def dictionary(request, code):
+    d = Dictionary.objects.filter(language_code=code)
+    if len(d):
+        return JsonResponse(d[0].content)
+    return JsonResponse({})
+
+def mapillary_callback(request):
+    j={"result":"FAIL"}
+    if 'code' in request.GET:
+        import requests
+        client_id=getattr(config, 'MAPILLARY_CLIENT_TOKEN')
+        url = 'https://graph.mapillary.com/token'
+        payload={
+            "grant_type": "authorization_code",
+            "code": request.GET.get('code'),
+            "client_id": getattr(config, 'MAPILLARY_CLIENT_ID')
+        }
+        headers = {
+            'content-type': 'application/json',
+            'Accept-Charset': 'UTF-8',
+            "Authorization": "OAuth {secret}".format(secret=getattr(config, 'MAPILLARY_SECRET'))
+        }
+        r = requests.post(url, data=payload, headers=headers)
+        j=r.json()
+        config.MAPILLARY_TOKEN=j['access_token']
+        d=datetime.datetime.now()+datetime.timedelta(seconds=j['expires_in'])
+        config.MAPILLARY_EXPIRES=d
+        response=redirect(request.GET.get('state'))
+        response.set_cookie('mapillary_auth', j['access_token'])
+        return response
+    return JsonResponse(j)
+
 @csrf_exempt
 def proxy(request):
-    remoteurl = "http://%s:5000%s" % (settings.WINDSHAFT_HOST, request.path,)
+    remoteurl = "%s:5000%s" % (config.WINDSHAFT, request.path,)
     return proxy_view(request, remoteurl)
 
 @csrf_exempt
@@ -107,13 +146,70 @@ def mapserver(request):
     return proxy_view(request, "http://%s%s" % (config.MAPSERVER, request.path,))
 
 @csrf_exempt
-def mapcache(request):
-    dest="http://%s/%s" % (config.MAPSERVER, request.path,)
-    return proxy_view(request, dest)
+def legend(request, layer, mapfile):
+    if layer=='theme':
+        path="?map=/etc/mapserver/theme_{mapfile}.map&VERSION=1.1.1&LAYERS=theme&mode=legend".format(
+            mapfile=mapfile,
+        )
+        return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
+    if layer=='critical':
+        path="?map=/etc/mapserver/critical_{mapfile}.map&VERSION=1.1.1&LAYERS=critical&mode=legend".format(
+            mapfile=mapfile,
+        )
+        return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
+
+@csrf_exempt
+def grid(request, geometry, mapfile, layer, z, x, y):
+    num_sq=math.pow(2, int(z))
+    size_sq=40075016.68557849/num_sq
+    x0=-20037508.342789244+int(x)*size_sq
+    x1=x0+size_sq
+    y0=20037508.342789244-(int(y)+1)*size_sq
+    y1=y0+size_sq
+    filename="{geometry}_{mapfile}.map".format(geometry=geometry,mapfile=mapfile,)
+    if not os.path.exists("./mapserver/%s" % (filename)):
+        if geometry=='critical':
+            b=BlackSpotSet.objects.get(pk=mapfile)
+            b.write_mapfile()
+        if geometry=='boundary':
+            b=Boundary.objects.get(pk=mapfile)
+            b.write_mapfile()
+    path="?map=/etc/mapserver/{filename}&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS={layer}&STYLES=&SRS=EPSG:3857&BBOX={x0},{y0},{x1},{y1}&WIDTH=250&HEIGHT=250&type=utfgrid&format=application/json".format(
+        filename=filename,
+        x0=x0,
+        x1=x1,
+        y0=y0,
+        y1=y1,
+        geometry=geometry,
+        layer=layer
+    )
+
+    return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
+
+@csrf_exempt
+def maps(request, geometry, mapfile, layer, z, x, y):
+    if geometry=='boundary' and not os.path.exists("./mapserver/boundary_%s.map" % (mapfile)):
+        b=Boundary.objects.get(pk=mapfile)
+        b.write_mapfile()
+    if geometry=='critical' and not os.path.exists("./mapserver/critical_%s.map" % (mapfile)):
+        b=BlackSpotSet.objects.get(pk=mapfile)
+        b.write_mapfile()
+    
+    path="?map=/etc/mapserver/{geometry}_{mapfile}&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS={layer}&STYLES=&SRS=EPSG:3857&MODE=tile&TILEMODE=gmap&TILE={x}+{y}+{z}&WIDTH=250&HEIGHT=250&format=image/png".format(
+        mapfile="%s.map" % mapfile,
+        x=x,
+        y=y,
+        z=z,
+        geometry=geometry,
+        layer=layer
+    )
+    print(path)    
+    return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
+ 
 
 @api_view(['GET', 'POST', ])
 def run_calculate_blackspots(request, uuid):
-    print("Requesting blackspots")
+    
     task = generate_blackspots.delay(uuid, request.user.pk)
     return Response({'success': True, 'taskid': task.id}, status=status.HTTP_201_CREATED)
 
@@ -130,6 +226,15 @@ def retrieve_blackspots(request, pk):
 def segment_sets(request):
     s=SegmentSet.objects.all()
     return JsonResponse({"result":[{"id":segment.id, "name":segment.name} for segment in s]})
+
+def download(request, filename):
+    file_path = os.path.join('zip', filename)
+    if os.path.exists(file_path):
+        with open(file_path, 'rb') as fh:
+            response = HttpResponse(fh.read(), content_type="application/zip")
+            response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
+            return response
+    raise Http404
 
 def build_toddow(queryset):
     """
@@ -165,12 +270,15 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         if details_only_param == 'True' or details_only_param == 'true':
             requested_details_only = True
 
-        if is_admin_or_writer(self.request.user):
-            if requested_details_only:
-                return DetailsReadOnlyRecordNonPublicSerializer
-            else:
-                return DriverRecordSerializer
-        return DetailsReadOnlyRecordSerializer
+        #if is_admin_or_writer(self.request.user):
+        if requested_details_only:
+            return DetailsReadOnlyRecordNonPublicSerializer
+        #else:
+        return DriverRecordSerializer
+        #return DetailsReadOnlyRecordSerializer
+    
+    def get_super_queryset(self):
+        return super(DriverRecordViewSet, self).get_queryset()
 
     def get_queryset(self):
         qs = super(DriverRecordViewSet, self).get_queryset()
@@ -255,6 +363,54 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             tile_token = uuid.uuid4()
             self._cache_tile_sql(tile_token, query_sql)
             response.data['tilekey'] = tile_token
+        elif ('mapfile' in request.query_params and
+                request.query_params['mapfile'] in ['True', 'true']):
+            m=re.match('Token (.*)', request.headers['Authorization'])
+            tile_token=m.group(1)
+            
+            response = Response(dict())
+            recordtype_uuid=request.query_params['record_type']
+            s=RecordSchema.objects.filter(record_type=recordtype_uuid).order_by('-version')
+            if not len(s):
+                #throw an error
+                response.data['mapfile'] = None
+            else:   
+                schema=s[0]
+                g=Record.objects.filter(schema=schema)
+                
+                query_sql = self.generate_mapserver_query_sql(request)
+                
+                query_sql=query_sql.replace('::bytea', '::geometry')
+                query_sql=query_sql.replace('\'\\x', '\'')
+                query_sql=query_sql.replace('"', '\\"')
+
+                if 'records_mapfile' in request.session:
+                    tile_token = request.session['records_mapfile']
+                else:
+                    request.session['records_mapfile']=str(tile_token)
+                    request.session.modified = True
+
+                self._cache_tile_sql(tile_token, query_sql)
+
+                query_sql=query_sql.replace(') WHERE (', ') WHERE st_intersects(geom, !BOX!) AND (')
+                dbstring=connection.settings_dict['HOST']
+                if settings.DEBUG:
+                    if hasattr(settings, 'CONTAINER_NAME'):
+                        dbstring="database-{container}".format(container=settings.CONTAINER_NAME)
+                d="0"
+                if settings.DEBUG:
+                    d="5"
+                t=render_to_string('records.map', {
+                    "connection":connection.settings_dict['HOST'],
+                    "username":connection.settings_dict['USER'],
+                    "password":connection.settings_dict['PASSWORD'],
+                    "dbname":connection.settings_dict['NAME'],
+                    "query":query_sql,
+                    "debug":d,
+                })
+                with open("./mapserver/records_%s.map" % tile_token, "w+") as m:
+                    m.write(t)
+                response.data['mapfile'] = tile_token
         else:
             response = super(DriverRecordViewSet, self).list(self, request, *args, **kwargs)
         return response
@@ -374,6 +530,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         numeric = schema.schema['definitions'][path[0]]['properties'][path[2]]['type']=="number"
         if numeric:
             counts_queryset = self.get_filtered_queryset(request)
+            res['total_crashes']=counts_queryset.count()
             res=counts_queryset.annotate(
                 val=RawSQL("((data->%s->%s)::numeric)", (path[0],path[2]))
             ).aggregate(total=Sum('val'))
@@ -390,6 +547,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         # alias instead.
         choice_indices = {str(idx): choice for idx, choice in enumerate(choices)}
         counts_queryset = self.get_filtered_queryset(request)
+        total_crashes=counts_queryset.count()
         for idx, choice in list(choice_indices.items()):
             filter_rule = self._make_djsonb_containment_filter(path, choice, multiple)
             # We want a column for each enum choice with a binary 1/0 indication of whether the row
@@ -402,7 +560,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             annotate_params[idx] = choice_case
             counts_queryset = counts_queryset.annotate(**annotate_params)
         output_data = {'prefix': cost_config.cost_prefix, 'suffix': cost_config.cost_suffix}
-        if counts_queryset.count() < 1:  # Short-circuit if no events at all
+        if total_crashes < 1:  # Short-circuit if no events at all
             output_data.update({'total': 0, 'subtotals': {choice: 0 for choice in choices},
                                 'outdated_cost_config': False})
             return Response(output_data)
@@ -434,7 +592,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 subtotals[key] = 0
         total = sum(subtotals.values())
         # Return breakdown costs and sum
-        output_data.update({'total': total, 'subtotals': subtotals,
+        output_data.update({'total': total, 'total_crashes': total_crashes, 'subtotals': subtotals,
                             'outdated_cost_config': found_missing_choices})
         return Response(output_data)
 
@@ -445,7 +603,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         Requires the following query parameters:
         - Exactly one row specification parameter chosen from:
             - row_period_type: A time period to use as rows; valid choices are:
-                               {'hour', 'day', 'week_day', 'week', 'month', 'year'}
+                               {'hour', 'day', 'week_day', 'week', 'month', 'year', 'all'}
                                The value 'day' signifies day-of-month
             - row_boundary_id: Id of a Boundary whose BoundaryPolygons should be used as rows
             - row_choices_path: Path components to a schema property whose choices should be used
@@ -464,6 +622,10 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         Allows the following query parameters:
         - aggregation_boundary: Id of a Boundary; separate tables will be generated for each
                                 BoundaryPolygon associated with the Boundary.
+        - relate: Path for the multiple related table to aggregate into counts. If this isn't 
+            provided, the method must return the counts of registries for each aggregation.
+            When the relate patrameter is provided, the method must count the totals for that 
+            related information.
         - all other filter params accepted by the list endpoint; these will filter the set of
             records before any aggregation is applied. This may result in some rows / columns /
             tables having zero records.
@@ -554,6 +716,182 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 annotated_qs, row_multi, row_labels, col_multi, col_labels))
         return Response(response)
 
+    def thematic(self, request, b): # b is a blackspotset
+        if b.color is not None:
+            h=b.color.lstrip('#')
+            color=tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+        cor=reduce(lambda a,b: "{a} {b}".format(a=a,b=b),color)
+        cursor = connection.cursor().cursor
+        fq=self.get_filtered_queryset(request).order_by().values('geom')
+        sql, params = fq.query.sql_with_params()
+        fq = cursor.mogrify(sql, params).decode('utf-8')
+        display_field=b.roadmap.display_field
+        where=re.search('WHERE (.*)$', fq).group(1)
+        print(where)
+        query_sql="select r.id, count(*) as c, r.name, r.geom \
+         from data_recordsegment r\
+            join data_driverrecord_segment dr on dr.recordsegment_id =r.id\
+             join data_driverrecord drs on dr.driverrecord_id=drs.record_ptr_id\
+             join grout_record on grout_record.uuid=dr.driverrecord_id \
+             LEFT JOIN grout_recordschema ON (grout_record.schema_id = grout_recordschema.uuid) \
+             where r.size={size} and {where} group by r.id, r.geom, r.name".format(where=where, display_field=display_field, size=b.size)
+        print(query_sql)
+        #the complete query is set to the mapfile
+        
+        #execute the small query
+        cursor.execute(query_sql)
+
+        query_sql="select r.id, count(*) as c, r.name, r.geom \
+         from data_recordsegment r\
+            join data_driverrecord_segment dr on dr.recordsegment_id =r.id\
+             join data_driverrecord drs on dr.driverrecord_id=drs.record_ptr_id\
+             join grout_record on grout_record.uuid=dr.driverrecord_id \
+             LEFT JOIN grout_recordschema ON (grout_record.schema_id = grout_recordschema.uuid) \
+             where st_intersects(!BOX!, r.geom) AND st_intersects(!BOX!, grout_record.geom) AND r.size={size} and {where} group by r.id, r.geom, r.name".format(where=where, display_field=display_field, size=b.size)
+        print(query_sql)
+
+        sample=list(set(map(lambda x: x[1], [r for r in cursor.fetchall()])))
+        print(sample)
+        #sample=sorted([r for r in cursor.fetchall()], key=lambda a: a[1])
+
+        chunk=(len(sample)-1)/5.0
+        i=0
+        classes=[]
+        sample.sort()
+        while i<len(sample):
+            min=sample[i]
+            max=sample[i]
+            opacity=round(100*i/len(sample))
+            cl={
+                'min':min,
+                'max':max,
+                'color':cor,
+                'name':"{min}".format(min=min),
+                'opacity':opacity
+            }
+            classes.append(cl)
+            i+=1
+        print(classes)
+        d="0"
+        if settings.DEBUG:
+            d="5"
+        t=render_to_string('critical.map', {
+                    "connection":connection.settings_dict['HOST'],
+                    "username":connection.settings_dict['USER'],
+                    "password":connection.settings_dict['PASSWORD'],
+                    "dbname":connection.settings_dict['NAME'],
+                    "query":query_sql.replace('"', '\\"'),
+                    "classes":classes,
+                    "debug": d,
+                })
+        if "critical_mapfile_%s" % (b.uuid) in request.session:
+            tile_token = request.session["critical_mapfile_%s" % (b.uuid)]
+        else:
+            if settings.DEBUG:
+                tile_token="critical_%s_debug" % (b.uuid)
+            else:
+                tile_token="%s_%s" % (b.uuid, uuid.uuid4())
+            request.session["critical_mapfile_%s" % (b.uuid)]=str(tile_token)
+            request.session.modified = True
+        dbstring=connection.settings_dict['HOST']
+        if settings.DEBUG:
+            if hasattr(settings, 'CONTAINER_NAME'):
+                dbstring="database-{container}".format(container=settings.CONTAINER_NAME)
+        
+        with open("./mapserver/critical_%s.map" % (tile_token), "w+") as m:
+                    m.write(t)
+        return Response({'query':query_sql, 'sample':sample, 'mapfile': tile_token})        
+
+    @action(methods=['get'], detail=False)
+    def quantiles(self, request):
+        # this is a particular crosstabs request for aggregating by geo, and creating a mapfile
+        # the mapfile is indexed by the boundary uuid and the session id.
+        blackspotset_uuid=request.query_params.get('critical', None)
+        tables_boundary = request.query_params.get('aggregation_boundary', None)
+        if (tables_boundary is None or not re.match(r'^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', tables_boundary, flags=re.IGNORECASE)) and (blackspotset_uuid is None or not re.match(r'^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', blackspotset_uuid, flags=re.IGNORECASE)):
+            return JsonResponse({
+                "mapfile":None, "error": "uuid not valid"
+            })
+        if blackspotset_uuid is not None:
+            b=BlackSpotSet.objects.get(pk=blackspotset_uuid)
+            return self.thematic(request, b)
+        else:
+            b=Boundary.objects.get(pk=tables_boundary)
+        color=[255,0,0]
+        if b.color is not None:
+            h=b.color.lstrip('#')
+            color=tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+
+        qset=BoundaryPolygon.objects.filter(boundary_id=tables_boundary).values('uuid','geom')
+        cursor = connection.cursor().cursor
+        fq=self.get_filtered_queryset(request).order_by().values('geom')
+        sql, params = fq.query.sql_with_params()
+        fq = cursor.mogrify(sql, params).decode('utf-8')
+        sql, params = qset.query.sql_with_params()
+        gq = cursor.mogrify(sql, params).decode('utf-8')
+        where=reduce((lambda a, b: "%s AND %s" % (a, b)),
+            map(
+                lambda x: re.search('WHERE (.*)$', x).group(1),
+                [fq, gq]
+            )
+        )
+        #the complete query is set to the mapfile
+        query_sql='SELECT "grout_boundarypolygon"."geom","grout_boundarypolygon"."uuid", count(*) as c FROM "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\'  LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") WHERE {where} GROUP BY "grout_boundarypolygon"."geom","grout_boundarypolygon"."uuid"'.format(where=where)
+        
+        #execute the small query
+        cursor.execute('SELECT "grout_boundarypolygon"."uuid", case when c.c is null then 0 else c.c end, "grout_boundarypolygon".data->\'{display_field}\' from "grout_boundarypolygon" left join (SELECT "grout_boundarypolygon"."uuid", count(*) as c, "grout_boundarypolygon".data->\'{display_field}\' as name FROM  "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\'  LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") WHERE {where} GROUP BY "grout_boundarypolygon"."uuid") c on c.uuid="grout_boundarypolygon"."uuid" WHERE "grout_boundarypolygon"."boundary_id" = \'{boundary_id}\''.format(where=where, display_field=b.display_field, boundary_id=tables_boundary))
+        sample=sorted([r for r in cursor.fetchall()], key=lambda a: a[1])
+        chunk=(len(sample)-1)/5.0
+        i=0
+        classes=[]
+        last={'max':-1, 'min':-1}
+        print(sample)
+        while i<5:
+            min=sample[math.floor(i*chunk)][1]
+            max=sample[math.ceil((i+1)*chunk)][1]
+            cl={
+                'min':min,
+                'max':max,
+                'color':reduce(lambda a,b: "{a} {b}".format(a=a,b=b), map(
+                lambda c: 255-round(((255-c)/4)*i),
+                color)),
+                'name':"{min} ~ {max}".format(max=max,min=min)
+            }
+            if min!=max and (last['min']!=min or last['max']!=max):
+                classes.append(cl)
+            last={'max':cl['max'],'min':cl['min']}
+            i+=1
+        d="0"
+        if settings.DEBUG:
+            d="5"
+        t=render_to_string('boundary_theme.map', {
+                    "connection":connection.settings_dict['HOST'],
+                    "username":connection.settings_dict['USER'],
+                    "password":connection.settings_dict['PASSWORD'],
+                    "dbname":connection.settings_dict['NAME'],
+                    "query":query_sql.replace('"', '\\"'),
+                    "classes":classes,
+                    "boundary_id":tables_boundary,
+                    "debug": d,
+                })
+        if "theme_mapfile_%s" % (tables_boundary) in request.session:
+            tile_token = request.session["theme_mapfile_%s" % (tables_boundary)]
+        else:
+            if settings.DEBUG:
+                tile_token="theme_%s_debug" % (tables_boundary)
+            else:
+                tile_token="%s_%s" % (tables_boundary, uuid.uuid4())
+            request.session["theme_mapfile_%s" % (tables_boundary)]=str(tile_token)
+            request.session.modified = True
+        dbstring=connection.settings_dict['HOST']
+        if settings.DEBUG:
+            if hasattr(settings, 'CONTAINER_NAME'):
+                dbstring="database-{container}".format(container=settings.CONTAINER_NAME)
+        
+        with open("./mapserver/theme_%s.map" % (tile_token), "w+") as m:
+                    m.write(t)
+        return Response({'query':query_sql, 'sample':sample, 'mapfile': tile_token})
+        
     def _fill_table(self, annotated_qs, row_multi, row_labels, col_multi, col_labels):
         """ Fill a nested dictionary with the counts and compute row totals. """
 
@@ -604,12 +942,12 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 multi_labels = col_labels
                 single_label = 'row'
                 multi_prefix = 'col'
-
             multi_labels = [
                 '{}_{}'.format(multi_prefix, str(label['key']))
                 for label in multi_labels
             ]
-
+            
+            
             # Perform a sum on each of the 'multi' columns, storing the data in a sum_* field
             annotated_qs = (
                 annotated_qs.values(single_label, *multi_labels)
@@ -619,6 +957,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             # Each object either has a 'row' and several 'col_*'s or a 'col' and several 'row_*'s.
             # Get the combinations accordingly and accumulate the appropriate stored value.
             for rd in annotated_qs:
+                print(rd)
                 for multi_label in multi_labels:
                     sum_val = rd['sum_{}'.format(multi_label)]
                     rd_row = rd['row'] if 'row' in rd else 'None'
@@ -628,7 +967,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                         data[str(multi_label[4:])][str(rd_col)] += sum_val
                     else:
                         data[str(rd_row)][str(multi_label[4:])] += sum_val
-
         row_totals = {row: sum(cols.values()) for (row, cols) in list(data.items())}
         return {'data': data, 'row_totals': row_totals}
 
@@ -661,6 +999,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
 
         if param.endswith('period_type'):
             query_calendar = request.query_params.get('calendar')
+            #period type can be "all"
             if (query_calendar == 'gregorian'):
                 return self._get_annotated_tuple(
                     queryset, annotation_id,
@@ -677,8 +1016,9 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         else:  # 'choices_path'; ensured by parent function
             schema = RecordType.objects.get(pk=record_type_id).get_current_schema()
             path = request.query_params[param].split(',')
+            relate=request.query_params.get('relate')
             return self._get_multiple_choices_annotated_tuple(
-                queryset, annotation_id, schema, path)
+                queryset, annotation_id, schema, path, relate)
 
     def _get_day_label(self, week_day_index):
         """Constructs a day translation label string given a week day index
@@ -766,6 +1106,16 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                     }
                 ]
             },
+            'all': { 
+                'range': range(0, 1),
+                'lookup': lambda x: {'archived': False},
+                'label': lambda x: [
+                    {
+                        'text': 'Records', 
+                        'translate': True
+                    }
+                ]
+            }
         }
 
         # Ranges are built below, partly based on the ranges in 'periodic_ranges' above.
@@ -1115,7 +1465,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         ]
         return (Case(*whens, output_field=CharField()), labels)
 
-    def _get_multiple_choices_annotated_tuple(self, queryset, annotation_id, schema, path):
+    def _get_multiple_choices_annotated_tuple(self, queryset, annotation_id, schema, path, relate=None):
         """Helper wrapper for annotating a queryset with a case statement
 
         Args:
@@ -1123,6 +1473,8 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
           annotation_id (String): 'row' or 'col'
           schema (RecordSchema): A RecordSchema to get properties from
           path (list): A list of path fragments to navigate to the desired property
+          relate (string): What to count - if None, we will return the registries count; 
+            else, the aggregated row or column for the related value.
 
         Returns:
             A 3-tuple of:
@@ -1142,11 +1494,18 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             if is_array:
                 pattern=json.dumps({path[2]:choice})
                 pattern=pattern[1:len(pattern)-1]
-                annotations['{}_{}'.format(annotation_id, choice)] = RawSQL("\
-                    SELECT count(*) from\
-                    regexp_matches(\"grout_record\".\"data\"->>%s, %s, 'g') \
-                    ",(path[0], pattern)
-                )
+                if not relate or relate=="":
+                    annotations['{}_{}'.format(annotation_id, choice)] = RawSQL("\
+                        SELECT \
+    case when \"grout_record\".\"data\"->>%s ~ %s = 't' then 1 else 0 end\
+    ",(path[0], pattern)
+                    )
+                else:
+                    annotations['{}_{}'.format(annotation_id, choice)] = RawSQL("\
+                        SELECT \
+                        -1+array_length(regexp_split_to_array(\"grout_record\".\"data\"->>%s, %s),1) as l \
+                        ",(path[0], pattern)
+                                        )
             else:
                 expression="data__%s__%s__contains"  % (path[0], path[2])
                 annotations['{}_{}'.format(annotation_id, choice)] = Case(
@@ -1280,9 +1639,9 @@ class DriverRecordSchemaViewSet(RecordSchemaViewSet):
 
     # Filter out everything except details for read-only users
     def get_serializer_class(self):
-        if is_admin_or_writer(self.request.user):
-            return RecordSchemaSerializer
-        return DetailsReadOnlyRecordSchemaSerializer
+        #if is_admin_or_writer(self.request.user):
+        return RecordSchemaSerializer
+        #return DetailsReadOnlyRecordSchemaSerializer
 
     def perform_create(self, serializer):
         instance = serializer.save()
@@ -1309,6 +1668,7 @@ class DriverRecordDuplicateViewSet(viewsets.ModelViewSet):
     filter_class = filters.RecordDuplicateFilter
     @action(detail=True, methods=['patch'])
     def resolve(self, request, pk=None):
+        print("searching duplicated %s"%(pk))
         duplicate = self.queryset.get(pk=pk)
         recordUUID = request.data.get('recordUUID', None)
         if recordUUID is None:
@@ -1453,6 +1813,7 @@ def get_config(request):
             'MAP_CENTER_LONGITUDE': config.MAP_CENTER_LONGITUDE,
             'MAP_ZOOM': config.MAP_ZOOM,
             "PRIMARY_LABEL": config.PRIMARY_LABEL,
+            "SECONDARY_LABEL": config.SECONDARY_LABEL
             }
         },
         status=status.HTTP_200_OK)
@@ -1464,6 +1825,20 @@ class PictureViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request):
-        print(request)
-        print("CREATING")
+        
+        
         pass
+
+class DictionaryViewSet(viewsets.ViewSet):
+    serializer_class=DictionarySerializer
+    queryset=Dictionary.objects.all()
+    def retrieve(self, request, pk=None):
+        queryset=Dictionary.objects.all()
+        dictionary=get_object_or_404(queryset,language_code=pk)
+        serializer=DictionarySerializer(dictionary)
+        return Response(serializer.data)    
+    def list(self, request):
+        queryset = Dictionary.objects.all()
+        serializer = DictionarySerializer(queryset, many=True)
+        return Response(serializer.data)
+

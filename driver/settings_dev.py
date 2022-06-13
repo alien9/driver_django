@@ -7,11 +7,28 @@ from django.utils.translation import ugettext_lazy as _
 DEVELOP = True
 STAGING = True if os.environ.get('DJANGO_ENV', 'staging') == 'staging' else False
 PRODUCTION = not DEVELOP and not STAGING
-WINDSHAFT_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-bolivia"]).decode('utf8').strip()
-DRIVER_DB_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "database-bolivia"]).decode('utf8').strip()
-REDIS_HOST = subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "redis-server-bolivia"]).decode('utf8').strip()
+
+f = open(".env", "r")
+e={}
+for k in [ t.split('=') for t in f.readlines() ]:
+    if len(k)>1:
+        e[k[0]]=k[1].replace("\n", "")
+
+DATABASE_NAME=e['DATABASE_NAME']
+DRIVER_DB_HOST=e['DATABASE_HOST']
+CONTAINER_NAME=e['CONTAINER_NAME']
+WINDSHAFT_HOST='localhost'#subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-vidasegura"]).decode('utf8').strip()
+MAPSERVER_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "mapserver-%s" % (CONTAINER_NAME)]).decode('utf8').strip()
+REDIS_HOST = subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "redis-server-%s" % (CONTAINER_NAME)]).decode('utf8').strip()
+CONTAINER_NAME='vidasegura'
+CONSTANCE_CONFIG['WINDSHAFT']=("http://%s" % (WINDSHAFT_HOST,), "WindShaft")
+CONSTANCE_CONFIG['MAPSERVER']=("http://%s" % (MAPSERVER_HOST,), "Mapserver")
+CONSTANCE_CONFIG['GEOSERVER']=("http://%s" % (e['GEOSERVER'],), "GeoServer")
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Quick-start development settings - unsuitable for production
+
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -23,11 +40,11 @@ DEBUG = DEVELOP
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': os.environ.get('DRIVER_DB_NAME', 'driver'),
+        'NAME': DATABASE_NAME,
         'HOST': DRIVER_DB_HOST,
         'PORT': os.environ.get('DRIVER_DB_PORT', 5432),
         'USER': os.environ.get('DRIVER_DB_USER', 'driver'),
-        'PASSWORD': os.environ.get('DRIVER_DB_PASSWORD', 'supersecretpassword'),
+        'PASSWORD': os.environ.get('DRIVER_DB_PASSWORD', 'driver'),
         'CONN_MAX_AGE': 3600,  # in seconds
         'OPTIONS': {
         #    'sslmode': 'require'
@@ -36,13 +53,13 @@ DATABASES = {
 }
 
 from django.utils.translation import ugettext_lazy as _
-LANGUAGES = ( 
+LANGUAGES = [
    ('de', _('German')),
    ('en', _('English')),
    ('fr', _('French')),
    ('es', _('Spanish')),
    ('pt-br', _('Portuguese'))
-)
+]
 
 TIME_ZONE = os.environ.get("DRIVER_LOCAL_TIME_ZONE", 'America/La_Paz')
 
@@ -51,7 +68,7 @@ BLACKSPOT_RECORD_TYPE_LABEL = os.environ.get('BLACKSPOT_RECORD_TYPE_LABEL', 'Inc
 # user and group settings
 
 ## django-oidc settings
-HOST_URL = os.environ.get('HOST_URL', 'https://titopop.com')
+HOST_URL = os.environ.get('HOST_URL', '')
 
 APPEND_SLASH=True
 
@@ -119,3 +136,6 @@ def show_toolbar(request):
 DEBUG_TOOLBAR_CONFIG = {
     "SHOW_TOOLBAR_CALLBACK" : show_toolbar,
 }
+
+DEDUPE_DISTANCE_DEGREES=0.5
+
