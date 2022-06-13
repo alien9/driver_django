@@ -66,10 +66,10 @@ export class IndexComponent implements OnInit {
   locale: string
   weekdays: object
   reportFilters: object[]
-  legends: object[]=[]
+  legends: object[] = []
   counts: object
   filterAsText: any[] = []
-  subtitles: object[]=[]
+  subtitles: object[] = []
   loading: object = {
     "segment": [],
     "theme": []
@@ -223,7 +223,12 @@ export class IndexComponent implements OnInit {
       overlays: {
       }
     }
-    this.layers = [ofi]
+    let bl = localStorage.getItem("baselayer") || 'Mapa Oficial'
+
+    if (this.layersControl.baseLayers[bl])
+      this.layers = [this.layersControl.baseLayers[bl]]
+    else
+      this.layers = [ofi]
     this.options = {
       layers: this.layers
     }

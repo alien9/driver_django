@@ -89,8 +89,9 @@ export class MapComponent implements OnInit {
   onMapReady(e: any) {
     this.map.emit(e)
     e.on('overlayadd', e=>{
-      console.log("added an overlay")
-      console.log(e)
+    })
+    e.on('baselayerchange', l=>{
+      localStorage.setItem("baselayer", l.name)
     })
   }
   startDraw(e: any) {
