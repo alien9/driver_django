@@ -1,0 +1,83 @@
+{% extends "admin/change_form.html" %}
+{% block after_field_sets %}
+<div class="submit-row">
+    <p class="deletelink-box">
+        <a href="javascript:void(0);" class="authenticate">Authenticate to Mapillary</a>
+    </p>
+</div>
+<div class="submit-row">
+    <p class="deletelink-box" style="display:hidden" id="locate-point">
+        <a href="javascript:void(0);" class="locate-point">Locate this point</a>
+    </p>
+    <p id="mapillary_link">{{mapillary_link}}</p>
+    <p id="mapillary_client_token">{{mapillary_client_token}}</p>
+    <p id="mapillary_client_id">{{mapillary_client_id}}</p>
+    <p id="latitude-field">{{original.geom.y|safe}}</p>
+    <p id="longitude-field">{{original.geom.x|safe}}</p>
+</div>
+<style type="text/css">
+    .submit-row a.authenticate {
+        text-decoration: none;
+    }
+
+    a.calculating {
+        opacity: 0.4;
+    }
+</style>
+
+<script>
+    (function () {
+        if (!$) {
+            $ = django.jQuery;
+            console.log("Loading")
+        }
+        var cid = $('#mapillary_client_id').html();
+        var auth_cookie = document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "mapillary_auth");
+        if (auth_cookie.length) {
+            $('#locate-point').show();
+            $('#locate-point a').click(function () {
+                var latlng = [parseFloat($("#latitude-field").html()), parseFloat($("#longitude-field").html())]               
+                var token = auth_cookie[0][1];
+                var searchImages = function (inc) {
+                    var bbox = [latlng[1] - inc, latlng[0] - inc, latlng[1] + inc, latlng[0] + inc]
+                    url = `https://graph.mapillary.com/images?access_token=${token}&&bbox=${bbox.join(',')}`
+                console.log(url);
+                    $.ajax(url, {
+                        success: function (data) {
+                            var current = null;
+                            if (!data['data']) return;
+                            l = data['data'].length;
+                            console.log(`${data['data'].length} retornado(s)`)
+                            if(!l){
+                                searchImages(inc+0.001)
+                            }
+                            data['data'].forEach(d => {
+                                if (d['geometry']) {
+                                    d['distance'] = Math.pow(Math.pow(latlng[1] - d['geometry']['coordinates'][0], 2) + Math.pow(latlng[0] - d['geometry']['coordinates'][1], 2), 0.5)
+                                    if (!current || current['distance'] > d['distance']) {
+                                        current = d;
+                                    }
+                                }
+                            });
+
+                            if (current) {
+                                $('input[name=mapillary]').val(current['id']);
+                            }
+                        }
+                    });
+                };
+                searchImages(0.001)
+                //http://192.168.1.101:8000/maps/records/records_debug/records/14/5091/8952.png/?1634749221845
+
+            });
+            $('.authenticate').click(function () {
+                if (!cid.length) return;
+                window.location.href = `https://www.mapillary.com/connect?client_id=${cid}&state=${window.location.href}`
+            });
+            var uuid = '{{ original.uuid }}';
+        }
+    })();
+</script>
+
+<div id="progressbar"></div>
+{% endblock %}
