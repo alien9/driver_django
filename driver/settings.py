@@ -40,17 +40,17 @@ TESTING = 'test' in sys.argv
 
 ALLOWED_HOSTS = ['*']
 # TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "%s://%s" % (os.environ.get('PROTOCOL', 'http'), os.environ.get("HOST_NAME", "localhost"),),
     'http://localhost:8000',
     'http://localhost:4200',
 ]
+CORS_ALLOW_HEADERS = ('content-disposition', 'accept-encoding', 'responsetype',
+                      'content-type', 'accept', 'origin', 'authorization', 'x-csrftoken')
+LANGUAGE_CODE = 'pt-br'
 
-#LANGUAGE_CODE = 'pt-br'
-USE_I18N = False
-USE_L10N = False
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 # Application definition
@@ -69,7 +69,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework.authtoken',
     'storages',
-
+    'captcha',
     'django_extensions',
 
     'django_filters',
@@ -158,7 +158,7 @@ DATABASES = {
         }
     }
 }
-
+print("Version after pull")
 POSTGIS_VERSION = tuple(
     map(int, os.environ.get('DJANGO_POSTGIS_VERSION', '2.1.3').split("."))
 )
@@ -170,15 +170,11 @@ POSTGIS_VERSION = tuple(
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
 from django.utils.translation import ugettext_lazy as _
-LANGUAGES = ( 
-   ('de', _('German')),
-   ('en', _('English')),
-   ('fr', _('French')),
-   ('es', _('Spanish')),
+LANGUAGES = [ 
    ('pt-br', _('Portuguese'))
-)
+]
 
-TIME_ZONE = os.environ.get("DRIVER_LOCAL_TIME_ZONE", 'America/Sao_Paulo')
+TIME_ZONE = os.environ.get("TIMEZONE", 'America/Sao_Paulo')
 
 USE_I18N = True
 
@@ -272,9 +268,9 @@ LOGGING = {
 }
 DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 # user and group settings
-DEFAULT_ADMIN_EMAIL = os.environ.get("DRIVER_ADMIN_EMAIL", 'systems+driver@azavea.com')
-DEFAULT_ADMIN_USERNAME = os.environ.get("DRIVER_ADMIN_USERNAME", 'admin')
-DEFAULT_ADMIN_PASSWORD = os.environ.get("DRIVER_ADMIN_PASSWORD", 'admin')
+DEFAULT_ADMIN_EMAIL = os.environ.get("DRIVER_ADMIN_EMAIL", 'vdasegura@cetsp.com.br')
+DEFAULT_ADMIN_USERNAME = os.environ.get("DRIVER_ADMIN_USERNAME", None)
+DEFAULT_ADMIN_PASSWORD = os.environ.get("DRIVER_ADMIN_PASSWORD", None)
 # the client keeps these group names in the editor's config.js
 DRIVER_GROUPS = {
     'READ_ONLY': os.environ.get('DRIVER_READ_ONLY_GROUP', 'public'),
@@ -529,14 +525,14 @@ CONSTANCE_CONFIG = {
     'MAP_CENTER_LATITUDE': (os.getenv('CENTER_LATITUDE', -23.5), _("Latitude")),
     'MAP_CENTER_LONGITUDE': (os.getenv('CENTER_LONGITUDE', -46.7), _("Longitude")),
     'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
-    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Accident"), _("Accident")),
-    "SECONDARY_LABEL": (os.getenv('PRIMARYLABEL', "Intervention"), _("Intervention")),
+    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Sinistro"), _("Accident")),
+    "SECONDARY_LABEL": (os.getenv('SECONDARYLABEL', "Intervention"), _("Intervention")),
     "WINDSHAFT": ("http://windshaft-%s" % (os.getenv("CONTAINER_NAME", 'driver')), "WindShaft"),
-    "LANGUAGES": ('[{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}]', _("Languages")),
     "HOSTNAME": (os.getenv('HOST_URL', os.getenv('PROTOCOL', "https")+"://"+os.getenv('HOSTNAME', "localhost:8000")), _("Host Name")),
     "COUNTRY_CODE": (os.getenv('COUNTRY', "ic"), _("Country Code")),
     "MAPSERVER": ("http://mapserver-%s" % (os.getenv('CONTAINER_NAME', 'driver')), "MapServer"),
-    'TIMEZONE': ('America/Sao_Paulo', 'Time Zone', 'tzselect'),
+    'TIMEZONE': (os.getenv('TIMEZONE', 'America/Sao_Paulo'), 'Time Zone', 'tzselect'),
+    "GEOSERVER": (os.getenv('GEOSERVER', ''), "GeoServer"),
     'MAPILLARY_CLIENT_TOKEN': ("", _("Mapillary Client token")),
     'MAPILLARY_CLIENT_ID': ("", _("Mapillary Client")),
     'MAPILLARY_SECRET': ("", _("Mapillary secret")),
@@ -548,3 +544,19 @@ CONSTANCE_CONFIG = {
     'IRAP_PRIVATE_KEY': ("", _("iRAP Private key")),
     'OPENWEATHER_RAPID_KEY':((os.getenv('OPENWEATHER_RAPID_KEY', '')), _("Open Weather API")),
 }
+CAPTCHA_OUTPUT_FORMAT=u'%(image)s %(hidden_field)s %(text_field)s'
+
+
+
+EMAIL_HOST = os.environ.get("EMAIL_HOST", 'localhost')
+EMAIL_PORT = os.environ.get('EMAIL_PORT', 25)
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 0) == '1'
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL','vidasegura@vidasegura.cetsp.com.br')
+
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', None)
+if EMAIL_HOST_USER:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL','vidasegura@vidasegura.cetsp.com.br')
+
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', None)

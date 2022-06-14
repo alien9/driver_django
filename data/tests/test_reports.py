@@ -39,6 +39,8 @@ class ReportsTestCase(APITestCase):
         for record in records['results']:
             record['schema']=rt['uuid'] 
             response=self.client.post('/api/records/', record, format='json')
+            print("upa")
+            print(response.json())
 
     def setUpGeography(self):
         b=Boundary(
@@ -62,7 +64,7 @@ class ReportsTestCase(APITestCase):
         print("Testing reports...", end='')
         
         
-        # 1 crash involves a minor
+        # 2 crash involves a minor
         response=self.client.get("/api/records/?archived=False&details_only=False&jsonb=%7B\"driverVictim\":%7B\"Age\":%7B\"_rule_type\":\"intrange_multiple\",\"max\":17%7D%7D%7D&limit=50&occurred_max=2022-01-13T01:59:59.999Z&occurred_min=2021-10-14T02:00:00.000Z&record_type={record_type}".format(
                 record_type=self.record_type_uuid
             )
@@ -70,7 +72,7 @@ class ReportsTestCase(APITestCase):
         print(".", end='')
         print(response.json())
 
-        self.assertEqual(response.json()['count'], 1)
+        self.assertEqual(response.json()['count'], 2)
         # 5 crashes involv motorcycle(s)
         response=self.client.get("/api/records/?archived=false&details_only=false&limit=50&record_type={record_type}&active=true&jsonb=%7B%22driverVehicle%22:%7B%22Vehicle%20type%22:%7B%22_rule_type%22:%22containment_multiple%22,%22contains%22:%5B%22Motorcycle%22%5D%7D%7D%7D&occurred_min=2021-10-01T03:00:37.291Z&occurred_max=2022-01-11T03:00:37.291Z".format(
                 record_type=self.record_type_uuid

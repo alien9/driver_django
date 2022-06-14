@@ -132,7 +132,12 @@ class BlackSpotSetAdmin(admin.ModelAdmin):
     list_display =  ("title",)
     def stats(self, obj: BlackSpotSet) -> str:
         return "%s spots detected" % (obj.blackspot_set.count()) 
-
+    class Meta:
+        model = BlackSpotSet
+        fields = '__all__'
+        widgets = {
+            'color': TextInput(attrs={'type': 'color'}),
+        }
 class UserAdminDriver(UserAdmin):
     inlines = UserAdmin.inlines + [IrapInline]
    

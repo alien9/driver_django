@@ -82,15 +82,20 @@ class DriverRecord(Record):
     neighborhood = models.CharField(max_length=50, null=True, blank=True)
     road = models.CharField(max_length=200, null=True, blank=True)
     state = models.CharField(max_length=50, null=True, blank=True)
-    segment = models.ManyToManyField(RecordSegment, null=True, blank=True)
+    segment = models.ManyToManyField(RecordSegment, blank=True)
     mapillary=models.OneToOneField('MapillaryData', on_delete=models.CASCADE, null=True, blank=True)
 
     def geocode(self, roadmap_uuid, size):
         if self.geom:
             row=[None]
+            print("getting segment")
+            seg=self.segment.filter(size=size)
+            if seg.count():
+                return seg[0]
             with connection.cursor() as cursor:
                 cursor.execute("select * from works.find_segment(%s, %s, %s)", [self.geom.ewkt, size, str(roadmap_uuid)])
                 row = cursor.fetchone()
+                print(row)
             if row[0] is not None:
                 s=RecordSegment.objects.filter(
                     geom=GEOSGeometry(row[0]),
@@ -98,6 +103,7 @@ class DriverRecord(Record):
                     roadmap_id=roadmap_uuid
                 )
                 if not len(s):
+                    print("inedito segmento")
                     seg=RecordSegment(
                         roadmap_id=roadmap_uuid, 
                         data={},
@@ -108,6 +114,7 @@ class DriverRecord(Record):
                     seg.save()
                 else:
                     seg=s[0]
+                    print("reaproveita")
                 self.segment.add(seg)
                     
     def save(self, *args, **kwargs):
@@ -127,7 +134,7 @@ class DriverRecord(Record):
                         self.light='night'
         super(DriverRecord, self).save(*args, **kwargs)
 
-@receiver(post_save, sender=DriverRecord)
+""" @receiver(post_save, sender=DriverRecord)
 def record_after_save(sender, instance, **kwargs):
     if instance.location_text is None and config.NOMINATIM!='':
         r=requests.get("https://api.pickpoint.io/v1/reverse?format=json&key={key}&lat={lat}&lon={lon}".format(
@@ -136,11 +143,12 @@ def record_after_save(sender, instance, **kwargs):
             lon=instance.geom.x
         ))
         j=r.json()
+        print(j)
         print("%s, %s" % (j['address']['road'],j['address']['city']))
         if j:
             instance.location_text="%s, %s" % (j['address']['road'],j['address']['city']) [0:199]
             instance.save()
-
+ """
 
 class MapillaryData(models.Model):
     record=models.OneToOneField(DriverRecord, on_delete=models.CASCADE, primary_key=True)
@@ -221,7 +229,7 @@ class DedupeJob(models.Model):
             (SUCCESS, 'Success'),
             (ERROR, 'Error'),
         )
-
+ 
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     datetime = models.DateTimeField(auto_now_add=True, db_index=True)
     status = models.CharField(max_length=8, choices=Status.CHOICES, default=Status.PENDING)

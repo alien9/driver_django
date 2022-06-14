@@ -151,6 +151,8 @@ class DriverRecordExporter(object):
         outfiles = {related: tempfile.NamedTemporaryFile(delete=False)
                     for related, subschema in self.schema['definitions'].iteritems()
                     if not subschema.get('details')}
+        print("setting up downloadable files")
+        print(outfiles)
         return (rec_outfile, outfiles)
 
     def write_headers(self):

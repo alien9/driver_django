@@ -41,8 +41,9 @@ urlpatterns = i18n_patterns(
 
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
+    url('^', include('django.contrib.auth.urls')),
     url(r'^api/', include(router.urls)),
-    url(r'^legacy/', data_views.index),
+    url(r'^api/create-user/', auth_views.user_create),
     url(r'^editor/$', data_views.editor),
     url(r'^maps/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w\s]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).png/$', data_views.maps),
     url(r'^grid/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).json/$', data_views.grid),
@@ -68,12 +69,13 @@ urlpatterns = [
     url(r'^download/(?P<filename>[^\/]*)$', data_views.download),
     url('tiles/', data_views.proxy),
     url('mapserver/', data_views.mapserver),
-    url('segments/', data_views.segment_sets),    
+    #url('segments/', data_views.segment_sets),    
     url('api/irap-login/', login_irap),
     url('api/irap-getdataset/', getdataset),
     url('api/irap-getlat_lon/', getlat_lon),
     url('api/irap-fatalitydata/', fatalitydata),
-    url(r'^get_config/', auth_views.get_config)
+    url(r'^get_config/', auth_views.get_config),
+    url(r'^signup/', auth_views.signup),
 ]
 
 # i18n for django-admin
@@ -82,9 +84,12 @@ from django.conf.urls.i18n import i18n_patterns
 # Allow login to the browseable API
 urlpatterns.append(url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')))
 
-if settings.DEBUG or settings.TESTING:
+if settings.DEBUG:
     import debug_toolbar
     urlpatterns = [
         url(r'^api/__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
 
+urlpatterns += [
+    path('captcha/', include('captcha.urls')),
+]

@@ -5,6 +5,7 @@ import tempfile
 import time
 import io
 import pytz
+from celery.utils.log import get_logger
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -21,6 +22,7 @@ from driver_auth.permissions import is_admin_or_writer
 logger = get_task_logger(__name__)
 local_tz = pytz.timezone(settings.TIME_ZONE)
 
+logger = get_logger(__name__)
 
 def _utf8(value):
     """
@@ -55,6 +57,7 @@ def export_csv(query_key, user_id):
                       Windshaft tiles so that the CSV will correspond to the filters applied in
                       the UI.
     """
+    logger.info("Starting export_csv")
     # Get Records
     records = get_queryset_by_key(query_key)
     # Get the most recent Schema for the Records' RecordType
@@ -68,10 +71,10 @@ def export_csv(query_key, user_id):
     # Get user
     user = User.objects.get(pk=user_id)
     # Create files and CSV Writers from Schema
-    if is_admin_or_writer(user):
-        record_writer = DriverRecordExporter(schema)
-    else:
-        record_writer = ReadOnlyRecordExporter(schema)
+    #if is_admin_or_writer(user):
+    record_writer = DriverRecordExporter(schema)
+    #else:
+    #    record_writer = ReadOnlyRecordExporter(schema)
 
     # Write records to files
     for rec in records:
