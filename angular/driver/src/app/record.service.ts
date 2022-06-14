@@ -38,7 +38,7 @@ export class RecordService {
     let params = new HttpParams()
       .set('archived', 'false')
       .set('details_only', 'false')
-      .set('limit', '50')
+      .set('limit', o['limit']?o['limit']:'50')
       .set('record_type', o['uuid'])
       .set('active', 'true')
     if (q) {
@@ -127,6 +127,16 @@ export class RecordService {
     })
     return this.http.get<any[]>(`${this.getBackend()}/api/records/quantiles/`, { headers: this.getHeaders(), params: params })
   }
+  getSegmentQuantiles(o: string, q: object) {
+    let params = new HttpParams()
+      .set('archived', 'False')
+      .set('record_type', o)
+      .set('calendar', 'gregorian')
+    Object.keys(q).forEach(k => {
+      params = params.set(k, q[k])
+    })
+    return this.http.get<any[]>(`${this.getBackend()}/api/records/quantiles/`, { headers: this.getHeaders(), params: params })
+  }
   iRapLogin(data) {
     return this.http.post(`${this.getBackend()}/api/irap-login/`, data, { headers: this.getHeaders() });
   }
@@ -185,13 +195,25 @@ export class RecordService {
   }
   postCsv(tilekey:string){
     let data={"tilekey":tilekey}
-    let csrf = document.cookie.match(/csrftoken=(\w*)?/)
-    if (csrf) {
-      data['csrfmiddlewaretoken'] = csrf.pop()
-    }
     return this.http.post(`${this.getBackend()}/api/csv-export/`, data, { headers: this.getHeaders() })
   }
   getCsv(tilekey:string){
     return this.http.get<any[]>(`${this.getBackend()}/api/csv-export/${tilekey}/`, { headers: this.getHeaders() })
+  }
+  //https://vidasegura.cetsp.com.br/api/records/costs/?archived=False&details_only=True&occurred_max=2020-12-31T02:59:59.000Z&occurred_min=2020-01-01T03:00:00.000Z&record_type=e2d3fa18-4080-4595-b39b-c95d3c30b626
+  getRecordCosts(o: Object, q: any): Observable<any[]> {
+    let params = new HttpParams()
+      .set('archived', 'false')
+      .set('details_only', 'true')
+      .set('record_type', o['uuid'])
+      .set('active', 'true')
+    if (q) {
+      if (q.filter) {
+        for (var k in q.filter) {
+          if (q.filter[k]) params = params.set(k, q.filter[k])
+        }
+      }
+    }
+    return this.http.get<any[]>(this.getBackend() + '/api/records/costs/', { headers: this.getHeaders(), params: params })
   }
 }

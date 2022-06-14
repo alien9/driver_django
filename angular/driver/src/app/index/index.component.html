@@ -1,12 +1,13 @@
-<app-navbar *ngIf=recordSchema [recordSchema]=recordSchema class=navbar-fixed [config]=config [filter]=filter [filterObject]=filterObject [boundaries]=boundaries (boundaryChange)=setBoundary($event) (boundaryPolygonChange)=setBoundaryPolygon($event) [boundary]=boundary
-    [boundaryPolygons]=boundaryPolygons [boundaryPolygon]=boundaryPolygon (filterChange)=setFilter($event) (stateChange)=selectState($event) (reportChange)=setReport($event) [stateSelected]=state (goBack)=goBack($event) (iRapChange)=setIrap($event) [iRap]=iRap
-    [irapDataset]=irapDataset (newRecord)=startRecord($event) [inserting]=listening (startDownload)=download($event)>
+<app-navbar *ngIf="recordSchema && filter" [recordSchema]=recordSchema class=navbar-fixed [config]=config [filter]=filter [filterObject]=filterObject [boundaries]=boundaries (boundaryChange)=setBoundary($event) (boundaryPolygonChange)=setBoundaryPolygon($event)
+    [boundary]=boundary [boundaryPolygons]=boundaryPolygons [boundaryPolygon]=boundaryPolygon (filterChange)=setFilter($event) (stateChange)=selectState($event) (reportChange)=setReport($event) [stateSelected]=state (goBack)=goBack($event) (iRapChange)=setIrap($event)
+    [iRap]=iRap [irapDataset]=irapDataset (newRecord)=startRecord($event) [inserting]=listening (startDownload)=download($event) [canWrite]="canWrite">
 </app-navbar>
 <app-list *ngIf="state=='List'" [filter]=filter [listPage]=listPage (setListPage)=setListPage($event) [boundary_polygon_uuid]=boundary_polygon_uuid [recordSchema]=recordSchema [recordList]=recordList (viewRecord)="viewRecord(viewpoint, $event)"></app-list>
 <app-map *ngIf="state=='Map'" (setDrawing)=setDrawing($event) [fitBounds]=fitBounds [options]=options [layers]=layers [layersControl]=layersControl [boundary_polygon_uuid]=boundary_polygon_uuid (map)=setMap($event) (onSetPolygon)=setPolygon($event) [polygon]=polygon
     [mapListening]=listening (newRecord)=newRecord($event,viewpoint)></app-map>
 
-<app-legend [legends]=legends *ngIf=legends></app-legend>
+<app-legend [config]="config" [legends]=legends [subtitles]=subtitles *ngIf=legends.length||subtitles.length></app-legend>
+<app-counter [config]="config" [counts]=counts [filter]="filter" [fields]="filterAsText" *ngIf="counts && state=='Map'"></app-counter>
 
 <button (click)=mapClick(viewpoint) [hidden]="true" id="map-popup-button"></button>
 <ng-template #viewpoint let-modal>
@@ -26,7 +27,7 @@
 
 <div id="popup-content">
     <h5>-name-</h5>
-    <p>{{'Cost'| translate}}: -cost-</p>
+    <!--p>{{'Cost'| translate}}: -cost-</p-->
     <p>{{'Count'| translate}}: -total-</p>
 </div>
 <div id="record-popup-content">

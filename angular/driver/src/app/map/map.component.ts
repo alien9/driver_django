@@ -53,7 +53,7 @@ export class MapComponent implements OnInit {
     this.recordSchema = JSON.parse(localStorage.getItem("record_schema"))
     let bp = localStorage.getItem("boundary_polygon")
     if (bp) this.boundary_polygon_uuid = bp
-    if (this.polygon) this.drawnItems.addLayer(this.polygon)
+    //if (this.polygon) this.drawnItems.addLayer(this.polygon)
     this.drawOptions = {
       position: 'topright',
       draw: {
@@ -61,7 +61,7 @@ export class MapComponent implements OnInit {
         polyline: false,
         circlemarker: false,
         circle: false,
-        rectangle: { showArea: false }
+        rectangle: { showArea: false, repeatMode:false }
       },
       edit: {
         featureGroup: this.drawnItems
@@ -75,21 +75,23 @@ export class MapComponent implements OnInit {
     this.router.navigateByUrl('/login')
   }
   onDrawCreated(e: any) {
-    this.drawnItems = featureGroup()
-    const layer = (e as DrawEvents.Created).layer;
+    let layer = (e as DrawEvents.Created).layer;
     this.drawnItems.addLayer(layer);
-    this.onSetPolygon.emit(layer)
+    this.onSetPolygon.emit(this.drawnItems)
     this.setDrawing.emit(false)
   }
   onDrawDeleted(e: any) {
-    this.onSetPolygon.emit(null)
+    let layer = (e as DrawEvents.Deleted).layer;
+    this.drawnItems.removeLayer(layer);
+    this.onSetPolygon.emit(this.drawnItems)
     this.setDrawing.emit(false)
   }
   onMapReady(e: any) {
     this.map.emit(e)
     e.on('overlayadd', e=>{
-      console.log("added an overlay")
-      console.log(e)
+    })
+    e.on('baselayerchange', l=>{
+      localStorage.setItem("baselayer", l.name)
     })
   }
   startDraw(e: any) {

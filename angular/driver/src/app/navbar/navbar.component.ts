@@ -48,6 +48,7 @@ export class NavbarComponent implements OnInit {
   public savedFilters: any[]
   public filterLabel: string = ""
   public filtering: boolean = false
+  @Input() canWrite:boolean
   public tabs = [
 
   ]
@@ -89,7 +90,7 @@ export class NavbarComponent implements OnInit {
           return
         } */
     this.schema = this.recordSchema['schema']
-    this.language = localStorage.getItem("Language") || 'en'
+    this.language = localStorage.getItem("Language") || 'pt'
     console.log(this.schema)
     this.initDataFrame()
     this.qrvalue = this.recordService.getBackend()
@@ -109,6 +110,9 @@ export class NavbarComponent implements OnInit {
   }
   selectBoundaryPolygon(b: any) {
     this.boundaryPolygonChange.emit(b)
+  }
+  startHelp(content:any){
+    this.modalService.open(content, { size: 'xl', scrollable: true});
   }
   startFilters(content: any) {
     this.modalService.open(content, { size: 'lg' });
@@ -256,12 +260,12 @@ export class NavbarComponent implements OnInit {
   }
   collectCsv(task: string) {
     this.recordService.getCsv(task).pipe(first()).subscribe(d => {
+      console.log(d)
       if (d['status'] != "SUCCESS") {
         setTimeout(() => this.collectCsv(task), 3000)
       } else {
         this.downloading = false
-        console.log(d['result'].replace(/^[\w]+:/, location.protocol))
-        window.location.href=d['result'].replace(/^[\w]+:/, location.protocol)
+        window.location.href=d['result'].replace(/^\w+:/, window.location.protocol)
       }
     })
   }
@@ -275,12 +279,11 @@ export class NavbarComponent implements OnInit {
         if (this.downloading)
           return
         this.downloading = true
+        setTimeout('$("#navbarDropdown")[0].click()', 200)
         this.recordService.getTileKey({ 'uuid': this.recordSchema["record_type"] }, {
           filter: this.filter
         }).pipe(first()).subscribe(t => {
-          console.log(t)
           this.recordService.postCsv(t['tilekey']).pipe(first()).subscribe(data => {
-            console.log(data)
             if (data['success']) {
               setTimeout(() => this.collectCsv(data['taskid']), 1000)
             }
@@ -290,7 +293,7 @@ export class NavbarComponent implements OnInit {
         break
     }
   }
-  hasDownload() {
+  hasDownload(){
     return ['List', 'Map', 'Reports'].indexOf(this.stateSelected) >= 0
   }
   setlang(code: string) {
@@ -450,8 +453,27 @@ export class NavbarComponent implements OnInit {
 
   resetFilter() {
     localStorage.removeItem("current_filter")
-    this.filterChange.emit({})
-    this.loadFilter()
+    this.recordService.getRecords({ 'uuid': this.recordSchema['record_type'] }, { 'filter': { 'limit': 1 } }).pipe(first()).subscribe({
+      next: data => {
+        // set filter: last 3 months from latest found data
+        if (data['results'] && data['results'].length) {
+          let di = new Date(data['results'][0].occurred_from)
+          let df = new Date(data['results'][0].occurred_from)
+          df.setMonth(di.getMonth() - 3)
+          this.occurred_min=df
+          this.occurred_max=di
+          this.occurred_min_ngb = this.asNgbDateStruct(this.occurred_min)
+          this.occurred_max_ngb = this.asNgbDateStruct(this.occurred_max)
+          this.filter = {
+            'occurred_max': di.toISOString(),
+            'occurred_min': df.toISOString()
+          }
+          jQuery('.modal-content input[type=checkbox]').prop('checked', false)
+          this.filterObject={}
+          this.loadFilter()
+        }
+      }
+    })
   }
   cancelReport(modal: any) {
     this.goBack.emit('Reports')

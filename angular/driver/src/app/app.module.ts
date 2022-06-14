@@ -34,7 +34,7 @@ import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
 import { ModalModule } from 'ngx-bootstrap/modal';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { filter, funnel, threeDots, threeDotsVertical, calendar, x, textParagraph, pencilSquare, pinMapFill } from 'ngx-bootstrap-icons';
+import { filter, funnel, threeDots, threeDotsVertical, calendar, x, textParagraph, pencilSquare, pinMapFill, arrowRepeat, questionLg } from 'ngx-bootstrap-icons';
 
 import { NgxBootstrapIconsModule } from 'ngx-bootstrap-icons';
 import { ListComponent } from './list/list.component';
@@ -63,6 +63,7 @@ import { AuthService } from './auth.service'
 import { map } from 'rxjs/operators';
 import { DuplicateComponent } from './duplicate/duplicate.component';
 import { LegendComponent } from './legend/legend.component';
+import { CounterComponent } from './counter/counter.component';
 
 const socialConfigFactory = (restService: AuthService) => {
   return restService.getGoogleClientId().pipe(map(config => {
@@ -104,7 +105,9 @@ const icons = {
   x,
   textParagraph,
   pencilSquare,
-  pinMapFill
+  pinMapFill,
+  arrowRepeat,
+  questionLg
 };
 
 @NgModule({
@@ -135,6 +138,7 @@ const icons = {
     IrapPopupComponent,
     DuplicateComponent,
     LegendComponent,
+    CounterComponent,
   ],
   imports: [
     BrowserModule,

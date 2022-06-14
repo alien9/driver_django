@@ -22,7 +22,6 @@ import * as uuid from 'uuid';
   styleUrls: ['./index.component.scss']
 })
 export class IndexComponent implements OnInit {
-  private mapfile: string;
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
     if (event.key && event.key == 'Escape') {
@@ -67,7 +66,15 @@ export class IndexComponent implements OnInit {
   locale: string
   weekdays: object
   reportFilters: object[]
-  legends: object[]
+  legends: object[] = []
+  counts: object
+  filterAsText: any[] = []
+  subtitles: object[] = []
+  loading: object = {
+    "segment": [],
+    "theme": []
+  }
+
   private irapColor = [
     '#000000',
     '#ff0000',
@@ -77,6 +84,7 @@ export class IndexComponent implements OnInit {
     '#009900',
   ]
   theme: object = {}
+  segment: object = {}
   @ViewChild(NavbarComponent) navbar!: NavbarComponent;
   @ViewChild(ChartsComponent) charts!: ChartsComponent;
   popContent: any
@@ -95,21 +103,25 @@ export class IndexComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    console.log("this is loading")
+
     let cu = document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")
     if (!cu.length) {
       this.router.navigateByUrl('/login')
       return
     }
+
     this.recordService.getConfig().pipe(first()).subscribe(data => {
-      localStorage.setItem('config', JSON.stringify(data));
-      this.recordService.getRecordType().subscribe({next:
-        rata => {
+      this.config = data
+      this.recordService.getRecordType().subscribe({
+        next: rata => {
           if (rata['results']) {
             let schema_uuid;
             for (let i = 0; i < rata['results'].length; i++) {
               if (rata['results'][i]['label'] == data['PRIMARY_LABEL']) {
                 schema_uuid = rata['results'][i]['current_schema'];
                 this.recordtype_uuid = rata['results'][i]['uuid']
+                this.config['PRIMARY_LABEL_PLURAL'] = rata['results'][i]['plural_label']
               };
             }
             if (schema_uuid) {
@@ -117,8 +129,6 @@ export class IndexComponent implements OnInit {
                 sata => {
                   localStorage.setItem('record_schema', JSON.stringify(sata));
                   this.recordSchema = sata
-                  //this.entering.emit(null)
-                  //this.router.navigateByUrl('/')
                   this.afterInit()
                 }
               )
@@ -128,9 +138,10 @@ export class IndexComponent implements OnInit {
           } else {
             alert(data['PRIMARY_LABEL'] + " record type not found")
           }
-        },error:err=>{
+        }, error: err => {
           this.router.navigateByUrl('/login')
-        }})
+        }
+      })
     })
   }
   afterInit() {
@@ -138,7 +149,7 @@ export class IndexComponent implements OnInit {
     if (w && w.length && w[1] == 'true') this.canWrite = true
     this.state = localStorage.getItem('state') || 'Map'
     this.popContent = $("#popup-content")[0]
-    this.config = (localStorage.getItem("config")) ? JSON.parse(localStorage.getItem("config")) : {}
+
     if (!this.config['LANGUAGES'])
       this.config['LANGUAGES'] = []
     const mapillary_auth: string = this.route.snapshot.queryParamMap.get('code');
@@ -150,14 +161,13 @@ export class IndexComponent implements OnInit {
       this.irapDataset = JSON.parse(localStorage.getItem("irapDataset"))
       if (!this.irapDataset['selected']) this.irapDataset['selected'] = {}
     }
-    this.locale = localStorage.getItem("Language") || "en"
+    this.locale = localStorage.getItem("Language") || "pt"
     this.weekdays = {}
     let d = new Date()
     for (let i = 0; i < 7; i++) {
       this.weekdays[d.getDay()] = d.toLocaleDateString(this.locale, { weekday: 'long' })
       d.setDate(d.getDate() + 1)
     }
-    //this.recordSchema = JSON.parse(localStorage.getItem("record_schema"))
     this.backend = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
 
     let tables = Object.keys(this.recordSchema['schema']['properties'])
@@ -179,7 +189,7 @@ export class IndexComponent implements OnInit {
       this.filter = JSON.parse(fu)
       this.filterObject = (this.filter['jsonb']) ? JSON.parse(this.filter['jsonb']) : {}
     }
-
+    let geoserver = this.config["GEOSERVER"] || "https://vidasegura.cetsp.com.br/geoserver"
     let str = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
       {
         attribution: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors, &copy; <a href='https://cartodb.com/attributions'>CartoDB</a>",
@@ -192,8 +202,8 @@ export class IndexComponent implements OnInit {
         detectRetina: false,
         zIndex: 1
       })
-    let osm = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
-    let sat = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {});
+    let osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
+    let sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {});
 
     this.backend = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
     this.layersControl = {
@@ -206,7 +216,12 @@ export class IndexComponent implements OnInit {
       overlays: {
       }
     }
-    this.layers = [str]
+    let bl = localStorage.getItem("baselayer") || 'CartoDB'
+
+    if (this.layersControl.baseLayers[bl])
+      this.layers = [this.layersControl.baseLayers[bl]]
+    else
+      this.layers = [str]
     this.options = {
       layers: this.layers
     }
@@ -214,7 +229,8 @@ export class IndexComponent implements OnInit {
       next: critical_data => {
         if (critical_data['results']) {
           critical_data['results'].forEach(rs => {
-            let gl = utfGrid(`${this.backend}/grid/critical/${rs['uuid']}/critical_offset/{z}/{x}/{y}.json/`, {
+
+            let gl = utfGrid(`${this.backend}/grid/critical/${rs['uuid']}/segments/{z}/{x}/{y}.json/`, {
               resolution: 4,
               pointerCursor: true,
               mouseInterval: 66
@@ -234,16 +250,14 @@ export class IndexComponent implements OnInit {
                 $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
               })
             });
-            gl.on('click', (e: any) => {
-              if (!e.data) return
-              let t = this.popContent.innerHTML
-                .replace(/-total-/, e.data.num_records)
-                .replace(/-name-/, e.data.name)
-                .replace(/-cost-/, e.data.cost)
-              new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
+            gl.on('add', (e: any) => {
+              this.zone.run(() => {
+                this.addSegment(rs['uuid'], rs['title'])
+                this.loading['segment'].push(rs['uuid'])
+                $('.leaflet-grab').css('cursor', 'progress')
+              })
             })
             this.layersControl.overlays[rs["title"]] = new L.LayerGroup([
-              L.tileLayer(`${this.backend}/maps/critical/${rs['uuid']}/critical/{z}/{x}/{y}.png`, {}),
               gl
             ])
           })
@@ -296,12 +310,12 @@ export class IndexComponent implements OnInit {
                   $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
                 })
               });
-              //let l=L.tileLayer(`${this.backend}/maps/boundary/${b.uuid}/boundary/{z}/{x}/{y}.png`, {})
               gl.on('click', (e) => {
                 console.log(e)
               })
               gl.on('add', lo => {
                 this.zone.run(() => {
+                  $('.leaflet-grab').css('cursor', 'progress')
                   this.addThematic(b.uuid, b.label)
                 })
               })
@@ -324,18 +338,93 @@ export class IndexComponent implements OnInit {
       }
     })
   }
+  addSegment(uuid, label) {
+    let f = JSON.parse(JSON.stringify(this.filter || {}))
+    f['critical'] = uuid
+    let d = (new Date()).getTime()
+    this.recordService.getSegmentQuantiles(this.recordtype_uuid, f).pipe(first()).subscribe({
+      next: data => {
+        let gl = utfGrid(`${this.backend}/grid/critical/${data['mapfile']}/critical/{z}/{x}/{y}.json/?ts=${d}`, {
+          resolution: 4,
+          pointerCursor: true,
+          mouseInterval: 66
+        })
+        gl.on('mouseover', (e) => {
+          if (e.data) {
+            $('.leaflet-grab').css('cursor', 'pointer')
+            this.zone.run(() => {
+              let t = e.data['name'].replace(/^"|"$/g, "")
+              if (e.data['num_records']) t = `${t} (${e.data['num_records']})`
+              let m = this.map
+              this.map.eachLayer(function (layer) {
+                if (layer.options.pane === "tooltipPane") layer.removeFrom(m);
+              });
+              e.sourceTarget.bindTooltip(t, { sticky: true, permanent: false });
+            })
+          }
+          else {
+            this.zone.run(() => {
+              $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
+            })
+          }
+        });
+        gl.on('mouseout', (e) => {
+          this.zone.run(() => {
+            $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
+          })
+        });
+        gl.on('remove', (e) => {
+          this.zone.run(() => {
+            delete this.segment[uuid]
+            this.setLegends()
+          })
+        });
+        gl.on('add', (e) => {
+          this.zone.run(() => {
+            // add to the legends as well
+            this.segment[uuid] = { 'label': label, 'data': {}, 'mapfile': data['mapfile'] }
+            this.setLegends()
+            this.loading['segment'] = this.loading['segment'].filter(jt => jt != uuid)
+            if (!this.loading['segment'].length && !this.loading['theme'].length)
+              $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
+          })
+        });
+
+        gl.on('click', (e: any) => {
+          if (!e.data) return
+          let t = this.popContent.innerHTML
+            .replace(/-total-/, e.data.num_records)
+            .replace(/-name-/, e.data.name)
+          //            .replace(/-cost-/, e.data.cost)
+          new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
+        })
+        let l = L.tileLayer(`${this.backend}/maps/critical/${data['mapfile']}/critical/{z}/{x}/{y}.png?ts=${d}`, {})
+        while (this.layersControl.overlays[label].getLayers().length > 0) {
+          this.layersControl.overlays[label].removeLayer(this.layersControl.overlays[label].getLayers()[0])
+        }
+        this.layersControl.overlays[label].addLayer(gl)
+        this.layersControl.overlays[label].addLayer(l)
+        this.layersControl.overlays[label].setZIndex(999)
+      }, error: err => console.log(err)
+    })
+  }
   addThematic(uuid, label) {
-    let f = this.filter || {}
+    let f = JSON.parse(JSON.stringify(this.filter || {}))
     f['aggregation_boundary'] = uuid
     let d = (new Date()).getTime()
     this.recordService.getQuantiles(this.recordtype_uuid, f).pipe(first()).subscribe({
       next: data => {
-        console.log(data)
         let l = L.tileLayer(`${this.backend}/maps/theme/${data['mapfile']}/theme%20border/{z}/{x}/{y}.png?ts=${d}`, {})
-        console.log(this.layersControl.overlays[label])
         if (this.layersControl.overlays[label].getLayers().length > 1) {
           this.layersControl.overlays[label].removeLayer(this.layersControl.overlays[label].getLayers()[1])
         }
+        l.on('add', (e) => {
+          this.zone.run(() => {
+            this.loading['theme'] = this.loading['theme'].filter(jt => jt != uuid)
+            if (!this.loading['segment'].length && !this.loading['theme'].length)
+              $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
+          })
+        })
         this.layersControl.overlays[label].addLayer(l)
         this.layersControl.overlays[label].setZIndex(999)
         this.theme[uuid] = { 'label': label, 'data': {}, 'mapfile': data['mapfile'] }
@@ -350,15 +439,18 @@ export class IndexComponent implements OnInit {
     this.lastState = this.state
     this.state = s
     if (s == 'Map') {
-      if (this.recordsLayer && this.map && !this.map.hasLayer(this.recordsLayer))
-        this.map.addLayer(this.recordsLayer)
+      this.loadRecords(true)
     }
   }
   setLegends() {
     this.legends = []
+    this.subtitles = []
     Object.keys(this.theme).forEach(kt => {
       let imagePath = "/legend/"
       this.legends.push({ "title": this.theme[kt]['label'], "mapfile": this.theme[kt]['mapfile'], "uuid": kt, "layers": "theme", "ts": (new Date()).getTime() })
+    })
+    Object.keys(this.segment).forEach(kt => {
+      this.subtitles.push({ "title": this.segment[kt]['label'], "mapfile": this.segment[kt]['mapfile'], "uuid": kt, "layers": "theme", "ts": (new Date()).getTime() })
     })
 
   }
@@ -446,22 +538,21 @@ export class IndexComponent implements OnInit {
               pointerCursor: true,
               mouseInterval: 66
             })
-            this.layersControl.overlays[rs["title"]] = new L.LayerGroup([
-              L.tileLayer(`${this.backend}/maps/critical/${rs['uuid']}/critical/{z}/{x}/{y}.png`, {}),
+            /* this.layersControl.overlays[rs["title"]] = new L.LayerGroup([
+              L.tileLayer(`${this.backend}/maps/critical/${rs['uuid']}/segments/{z}/{x}/{y}.png`, {}),
               gl
-            ])
+            ]) */
           })
         }
       }
     )
   }
   loadRecords(show: boolean) {
-    console.log("loading records")
+    this.counts = { 'total': null, 'total_crashes': null, 'subtotals': [] }
     this.recordService.getMapFileKey({ 'uuid': this.recordSchema["record_type"] }, {
       filter: this.filter
     }).pipe(first()).subscribe(
       data => {
-        this.mapfile = data['mapfile']
         this.spinner.hide()
         let ts = (new Date()).getTime()
         this.layersControl.overlays['Heatmap'] = L.tileLayer(`${this.backend}/maps/records/${data["mapfile"]}/heatmap/{z}/{x}/{y}.png/?${ts}`, {})
@@ -487,8 +578,9 @@ export class IndexComponent implements OnInit {
           if (e.data) {
             if (this.isDrawing) return
             let du = new Date(Date.parse(e.data['occurred_from']))
+            console.log(e.data)
             let t = $("#record-popup-content").html()
-              .replace(/-date-/, `${du.toLocaleDateString()}, ${du.toLocaleTimeString()}`)
+              .replace(/-date-/, `${du.toLocaleDateString('pt-BR')}, ${du.toLocaleTimeString('pt-BR').replace(/:00$/, '')}`)
               .replace(/-location-/, e.data['location_text'])
               .replace(/-uuid-/, e.data['uuid'])
             new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
@@ -513,15 +605,33 @@ export class IndexComponent implements OnInit {
         ])
         this.recordsLayer.setZIndex(8000)
         console.log("records loaded")
-        this.layersControl.overlays['Records'] = this.recordsLayer
+        this.layersControl.overlays[this.config['PRIMARY_LABEL_PLURAL']] = this.recordsLayer
         if (show && this.map) {
-          console.log('map add layer')
           this.map.addLayer(this.recordsLayer)
         }
         if (!this.map) {
-          console.log('no map yet')
+          console.log('error:no map yet')
           this.layers.push(this.recordsLayer)
         }
+        if (this.filter['jsonb']) {
+          this.filterAsText = []
+          let j = JSON.parse(this.filter['jsonb'])
+          Object.values(j).forEach(value => {
+            Object.entries(value).forEach(fields => {
+              if (fields[1].contains) {
+                this.filterAsText.push(`${fields[0]}: ${fields[1].contains.join(", ")}`)
+              }
+            })
+          })
+        }
+        this.recordService.getRecordCosts({ 'uuid': this.recordSchema["record_type"] }, {
+          filter: this.filter
+        }).pipe(first()).subscribe({
+          next: data => {
+            console.log(data)
+            this.counts = data
+          }
+        })
       })
   }
   refreshList() {
@@ -550,6 +660,9 @@ export class IndexComponent implements OnInit {
     this.refreshList()
     Object.keys(this.theme).forEach(tk => {
       this.addThematic(tk, this.theme[tk]['label'])
+    })
+    Object.keys(this.segment).forEach(tk => {
+      this.addSegment(tk, this.segment[tk]['label'])
     })
     this.setLegends()
     console.log(this.theme)
@@ -631,9 +744,18 @@ export class IndexComponent implements OnInit {
   setPolygon(p: any) {
     if (!p) delete this.filter['polygon']
     else {
-      this.filter['polygon'] = JSON.stringify(p.toGeoJSON()['geometry'])
-      this.polygon = p
+      let ply = {
+        "type": "MultiPolygon",
+        "coordinates": []
+      }
+      p.getLayers().forEach(lk => {
+        let co = lk.toGeoJSON()['geometry']
+        ply["coordinates"].push([co["coordinates"][0]])
+      })
+      if (!ply["coordinates"].length) delete this.filter['polygon']
+      else this.filter['polygon'] = JSON.stringify(ply)
     }
+
     this.loadRecords(true)
   }
   setDrawing(e: boolean) {
@@ -744,8 +866,6 @@ export class IndexComponent implements OnInit {
     this.removeIrapLayer()
   }
   reloadRecords(e: any) {
-    console.log("Reloading everything")
-    console.log(e)
     switch (this.state) {
       case 'List':
         this.refreshList()
@@ -826,3 +946,4 @@ export class IndexComponent implements OnInit {
     }
   }
 }
+

@@ -69,11 +69,25 @@ export class InputComponent implements OnInit {
   ngOnInit(): void {
     let locale = localStorage.getItem("Language") || "en"
     this.schema = this.recordSchema['schema']
-    let osm = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
-    let sat = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {});
+    let str = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+      {
+        attribution: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors, &copy; <a href='https://cartodb.com/attributions'>CartoDB</a>",
+        detectRetina: false,
+        zIndex: 1
+      })
+    let str_nolabel = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/light_nolabels/{z}/{x}/{y}.png',
+      {
+        attribution: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors, &copy; <a href='https://cartodb.com/attributions'>CartoDB</a>",
+        detectRetina: false,
+        zIndex: 1
+      })
+    let osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
+    let sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {});
     this.backend = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
     this.layersControl = {
       baseLayers: {
+        'CartoDB': str,
+        'No Labels': str_nolabel,
         'Open Street Map': osm,
         'Satellite Map': sat
       },
@@ -118,6 +132,15 @@ export class InputComponent implements OnInit {
         })
     }
 
+    let bl = localStorage.getItem("baselayer") || 'CartoDB'
+
+    if (this.layersControl.baseLayers[bl])
+      this.layers = [this.layersControl.baseLayers[bl]]
+    else
+      this.layers = [str]
+    this.options = {
+      layers: this.layers
+    }
 
     this.layers = [osm,
       this.marker
