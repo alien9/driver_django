@@ -1,0 +1,32 @@
+<div class="counter">
+    <div>
+        {{filter['occurred_min']|date:'shortDate':'America/Sao_Paulo':'pt-BR'}} a {{filter['occurred_max']|date:'shortDate':'America/Sao_Paulo':'pt-BR'}}
+        <br>
+    </div>
+    <div class="filter">
+        <div *ngFor="let fld of fields">
+            {{fld}}
+        </div>
+    </div>
+    <div>
+
+    </div>
+    <div>
+        <div *ngIf="counts['total']==null">
+            <span class="spinner-border spinner-border-sm ml-3 mr-3 pr-3 pl-3"></span>
+        </div>
+        <div *ngIf="counts['total']!=null">{{counts['total_crashes']||'Zero '}} <span *ngIf="counts['total_crashes']==1">{{config['PRIMARY_LABEL']}}</span>
+            <span *ngIf="counts['total_crashes']!=1">{{config['PRIMARY_LABEL_PLURAL']}}</span>
+        </div>
+    </div>
+    <div *ngIf="counts['total']!=null" class="filter">
+        <div *ngIf="!subtotals" class="filter-details" (click)="flipTotals()">
+            Perda Economica Total e Mal Social:<br>{{counts['total']|currency:'BRL':'symbol':'1.2':'pt-BR'}}<br>
+        </div>
+        <div *ngIf="subtotals" class="filter-details" (click)="flipTotals()">
+            <div *ngFor="let v of counts['subtotals'] | keyvalue">
+                {{v.key}}: {{v.value|currency:'BRL':'symbol':'1.2':'pt-BR'}}
+            </div>
+        </div>
+    </div>
+</div>
