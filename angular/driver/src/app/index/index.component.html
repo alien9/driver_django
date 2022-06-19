@@ -21,7 +21,7 @@
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
-    <app-input [config]=config *ngIf=record [record]=record [recordSchema]=recordSchema [editing]=editing (mapillaryId)="setMapillary($event)" [modal]=modal (reloadRecords)="reloadRecords($event)">
+    <app-input [config]=config *ngIf=record [roadmap_uuid]="roadmap_uuid" [record]=record [recordSchema]=recordSchema [editing]=editing (mapillaryId)="setMapillary($event)" [modal]=modal (reloadRecords)="reloadRecords($event)">
     </app-input>
 </ng-template>
 

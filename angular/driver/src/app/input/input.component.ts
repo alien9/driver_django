@@ -27,6 +27,7 @@ export class InputComponent implements OnInit {
   @Input() config: object
   @Input() editing: boolean
   @Input() modal: any
+  @Input() roadmap_uuid: string
   @Output() mapillaryId = new EventEmitter<string>()
   @Output() reloadRecords = new EventEmitter<object>()
   public schema: object
@@ -36,6 +37,7 @@ export class InputComponent implements OnInit {
   public edit: boolean = false
   private marker: L.marker
   private map: L.Map
+
   backend: string
   latitude: number
   longitude: number
@@ -132,8 +134,7 @@ export class InputComponent implements OnInit {
         })
     }
 
-    let bl = localStorage.getItem("baselayer") || 'CartoDB'
-
+    let bl = localStorage.getItem("input_baselayer") || 'CartoDB'
     if (this.layersControl.baseLayers[bl])
       this.layers = [this.layersControl.baseLayers[bl]]
     else
@@ -142,9 +143,6 @@ export class InputComponent implements OnInit {
       layers: this.layers
     }
 
-    this.layers = [osm,
-      this.marker
-    ]
     this.options = {
       layers: this.layers,
       zoom: 17,
@@ -260,12 +258,20 @@ export class InputComponent implements OnInit {
         })
       }
     })
+
   }
   mapReady(e: L.Map) {
     this.map = e
+    if (this.marker)
+      this.marker.addTo(this.map)
     setTimeout(function () {
       e.invalidateSize();
     }, 10);
+    e.on('overlayadd', e => {
+    })
+    e.on('baselayerchange', l => {
+      localStorage.setItem("input_baselayer", l.name)
+    })
   }
   tabChange(e: any) {
     if (this.schema['definitions'][e.nextId]['details']) {// it's returning to the map pane
@@ -315,9 +321,7 @@ export class InputComponent implements OnInit {
       distinctUntilChanged(),
       tap(() => this.geocoding = true),
       switchMap(term =>
-        this.webService.getForward({
-          'key': this.config['NOMINATIM'],
-          'country_code': this.config['COUNTRY_CODE'],
+        this.recordService.getForward(this.roadmap_uuid, {
           'term': term,
           'bbox': `${this.map.getBounds().getSouth()},${this.map.getBounds().getEast()},${this.map.getBounds().getNorth()},${this.map.getBounds().getWest()}`,
           'limit': 5
@@ -331,11 +335,15 @@ export class InputComponent implements OnInit {
       tap(() => this.geocoding = false)
     )
   geoResultFormatter = (x: any) => {
-    return x['display_name']
+    if (x['address'])
+      return x['address']['fullname']
+    return " "
   }
   geoInputFormatter = (x: any) => {
     if (typeof x == 'object') {
-      return x['display_name']
+      if (x['address'])
+        return x['address']['fullname']
+      return " "
     }
     return x
   }
@@ -372,7 +380,8 @@ export class InputComponent implements OnInit {
   }
   selectGeocodedOption(e: any): any {
     if (!e.item) return
-    this.record['location_text'] = e.item.display_name
+    if (e.item['address'])
+      this.record['location_text'] = e.item['address']['road']
     this.record['geom']['coordinates'] = [e.item.lon, e.item.lat]
     let latlng = new L.latLng(e.item.lat, e.item.lon)
     if (latlng) {

@@ -60,6 +60,7 @@ export class IndexComponent implements OnInit {
   private lastState: string
   public mapillary_id: string
   public irapDataset
+  roadmap_uuid: string
   listPage: number = 1
   listening: boolean = false
   hasIrap: boolean
@@ -619,7 +620,7 @@ export class IndexComponent implements OnInit {
           Object.values(j).forEach(value => {
             Object.entries(value).forEach(fields => {
               if (fields[1].contains) {
-                this.filterAsText.push(`${fields[0]}: ${fields[1].contains.join(", ")}`)
+                this.filterAsText.push(`${this.translateService.instant(fields[0])}: ${fields[1].contains.map(k => this.translateService.instant(k)).join(", ")}`)
               }
             })
           })
@@ -630,6 +631,12 @@ export class IndexComponent implements OnInit {
           next: data => {
             console.log(data)
             this.counts = data
+            this.recordService.getRoadMap().pipe(first()).subscribe({
+              next: data => {
+                if (data.length)
+                  this.roadmap_uuid = data[0]['uuid']
+              }
+            })
           }
         })
       })

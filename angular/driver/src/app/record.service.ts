@@ -200,7 +200,6 @@ export class RecordService {
   getCsv(tilekey:string){
     return this.http.get<any[]>(`${this.getBackend()}/api/csv-export/${tilekey}/`, { headers: this.getHeaders() })
   }
-  //https://vidasegura.cetsp.com.br/api/records/costs/?archived=False&details_only=True&occurred_max=2020-12-31T02:59:59.000Z&occurred_min=2020-01-01T03:00:00.000Z&record_type=e2d3fa18-4080-4595-b39b-c95d3c30b626
   getRecordCosts(o: Object, q: any): Observable<any[]> {
     let params = new HttpParams()
       .set('archived', 'false')
@@ -215,5 +214,11 @@ export class RecordService {
       }
     }
     return this.http.get<any[]>(this.getBackend() + '/api/records/costs/', { headers: this.getHeaders(), params: params })
+  }
+  getRoadMap(){
+    return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/`, { headers: this.getHeaders() })
+  }
+  getForward(roadmap:string, params: object) {
+    return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/${roadmap}/forward/?limit=15&q=${params['term']}&viewBox=${params['bbox']}`, { headers: this.getHeaders() })
   }
 }

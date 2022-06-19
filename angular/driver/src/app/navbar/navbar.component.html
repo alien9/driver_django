@@ -48,10 +48,10 @@
                 </li>
                 <li class="nav-item dropdown px-2">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarBoundariesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" *ngIf=boundary>
-                        {{boundary.label}}
+                        {{boundary.label|translate}}
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarBoundariesDropdown" *ngIf=boundaries.length>
-                        <li *ngFor="let b of boundaries"><a class="dropdown-item" href="#" (click)=selectBoundary(b)>{{b.label}}</a></li>
+                        <li *ngFor="let b of boundaries"><a class="dropdown-item" href="#" (click)=selectBoundary(b)>{{b.label|translate}}</a></li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown px-2">

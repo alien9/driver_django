@@ -14,18 +14,6 @@ export class CounterComponent implements OnInit {
   constructor() { }
   
   ngOnInit(): void {
-
-/*     if (this.filter['jsonb']) {
-      this.fields = []
-      let j = JSON.parse(this.filter['jsonb'])
-      Object.values(j).forEach(value => {
-        Object.entries(value).forEach(fields => {
-          if (fields[1].contains) {
-            this.fields.push(`${fields[0]}: ${fields[1].contains.join(", ")}`)
-          }
-        })
-      })
-    } */
   }
   flipTotals() {
     this.subtotals = !this.subtotals
