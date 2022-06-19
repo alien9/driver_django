@@ -120,7 +120,7 @@ class DriverRecord(Record):
     def save(self, *args, **kwargs):
         if not self.light:
             city=LocationInfo("","",config.TIMEZONE, self.geom.y, self.geom.x)
-            s=sun.sun(city.observer, date=self.occurred_from,tartzinfo=city.timezone)
+            s=sun.sun(city.observer, date=self.occurred_from,tzinfo=city.timezone)
 
             if abs((s['dawn']-self.occurred_from).seconds)<1800:
                 self.light='dawn'

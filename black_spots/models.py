@@ -84,6 +84,10 @@ def post_create(sender, instance, created, **kwargs):
     if created:
         instance.load_shapefile()
 
+@receiver(post_save, sender=RoadMap, dispatch_uid="save_roadmap")
+def post_save_roadmap(sender, instance, created, **kwargs):
+    from data.tasks import generate_roads_index
+    generate_roads_index.delay(instance.uuid)
 
 class Road(GroutModel):
     roadmap = models.ForeignKey('RoadMap',
@@ -162,11 +166,6 @@ class BlackSpotSet(GroutModel):
             m.write(t)
 @receiver(post_save, sender=BlackSpotSet, dispatch_uid="save_blackspotset")
 def post_save_blackspotset(sender, instance, created, **kwargs):
-    if instance.display:
-        alters=BlackSpotSet.objects.filter(Q(uuid=instance.uuid))
-        for b in alters:
-            b.display=False
-            b.save()
     # create mapserver file
     t=render_to_string('critical.map', {
         "connection":connection.settings_dict['HOST'],
@@ -178,8 +177,8 @@ def post_save_blackspotset(sender, instance, created, **kwargs):
     })
     with open("./mapserver/critical_%s.map" % (instance.uuid), "w+") as m:
         m.write(t)
-    from data.tasks import geocode_records
-    geocode_records.delay(instance.uuid)
+    from data.tasks import generate_roads_index
+    generate_roads_index.delay(instance.uuid)
 
 
 class BlackSpotConfig(GroutModel):

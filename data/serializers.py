@@ -154,4 +154,3 @@ class DictionarySerializer(ModelSerializer):
         model = Dictionary
         fields = '__all__'
 
-

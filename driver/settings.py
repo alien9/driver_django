@@ -42,6 +42,8 @@ ALLOWED_HOSTS = ['*']
 # TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
+
 CORS_ALLOWED_ORIGINS = [
     "%s://%s" % (os.environ.get('PROTOCOL', 'http'), os.environ.get("HOST_NAME", "localhost"),),
     'http://localhost:8000',
@@ -376,6 +378,7 @@ CELERY_ROUTES = {
     'data.tasks.fetch_record_csv.export_records': {'queue': 'taskworker'},
     'data.tasks.geocode_records.geocode_records': {'queue': 'taskworker'},
     'data.tasks.geocode_records.generate_blackspots': {'queue': 'taskworker'},
+    'data.tasks.geocode_records.generate_roads_index': {'queue': 'taskworker'},
 
 }
 # This needs to match the proxy configuration in nginx so that requests for files generated

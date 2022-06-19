@@ -3,7 +3,7 @@ from grout.models import Boundary, BoundaryPolygon
 from data.models import RecordType, RecordSchema, DriverRecord
 import json
 from rest_framework.test import APIClient, APITestCase, APIRequestFactory
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db import connection
 """
 # this is runnable at shell_plus to connect to the test database
@@ -14,14 +14,24 @@ db = connection.creation.create_test_db() # Create the test db
 """
 class ReportsTestCase(APITestCase):
     def setUp(self):
+        us=User.objects.filter(username='admin')
+        if not len(us):
+            u=User(username='admin')
+            u.save()
+        else:
+            u=us[0]
+        u.groups.add(Group.objects.filter(name='admin')[0])
+        u.save()
         self.client=APIClient()
-        self.client.force_authenticate(user=User.objects.first())
+        self.client.force_authenticate(user=u)
         response=self.client.post('/api/recordtypes/', { 
             "geometry_type":"point",
             "label":'Crash',
             "plural_label":'Crashes'
             }, format='json')
         r=response.json()
+        print("REPORTS TEST RECORD TYPE")
+        print(r)
         self.record_type_uuid=r['uuid']
         fu=open('data/tests/test_schema.json') 
         tu=fu.read()

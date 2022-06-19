@@ -18,11 +18,11 @@ router.register('audit-log', data_views.DriverRecordAuditLogViewSet)
 router.register('blackspots', black_spot_views.BlackSpotViewSet, basename='blackspots')
 router.register('blackspotsets', black_spot_views.BlackSpotSetViewSet, basename='blackspotsets')
 router.register('blackspotconfig', black_spot_views.BlackSpotConfigViewSet, basename='blackspotconfig')
+router.register('roadmaps', black_spot_views.RoadMapViewSet, basename='roadmaps')
 router.register('boundaries', data_views.DriverBoundaryViewSet)
 router.register('boundarypolygons', data_views.DriverBoundaryPolygonViewSet)
 router.register('csv-export', data_views.RecordCsvExportViewSet, basename='csv-export')
 router.register('duplicates', data_views.DriverRecordDuplicateViewSet)
-router.register('jars', data_views.AndroidSchemaModelsViewSet, basename='jars')
 router.register('records', data_views.DriverRecordViewSet)
 router.register('recordschemas', data_views.DriverRecordSchemaViewSet)
 router.register('recordtypes', data_views.DriverRecordTypeViewSet)
@@ -84,7 +84,7 @@ from django.conf.urls.i18n import i18n_patterns
 # Allow login to the browseable API
 urlpatterns.append(url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')))
 
-if settings.DEBUG:
+if settings.DEBUG or settings.TESTING:
     import debug_toolbar
     urlpatterns = [
         url(r'^api/__debug__/', include(debug_toolbar.urls)),

@@ -16,10 +16,10 @@ for k in [ t.split('=') for t in f.readlines() ]:
 
 DATABASE_NAME=e['DATABASE_NAME']
 DRIVER_DB_HOST=e['DATABASE_HOST']
-WINDSHAFT_HOST='localhost'#subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-vidasegura"]).decode('utf8').strip()
-MAPSERVER_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "mapserver-vidasegura"]).decode('utf8').strip()
-REDIS_HOST = subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "redis-server-vidasegura"]).decode('utf8').strip()
-CONTAINER_NAME='vidasegura'
+WINDSHAFT_HOST='localhost'#subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-"+e["CONTAINER_NAME"]]).decode('utf8').strip()
+MAPSERVER_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "mapserver-"+e["CONTAINER_NAME"]]).decode('utf8').strip()
+REDIS_HOST = subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "redis-server-"+e["CONTAINER_NAME"]]).decode('utf8').strip()
+CONTAINER_NAME=e['CONTAINER_NAME']
 CONSTANCE_CONFIG['WINDSHAFT']=("http://%s" % (WINDSHAFT_HOST,), "WindShaft")
 CONSTANCE_CONFIG['MAPSERVER']=("http://%s" % (MAPSERVER_HOST,), "Mapserver")
 CONSTANCE_CONFIG['GEOSERVER']=("http://%s" % (e['GEOSERVER'],), "GeoServer")
@@ -73,7 +73,10 @@ APPEND_SLASH=True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR+'/static/'
-
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'templates/dist'),
+    os.path.join(BASE_DIR, 'templates/schema_editor/dist'),
+)
 CACHES = {
     "default": {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -138,3 +141,4 @@ DEBUG_TOOLBAR_CONFIG = {
 
 DEDUPE_DISTANCE_DEGREES=0.5
 
+CORS_ORIGIN_ALLOW_ALL = True
