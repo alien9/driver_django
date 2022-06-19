@@ -11,16 +11,20 @@ PRODUCTION = not DEVELOP and not STAGING
 f = open(".env", "r")
 e={}
 for k in [ t.split('=') for t in f.readlines() ]:
-    e[k[0]]=k[1].replace("\n", "")
+    if len(k)>1:
+        e[k[0]]=k[1].replace("\n", "")
 
+DATABASE_NAME=e['DATABASE_NAME']
 DRIVER_DB_HOST=e['DATABASE_HOST']
-WINDSHAFT_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-%s" % (e['CONTAINER_NAME'])]).decode('utf8').strip()
-MAPSERVER_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "mapserver-%s" % (e['CONTAINER_NAME'])]).decode('utf8').strip()
-#DRIVER_DB_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "database-%s" % (e['CONTAINER_NAME'])]).decode('utf8').strip()
-REDIS_HOST = subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "redis-server-%s" % (e['CONTAINER_NAME'])]).decode('utf8').strip()
+WINDSHAFT_HOST='localhost'#subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-"+e["CONTAINER_NAME"]]).decode('utf8').strip()
+MAPSERVER_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "mapserver-"+e["CONTAINER_NAME"]]).decode('utf8').strip()
+REDIS_HOST = subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "redis-server-"+e["CONTAINER_NAME"]]).decode('utf8').strip()
 CONTAINER_NAME=e['CONTAINER_NAME']
 CONSTANCE_CONFIG['WINDSHAFT']=("http://%s" % (WINDSHAFT_HOST,), "WindShaft")
 CONSTANCE_CONFIG['MAPSERVER']=("http://%s" % (MAPSERVER_HOST,), "Mapserver")
+CONSTANCE_CONFIG['GEOSERVER']=("http://%s" % (e['GEOSERVER'],), "GeoServer")
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Quick-start development settings - unsuitable for production
 
@@ -35,11 +39,11 @@ DEBUG = DEVELOP
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': e['DATABASE_NAME'],
+        'NAME': DATABASE_NAME,
         'HOST': DRIVER_DB_HOST,
         'PORT': os.environ.get('DRIVER_DB_PORT', 5432),
         'USER': os.environ.get('DRIVER_DB_USER', 'driver'),
-        'PASSWORD': e['DATABASE_PASSWORD'],
+        'PASSWORD': os.environ.get('DRIVER_DB_PASSWORD', 'driver'),
         'CONN_MAX_AGE': 3600,  # in seconds
         'OPTIONS': {
         #    'sslmode': 'require'
@@ -47,15 +51,14 @@ DATABASES = {
     }
 }
 
-
 from django.utils.translation import ugettext_lazy as _
-LANGUAGES = ( 
+LANGUAGES = [
    ('de', _('German')),
    ('en', _('English')),
    ('fr', _('French')),
    ('es', _('Spanish')),
    ('pt-br', _('Portuguese'))
-)
+]
 
 TIME_ZONE = os.environ.get("DRIVER_LOCAL_TIME_ZONE", 'America/La_Paz')
 
@@ -70,7 +73,10 @@ APPEND_SLASH=True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR+'/static/'
-
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'templates/dist'),
+    os.path.join(BASE_DIR, 'templates/schema_editor/dist'),
+)
 CACHES = {
     "default": {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -135,3 +141,4 @@ DEBUG_TOOLBAR_CONFIG = {
 
 DEDUPE_DISTANCE_DEGREES=0.5
 
+CORS_ORIGIN_ALLOW_ALL = True

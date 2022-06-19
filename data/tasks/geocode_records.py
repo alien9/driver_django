@@ -2,39 +2,25 @@ from django.conf import settings
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from django_redis import get_redis_connection
-import time, uuid, pytz
+import time, uuid, pytz, os
 from data.models import DriverRecord, RecordType
-from black_spots.models import BlackSpot, BlackSpotSet
+from grout.models import Boundary
+from black_spots.models import RoadMap
 from constance import config  
 from django.db import connection
 from datetime import datetime
+from whoosh.index import create_in
+from whoosh.fields import Schema, TEXT, ID, STORED, NUMERIC
+from django.contrib.gis.geos import Point 
+
 logger = get_task_logger(__name__)
 
 @shared_task(track_started=True)
-def geocode_records():
-    redis_conn = get_redis_connection('geocode')
-    is_running=redis_conn.get('is_running')
-    print(is_running)
-    if is_running==b'1':
-        print("It is already running.")
-    #    return
-    redis_conn.set('is_running', "1")
-    id = redis_conn.lpop('records')
-    redis_conn.close()
-    try:
-        while id is not None:
-            print(id)
-            redis_conn = get_redis_connection('geocode')
-            redis_conn.close()
-            r=DriverRecord.objects.get(pk=id.decode('utf8'))
-            r.geocode()
-            id = redis_conn.lpop('records')
-        redis_conn = get_redis_connection('geocode')
-        redis_conn.set('is_running', "0")
-    except KeyboardInterrupt:
-        redis_conn = get_redis_connection('geocode')
-        redis_conn.delete('is_running')
-        
+def geocode_records(blackspotset):
+    bs=BlackSpotSet.objects.filter(uuid=blackspotset)
+    if len(bs):
+        for r in DriverRecord.objects.all():
+            r.geocode(bs[0].roadmap_id, bs[0].size)
         
 @shared_task(track_started=True)
 def generate_blackspots(blackspotset_uuid=None, user_id=None):
@@ -103,4 +89,35 @@ def generate_blackspots(blackspotset_uuid=None, user_id=None):
             total-=1
         
 
+@shared_task(track_started=True)
+def generate_roads_index(roadmap_id):
+    roadmap=RoadMap.objects.get(pk=roadmap_id)
+    schema = Schema(name=TEXT(stored=True),id=ID(stored=True),lat=NUMERIC(stored=True), lon=NUMERIC(stored=True), fullname=STORED)
+    if not os.path.exists("indexdir"):
+        os.mkdir("indexdir")
 
+    # Creating a index writer to add document as per schema
+    ix = create_in("indexdir",schema)
+    writer = ix.writer()
+    display_field=roadmap.display_field
+    names=set()
+    n=0
+    for rua in roadmap.roads.all():
+        if display_field in rua.data:
+            if rua.data[display_field] is not None:
+                if len(rua.data[display_field])>2:
+                    if len(rua.geom.coords)>0:
+                        loc=rua.geom.coords[len(rua.geom.coords)//2]
+                        streetname=rua.data[display_field]
+                        for bo in Boundary.objects.all():
+                            p=rua.geom.coords[len(rua.geom.coords)//2]
+                            bp=bo.polygons.filter(geom__contains=Point(p[0], p[1], rua.geom.srid))
+                            if len(bp):
+                                streetname+=" - {local}".format(local=bp[0].data[bo.display_field])
+                        if streetname not in names:
+                            writer.add_document(name=rua.data[display_field], fullname=streetname,id=str(rua.uuid),lat=loc[1],lon=loc[0])
+                            logger.debug("%s: added %s"% (n, streetname))
+                            names.add(streetname)
+                            n+=1
+
+    writer.commit()

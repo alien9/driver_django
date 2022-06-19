@@ -8,7 +8,6 @@ from django.db import migrations, models
 import django.db.models.deletion
 import uuid
 
-sql_statement = open("find_segments.sql").read()
 
 class Migration(migrations.Migration):
 
@@ -21,7 +20,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(sql_statement),
         migrations.CreateModel(
             name='DedupeJob',
             fields=[

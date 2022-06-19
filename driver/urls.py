@@ -18,11 +18,11 @@ router.register('audit-log', data_views.DriverRecordAuditLogViewSet)
 router.register('blackspots', black_spot_views.BlackSpotViewSet, basename='blackspots')
 router.register('blackspotsets', black_spot_views.BlackSpotSetViewSet, basename='blackspotsets')
 router.register('blackspotconfig', black_spot_views.BlackSpotConfigViewSet, basename='blackspotconfig')
+router.register('roadmaps', black_spot_views.RoadMapViewSet, basename='roadmaps')
 router.register('boundaries', data_views.DriverBoundaryViewSet)
 router.register('boundarypolygons', data_views.DriverBoundaryPolygonViewSet)
 router.register('csv-export', data_views.RecordCsvExportViewSet, basename='csv-export')
 router.register('duplicates', data_views.DriverRecordDuplicateViewSet)
-router.register('jars', data_views.AndroidSchemaModelsViewSet, basename='jars')
 router.register('records', data_views.DriverRecordViewSet)
 router.register('recordschemas', data_views.DriverRecordSchemaViewSet)
 router.register('recordtypes', data_views.DriverRecordTypeViewSet)
@@ -41,8 +41,9 @@ urlpatterns = i18n_patterns(
 
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
+    url('^', include('django.contrib.auth.urls')),
     url(r'^api/', include(router.urls)),
-    url(r'^legacy/', data_views.index),
+    url(r'^api/create-user/', auth_views.user_create),
     url(r'^editor/$', data_views.editor),
     url(r'^maps/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w\s]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).png/$', data_views.maps),
     url(r'^grid/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).json/$', data_views.grid),
@@ -68,12 +69,13 @@ urlpatterns = [
     url(r'^download/(?P<filename>[^\/]*)$', data_views.download),
     url('tiles/', data_views.proxy),
     url('mapserver/', data_views.mapserver),
-    url('segments/', data_views.segment_sets),    
+    #url('segments/', data_views.segment_sets),    
     url('api/irap-login/', login_irap),
     url('api/irap-getdataset/', getdataset),
     url('api/irap-getlat_lon/', getlat_lon),
     url('api/irap-fatalitydata/', fatalitydata),
-    url(r'^get_config/', auth_views.get_config)
+    url(r'^get_config/', auth_views.get_config),
+    url(r'^signup/', auth_views.signup),
 ]
 
 # i18n for django-admin
@@ -88,3 +90,6 @@ if settings.DEBUG or settings.TESTING:
         url(r'^api/__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
 
+urlpatterns += [
+    path('captcha/', include('captcha.urls')),
+]

@@ -3,9 +3,14 @@ from rest_framework.exceptions import ParseError, NotFound
 from rest_framework.serializers import ModelSerializer
 
 from grout.models import BoundaryPolygon
-from black_spots.models import (BlackSpot, BlackSpotSet, BlackSpotConfig)
+from black_spots.models import (BlackSpot, BlackSpotSet, BlackSpotConfig, RoadMap)
 from black_spots.filters import parse_and_validate_dt
 
+class RoadMapSerializer(ModelSerializer):
+    class Meta:
+        model=RoadMap
+        read_only_fields = ('id',)
+        fields = '__all__'
 
 class BlackSpotSerializer(ModelSerializer):
     """Serializer for black spots"""
@@ -117,3 +122,8 @@ class EnforcerAssignmentInputSerializer():
         """
         param_val = self.get_required_param(key, request)
         return parse_and_validate_dt(param_val, key)
+
+class RoadMapSerializer(ModelSerializer):
+    class Meta:
+        model=RoadMap
+        fields='__all__'

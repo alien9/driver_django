@@ -1,4 +1,4 @@
-import logging
+import logging,json
 from urllib.parse import quote
 from urllib.parse import parse_qs
 from django.views.decorators.csrf import csrf_exempt
@@ -7,7 +7,12 @@ from django.contrib.auth.models import User, Group
 from data.models import Dictionary
 from django.http import JsonResponse
 from django.shortcuts import redirect
-
+from django import forms
+from captcha.fields import CaptchaField
+from captcha.models import CaptchaStore
+from django.http import HttpResponse
+from django.utils import  timezone
+import hashlib, datetime, random
 from oauth2client import client, crypt
 from django.urls import reverse
 
@@ -189,5 +194,57 @@ def get_config(request):
     conf['LANGUAGES']=[]
     for ds in Dictionary.objects.all():
         conf['LANGUAGES'].append({"code":ds.language_code, "name":ds.name})
-    return JsonResponse(conf)
+    for k in [
+        'MAPILLARY_CLIENT_TOKEN',
+        'MAPILLARY_SECRET',
+        'MAPILLARY_TOKEN',
+        'IRAP_API_KEY',
+        'IRAP_AUTH_ID',
+        'IRAP_PRIVATE_KEY',
+    ]:
+        if k in conf:
+            del conf[k]
     
+    return JsonResponse(conf)
+
+@csrf_exempt
+def user_create(request):
+    d = json.loads(request.body)
+    if not 'email' in d:
+        return JsonResponse({'username': 'LOGIN.EMAIL_NEEDED'}, status=status.HTTP_400_BAD_REQUEST)
+    if not 'captcha_0' in d or not 'captcha_1' in d:
+        return JsonResponse({'captcha_1': 'LOGIN.CAPTCHA_MISSING'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        CaptchaStore.objects.get(response=d['captcha_1'].lower(), hashkey=d['captcha_0'], expiration__gt=timezone.now()).delete()
+    except CaptchaStore.DoesNotExist:
+        return JsonResponse({'captcha_1': 'LOGIN.CAPTCHA_ERROR'}, status=status.HTTP_400_BAD_REQUEST)
+
+    
+    chars = hashlib.sha1()
+    chars.update(("%s%s" % (datetime.datetime.now(), str(random.random()*99999))).encode('utf8'))
+    d['groups']=[]
+    d['username']=d['email']
+    d['password'] = chars.hexdigest()
+
+    serialized = UserSerializer(data=d, context={"request": request})
+    if serialized.is_valid():
+        #my_group = Group.objects.get(name='analyst')
+        u=serialized.save()
+        #my_group.user_set.add(u) unfortunately thats too dangerous
+        return JsonResponse(serialized.data, status=status.HTTP_201_CREATED)
+    else:
+        return JsonResponse(serialized.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@csrf_exempt
+def signup(request):
+    if request.POST:
+        nop
+    else:
+        form = CaptchaSignupForm()
+        r=HttpResponse(form.as_p())
+        
+        return r
+
+class CaptchaSignupForm(forms.Form):
+    email = forms.CharField()
+    captcha = CaptchaField()
