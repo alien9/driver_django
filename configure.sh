@@ -49,6 +49,7 @@ else
      echo "HTTPS"
  #    docker exec driver-nginx certbot
 fi
+[ -e "./static/*" ] && sudo rm ./static/*
 if [ "${EXISTE_DJANGO}" != "" ]; then 
      [ -e "${STATIC_ROOT}/static/*" ] && sudo rm -rf ${STATIC_ROOT}/static/*
      docker exec "driver-django-${CONTAINER_NAME}" ./manage.py collectstatic --noinput
