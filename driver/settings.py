@@ -542,6 +542,7 @@ CONSTANCE_CONFIG = {
     'IRAP_AUTH_ID': ("", _("iRAP Auth ID")),
     'IRAP_API_KEY': ("", _("iRAP API key")),
     'IRAP_PRIVATE_KEY': ("", _("iRAP Private key")),
+    'COLOR_SCHEME+': ("", _("Color Scheme")),
     'OPENWEATHER_RAPID_KEY':((os.getenv('OPENWEATHER_RAPID_KEY', '')), _("Open Weather API")),
 }
 CAPTCHA_OUTPUT_FORMAT=u'%(image)s %(hidden_field)s %(text_field)s'
