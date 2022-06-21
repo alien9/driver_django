@@ -58,7 +58,7 @@
                     <option [value]="field['table']+',properties,'+field['title']"
                         *ngFor="let field of reportFilters">
                         {{field['title']|translate}}</option>
-                    <option [value]="'boundary_id'" *ngFor="let bound of boundaries">{{bound.name}}</option>
+                    <option [value]="'boundary_id'" *ngFor="let bound of boundaries">{{bound.label|translate}}</option>
                     
                 </select>
                 <select class="custom-select" [(ngModel)]="barChart['parent_field']" (change)=loadChart(active) style="display:none">

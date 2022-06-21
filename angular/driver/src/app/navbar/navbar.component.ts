@@ -114,7 +114,6 @@ export class NavbarComponent implements OnInit {
     this.initDataFrame()
     this.qrvalue = this.recordService.getBackend()
     if (!this.qrvalue.length) this.qrvalue = window.document.location.href
-    console.log(this.boundaries)
   }
   onStateSelected(state) {
     this.stateSelected = state
