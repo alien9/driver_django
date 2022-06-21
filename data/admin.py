@@ -128,16 +128,23 @@ class RoadMapAdmin(admin.ModelAdmin):
 class IrapInline(admin.StackedInline):
     model=Irap
 
-class BlackSpotSetAdmin(admin.ModelAdmin):
-    list_display =  ("title",)
-    def stats(self, obj: BlackSpotSet) -> str:
-        return "%s spots detected" % (obj.blackspot_set.count()) 
+class BlackSpotSetForm(ModelForm):
     class Meta:
         model = BlackSpotSet
         fields = '__all__'
         widgets = {
             'color': TextInput(attrs={'type': 'color'}),
         }
+
+class BlackSpotSetAdmin(admin.ModelAdmin):
+    form=BlackSpotSetForm
+    list_display =  ("title",)
+    def stats(self, obj: BlackSpotSet) -> str:
+        return "%s spots detected" % (obj.blackspot_set.count()) 
+    class Meta:
+        model = BlackSpotSet
+        fields = '__all__'
+        
 class UserAdminDriver(UserAdmin):
     inlines = UserAdmin.inlines + [IrapInline]
    

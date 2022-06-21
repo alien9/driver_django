@@ -10,6 +10,7 @@ services:
     volumes:
       - ./static:/var/www/static
       - ./mapserver:/opt/app/mapserver
+      - ./indexdir:/opt/app/indexdir
     depends_on:
       - redis-server
       - mapserver
@@ -38,6 +39,7 @@ services:
   driver-celery:
     volumes:
       - ./zip:/var/www/media
+      - ./indexdir:/opt/app/indexdir
     depends_on:
       - redis-server
     environment:
@@ -64,28 +66,3 @@ services:
     volumes:
       - ./mapserver/:/etc/mapserver
     image: geodata/mapserver
-
-  windshaft:
-    command: server.js
-    container_name: windshaft-${CONTAINER_NAME}
-    links:
-      - redis-server:redis
-    depends_on:
-      - redis-server
-    volumes:
-      - ./windshaft/driver.js:/opt/windshaft/driver.js
-      - ./windshaft/healthCheck.js:/opt/windshaft/healthCheck.js
-      - ./windshaft/alphamarker.png:/opt/windshaft/alphamarker.png
-      - ./windshaft/server.js:/opt/windshaft/server.js
-    environment:
-      - DRIVER_DB_NAME=${DATABASE_NAME}
-      - DRIVER_DB_USER=${DATABASE_USERNAME}
-      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
-      - WINDSHAFT_DB_USER=${DATABASE_USERNAME}
-      - WINDSHAFT_DB_PASSWORD=${DATABASE_PASSWORD}
-      - DRIVER_DB_HOST=${DATABASE_HOST}
-      - DRIVER_DB_PORT=5432
-      - DRIVER_APP_HOST=${PROTOCOL}://${HOST_NAME}
-      - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
-      - DRIVER_REDIS_PORT=6379
-    image: quay.io/azavea/windshaft:0.1.0
