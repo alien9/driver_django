@@ -103,6 +103,7 @@ export class NavbarComponent implements OnInit {
       if (!this.language) {
         this.language = this.config["LANGUAGES"][0]["code"]
         localStorage.setItem("Language", this.language)
+        location.reload()
       }
     }
     if(!this.language){
