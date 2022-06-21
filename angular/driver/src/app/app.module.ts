@@ -46,7 +46,7 @@ import { ArrayJoinPipe } from './input/arrayjoin.pipe';
 import { LocalizedDatePipe } from './report/localized.date.pipe';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { MultiTranslateHttpLoader } from 'ngx-translate-multi-http-loader';
-
+import { LocalCurrencyPipe } from './counter/localcurrency.pipe';
 import { ArrayFirstPipe } from './input/first.pipe'
 import { SafePipeModule } from 'safe-pipe';
 import { ReportComponent } from './report/report.component';
@@ -117,6 +117,7 @@ const icons = {
     InputComponent,
     LoginComponent,
     NavbarComponent,
+    LocalCurrencyPipe,
     OrderedFieldsPipe,
     SearchableFilterPipe,
     OrderPipe,

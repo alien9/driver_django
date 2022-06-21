@@ -104,14 +104,12 @@ export class IndexComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    console.log("this is loading")
-
     let cu = document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")
     if (!cu.length) {
       this.router.navigateByUrl('/login')
       return
     }
-
+    this.locale = localStorage.getItem("Language") || navigator.language
     this.recordService.getConfig().pipe(first()).subscribe(data => {
       this.config = data
       this.recordService.getRecordType().subscribe({
@@ -162,7 +160,7 @@ export class IndexComponent implements OnInit {
       this.irapDataset = JSON.parse(localStorage.getItem("irapDataset"))
       if (!this.irapDataset['selected']) this.irapDataset['selected'] = {}
     }
-    this.locale = localStorage.getItem("Language") || "pt"
+    
     this.weekdays = {}
     let d = new Date()
     for (let i = 0; i < 7; i++) {

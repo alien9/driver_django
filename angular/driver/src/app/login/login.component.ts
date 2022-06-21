@@ -54,7 +54,6 @@ export class LoginComponent implements OnInit {
             this.setCookie('AuthService.token', '', -1)
             this.authenticationService.logout()
         }
-        localStorage.clear()
         this.loginForm = this.formBuilder.group({
             username: ['', Validators.required],
             password: ['', Validators.required]
@@ -94,31 +93,6 @@ export class LoginComponent implements OnInit {
                         this.entering.emit(null)
                         this.loading = false;
                         this.router.navigateByUrl('/')
-                        /* this.recordService.getRecordType().subscribe(
-                            rata => {
-                                if (rata['results']) {
-                                    let schema_uuid;
-                                    for (let i = 0; i < rata['results'].length; i++) {
-                                        if (rata['results'][i]['label'] == data['config'].PRIMARY_LABEL) {
-                                            schema_uuid = rata['results'][i]['current_schema'];
-                                        };
-                                    }
-                                    if (schema_uuid) {
-                                        this.recordService.getRecordSchema(schema_uuid).subscribe(
-                                            sata => {
-                                                localStorage.setItem('record_schema', JSON.stringify(sata));
-                                                this.entering.emit(null)
-                                                this.router.navigateByUrl('/')
-                                            }
-                                        )
-                                    } else {
-                                        this.errorMessage = "record schema not found for " + data['config'].PRIMARY_LABEL;
-                                    }
-                                } else {
-                                    this.errorMessage = data['config'].PRIMARY_LABEL + " record type not found";
-                                }
-                                this.loading = false;
-                            }) */
                     }
 
                 }, error: err => {

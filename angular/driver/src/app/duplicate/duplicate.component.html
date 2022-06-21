@@ -42,7 +42,7 @@
                 </div>
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item">
-                        <span>{{'Date and time'|translate}}</span>: {{record[key]["occurred_from"]|localizedDate }} {{record[key]["occurred_from"]|localizedDate:'shortTime' }}}
+                        <span>{{'Date and time'|translate}}</span>: {{record[key]["occurred_from"]|localizedDate:'shortDate':locale }} {{record[key]["occurred_from"]|localizedDate:'shortTime':locale }}}
                     </li>
                     <li class="list-group-item">
                         <span>{{'Location'|translate}}</span>: {{record[key]["location_text"] }}

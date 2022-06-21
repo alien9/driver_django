@@ -18,6 +18,7 @@ export class DuplicateComponent implements OnInit {
   duplicatePage: number = 1
   map: L.Map[] = []
   backend: string
+  @Input() locale:string
   layersControl: any
   options: any
   layers: any

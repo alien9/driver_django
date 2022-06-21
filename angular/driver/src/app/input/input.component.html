@@ -25,10 +25,10 @@
                     <li class="list-group-item">
                         <input class="form-control" type=hidden placeholder="yyyy-mm-dd" name="occurred_date" [(ngModel)]="occurred_date_ngb" ngbDatepicker #df="ngbDatepicker" (dateSelect)="setDate($event)">
                         <span>{{'Date and time'|translate}}</span>:
-                        <span *ngIf=!editing>{{record["occurred_from"]|localizedDate }}
-                            {{record["occurred_from"]|localizedDate:'shortTime' }}</span>
+                        <span *ngIf=!editing>{{record["occurred_from"]|localizedDate:'shortDate':locale }}
+                            {{record["occurred_from"]|localizedDate:'shortTime':locale }}</span>
                         <span *ngIf=editing>
-                            <a href="#" (click)=df.toggle()>{{record["occurred_from"]|localizedDate }}</a>
+                            <a href="#" (click)=df.toggle()>{{record["occurred_from"]|localizedDate:'shortDate':locale }}</a>
                             <ngb-timepicker [(ngModel)]="occurred_time" [spinners]=false [meridian]=false *ngIf=editing
                                 (change)=setDate($event)></ngb-timepicker>
                         </span>

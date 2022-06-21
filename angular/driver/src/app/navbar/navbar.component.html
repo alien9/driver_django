@@ -44,6 +44,18 @@
                         <li>
                             <hr class="dropdown-divider">
                         </li>
+                        <li style="display: flex;" *ngIf="hasDownload()">
+                            <a class="dropdown-item" (click)="preDownload()" href="#">{{'Download' | translate}}
+                                <div class="spinner-border spinner-border-sm" role="status" *ngIf="downloading">
+                                </div>
+                            </a>
+                        </li>
+                        <li *ngIf="hasDownload()">
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" (click)="logout()" href="#">{{'Exit'|translate}} </a>
+                        </li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown px-2">
@@ -97,21 +109,6 @@
                                 {{l['name']|translate}}
                             </label>
                         </div>
-                    </li>
-                    <li *ngIf="config['LANGUAGES'].length>0">
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li style="display: flex;" *ngIf="hasDownload()">
-                        <a class="dropdown-item" (click)="preDownload()" href="#">{{'Download' | translate}}
-                            <div class="spinner-border spinner-border-sm" role="status" *ngIf="downloading">
-                            </div>
-                        </a>
-                    </li>
-                    <li *ngIf="hasDownload()">
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li>
-                        <a class="dropdown-item" (click)="logout()" href="#">{{'Exit'|translate}} </a>
                     </li>
                 </ul>
             </div>
@@ -222,7 +219,7 @@
             <div class="card-body">
                 <h5 class="card-title">{{'Active filter'|translate}}</h5>
                 <p class="card-text" *ngIf="filter[ 'occurred_min'] && filter[ 'occurred_max']">
-                    <p>{{'Occurred date'| translate}}: {{filter['occurred_min']|localizedDate}} {{'to'|translate}} {{filter['occurred_max']|localizedDate}}
+                    <p>{{'Occurred date'| translate}}: {{filter['occurred_min']|localizedDate:'shortDate':locale}} {{'to'|translate}} {{filter['occurred_max']|localizedDate:'shortDate':locale}}
                     </p>
                     <span *ngFor="let tab of filterObject | keyvalue">
                     <p *ngFor="let field of tab.value | keyvalue">{{field.key|translate}}:

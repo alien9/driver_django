@@ -27,6 +27,7 @@ export class InputComponent implements OnInit {
   @Input() config: object
   @Input() editing: boolean
   @Input() modal: any
+  @Input() locale: string
   @Input() roadmap_uuid: string
   @Output() mapillaryId = new EventEmitter<string>()
   @Output() reloadRecords = new EventEmitter<object>()
@@ -69,7 +70,6 @@ export class InputComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    let locale = localStorage.getItem("Language") || "en"
     this.schema = this.recordSchema['schema']
     let str = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
       {
@@ -119,8 +119,8 @@ export class InputComponent implements OnInit {
     let du = new Date(this.record['occurred_from'])
     this.occurred_date_ngb = this.asNgbDateStruct(du)
     this.occurred_time = {
-      hour: parseInt(du.toLocaleTimeString(locale, { hour: '2-digit', hour12: false })),
-      minute: parseInt(du.toLocaleTimeString(locale, { minute: '2-digit' })),
+      hour: parseInt(du.toLocaleTimeString(this.locale, { hour: '2-digit', hour12: false })),
+      minute: parseInt(du.toLocaleTimeString(this.locale, { minute: '2-digit' })),
       second: 0
     }
     let c = this.record['geom'].coordinates

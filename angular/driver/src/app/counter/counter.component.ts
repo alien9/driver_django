@@ -11,9 +11,14 @@ export class CounterComponent implements OnInit {
   @Input() config: object
   @Input() fields: any[]
   subtotals: boolean = false
+  language:string="en"
   constructor() { }
   
   ngOnInit(): void {
+    this.language=localStorage.getItem("Language") || "en"
+    if(!this.language.match(/\w+-\w+/)){
+      this.language=`${this.language}-${this.config['COUNTRY_CODE']}`
+    }
   }
   flipTotals() {
     this.subtotals = !this.subtotals

@@ -37,6 +37,7 @@ export class NavbarComponent implements OnInit {
   @Output() startDownload = new EventEmitter<object>()
   @Input() recordSchema: object
   @Input() stateSelected
+  @Input() locale: string
   public authenticated: boolean = true
   public occurred_min: Date
   public occurred_max: Date
@@ -48,7 +49,7 @@ export class NavbarComponent implements OnInit {
   public savedFilters: any[]
   public filterLabel: string = ""
   public filtering: boolean = false
-  @Input() canWrite:boolean
+  @Input() canWrite: boolean
   public tabs = [
 
   ]
@@ -90,8 +91,25 @@ export class NavbarComponent implements OnInit {
           return
         } */
     this.schema = this.recordSchema['schema']
-    this.language = localStorage.getItem("Language") || 'pt'
-    console.log(this.schema)
+
+    let l = localStorage.getItem("Language") || navigator.language
+    if (this.config["LANGUAGES"]) {
+      (this.config["LANGUAGES"]).forEach(fu => {
+        if (fu["code"] == l) {
+          localStorage.setItem("language", fu["code"])
+          this.language = fu["code"]
+        }
+      })
+      if (!this.language) {
+        this.language = this.config["LANGUAGES"][0]["code"]
+        localStorage.setItem("language", this.language)
+      }
+    }
+    if(!this.language){
+      this.language="en"
+      localStorage.setItem("language", this.language)
+    }
+    this.locale=this.language
     this.initDataFrame()
     this.qrvalue = this.recordService.getBackend()
     if (!this.qrvalue.length) this.qrvalue = window.document.location.href
@@ -111,8 +129,8 @@ export class NavbarComponent implements OnInit {
   selectBoundaryPolygon(b: any) {
     this.boundaryPolygonChange.emit(b)
   }
-  startHelp(content:any){
-    this.modalService.open(content, { size: 'xl', scrollable: true});
+  startHelp(content: any) {
+    this.modalService.open(content, { size: 'xl', scrollable: true });
   }
   startFilters(content: any) {
     this.modalService.open(content, { size: 'lg' });
@@ -265,7 +283,7 @@ export class NavbarComponent implements OnInit {
         setTimeout(() => this.collectCsv(task), 3000)
       } else {
         this.downloading = false
-        window.location.href=d['result'].replace(/^\w+:/, window.location.protocol)
+        window.location.href = d['result'].replace(/^\w+:/, window.location.protocol)
       }
     })
   }
@@ -293,7 +311,7 @@ export class NavbarComponent implements OnInit {
         break
     }
   }
-  hasDownload(){
+  hasDownload() {
     return ['List', 'Map', 'Reports'].indexOf(this.stateSelected) >= 0
   }
   setlang(code: string) {
@@ -460,8 +478,8 @@ export class NavbarComponent implements OnInit {
           let di = new Date(data['results'][0].occurred_from)
           let df = new Date(data['results'][0].occurred_from)
           df.setMonth(di.getMonth() - 3)
-          this.occurred_min=df
-          this.occurred_max=di
+          this.occurred_min = df
+          this.occurred_max = di
           this.occurred_min_ngb = this.asNgbDateStruct(this.occurred_min)
           this.occurred_max_ngb = this.asNgbDateStruct(this.occurred_max)
           this.filter = {
@@ -469,7 +487,7 @@ export class NavbarComponent implements OnInit {
             'occurred_min': df.toISOString()
           }
           jQuery('.modal-content input[type=checkbox]').prop('checked', false)
-          this.filterObject={}
+          this.filterObject = {}
           this.loadFilter()
         }
       }

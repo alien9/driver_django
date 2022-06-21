@@ -21,11 +21,11 @@
     </div>
     <div *ngIf="counts['total']!=null" class="filter">
         <div *ngIf="!subtotals" class="filter-details" (click)="flipTotals()">
-            {{"Social costs:"|translate}}:<br>{{counts['total']|currency:'BRL':'symbol':'1.2':'pt-BR'}}<br>
+            {{"Social costs:"|translate}}:<br>{{counts['total']|localcurrency:config['CURRENCY']:language}}<br>
         </div>
         <div *ngIf="subtotals" class="filter-details" (click)="flipTotals()">
             <div *ngFor="let v of counts['subtotals'] | keyvalue">
-                {{v.key|translate}}: {{v.value|currency:'BRL':'symbol':'1.2':'pt-BR'}}
+                {{v.key|translate}}: {{v.value|localcurrency:config['CURRENCY']:language}}
             </div>
         </div>
     </div>

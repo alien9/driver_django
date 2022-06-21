@@ -11,7 +11,6 @@ export class AuthService {
     return localStorage.getItem("backend")||(('api' in environment)?environment.api:'')
   }
   logout() {
-    localStorage.clear()
     let next=encodeURIComponent("/login")
     window.location.href=`${this.getBackend()}/api-auth/logout/?next=${next}`
   }

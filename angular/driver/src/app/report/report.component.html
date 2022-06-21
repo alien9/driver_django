@@ -2,7 +2,7 @@
     <div *ngFor="let table of report['crosstabs']['tables']; let j=index">
         <div class=m-2>
             <h3>
-                {{report['parameters']['occurred_min']|localizedDate:'longDate'}} - {{report['parameters']['occurred_max']|localizedDate:'longDate'}}
+                {{report['parameters']['occurred_min']|localizedDate:'longDate':locale}} - {{report['parameters']['occurred_max']|localizedDate:'longDate':locale}}
             </h3>
             <h5>
                 <span *ngIf="report['relatable']">
