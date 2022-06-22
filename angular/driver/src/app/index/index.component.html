@@ -37,7 +37,7 @@
     <a href="#" id="open-record-popup" (click)=popClick($event)>{{'View'|translate}}</a>
 </div>
 
-<app-report *ngIf="state=='Reports'" [locale]="locale" [recordSchema]=recordSchema [boundaries]=boundaries [report]=report [config]=config (reloadReport)=reloadReport($event)></app-report>
+<app-report *ngIf="state=='Reports' && ready" [locale]="locale" [recordSchema]=recordSchema [boundaries]=boundaries [report]=report [config]=config (reloadReport)=reloadReport($event)></app-report>
 <app-charts *ngIf="state=='Charts'" [recordSchema]=recordSchema [boundaries]=boundaries [reportFilters]=reportFilters [filter]=filter [boundary_polygon_uuid]=boundary_polygon_uuid [weekdays]=weekdays></app-charts>
 <app-duplicate *ngIf="state=='Duplicates'" [locale]="locale" [recordTypeUuid]="recordtype_uuid" [recordSchema]=recordSchema></app-duplicate>
 <button *ngIf="mapillary_id" type="button" class="close mapillary-close" aria-label="Close" (click)="mapillary_id=null">

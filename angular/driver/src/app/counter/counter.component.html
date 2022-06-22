@@ -12,10 +12,10 @@
 
     </div>
     <div>
-        <div *ngIf="counts['total']==null">
+        <div *ngIf="counts['total_crashes']==null">
             <span class="spinner-border spinner-border-sm ml-3 mr-3 pr-3 pl-3"></span>
         </div>
-        <div *ngIf="counts['total']!=null">{{counts['total_crashes']||('Zero'|translate)}} <span *ngIf="counts['total_crashes']==1">{{config['PRIMARY_LABEL']|translate}}</span>
+        <div *ngIf="counts['total_crashes']!=null">{{counts['total_crashes']||('Zero'|translate)}} <span *ngIf="counts['total_crashes']==1">{{config['PRIMARY_LABEL']|translate}}</span>
             <span *ngIf="counts['total_crashes']!=1">{{config['PRIMARY_LABEL_PLURAL']|translate}}</span>
         </div>
     </div>

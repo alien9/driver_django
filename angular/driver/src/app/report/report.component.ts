@@ -19,8 +19,8 @@ export class ReportComponent implements OnInit {
   @Input() relatable: object //the alternate table for countings, as opposed to the registry count
   @Output() goBack = new EventEmitter<string>()
   @Output() reloadReport = new EventEmitter<string>()
+  @Input() locale:string
   path: object = {}
-  locale: string
   timezone: any
   weekdays: object
   relate: string = ""
@@ -32,7 +32,6 @@ export class ReportComponent implements OnInit {
 
   ngOnInit(): void {
     this.timezone = (new Date()).getTimezoneOffset()
-    this.locale = localStorage.getItem("Language") || "en"
     this.weekdays = {}
     let d = new Date()
     for (let i = 0; i < 7; i++) {

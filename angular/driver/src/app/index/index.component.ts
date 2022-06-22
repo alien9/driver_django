@@ -30,6 +30,7 @@ export class IndexComponent implements OnInit {
       $('.leaflet-container').css('cursor', 'grab');
     }
   }
+  public ready:boolean=false
   public config: object = {}
   public boundaries: any[] = []
   public boundary: any
@@ -160,7 +161,7 @@ export class IndexComponent implements OnInit {
       this.irapDataset = JSON.parse(localStorage.getItem("irapDataset"))
       if (!this.irapDataset['selected']) this.irapDataset['selected'] = {}
     }
-    
+
     this.weekdays = {}
     let d = new Date()
     for (let i = 0; i < 7; i++) {
@@ -272,7 +273,7 @@ export class IndexComponent implements OnInit {
             if (current_boundary) {
               this.boundary = (this.boundaries.filter(bu => bu.uuid == current_boundary).pop())
             }
-            if (!current_boundary) {
+            if (!this.boundary) {
               this.boundary = this.boundaries[0]
             }
             this.setBoundary(this.boundary)
@@ -603,7 +604,6 @@ export class IndexComponent implements OnInit {
           cl
         ])
         this.recordsLayer.setZIndex(8000)
-        console.log("records loaded")
         this.layersControl.overlays[this.config['PRIMARY_LABEL_PLURAL']] = this.recordsLayer
         if (show && this.map) {
           this.map.addLayer(this.recordsLayer)
@@ -627,7 +627,6 @@ export class IndexComponent implements OnInit {
           filter: this.filter
         }).pipe(first()).subscribe({
           next: data => {
-            console.log(data)
             this.counts = data
             this.recordService.getRoadMap().pipe(first()).subscribe({
               next: data => {
@@ -635,6 +634,17 @@ export class IndexComponent implements OnInit {
                   this.roadmap_uuid = data[0]['uuid']
               }
             })
+          }, error: err => {
+            this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"], 'limit': 1 }, { filter: this.filter }).pipe(first()).subscribe(
+              data => {
+                if (data["count"]) {
+                  this.counts = {
+                    "total_crashes": data["count"]
+                  }
+                }
+              }
+            )
+            console.log(err)
           }
         })
       })

@@ -94,23 +94,25 @@ export class NavbarComponent implements OnInit {
 
     let l = localStorage.getItem("Language") || navigator.language
     if (this.config["LANGUAGES"]) {
-      (this.config["LANGUAGES"]).forEach(fu => {
+      this.config["LANGUAGES"].forEach(fu => {
         if (fu["code"] == l) {
           localStorage.setItem("Language", fu["code"])
           this.language = fu["code"]
         }
       })
       if (!this.language) {
-        this.language = this.config["LANGUAGES"][0]["code"]
-        localStorage.setItem("Language", this.language)
-        location.reload()
+        if (this.config["LANGUAGES"].length) {
+          this.language = this.config["LANGUAGES"][0]["code"]
+          localStorage.setItem("Language", this.language)
+          location.reload()
+        }
       }
     }
-    if(!this.language){
-      this.language="en"
+    if (!this.language) {
+      this.language = "en"
       localStorage.setItem("Language", this.language)
     }
-    this.locale=this.language
+    this.locale = this.language
     this.initDataFrame()
     this.qrvalue = this.recordService.getBackend()
     if (!this.qrvalue.length) this.qrvalue = window.document.location.href
