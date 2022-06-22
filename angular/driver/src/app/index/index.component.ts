@@ -441,6 +441,7 @@ export class IndexComponent implements OnInit {
     if (s == 'Map') {
       this.loadRecords(true)
     }
+    this.ready=true
   }
   setLegends() {
     this.legends = []
@@ -473,6 +474,7 @@ export class IndexComponent implements OnInit {
     }
   }
   setBoundaryPolygon(b: any) {
+    this.ready=false
     this.boundary_polygon_uuid = (b) ? b['uuid'] : null
     if (this.boundary_polygon_uuid) {
       if (!this.filter) {
@@ -506,6 +508,7 @@ export class IndexComponent implements OnInit {
     if (!this.filter) {
       this.recordService.getRecords({ 'uuid': this.recordSchema['record_type'] }, { 'filter': { 'limit': 1 } }).pipe(first()).subscribe({
         next: data => {
+          this.counts["total_crashes"]=data["count"]
           // set filter: last 3 months from latest found data
           if (data['results'] && data['results'].length) {
             let di = new Date(data['results'][0].occurred_from)
@@ -553,6 +556,7 @@ export class IndexComponent implements OnInit {
       filter: this.filter
     }).pipe(first()).subscribe(
       data => {
+        this.ready=true
         this.spinner.hide()
         let ts = (new Date()).getTime()
         this.layersControl.overlays['Heatmap'] = L.tileLayer(`${this.backend}/maps/records/${data["mapfile"]}/heatmap/{z}/{x}/{y}.png/?${ts}`, {})

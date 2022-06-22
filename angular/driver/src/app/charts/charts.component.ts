@@ -71,6 +71,10 @@ export class ChartsComponent implements OnInit, OnChanges {
     this.filter = JSON.parse(localStorage.getItem("current_filter") || '{}')
     //}
     this.filter['record_type'] = this.recordSchema['record_type']
+    if(this.boundary_polygon_uuid){
+      console.log("has polygon uuid")
+      this.filter["polygon_id"]=this.boundary_polygon_uuid
+    }
     let ts = this.translateService
     switch (activeTab) {
       case 1: // toddow
