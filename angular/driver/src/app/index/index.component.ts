@@ -353,7 +353,7 @@ export class IndexComponent implements OnInit {
           if (e.data) {
             $('.leaflet-grab').css('cursor', 'pointer')
             this.zone.run(() => {
-              let t = e.data['name'].replace(/^"|"$/g, "")
+              let t = e.data['name'].replace(/^"|"$|^null$/g, "")
               if (e.data['num_records']) t = `${t} (${e.data['num_records']})`
               let m = this.map
               this.map.eachLayer(function (layer) {
@@ -627,17 +627,13 @@ export class IndexComponent implements OnInit {
             })
           })
         }
+
         this.recordService.getRecordCosts({ 'uuid': this.recordSchema["record_type"] }, {
           filter: this.filter
         }).pipe(first()).subscribe({
           next: data => {
             this.counts = data
-            this.recordService.getRoadMap().pipe(first()).subscribe({
-              next: data => {
-                if (data.length)
-                  this.roadmap_uuid = data[0]['uuid']
-              }
-            })
+            this.getRoadMap()
           }, error: err => {
             this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"], 'limit': 1 }, { filter: this.filter }).pipe(first()).subscribe(
               data => {
@@ -646,12 +642,21 @@ export class IndexComponent implements OnInit {
                     "total_crashes": data["count"]
                   }
                 }
+                this.getRoadMap()
               }
             )
             console.log(err)
           }
         })
       })
+  }
+  getRoadMap(){
+    this.recordService.getRoadMap().pipe(first()).subscribe({
+      next: data => {
+        if (data.length)
+          this.roadmap_uuid = data[0]['uuid']
+      }
+    })
   }
   refreshList() {
     this.recordList = null
