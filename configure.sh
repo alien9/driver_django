@@ -22,11 +22,13 @@ CELERY_HOST="localhost"
 if [ "${EXISTE_CELERY}" != "" ]; then
      CELERY_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-celery-${CONTAINER_NAME})
 fi
-WINDSHAFT_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' windshaft-${CONTAINER_NAME})
-if [ "${WINDSHAFT_HOST}" == "" ]; then
-     echo "Windshaft did not start."
-     exit
+if [ "${PROTOCOL}" == "" ]; then
+     PROTOCOL='http'
 fi
+if [ -d "static" ]; then
+     sudo rm -rf static/*
+fi
+
 STATIC_ROOT=$(pwd)
 if [[ ! -f driver-${CONTAINER_NAME}.conf ]]; then
      cp driver.conf driver-${CONTAINER_NAME}.conf
@@ -35,7 +37,6 @@ sed -i -e "s/\s[^ ]*\s*#HOST_NAME$/ ${HOST_NAME}; #HOST_NAME/g" \
 -e "s,\s[^ ]*\s*#STATIC_ROOT$, ${STATIC_ROOT}; #STATIC_ROOT,g" \
 -e "s,\s[^ ]*\s*#STATIC_ROOT_MEDIA$, ${STATIC_ROOT}/zip/; #STATIC_ROOT_MEDIA,g" \
 -e "s/http.*#driver-django$/http:\/\/${DJANGO_HOST}:4000; #driver-django/g" \
--e "s/\s[^ ]*\s*#windshaft$/ http:\/\/${WINDSHAFT_HOST}:5000; #windshaft/g" \
 -e "s,\s[^ ]*\s*#ALPHA_ROOT$, ${STATIC_ROOT}/static/dist/; #ALPHA_ROOT,g" \
 -e "s,\s[^ ]*\s*#FAVICON$, ${STATIC_ROOT}/static/dist/favicon.ico; #FAVICON,g" \
 driver-${CONTAINER_NAME}.conf

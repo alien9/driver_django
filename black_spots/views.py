@@ -263,7 +263,7 @@ class RoadMapViewSet(viewsets.GenericViewSet):
 
     @action(methods=['get'], detail=True)
     def forward(self, request, pk=None):
-        ix = open_dir("indexdir")
+        ix = open_dir("indexdir/{road}".format(road=pk))
         searcher = ix.searcher()
         parser = QueryParser("name", schema=ix.schema)
         parser.add_plugin(FuzzyTermPlugin())

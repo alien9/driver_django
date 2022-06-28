@@ -958,16 +958,15 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             # Each object either has a 'row' and several 'col_*'s or a 'col' and several 'row_*'s.
             # Get the combinations accordingly and accumulate the appropriate stored value.
             for rd in annotated_qs:
-                print(rd)
                 for multi_label in multi_labels:
                     sum_val = rd['sum_{}'.format(multi_label)]
                     rd_row = rd['row'] if 'row' in rd else 'None'
                     rd_col = rd['col'] if 'col' in rd else 'None'
-
-                    if row_multi:
-                        data[str(multi_label[4:])][str(rd_col)] += sum_val
-                    else:
-                        data[str(rd_row)][str(multi_label[4:])] += sum_val
+                    if sum_val is not None:
+                        if row_multi:
+                            data[str(multi_label[4:])][str(rd_col)] += sum_val
+                        else:
+                            data[str(rd_row)][str(multi_label[4:])] += sum_val
         row_totals = {row: sum(cols.values()) for (row, cols) in list(data.items())}
         return {'data': data, 'row_totals': row_totals}
 

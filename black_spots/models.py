@@ -177,8 +177,8 @@ def post_save_blackspotset(sender, instance, created, **kwargs):
     })
     with open("./mapserver/critical_%s.map" % (instance.uuid), "w+") as m:
         m.write(t)
-    from data.tasks import generate_roads_index
-    generate_roads_index.delay(instance.uuid)
+    from data.tasks import geocode_records
+    geocode_records.delay(instance.uuid)
 
 
 class BlackSpotConfig(GroutModel):

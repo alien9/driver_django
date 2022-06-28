@@ -546,6 +546,7 @@ CONSTANCE_CONFIG = {
     'IRAP_API_KEY': ("", _("iRAP API key")),
     'IRAP_PRIVATE_KEY': ("", _("iRAP Private key")),
     'OPENWEATHER_RAPID_KEY':((os.getenv('OPENWEATHER_RAPID_KEY', '')), _("Open Weather API")),
+    'CURRENCY':((os.getenv('CURRENCY', '')), _("Currency")),
 }
 CAPTCHA_OUTPUT_FORMAT=u'%(image)s %(hidden_field)s %(text_field)s'
 

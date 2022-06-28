@@ -2,10 +2,10 @@ from django.conf import settings
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from django_redis import get_redis_connection
-import time, uuid, pytz, os
+import time, uuid, pytz, os, glob
 from data.models import DriverRecord, RecordType
 from grout.models import Boundary
-from black_spots.models import RoadMap
+from black_spots.models import RoadMap, BlackSpotSet
 from constance import config  
 from django.db import connection
 from datetime import datetime
@@ -92,12 +92,20 @@ def generate_blackspots(blackspotset_uuid=None, user_id=None):
 @shared_task(track_started=True)
 def generate_roads_index(roadmap_id):
     roadmap=RoadMap.objects.get(pk=roadmap_id)
+    if roadmap.display_field is None:
+        return
     schema = Schema(name=TEXT(stored=True),id=ID(stored=True),lat=NUMERIC(stored=True), lon=NUMERIC(stored=True), fullname=STORED)
     if not os.path.exists("indexdir"):
         os.mkdir("indexdir")
-
+    ixname="indexdir/{road}".format(road=roadmap_id)
+    if not os.path.exists(ixname):
+        os.mkdir(ixname)
+    else:
+        for f in glob.glob("{ixname}/*".format(ixname=ixname)):
+            os.remove(f)
+    logger.debug("creating %s"% (ixname))
     # Creating a index writer to add document as per schema
-    ix = create_in("indexdir",schema)
+    ix = create_in(ixname,schema)
     writer = ix.writer()
     display_field=roadmap.display_field
     names=set()
@@ -109,12 +117,14 @@ def generate_roads_index(roadmap_id):
                     if len(rua.geom.coords)>0:
                         loc=rua.geom.coords[len(rua.geom.coords)//2]
                         streetname=rua.data[display_field]
+                        hb=False
                         for bo in Boundary.objects.all():
                             p=rua.geom.coords[len(rua.geom.coords)//2]
                             bp=bo.polygons.filter(geom__contains=Point(p[0], p[1], rua.geom.srid))
                             if len(bp):
                                 streetname+=" - {local}".format(local=bp[0].data[bo.display_field])
-                        if streetname not in names:
+                                hb=True
+                        if hb and (streetname not in names):
                             writer.add_document(name=rua.data[display_field], fullname=streetname,id=str(rua.uuid),lat=loc[1],lon=loc[0])
                             logger.debug("%s: added %s"% (n, streetname))
                             names.add(streetname)
