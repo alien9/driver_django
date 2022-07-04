@@ -8,7 +8,7 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class AppComponent {
   constructor(private translate: TranslateService) {
-    let lang=localStorage.getItem("Language") || 'pt'
+    let lang=localStorage.getItem("Language") || 'en'
     translate.setDefaultLang(lang);
   }
   title = 'driver';

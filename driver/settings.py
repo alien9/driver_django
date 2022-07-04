@@ -172,8 +172,13 @@ POSTGIS_VERSION = tuple(
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
 from django.utils.translation import ugettext_lazy as _
-LANGUAGES = [ 
-   ('pt-br', _('Portuguese'))
+
+LANGUAGES = [
+    ('en', _('English')),
+    ('pt-br', _('Brazilian Portuguese')),
+    ('es', _('Spanish')),
+    ('fr', _('French')),  
+    ('zh-hans', _('Simplified Chinese')),
 ]
 
 TIME_ZONE = os.environ.get("TIMEZONE", 'America/Sao_Paulo')

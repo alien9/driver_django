@@ -64,6 +64,33 @@ MAP
     END
 
     LAYER
+        NAME        "critical_legend"
+        DATA        "geom from ({{query|safe}})as q using unique id using srid=4326"
+        CONNECTIONTYPE  POSTGIS
+        CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
+        
+        UTFITEM   "id"
+        UTFDATA   "{\"id\":\"[id]\",\"name\":\"[name]\", \"num_records\":\"[c]\"}"
+        PROCESSING "KERNELDENSITY_RADIUS=10"
+        
+        TYPE LINE
+        PROJECTION
+            "init=epsg:4326"
+        END
+        {% for class in classes_legend %}
+        CLASS
+            EXPRESSION ([c]>={{class.min}} AND [c]<={{class.max}})
+            NAME "{{class.name}}"
+            STYLE
+                WIDTH 10
+                OPACITY {{class.opacity}}
+                COLOR {{class.color}}
+            END
+        END
+        {% endfor %}
+    END
+
+    LAYER
         NAME        "critical_offset"
         DATA        "{{query|safe}}"
         CONNECTIONTYPE  POSTGIS

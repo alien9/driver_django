@@ -169,7 +169,7 @@ const icons = {
     SocialLoginModule,
   ],
   providers: [
-    { provide: LOCALE_ID, useValue: 'pt' },
+    { provide: LOCALE_ID, useValue: 'pt-BR' },
     { provide: LOCALE_ID, useValue: 'fr' },
     { provide: LOCALE_ID, useValue: 'es' },
     { provide: LOCALE_ID, useValue: 'en' },

@@ -153,7 +153,7 @@ def legend(request, layer, mapfile):
         )
         return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
     if layer=='critical':
-        path="?map=/etc/mapserver/critical_{mapfile}.map&VERSION=1.1.1&LAYERS=critical&mode=legend".format(
+        path="?map=/etc/mapserver/critical_{mapfile}.map&VERSION=1.1.1&LAYERS=critical_legend&mode=legend".format(
             mapfile=mapfile,
         )
         return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
@@ -736,7 +736,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
              join grout_record on grout_record.uuid=dr.driverrecord_id \
              LEFT JOIN grout_recordschema ON (grout_record.schema_id = grout_recordschema.uuid) \
              where r.size={size} and {where} group by r.id, r.geom, r.name".format(where=where, display_field=display_field, size=b.size)
-        print(query_sql)
         #the complete query is set to the mapfile
         
         #execute the small query
@@ -755,7 +754,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         print(sample)
         #sample=sorted([r for r in cursor.fetchall()], key=lambda a: a[1])
 
-        chunk=(len(sample)-1)/5.0
         i=0
         classes=[]
         sample.sort()
@@ -772,7 +770,15 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             }
             classes.append(cl)
             i+=1
-        print(classes)
+        classes_legend=[]
+        if len(classes)<=5:
+            classes_legend=list(classes)
+        else:
+            classes_legend.append(classes[0])
+            for i in range(1,5):
+                classes_legend.append(classes[math.floor(i*len(classes)/5)])
+            classes_legend.append(classes[len(classes)-1])
+ 
         d="0"
         if settings.DEBUG:
             d="5"
@@ -783,6 +789,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                     "dbname":connection.settings_dict['NAME'],
                     "query":query_sql.replace('"', '\\"'),
                     "classes":classes,
+                    "classes_legend":classes_legend,
                     "debug": d,
                 })
         if "critical_mapfile_%s" % (b.uuid) in request.session:
