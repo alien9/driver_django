@@ -17,6 +17,7 @@ export class ChartsComponent implements OnInit, OnChanges {
   @Input() recordSchema: object
   @Input() reportFilters: object[]
   @Input() boundaries:object[]
+  @Input() config:object
   active = 1
   toddow: any
   locale: string
@@ -37,6 +38,7 @@ export class ChartsComponent implements OnInit, OnChanges {
     '32e4cc',
     'e52a1d'
   ]
+
   barChartParent: any;
   constructor(
     private recordService: RecordService,
@@ -47,6 +49,9 @@ export class ChartsComponent implements OnInit, OnChanges {
   ) { }
 
   ngOnInit(): void {
+    if(this.config['COLOR_SCHEME'] && this.config['COLOR_SCHEME']){
+      this.palette=this.config['COLOR_SCHEME'].split(/\W/)
+    }
     this.barChart = { 'interval': 'year' }
     this.locale = localStorage.getItem("Language") || "pt"
     this.wants_pizza = localStorage.getItem("pizza") != null
