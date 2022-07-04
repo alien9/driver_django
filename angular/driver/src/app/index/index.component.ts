@@ -584,7 +584,7 @@ export class IndexComponent implements OnInit {
             let du = new Date(Date.parse(e.data['occurred_from']))
             console.log(e.data)
             let t = $("#record-popup-content").html()
-              .replace(/-date-/, `${du.toLocaleDateString('pt-BR')}, ${du.toLocaleTimeString('pt-BR').replace(/:00$/, '')}`)
+              .replace(/-date-/, `${this.toLocaleDateString(du)}, ${this.toLocaleTimeString(du).replace(/:00$/, '')}`)
               .replace(/-location-/, e.data['location_text'])
               .replace(/-uuid-/, e.data['uuid'])
             new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
@@ -647,6 +647,20 @@ export class IndexComponent implements OnInit {
           }
         })
       })
+  }
+  toLocaleDateString(d:Date){
+    try{
+      return d.toLocaleDateString(this.locale)
+    }catch(e){
+      return d.toLocaleDateString()
+    }
+  }
+  toLocaleTimeString(d:Date){
+    try{
+      return d.toLocaleTimeString(this.locale)
+    }catch(e){
+      return d.toLocaleTimeString()
+    }
   }
   getRoadMap(){
     this.recordService.getRoadMap().pipe(first()).subscribe({
