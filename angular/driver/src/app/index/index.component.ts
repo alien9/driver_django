@@ -638,10 +638,8 @@ export class IndexComponent implements OnInit {
           }, error: err => {
             this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"], 'limit': 1 }, { filter: this.filter }).pipe(first()).subscribe(
               data => {
-                if (data["count"]) {
-                  this.counts = {
-                    "total_crashes": data["count"]
-                  }
+                this.counts = {
+                  "total_crashes": data["count"]
                 }
                 this.getRoadMap()
               }
