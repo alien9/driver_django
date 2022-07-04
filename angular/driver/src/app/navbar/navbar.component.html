@@ -35,10 +35,10 @@
                         <li>
                             <a class="dropdown-item" href="#" (click)=qrCode(qrcode)>{{'Android code' | translate}}</a>
                         </li>
-                        <li *ngIf="config['IRAP_AUTH_ID']!=''">
+                        <li *ngIf="config['IRAP_AUTH_ID']">
                             <hr class="dropdown-divider">
                         </li>
-                        <li *ngIf="config['IRAP_AUTH_ID']!=''">
+                        <li *ngIf="config['IRAP_AUTH_ID']">
                             <a class="dropdown-item" (click)="startIrap(vida)" href="#">ViDA</a>
                         </li>
                         <li>
