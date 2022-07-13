@@ -85,13 +85,7 @@ export class NavbarComponent implements OnInit {
     this.reportHeaders = {
 
     }
-    /*     this.recordSchema = JSON.parse(localStorage.getItem('record_schema'))
-        if (!this.recordSchema) {
-          this.router.navigateByUrl('/login')
-          return
-        } */
     this.schema = this.recordSchema['schema']
-
     let l = localStorage.getItem("Language") || navigator.language
     if (this.config["LANGUAGES"]) {
       this.config["LANGUAGES"].forEach(fu => {
@@ -282,7 +276,12 @@ export class NavbarComponent implements OnInit {
     this.recordService.getCsv(task).pipe(first()).subscribe(d => {
       console.log(d)
       if (d['status'] != "SUCCESS") {
-        setTimeout(() => this.collectCsv(task), 3000)
+        if (d['status'] == 'FAILURE') {
+          this.downloading = false
+          alert("Server error while downloading")
+        } else {
+          setTimeout(() => this.collectCsv(task), 3000)
+        }
       } else {
         this.downloading = false
         window.location.href = d['result'].replace(/^\w+:/, window.location.protocol)

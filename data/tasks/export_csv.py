@@ -309,6 +309,9 @@ class ModelAndDetailsWriter(BaseRecordWriter):
         """Pull data from a record, send to appropriate writers, and then combine output"""
         output = io.StringIO()
         self.model_writer.write_record(record, output)
+        if self.details_key not in record.data:
+            print(record.data)
+            print("ERRRR")
         self.details_writer.write_related(record.pk, record.data[self.details_key], output)
         csv_file.write(self.merge_lines(output.getvalue()))
 

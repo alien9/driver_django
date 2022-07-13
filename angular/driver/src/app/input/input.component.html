@@ -44,19 +44,24 @@
                     </li>
                     <li class="list-group-item">
                         <!--possible values are {{'night'|translate}}{{'dawn'|translate}}{{'day'|translate}}{{'dusk'|translate}}-->
-                        <span>{{'Light'|translate}}</span>: {{record["light"]|translate}}
+                        <span>{{'Light'|translate}}</span>: <span *ngIf="!editing">{{record["light"]|translate}}</span>
+                        <select *ngIf="editing" class="form-select" [(ngModel)]="record['light']">
+                            <!--possible values: 
+                                {{'clear-day'|translate}},{{'clear-night'|translate}},{{'cloudy'|translate}},{{'fog'|translate}},{{'hail'|translate}},{{'partly-cloudy-day'|translate}},{{'partly-cloudy-night'|translate}},{{'rain'|translate}},{{'sleet'|translate}},{{'snow'|translate}},{{'thunderstorm'|translate}},{{'tornado'|translate}},{{'wind'|translate}}
+                            -->
+                            <option [ngValue]="v" *ngFor="let v of lightValues">{{v|translate}}</option>
+                        </select>
                     </li>
                 </ul>
                 <div *ngIf="!k.value.multiple">
                     <ul class="list-group list-group-flush" *ngFor="let f of k.value.properties|keyvalue|display|orderBy">
                         <li class="list-group-item">{{f.key|translate}}:
                             <span *ngIf="!editing && f.value.format!='checkbox'">{{record['data']|dict_dump:k.key:null:f.key|format:f.value|translate}}</span>
-                            <span *ngIf="f.value.format=='checkbox'">{{record['data']|dict_dump:k.key:null:f.key|format:f.value}}</span>
+                            <span *ngIf="!editing && f.value.format=='checkbox'">{{record['data']|dict_dump:k.key:null:f.key|format:f.value}}</span>
                             <span *ngIf="editing">
                                 <div *ngIf="f.value.format=='checkbox'">
                                     <span *ngFor="let o of f.value.items.enum">
                                         <label class="form-check-label">
-                                            {{record['data'][k.key][f.key]|json}}
                                             <input class="form-check-input" type="checkbox" [value]="o"
                                                 checked="{{record['data'][k.key][f.key]?.includes(o) ? 'checked' : null}}"
                                                 (change)="onSingleCheckChange($event, k.key, f.key)">
