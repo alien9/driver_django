@@ -30,7 +30,7 @@ export class IndexComponent implements OnInit {
       $('.leaflet-container').css('cursor', 'grab');
     }
   }
-  public ready:boolean=false
+  public ready: boolean = false
   public config: object = {}
   public boundaries: any[] = []
   public boundary: any
@@ -61,6 +61,7 @@ export class IndexComponent implements OnInit {
   private lastState: string
   public mapillary_id: string
   public irapDataset
+  supportsLocalDate: boolean
   roadmap_uuid: string
   listPage: number = 1
   listening: boolean = false
@@ -111,6 +112,8 @@ export class IndexComponent implements OnInit {
       return
     }
     this.locale = localStorage.getItem("Language") || navigator.language
+    let du = (new Date()).toLocaleDateString(this.locale)
+    this.supportsLocalDate = !du.match(/^Invalid/)
     this.recordService.getConfig().pipe(first()).subscribe(data => {
       this.config = data
       this.recordService.getRecordType().subscribe({
@@ -164,9 +167,13 @@ export class IndexComponent implements OnInit {
 
     this.weekdays = {}
     let d = new Date()
-    for (let i = 0; i < 7; i++) {
-      this.weekdays[d.getDay()] = d.toLocaleDateString(this.locale, { weekday: 'long' })
-      d.setDate(d.getDate() + 1)
+    if (this.supportsLocalDate) {
+      for (let i = 0; i < 7; i++) {
+        this.weekdays[d.getDay()] = d.toLocaleDateString(this.locale, { weekday: 'long' })
+        d.setDate(d.getDate() + 1)
+      }
+    } else {
+      this.weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri']
     }
     this.backend = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
 
@@ -441,7 +448,7 @@ export class IndexComponent implements OnInit {
     if (s == 'Map') {
       this.loadRecords(true)
     }
-    this.ready=true
+    this.ready = true
   }
   setLegends() {
     this.legends = []
@@ -474,7 +481,7 @@ export class IndexComponent implements OnInit {
     }
   }
   setBoundaryPolygon(b: any) {
-    this.ready=false
+    this.ready = false
     this.boundary_polygon_uuid = (b) ? b['uuid'] : null
     if (this.boundary_polygon_uuid) {
       if (!this.filter) {
@@ -508,7 +515,7 @@ export class IndexComponent implements OnInit {
     if (!this.filter) {
       this.recordService.getRecords({ 'uuid': this.recordSchema['record_type'] }, { 'filter': { 'limit': 1 } }).pipe(first()).subscribe({
         next: data => {
-          this.counts["total_crashes"]=data["count"]
+          this.counts["total_crashes"] = data["count"]
           // set filter: last 3 months from latest found data
           if (data['results'] && data['results'].length) {
             let di = new Date(data['results'][0].occurred_from)
@@ -556,7 +563,7 @@ export class IndexComponent implements OnInit {
       filter: this.filter
     }).pipe(first()).subscribe(
       data => {
-        this.ready=true
+        this.ready = true
         this.spinner.hide()
         let ts = (new Date()).getTime()
         this.layersControl.overlays['Heatmap'] = L.tileLayer(`${this.backend}/maps/records/${data["mapfile"]}/heatmap/{z}/{x}/{y}.png/?${ts}`, {})
@@ -648,21 +655,14 @@ export class IndexComponent implements OnInit {
         })
       })
   }
-  toLocaleDateString(d:Date){
-    try{
-      return d.toLocaleDateString(this.locale)
-    }catch(e){
-      return d.toLocaleDateString()
-    }
+  toLocaleDateString(d: Date) {
+    return (this.supportsLocalDate) ? d.toLocaleDateString(this.locale) : d.toLocaleDateString()
+
   }
-  toLocaleTimeString(d:Date){
-    try{
-      return d.toLocaleTimeString(this.locale)
-    }catch(e){
-      return d.toLocaleTimeString()
-    }
+  toLocaleTimeString(d: Date) {
+    return (this.supportsLocalDate) ? d.toLocaleTimeString(this.locale) : d.toLocaleTimeString()
   }
-  getRoadMap(){
+  getRoadMap() {
     this.recordService.getRoadMap().pipe(first()).subscribe({
       next: data => {
         if (data.length)

@@ -60,6 +60,9 @@ export class InputComponent implements OnInit {
     //'tornado',
     'wind'
   ]
+  lightValues=[
+    'dawn','day','dusk','night'
+  ]
   geocoding = false
   geocodeFailed = false
   constructor(
