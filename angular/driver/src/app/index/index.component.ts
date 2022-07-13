@@ -515,12 +515,8 @@ export class IndexComponent implements OnInit {
     if (!this.filter) {
       this.recordService.getRecords({ 'uuid': this.recordSchema['record_type'] }, { 'filter': { 'limit': 1 } }).pipe(first()).subscribe({
         next: data => {
-<<<<<<< HEAD
           if(!this.counts) this.counts={}
-          this.counts["total_crashes"]=data["count"]
-=======
           this.counts["total_crashes"] = data["count"]
->>>>>>> 61d94b7cb28504a2be336dcf13e2ab027fea51e4
           // set filter: last 3 months from latest found data
           if (data['results'] && data['results'].length) {
             let di = new Date(data['results'][0].occurred_from)
