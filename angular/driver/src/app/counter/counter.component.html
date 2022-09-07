@@ -1,6 +1,7 @@
 <div class="counter">
     <div>
-        {{filter['occurred_min']|date:'shortDate':'America/Sao_Paulo':'pt-BR'}} - {{filter['occurred_max']|date:'shortDate':'America/Sao_Paulo':'pt-BR'}}
+        {{filter['occurred_min']|date:'shortDate':'America/Sao_Paulo':'pt-BR'}} -
+        {{filter['occurred_max']|date:'shortDate':'America/Sao_Paulo':'pt-BR'}}
         <br>
     </div>
     <div class="filter">
@@ -9,13 +10,26 @@
         </div>
     </div>
     <div>
-
+        <div class="irap-control" *ngIf="irapLayer && irapLayer['title']">
+            <strong>iRAP Star Rating Layer</strong>
+            <div *ngFor="let t of irapLayer['title']" class="iraplink" (click)="iRapCenter(irapLayer)">{{t['name']}}</div>
+            <div>
+                <label>{{'Road user'|translate}}: </label>
+                <select [(ngModel)]="irapLayer['what']" (change)=drawIrap($event)>
+                    <option value="pedestrian">{{'Pedestrian'|translate}}</option>
+                    <option value="bicycle">{{'Bicycle'|translate}}</option>
+                    <option value="motorcycle">{{'Motorcycle'|translate}}</option>
+                    <option value="car">{{'Car'|translate}}</option>
+                </select>
+            </div>
+        </div>
     </div>
     <div>
         <div *ngIf="counts['total_crashes']==null">
             <span class="spinner-border spinner-border-sm ml-3 mr-3 pr-3 pl-3"></span>
         </div>
-        <div *ngIf="counts['total_crashes']!=null">{{counts['total_crashes']||('Zero'|translate)}} <span *ngIf="counts['total_crashes']==1">{{config['PRIMARY_LABEL']|translate}}</span>
+        <div *ngIf="counts['total_crashes']!=null">{{counts['total_crashes']||('Zero'|translate)}} <span
+                *ngIf="counts['total_crashes']==1">{{config['PRIMARY_LABEL']|translate}}</span>
             <span *ngIf="counts['total_crashes']!=1">{{config['PRIMARY_LABEL_PLURAL']|translate}}</span>
         </div>
     </div>

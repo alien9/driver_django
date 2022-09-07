@@ -141,10 +141,10 @@ export class RecordService {
     return this.http.post(`${this.getBackend()}/api/irap-login/`, data, { headers: this.getHeaders() });
   }
   getIRapDataset(data: object) {
+    console.log("Getting irap dataset")
     return this.http.post(`${this.getBackend()}/api/irap-getdataset/`, data, { headers: this.getHeaders() });
   }
   getIRapData(data: object) {
-    console.log(data)
     return this.http.post(`${this.getBackend()}/api/irap-getlat_lon/`, data, { headers: this.getHeaders() });
   }
   getIRapFatalityData(data: object) {

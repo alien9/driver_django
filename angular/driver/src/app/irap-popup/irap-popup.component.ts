@@ -1,4 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl, SafeUrl} from '@angular/platform-browser';
 
 @Component({
   selector: 'app-irap-popup',
@@ -31,7 +32,12 @@ export class IrapPopupComponent implements OnInit {
     '#ffff44',
     '#009900',
   ]
-  constructor() { }
+  roadFeatures: any;
+  sanitizer: DomSanitizer;
+  loading:boolean=false
+  constructor(private san: DomSanitizer) { 
+    this.sanitizer=san
+  }
 
   ngOnInit(): void {
   }

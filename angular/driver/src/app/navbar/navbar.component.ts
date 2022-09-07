@@ -8,6 +8,10 @@ import { first } from 'rxjs/operators';
 import { NgxSpinnerService } from "ngx-spinner";
 import { AuthService } from '../auth.service';
 import { saveAs } from "file-saver"
+import { ViewChild } from '@angular/core';
+import { NgbTypeahead } from '@ng-bootstrap/ng-bootstrap';
+import { Observable, Subject, merge, OperatorFunction } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-navbar',
@@ -22,7 +26,7 @@ export class NavbarComponent implements OnInit {
   @Input() boundaryPolygons: any[] = []
   @Input() boundaryPolygon: any
   @Input() filter: object
-  @Input() iRap: object
+  @Input() iRapData: object
   @Input() irapDataset: object
   public filterPage: object
   @Input() filterObject: object
@@ -67,7 +71,28 @@ export class NavbarComponent implements OnInit {
   irap_err: string
   qrvalue: string
   downloading: boolean;
+  iRapLayerName: string
+  searchIrapLayer: OperatorFunction<string, readonly string[]> = (text$: Observable<string>) => {
+    let t: string[] = []
+    this.irapDataset["data"].forEach((d) => {
+      d.dataset_data.forEach(dsd => {
+        t.push(`${d.name} - ${dsd.dataset_data_name}`)
+      })
+    })
+    return text$.pipe(
+      debounceTime(200),
+      distinctUntilChanged(),
+      map(term => term.length < 2 ? []
+        : t.filter(v => v.toLowerCase().indexOf(term.toLowerCase()) > -1).slice(0, 10)))
 
+    /* 
+    text$.pipe(
+      debounceTime(200),
+      distinctUntilChanged(),
+      map(term => term.length < 2 ? []
+        : Object.keys(this.irapDataset).filter(v => v.toLowerCase().indexOf(term.toLowerCase()) > -1).slice(0, 10))
+    ); */
+  }
   constructor(
     private authService: AuthService,
     private recordService: RecordService,
@@ -138,11 +163,13 @@ export class NavbarComponent implements OnInit {
     })
   }
   startIrap(content: any) {
+    console.log("starting irap")
     this.modalService.open(content, {});
-    if (this.iRap) {
-      this.spinner.show()
-      this.loadIrapDataset()
-    }
+    //if (this.iRap) {
+    console.log("there's irap")
+    this.spinner.show()
+    this.loadIrapDataset()
+    //}
   }
   asNgbDateStruct(date: Date) {
     return { day: date.getDate(), month: date.getMonth() + 1, year: date.getFullYear() }
@@ -508,7 +535,10 @@ export class NavbarComponent implements OnInit {
       }
     }).pipe(first()).subscribe({
       next: data => {
-        this.iRapChange.emit({ user: data })
+        console.log("login ", data)
+        this.iRapChange.emit({ iRap: data })
+        this.iRapData = data['data']
+        this.loadIrapDataset()
       }, error: err => {
         console.log(err)
         if (err['error'] && err['error']['message']) {
@@ -525,10 +555,11 @@ export class NavbarComponent implements OnInit {
       this.spinner.hide()
       return
     }
-    this.recordService.getIRapDataset({ "body": this.iRap['data'] }).pipe(first()).subscribe({
+    this.recordService.getIRapDataset({ "body": this.iRapData }).pipe(first()).subscribe({
       next: data => {
         console.log(data)
-        this.iRapChange.emit({ dataset: data, iRap: this.iRap })
+        console.log("DATAESET WAS SET")
+        this.iRapChange.emit({ dataset: data, iRap: this.iRapData })
         this.spinner.hide()
       },
       error: err => {
@@ -539,29 +570,22 @@ export class NavbarComponent implements OnInit {
   }
   applyIrap(modal) {
     this.spinner.show()
-    let b = this.iRap['data']
+    let b = {}
     b['dataset_id'] = Object.keys(this.irapDataset['selected']).filter(k => this.irapDataset['selected'][k])
-    this.iRapChange.emit({ dataset: this.irapDataset, iRap: this.iRap }) // save selection
-    let d = localStorage.getItem("irap-data")
-    if (d) {
-      this.iRapChange.emit({ layer: JSON.parse(d), iRap: this.iRap })
-      this.spinner.hide()
-      modal.close('ok')
-    } else {
-      this.recordService.getIRapData({ "body": b }).pipe(first()).subscribe({
-        next: data => {
-          localStorage.setItem("irap-data", JSON.stringify(data))
-          this.iRapChange.emit({ layer: data, iRap: this.iRap })
-          this.spinner.hide()
-          modal.close('ok')
-        },
-        error: err => {
-          this.iRapChange.emit({ user: null })
-          this.spinner.hide()
-          modal.close('error')
-        }
-      })
-    }
+    this.iRapChange.emit({ dataset: this.irapDataset, iRap: this.iRapData }) // save selection
+    this.recordService.getIRapData({ "body": b }).pipe(first()).subscribe({
+      next: data => {
+        console.log("loaded an irap layer")
+        this.iRapChange.emit({ layer: data, iRap: this.iRapData })
+        this.spinner.hide()
+        modal.close('ok')
+      },
+      error: err => {
+        this.iRapChange.emit({ user: null })
+        this.spinner.hide()
+        modal.close('error')
+      }
+    })
   }
   hasSelection(w: any) {
     let h = {}

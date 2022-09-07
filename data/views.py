@@ -728,7 +728,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         fq = cursor.mogrify(sql, params).decode('utf-8')
         display_field=b.roadmap.display_field
         where=re.search('WHERE (.*)$', fq).group(1)
-        print(where)
         query_sql="select r.id, count(*) as c, r.name, r.geom \
          from data_recordsegment r\
             join data_driverrecord_segment dr on dr.recordsegment_id =r.id\

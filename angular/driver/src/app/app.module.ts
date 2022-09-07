@@ -28,6 +28,8 @@ import { FormatPipe } from './navbar/format.pipe'
 import { FilterAsTextPipe } from './report/filterAsText.pipe'
 
 import { DictDumpPipe } from './navbar/dict_dump.pipe'
+
+import { ByPassSecurityPipe } from './irap-popup/sanitize.pipe'
 import { FirstPipe } from './list/first.pipe'
 import { RelatedPipe } from './input/related.pipe'
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
@@ -117,6 +119,7 @@ const icons = {
     InputComponent,
     LoginComponent,
     NavbarComponent,
+    ByPassSecurityPipe,
     LocalCurrencyPipe,
     OrderedFieldsPipe,
     SearchableFilterPipe,

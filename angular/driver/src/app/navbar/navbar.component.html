@@ -1,13 +1,15 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="z-index:9999">
     <div class="container-fluid">
         <a class="navbar-brand px-1" href="#">DRIVER</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item dropdown flex-fill px-2">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
                         {{stateSelected | translate}}
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -59,33 +61,42 @@
                     </ul>
                 </li>
                 <li class="nav-item dropdown px-2">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarBoundariesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" *ngIf=boundary>
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarBoundariesDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false" *ngIf=boundary>
                         {{boundary.label|translate}}
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarBoundariesDropdown" *ngIf=boundaries.length>
-                        <li *ngFor="let b of boundaries"><a class="dropdown-item" href="#" (click)=selectBoundary(b)>{{b.label|translate}}</a></li>
+                        <li *ngFor="let b of boundaries"><a class="dropdown-item" href="#"
+                                (click)=selectBoundary(b)>{{b.label|translate}}</a></li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown px-2">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarBoundaryPolygonsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarBoundaryPolygonsDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
                         <span *ngIf=!boundaryPolygon>{{'All'|translate}}</span>
                         <span *ngIf=boundaryPolygon>{{getBoundaryPolygonLabel(boundaryPolygon)|translate}}</span>
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarBoundaryPolygonsDropdown">
-                        <li><a class="dropdown-item" href="#" (click)=selectBoundaryPolygon(null)>{{'All'|translate}}</a></li>
-                        <li *ngFor="let b of boundaryPolygons"><a class="dropdown-item" href="#" (click)=selectBoundaryPolygon(b)>
+                        <li><a class="dropdown-item" href="#"
+                                (click)=selectBoundaryPolygon(null)>{{'All'|translate}}</a></li>
+                        <li *ngFor="let b of boundaryPolygons"><a class="dropdown-item" href="#"
+                                (click)=selectBoundaryPolygon(b)>
                                 {{getBoundaryPolygonLabel(b)}}</a></li>
                     </ul>
                 </li>
                 <li class="nav-item">
                     <form class="form-inline my-2 my-lg-0">
-                        <button (click)=startFilters(viewpoint) class="btn btn-outline-secondary mx-2" type="submit" placement="bottom" ngbTooltip="{{'Filters'|translate}}">
+                        <button (click)=startFilters(viewpoint) class="btn btn-outline-secondary mx-2" type="submit"
+                            placement="bottom" ngbTooltip="{{'Filters'|translate}}">
                             <i-bs name="funnel"></i-bs>
                         </button>
-                        <button *ngIf="stateSelected=='Reports'" (click)=startFilters(report) class="btn btn-outline-secondary mx-2" type="submit" id="report_button" placement="bottom" ngbTooltip="{{'Reports'|translate}}">
+                        <button *ngIf="stateSelected=='Reports'" (click)=startFilters(report)
+                            class="btn btn-outline-secondary mx-2" type="submit" id="report_button" placement="bottom"
+                            ngbTooltip="{{'Reports'|translate}}">
                             <i-bs name="text-paragraph"></i-bs>
                         </button>
-                        <label *ngIf="stateSelected=='Map'" class="btn btn-outline-secondary mx-2" placement="bottom" ngbTooltip="{{'Create Record'|translate}}" ngbButtonLabel>
+                        <label *ngIf="stateSelected=='Map'" class="btn btn-outline-secondary mx-2" placement="bottom"
+                            ngbTooltip="{{'Create Record'|translate}}" ngbButtonLabel>
                             <input type="checkbox" ngbButton [(ngModel)]="inserting"
                                 [ngModelOptions]="{standalone: true}" (change)=createRecord($event)>
                             <i-bs name="pin-map-fill"></i-bs>
@@ -98,13 +109,15 @@
             </ul>
 
             <div class="btn-group" *ngIf="config['LANGUAGES'].length>1">
-                <button class="btn btn-light" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button class="btn btn-light" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
                     <i-bs name="three-dots-vertical"></i-bs>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
                     <li *ngFor="let l of config['LANGUAGES']; let i=index">
                         <div class="dropdown-item">
-                            <input class="form-check-input" [(ngModel)]="language" (change)="setlang(l['code'])" type="radio" name="language" id="lannguageSelector{{i}}" [value]="l['code']"> &nbsp;
+                            <input class="form-check-input" [(ngModel)]="language" (change)="setlang(l['code'])"
+                                type="radio" name="language" id="lannguageSelector{{i}}" [value]="l['code']"> &nbsp;
                             <label class="form-check-label" for="lannguageSelector{{i}}">
                                 {{l['name']|translate}}
                             </label>
@@ -130,14 +143,16 @@
             </div>
             <div class="row">
                 <div class="input-group">
-                    <input class="form-control" placeholder="yyyy-mm-dd" name="dpf" [(ngModel)]="occurred_min_ngb" ngbDatepicker #df="ngbDatepicker">
+                    <input class="form-control" placeholder="yyyy-mm-dd" name="dpf" [(ngModel)]="occurred_min_ngb"
+                        ngbDatepicker #df="ngbDatepicker">
                     <button class="btn btn-outline-secondary calendar" (click)="df.toggle()" type="button">
                         <i-bs name="calendar"></i-bs>
                     </button>
                     <div class="input-group-prepend">
                         <span class="input-group-text">{{"to"|translate}}</span>
                     </div>
-                    <input class="form-control" placeholder="yyyy-mm-dd" name="dpt" [(ngModel)]="occurred_max_ngb" ngbDatepicker #dt="ngbDatepicker">
+                    <input class="form-control" placeholder="yyyy-mm-dd" name="dpt" [(ngModel)]="occurred_max_ngb"
+                        ngbDatepicker #dt="ngbDatepicker">
                     <button class="btn btn-outline-secondary calendar" (click)="dt.toggle()" type="button">
                         <i-bs name="calendar"></i-bs>
                     </button>
@@ -145,7 +160,8 @@
             </div>
         </div>
         <div class="table-group" *ngFor="let t of tables">
-            <div class="form-group" *ngFor="let k of schema.definitions[t].properties | keyvalue | isSearchable | orderBy">
+            <div class="form-group"
+                *ngFor="let k of schema.definitions[t].properties | keyvalue | isSearchable | orderBy">
                 <div class="row" *ngIf="k.value.enum || k.value.items">
                     <label *ngIf="!schema.definitions[t].multiple">{{schema.definitions[t].title|translate}}:
                         {{k.key|translate}}</label>
@@ -154,8 +170,10 @@
                     <div class="input-group mb-3">
                         <div class="col">
                             <div class="form-check" *ngFor="let option of k.value | enum">
-                                <input [(ngModel)]="filterPage[t][k.key][option]" class="form-check-input" type="checkbox" id="checkbox__{{t}}_{{k.key}}_{{option}}">
-                                <label class="form-check-label" for="checkbox__{{t}}_{{k.key}}_{{option}}">{{option|translate}}</label>
+                                <input [(ngModel)]="filterPage[t][k.key][option]" class="form-check-input"
+                                    type="checkbox" id="checkbox__{{t}}_{{k.key}}_{{option}}">
+                                <label class="form-check-label"
+                                    for="checkbox__{{t}}_{{k.key}}_{{option}}">{{option|translate}}</label>
                             </div>
                         </div>
                     </div>
@@ -163,11 +181,13 @@
                 <div class="row" *ngIf="k.value.type=='integer' || k.value.type=='number'">
                     <label>{{k.key|translate}}</label>
                     <div class="input-group mb-3">
-                        <input type="number" class="form-control" aria-label="minimum" [(ngModel)]="filterPage[t][k.key].minimum">
+                        <input type="number" class="form-control" aria-label="minimum"
+                            [(ngModel)]="filterPage[t][k.key].minimum">
                         <div class="input-group-prepend">
                             <span class="input-group-text">{{'to'|translate}}</span>
                         </div>
-                        <input type="number" class="form-control" aria-label="maximum" [(ngModel)]="filterPage[t][k.key].maximum">
+                        <input type="number" class="form-control" aria-label="maximum"
+                            [(ngModel)]="filterPage[t][k.key].maximum">
                         <button (click)="filterPage[t][k.key].minimum=null;filterPage[t][k.key].maximum=null">
                             <i-bs name="x"></i-bs>
                         </button>
@@ -200,10 +220,14 @@
     </div>
     <div class="modal-footer">
         <input type="text" [(ngModel)]=filterLabel placeholder="{{'Filter name'| translate}}">
-        <button type="button" class="btn btn-outline-secondary" (click)="saveFilter(modal);" [disabled]="filterLabel.length<1 || filtering">{{'Save'|translate}}</button>
-        <button type="button" class="btn btn-outline-secondary" (click)="applyFilter(modal);" [disabled]="filtering">{{'Apply'|translate}}</button>
-        <button type="button" class="btn btn-outline-secondary" (click)="resetFilter()" [disabled]="filtering">{{'Reset'|translate}}</button>
-        <button type="button" class="btn btn-outline-secondary" (click)="modal.close('Close click')">{{'Close'|translate}}</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="saveFilter(modal);"
+            [disabled]="filterLabel.length<1 || filtering">{{'Save'|translate}}</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="applyFilter(modal);"
+            [disabled]="filtering">{{'Apply'|translate}}</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="resetFilter()"
+            [disabled]="filtering">{{'Reset'|translate}}</button>
+        <button type="button" class="btn btn-outline-secondary"
+            (click)="modal.close('Close click')">{{'Close'|translate}}</button>
     </div>
 </ng-template>
 
@@ -219,21 +243,22 @@
             <div class="card-body">
                 <h5 class="card-title">{{'Active filter'|translate}}</h5>
                 <p class="card-text" *ngIf="filter[ 'occurred_min'] && filter[ 'occurred_max']">
-                    <p>{{'Occurred date'| translate}}: {{filter['occurred_min']|localizedDate:'shortDate':locale}} {{'to'|translate}} {{filter['occurred_max']|localizedDate:'shortDate':locale}}
-                    </p>
-                    <span *ngFor="let tab of filterObject | keyvalue">
+                <p>{{'Occurred date'| translate}}: {{filter['occurred_min']|localizedDate:'shortDate':locale}}
+                    {{'to'|translate}} {{filter['occurred_max']|localizedDate:'shortDate':locale}}
+                </p>
+                <span *ngFor="let tab of filterObject | keyvalue">
                     <p *ngFor="let field of tab.value | keyvalue">{{field.key|translate}}:
                         <span *ngIf="field.value[ 'contains']"><span
                                 *ngFor="let val of field.value[ 'contains']; let i=index; let isLast=last">{{val|translate}}{{isLast?"
                                 ":","}}</span>
-                    </span>
-                    <span *ngIf="field.value['min']">
+                        </span>
+                        <span *ngIf="field.value['min']">
                             {{'from'|translate}} {{field.value['min']}}
                         </span>
-                    <span *ngIf="field.value['max']">
+                        <span *ngIf="field.value['max']">
                             {{'up to'|translate}} {{field.value['max']}}
                         </span>
-                </p>
+                    </p>
                 </span>
             </div>
         </div>
@@ -242,7 +267,8 @@
             <div class="input-group-prepend">
                 <span class="input-group-text" id="basic-addon3">{{tab['label']|translate}}:</span>
             </div>
-            <select class="custom-select" [(ngModel)]=reportHeaders[tab.key] (change)=setReportHeaders($event) id="{{tab.key}}_header">
+            <select class="custom-select" [(ngModel)]=reportHeaders[tab.key] (change)=setReportHeaders($event)
+                id="{{tab.key}}_header">
                 <optgroup label="{{ 'Geography'|translate}}" *ngIf=boundaries.length>
                     <option [value]="'boundary_id,'+item.uuid" *ngFor="let item of boundaries">{{item.label}}
                     </option>
@@ -273,66 +299,91 @@
         </div>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-light" (click)="resetReport();startFilters(viewpoint)">{{'Reset'|translate}}</button>
-        <button type="button" class="btn btn-light" [disabled]="!reportHeaders[ 'row'] || !reportHeaders[ 'col']" (click)="applyReport(modal)">{{'Apply'|translate}}</button>
+        <button type="button" class="btn btn-light"
+            (click)="resetReport();startFilters(viewpoint)">{{'Reset'|translate}}</button>
+        <button type="button" class="btn btn-light" [disabled]="!reportHeaders[ 'row'] || !reportHeaders[ 'col']"
+            (click)="applyReport(modal)">{{'Apply'|translate}}</button>
         <button type="button" class="btn btn-light" (click)="cancelReport(modal)">{{'Close'|translate}}</button>
     </div>
 </ng-template>
 
 <ng-template #vida let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title">iRap ViDA</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss( 'Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    <div class="modal-body">
-        <div class="card" style=" max-width:300px;margin:auto;background-color:black;" *ngIf="!iRap">
-            <div class="card-body">
-                <div class="text-center">
-                    <form>
-                        <img src="https://sso.irap.org/img/iRAP_logo_200x79.png" style="margin-bottom:5%" width="100px">
-                        <label class="sr-only" for="email">Email</label>
-                        <input autofocus="" class="form-control" [ngModelOptions]="{standalone: true}" id="emailaddress" placeholder="Email" required="" type="email" [(ngModel)]="irap_email" ng-reflect-model="jvelasquez@worldbank.org">
-                        <label class="sr-only" for="password">Password</label>
-                        <input autofocus="" class="form-control" [ngModelOptions]="{standalone: true}" id="password" placeholder="Password" required="" type="password" ng-reflect-model="Admin@123" [(ngModel)]=irap_password>
-                        <div class="mt-3">
-                            <button class="btn btn-md btn-primary btn-block" style="background-color: white;color: black;" (click)=iRapLogin(vida)>
-                                {{'Sign In'|translate}}
-                            </button>
-                        </div>
-                        <div class="row" style="margin-top:5%;">
-                            <label class="w-50 float-left">
-                                <a href="https://sso.irap.org/register?broker_id=8" style="color: orange;"
-                                    target="_blank">{{'Register'|translate}}</a>
-                            </label>
-                            <label class="w-50 float-left">
-                                <a href="https://sso.irap.org/forgotten_password?broker_id=8" style="color: orange;"
-                                    target="_blank" ng-reflect-translate="">
-                                    {{'Forgot Password'|translate}}
-                                </a>
-                            </label>
-                        </div>
-                        <div class="row">{{irap_err}}</div>
-                    </form>
+    <div class="irap">
+        <div class="modal-header">
+            <h4 class="modal-title">iRap ViDA</h4>
+            <button type="button" class="close" aria-label="Close" (click)="modal.dismiss( 'Cross click')">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="card" style=" max-width:300px;margin:auto;background-color:black;" *ngIf="!irapDataset">
+                <div class="card-body">
+                    <div class="text-center">
+                        <form>
+                            <img src="https://sso.irap.org/img/iRAP_logo_200x79.png" style="margin-bottom:5%"
+                                width="100px">
+                            <label class="sr-only" for="email">Email</label>
+                            <input autofocus="" class="form-control" [ngModelOptions]="{standalone: true}"
+                                id="emailaddress" placeholder="Email" required="" type="email" [(ngModel)]="irap_email"
+                                ng-reflect-model="jvelasquez@worldbank.org">
+                            <label class="sr-only" for="password">Password</label>
+                            <input autofocus="" class="form-control" [ngModelOptions]="{standalone: true}" id="password"
+                                placeholder="Password" required="" type="password" ng-reflect-model="Admin@123"
+                                [(ngModel)]=irap_password>
+                            <div class="mt-3">
+                                <button class="btn btn-md btn-primary btn-block"
+                                    style="background-color: white;color: black;" (click)=iRapLogin(vida)>
+                                    {{'Sign In'|translate}}
+                                </button>
+                            </div>
+                            <div class="row" style="margin-top:5%;">
+                                <label class="w-50 float-left">
+                                    <a href="https://sso.irap.org/register?broker_id=8" style="color: orange;"
+                                        target="_blank">{{'Register'|translate}}</a>
+                                </label>
+                                <label class="w-50 float-left">
+                                    <a href="https://sso.irap.org/forgotten_password?broker_id=8" style="color: orange;"
+                                        target="_blank" ng-reflect-translate="">
+                                        {{'Forgot Password'|translate}}
+                                    </a>
+                                </label>
+                            </div>
+                            <div class="row">{{irap_err}}</div>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div *ngIf=irapDataset>
-            <ngb-accordion #acc="ngbAccordion" activeIds="ngb-panel-irap" [closeOthers]="true">
-                <ngb-panel [title]="d['name']" *ngFor="let d of irapDataset[ 'data']; let i=index" [cardClass]="hasSelection(d[ 'dataset_data'])">
-                    <ng-template ngbPanelContent>
-                        <div class="input-group" *ngFor="let de of d[ 'dataset_data']; let j=index">
-                            <label><input type="checkbox" [(ngModel)]="irapDataset[ 'selected'][de[ 'id']]">
-                                {{de['name']}}</label>
+            <div class="card" style=" max-width:300px;margin:auto;" *ngIf="!irapDataset">
+                <div class="card-body">
+                    <div class="text-center" style="height:200px">
+                        <div class="spinner-border" role="status">
                         </div>
-                    </ng-template>
-                </ngb-panel>
-            </ngb-accordion>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" (click)="resetIrap()">{{'Reset'|translate}}</button>
-                <button type="button" class="btn btn-light" (click)="applyIrap(modal)">{{'Apply'|translate}}</button>
-                <button type="button" class="btn btn-light" (click)="modal.close( 'cancel')">{{'Close'|translate}}</button>
+                    </div>
+                </div>
+            </div>
+            <div *ngIf="irapDataset">
+                <label for="typeahead-basic">Search for a project:</label>
+                <input id="typeahead-basic" type="search" class="form-control" [(ngModel)]="iRapLayerName"
+                    [ngbTypeahead]="searchIrapLayer" />
+                <hr>
+                <ngb-accordion #acc="ngbAccordion" activeIds="ngb-panel-irap" [closeOthers]="true">
+                    <ngb-panel [title]="d['name']" *ngFor="let d of irapDataset[ 'data']; let i=index"
+                        [cardClass]="hasSelection(d[ 'dataset_data'])">
+                        <ng-template ngbPanelContent>
+                            <div class="input-group" *ngFor="let de of d[ 'dataset_data']; let j=index">
+                                <label><input type="checkbox" [(ngModel)]="irapDataset[ 'selected'][de[ 'id']]">
+                                    {{de['name']}}</label>
+                            </div>
+                        </ng-template>
+                    </ngb-panel>
+                </ngb-accordion>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" (click)="resetIrap()">{{'Reset'|translate}}</button>
+                    <button type="button" class="btn btn-light"
+                        (click)="applyIrap(modal)">{{'Apply'|translate}}</button>
+                    <button type="button" class="btn btn-light"
+                        (click)="modal.close( 'cancel')">{{'Close'|translate}}</button>
+                </div>
             </div>
         </div>
     </div>

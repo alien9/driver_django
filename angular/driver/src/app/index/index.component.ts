@@ -22,6 +22,7 @@ import * as uuid from 'uuid';
   styleUrls: ['./index.component.scss']
 })
 export class IndexComponent implements OnInit {
+  iRapBounds: L.LatLngBounds;
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
     if (event.key && event.key == 'Escape') {
@@ -91,7 +92,7 @@ export class IndexComponent implements OnInit {
   @ViewChild(NavbarComponent) navbar!: NavbarComponent;
   @ViewChild(ChartsComponent) charts!: ChartsComponent;
   popContent: any
-  iRap: object
+  iRapData: object
   iraplayer: object = { when: 'after', what: 'pedestrian' }
   constructor(
     private recordService: RecordService,
@@ -159,7 +160,7 @@ export class IndexComponent implements OnInit {
     if (mapillary_auth) {
       localStorage.setItem('mapillary_auth', mapillary_auth)
     }
-    this.iRap = (this.config['IRAP_KEYS']) ? { "data": this.config['IRAP_KEYS'], "settings": this.config['IRAP_SETTINGS'] } : null
+    this.iRapData = (this.config['IRAP_KEYS']) ? { "data": this.config['IRAP_KEYS'], "settings": this.config['IRAP_SETTINGS'] } : null
     if (localStorage.getItem("irapDataset")) {
       this.irapDataset = JSON.parse(localStorage.getItem("irapDataset"))
       if (!this.irapDataset['selected']) this.irapDataset['selected'] = {}
@@ -515,12 +516,21 @@ export class IndexComponent implements OnInit {
     if (!this.filter) {
       this.recordService.getRecords({ 'uuid': this.recordSchema['record_type'] }, { 'filter': { 'limit': 1 } }).pipe(first()).subscribe({
         next: data => {
-          if(!this.counts) this.counts={}
+          console.log("CREATING FILTER")
+          console.log(data)
+          if (!this.counts) this.counts = {}
           this.counts["total_crashes"] = data["count"]
           // set filter: last 3 months from latest found data
-          if (data['results'] && data['results'].length) {
-            let di = new Date(data['results'][0].occurred_from)
-            let df = new Date(data['results'][0].occurred_from)
+          if (data['results']) {
+            let di: Date
+            let df: Date
+            if (data['results'].length) {
+              di = new Date(data['results'][0].occurred_from)
+              df = new Date(data['results'][0].occurred_from)
+            } else {
+              di = new Date()
+              df = new Date()
+            }
             df.setMonth(di.getMonth() - 3)
             let fu = {
               'occurred_max': di.toISOString(),
@@ -817,8 +827,9 @@ export class IndexComponent implements OnInit {
     this.mapillary_id = null
   }
   setIrap(e: object) {
+    console.log("setting irap", e)
     if (e['iRap']) {
-      this.iRap = e['iRap']
+      this.iRapData = e['iRap']
     }
     if (e['user']) {
       this.config['IRAP_KEYS'] = e['user']['data']
@@ -843,20 +854,36 @@ export class IndexComponent implements OnInit {
   }
   removeIrapLayer() {
     if (this.layersControl.overlays['iRap']) {
-      let j = 0;
+      this.map.removeLayer(this.layersControl.overlays['iRap'])
+      /* let j = 0;
       for (let i = 0; i < this.layers.length; i++) {
         if (this.layers[i] == this.layersControl.overlays['iRap']) {
           j = i
         }
       }
-      this.layers.splice(j)
+      this.layers.splice(j) */
       delete this.layersControl.overlays['iRap']
     }
   }
-  drawIrap() {
+  iRapCenter(e) {
+    if (this.iRapBounds) {
+      this.map.fitBounds(this.iRapBounds)
+    }
+  }
+  drawIrap(what = null) {
     this.removeIrapLayer()
+    if (what) {
+      this.iraplayer['what'] = what // which road user is this
+    } else {
+      if (!this.iraplayer['what']) this.iraplayer['what'] = 'car'
+    }
+    let bds
     let lg = L.layerGroup(this.iraplayer['data'].map(seg => {
       let l = L.polyline([[seg.latitude, seg.longitude], [seg.latitude_to, seg.longitude_to]], { location_id: seg['location_id'], dataset_id: seg['dataset_id'], color: this.irapColor[parseInt(seg[`${this.iraplayer['what']}_star_${this.iraplayer['when']}`]) - 1] })
+      if (!bds) bds = l.getBounds()
+      else {
+        bds.extend(l.getBounds())
+      }
       l.on('click', e => {
         let yl = e.sourceTarget
         let component = this.resolver.resolveComponentFactory(IrapPopupComponent).create(this.injector);
@@ -866,12 +893,15 @@ export class IndexComponent implements OnInit {
           .setContent(component.location.nativeElement)
           .openOn(this.map);
         this.zone.run(() => {
-          let b = this.iRap['data']
-          b.language_code = this.locale
-          b.dataset_id = yl.options['dataset_id']
+          let b = {
+            language_code: this.locale,
+            dataset_id: yl.options['dataset_id']
+          }
           let l = yl.getLatLngs()
-          b.latitude = l[0]['lat']
-          b.longitude = l[0]['lng']
+          b["latitude"] = l[0]['lat']
+          b["longitude"] = l[0]['lng']
+          component.instance.loading = true
+          component.changeDetectorRef.detectChanges()
           this.recordService.getIRapFatalityData({ "body": b }).pipe(first()).subscribe(data => {
             component.instance.roadName = data['data']['road_name']
             component.instance.inspectionDate = data['data']['road_survey_date']
@@ -887,15 +917,21 @@ export class IndexComponent implements OnInit {
               'car': data['data']['car_fe'],
               'motorcycle': data['data']['motorcycle_fe'],
             }
+            component.instance.roadFeatures = data['data'].road_features
             console.log(data)
+            component.instance.loading = false
+
+
             component.changeDetectorRef.detectChanges()
           })
         })
       })
       return l
     }))
+    this.iRapBounds = bds
     this.layersControl.overlays['iRap'] = lg
     this.map.addLayer(lg)
+    this.iRapCenter(null)
   }
   removeIrap() {
     console.log('removeIrap')

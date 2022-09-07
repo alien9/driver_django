@@ -119,6 +119,8 @@ class DriverRecord(Record):
                     
     def save(self, *args, **kwargs):
         if not self.light:
+            if not self.geom:
+                return
             city=LocationInfo("","",config.TIMEZONE, self.geom.y, self.geom.x)
             s=sun.sun(city.observer, date=self.occurred_from,tzinfo=city.timezone)
 

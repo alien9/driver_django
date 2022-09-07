@@ -95,7 +95,7 @@ MAP
     END
     LAYER
         NAME        "records_offset"
-        DATA        "geom from ({{query|safe}}) as c using unique record_ptr_id using srid=4326"
+        DATA        "geom from ({{query|safe}} limit 100) as c using unique record_ptr_id using srid=4326"
         CONNECTIONTYPE  POSTGIS
         CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
         UTFITEM   "record_ptr_id"

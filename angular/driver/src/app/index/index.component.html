@@ -1,13 +1,13 @@
 <app-navbar *ngIf="recordSchema && filter" [locale]="locale" [recordSchema]=recordSchema class=navbar-fixed [config]=config [filter]=filter [filterObject]=filterObject [boundaries]=boundaries (boundaryChange)=setBoundary($event) (boundaryPolygonChange)=setBoundaryPolygon($event)
     [boundary]=boundary [boundaryPolygons]=boundaryPolygons [boundaryPolygon]=boundaryPolygon (filterChange)=setFilter($event) (stateChange)=selectState($event) (reportChange)=setReport($event) [stateSelected]=state (goBack)=goBack($event) (iRapChange)=setIrap($event)
-    [iRap]=iRap [irapDataset]=irapDataset (newRecord)=startRecord($event) [inserting]=listening (startDownload)=download($event) [canWrite]="canWrite">
+    [iRapData]=iRapData [irapDataset]=irapDataset (newRecord)=startRecord($event) [inserting]=listening (startDownload)=download($event) [canWrite]="canWrite">
 </app-navbar>
 <app-list *ngIf="state=='List'" [filter]=filter [listPage]=listPage (setListPage)=setListPage($event) [boundary_polygon_uuid]=boundary_polygon_uuid [recordSchema]=recordSchema [recordList]=recordList (viewRecord)="viewRecord(viewpoint, $event)"></app-list>
 <app-map *ngIf="state=='Map'" (setDrawing)=setDrawing($event) [fitBounds]=fitBounds [options]=options [layers]=layers [layersControl]=layersControl [boundary_polygon_uuid]=boundary_polygon_uuid (map)=setMap($event) (onSetPolygon)=setPolygon($event) [polygon]=polygon
     [mapListening]=listening (newRecord)=newRecord($event,viewpoint)></app-map>
 
 <app-legend [config]="config" [legends]=legends [subtitles]=subtitles *ngIf=legends.length||subtitles.length></app-legend>
-<app-counter [config]="config" [counts]=counts [filter]="filter" [fields]="filterAsText" *ngIf="counts && state=='Map'"></app-counter>
+<app-counter (iRapCenterChange)="iRapCenter($event)" (iRapChange)="drawIrap($event)" [irapLayer]=iraplayer [config]="config" [counts]=counts [filter]="filter" [fields]="filterAsText" *ngIf="counts && state=='Map'"></app-counter>
 
 <button (click)=mapClick(viewpoint) [hidden]="true" id="map-popup-button"></button>
 <ng-template #viewpoint let-modal>
@@ -45,29 +45,3 @@
 </button>
 <iframe class="mapillaryPop" *ngIf="mapillary_id" [src]="'https://www.mapillary.com/embed?image_key='+mapillary_id+ '&style=photo' | safe : 'resourceUrl'" height="100%" width="100%" frameborder="0">
 </iframe>
-
-<div class="irap-control m-3 p-2" *ngIf="hasIrap && (state=='Map')">
-    <div class="irap-header">
-        <button type="button" class="close irap-close" aria-label="Close" (click)="removeIrap()">
-            <span aria-hidden="true">&times;</span>
-        </button>
-        <h3>iRAP Star Rating Layer</h3>
-    </div>
-    <h5 *ngFor="let t of iraplayer['title']">{{t['name']}}</h5>
-    <div class="form-group">
-        <label>{{'Situation'|translate}}: </label>
-        <select [(ngModel)]="iraplayer['when']" (change)=drawIrap()>
-            <option value="before">{{'Before'|translate}}</option>
-            <option value="after">{{'After'|translate}}</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <label>{{'Road user'|translate}}: </label>
-        <select [(ngModel)]="iraplayer['what']" (change)=drawIrap()>
-            <option value="pedestrian">{{'Pedestrian'|translate}}</option>
-            <option value="bicycle">{{'Bicycle'|translate}}</option>
-            <option value="motorcycle">{{'Motorcycle'|translate}}</option>
-            <option value="car">{{'Car'|translate}}</option>
-        </select>
-    </div>
-</div>
