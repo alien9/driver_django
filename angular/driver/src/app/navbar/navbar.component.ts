@@ -12,6 +12,7 @@ import { ViewChild } from '@angular/core';
 import { NgbTypeahead } from '@ng-bootstrap/ng-bootstrap';
 import { Observable, Subject, merge, OperatorFunction } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map } from 'rxjs/operators';
+import { connectableObservableDescriptor } from 'rxjs/internal/observable/ConnectableObservable';
 
 @Component({
   selector: 'app-navbar',
@@ -53,6 +54,7 @@ export class NavbarComponent implements OnInit {
   public savedFilters: any[]
   public filterLabel: string = ""
   public filtering: boolean = false
+  public iRapSearchTerm = null
   @Input() canWrite: boolean
   public tabs = [
 
@@ -75,23 +77,13 @@ export class NavbarComponent implements OnInit {
   searchIrapLayer: OperatorFunction<string, readonly string[]> = (text$: Observable<string>) => {
     let t: string[] = []
     this.irapDataset["data"].forEach((d) => {
-      d.dataset_data.forEach(dsd => {
-        t.push(`${d.name} - ${dsd.dataset_data_name}`)
-      })
+      t.push(d.name)
     })
     return text$.pipe(
       debounceTime(200),
       distinctUntilChanged(),
       map(term => term.length < 2 ? []
         : t.filter(v => v.toLowerCase().indexOf(term.toLowerCase()) > -1).slice(0, 10)))
-
-    /* 
-    text$.pipe(
-      debounceTime(200),
-      distinctUntilChanged(),
-      map(term => term.length < 2 ? []
-        : Object.keys(this.irapDataset).filter(v => v.toLowerCase().indexOf(term.toLowerCase()) > -1).slice(0, 10))
-    ); */
   }
   constructor(
     private authService: AuthService,
@@ -521,11 +513,23 @@ export class NavbarComponent implements OnInit {
       }
     })
   }
+  searchIrap(event) {
+    console.log(event)
+    let tu = this.irapDataset["data"].filter(k => k.name === this.iRapSearchTerm).pop()
+    if (tu) {
+      console.log("scroll", tu)
+      let el: HTMLElement = document.getElementById(`accordion-irap-${tu['id']}-header`);
+      el.scrollIntoView();
+      (el.childNodes[0] as HTMLButtonElement).click()
+    }
+    console.log("AQUIYUIYIUYUIYUI")
+  }
   cancelReport(modal: any) {
     this.goBack.emit('Reports')
     modal.close('Go Back')
   }
   iRapLogin(irapModal) {
+    this.spinner.show()
     this.recordService.iRapLogin({
       "format": "json",
       "body":
@@ -547,6 +551,7 @@ export class NavbarComponent implements OnInit {
           if (err['message']) this.irap_err = err['message']
           else this.irap_err = 'Unknown error' // never should get here
         }
+        this.spinner.hide()
       }
     })
   }

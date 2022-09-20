@@ -392,7 +392,8 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                     request.session.modified = True
 
                 self._cache_tile_sql(tile_token, query_sql)
-
+                print("FONF ")
+                print(query_sql)
                 query_sql=query_sql.replace(') WHERE (', ') WHERE st_intersects(geom, !BOX!) AND (')
                 dbstring=connection.settings_dict['HOST']
                 if settings.DEBUG:

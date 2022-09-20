@@ -10,9 +10,10 @@
         </div>
     </div>
     <div>
-        <div class="irap-control" *ngIf="irapLayer && irapLayer['title']">
+        <div class="irap-control" *ngIf="irapLayer && irapLayer['title'] && irapLayer['title'].length">
             <strong>iRAP Star Rating Layer</strong>
-            <div *ngFor="let t of irapLayer['title']" class="iraplink" (click)="iRapCenter(irapLayer)">{{t['name']}}</div>
+            <div *ngFor="let t of irapLayer['title']" class="iraplink" (click)="iRapCenter(irapLayer)">{{t['name']}}
+            </div>
             <div>
                 <label>{{'Road user'|translate}}: </label>
                 <select [(ngModel)]="irapLayer['what']" (change)=drawIrap($event)>

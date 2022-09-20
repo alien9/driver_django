@@ -931,7 +931,8 @@ export class IndexComponent implements OnInit {
     this.iRapBounds = bds
     this.layersControl.overlays['iRap'] = lg
     this.map.addLayer(lg)
-    this.iRapCenter(null)
+    if (!what)
+      this.iRapCenter(null)
   }
   removeIrap() {
     console.log('removeIrap')

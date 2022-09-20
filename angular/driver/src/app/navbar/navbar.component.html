@@ -315,7 +315,12 @@
                 <span aria-hidden="true">&times;</span>
             </button>
         </div>
-        <div class="modal-body">
+
+        <div *ngIf="irapDataset" class="modal-body">
+            <label for="typeahead-basic">Search for a project:</label>
+            <input id="typeahead-basic" (change)="searchIrap($event)" type="search" class="form-control" [(ngModel)]="iRapSearchTerm" [ngbTypeahead]="searchIrapLayer" />
+        </div>
+        <div class="modal-body irap-list">
             <div class="card" style=" max-width:300px;margin:auto;background-color:black;" *ngIf="!irapDataset">
                 <div class="card-body">
                     <div class="text-center">
@@ -348,26 +353,15 @@
                                     </a>
                                 </label>
                             </div>
-                            <div class="row">{{irap_err}}</div>
+                            <div class="row" style="color:orangered">{{irap_err}}</div>
                         </form>
                     </div>
                 </div>
             </div>
-            <div class="card" style=" max-width:300px;margin:auto;" *ngIf="!irapDataset">
-                <div class="card-body">
-                    <div class="text-center" style="height:200px">
-                        <div class="spinner-border" role="status">
-                        </div>
-                    </div>
-                </div>
-            </div>
+
             <div *ngIf="irapDataset">
-                <label for="typeahead-basic">Search for a project:</label>
-                <input id="typeahead-basic" type="search" class="form-control" [(ngModel)]="iRapLayerName"
-                    [ngbTypeahead]="searchIrapLayer" />
-                <hr>
                 <ngb-accordion #acc="ngbAccordion" activeIds="ngb-panel-irap" [closeOthers]="true">
-                    <ngb-panel [title]="d['name']" *ngFor="let d of irapDataset[ 'data']; let i=index"
+                    <ngb-panel [title]="d['name']" *ngFor="let d of irapDataset[ 'data']; let i=index" id="accordion-irap-{{d.id}}"
                         [cardClass]="hasSelection(d[ 'dataset_data'])">
                         <ng-template ngbPanelContent>
                             <div class="input-group" *ngFor="let de of d[ 'dataset_data']; let j=index">
@@ -377,14 +371,14 @@
                         </ng-template>
                     </ngb-panel>
                 </ngb-accordion>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" (click)="resetIrap()">{{'Reset'|translate}}</button>
-                    <button type="button" class="btn btn-light"
-                        (click)="applyIrap(modal)">{{'Apply'|translate}}</button>
-                    <button type="button" class="btn btn-light"
-                        (click)="modal.close( 'cancel')">{{'Close'|translate}}</button>
-                </div>
             </div>
+        </div>
+        <div class="modal-footer" *ngIf="irapDataset">
+            <button type="button" class="btn btn-light" (click)="resetIrap()">{{'Reset'|translate}}</button>
+            <button type="button" class="btn btn-light"
+                (click)="applyIrap(modal)">{{'Apply'|translate}}</button>
+            <button type="button" class="btn btn-light"
+                (click)="modal.close( 'cancel')">{{'Close'|translate}}</button>
         </div>
     </div>
 </ng-template>

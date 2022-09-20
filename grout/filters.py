@@ -1,4 +1,5 @@
 import json
+import re
 import django_filters
 
 from django.contrib.gis.geos import GEOSGeometry
@@ -13,6 +14,7 @@ from django.db.models import Q
 from rest_framework.exceptions import ParseError, NotFound
 from rest_framework.filters import BaseFilterBackend
 from rest_framework_gis.filterset import GeoFilterSet
+from django.db.models.expressions import RawSQL
 
 from grout import models
 from grout.models import Boundary, BoundaryPolygon, Record, RecordType
@@ -29,15 +31,22 @@ FILTER_OVERRIDES = {
     }
 }
 
+
 class RecordFilter(GeoFilterSet):
 
     # Custom filter definitions.
-    record_type = django_filters.Filter(field_name='record_type', method='filter_record_type')
-    geom_intersects = django_filters.Filter(field_name='geom_intersects', method='filter_polygon')
-    polygon = django_filters.Filter(field_name='polygon', method='filter_polygon')
-    polygon_id = django_filters.Filter(field_name='polygon_id', method='filter_polygon_id')
-    occurred_min = django_filters.Filter(field_name='occurred_min', method='filter_occurred_min')
-    occurred_max = django_filters.Filter(field_name='occurred_max', method='filter_occurred_max')
+    record_type = django_filters.Filter(
+        field_name='record_type', method='filter_record_type')
+    geom_intersects = django_filters.Filter(
+        field_name='geom_intersects', method='filter_polygon')
+    polygon = django_filters.Filter(
+        field_name='polygon', method='filter_polygon')
+    polygon_id = django_filters.Filter(
+        field_name='polygon_id', method='filter_polygon_id')
+    occurred_min = django_filters.Filter(
+        field_name='occurred_min', method='filter_occurred_min')
+    occurred_max = django_filters.Filter(
+        field_name='occurred_max', method='filter_occurred_max')
 
     def filter_record_type(self, queryset, field_name, value):
         """ Method filter for records having a desired record type (uuid)
@@ -63,23 +72,22 @@ class RecordFilter(GeoFilterSet):
         if poly.valid:
             return queryset.filter(geom__intersects=poly)
         else:
-            raise ParseError('Input polygon must be valid GeoJSON: ' + poly.valid_reason)
+            raise ParseError(
+                'Input polygon must be valid GeoJSON: ' + poly.valid_reason)
 
     def filter_polygon_id(self, queryset, field_name, poly_uuid):
         """ Method filter for containment within the polygon specified by poly_uuid"""
         if not poly_uuid:
             return queryset
+        rrg=re.compile('[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}', re.I)
+        if not rrg.match(poly_uuid):
+            return queryset
         try:
-               return queryset.filter(geom__intersects=BoundaryPolygon.objects.get(pk=poly_uuid).geom)
+            return queryset.extra(where=["st_contains((SELECT geom FROM grout_boundarypolygon WHERE uuid='{q}'),geom)='t'".format(q=poly_uuid)])
         except ValueError as e:
             raise ParseError(e)
         except BoundaryPolygon.DoesNotExist as e:
             raise NotFound(e)
-        # It would be preferable to do something like this to avoid loading the whole geometry into
-        # Python, but this currently raises 'Complex expressions not supported for GeometryField'
-        #return queryset.filter(geom__intersects=RawSQL(
-        #    'SELECT geom FROM grout_boundarypolygon WHERE uuid=%s', (poly_uuid,)
-        #))
 
     def filter_occurred_min(self, queryset, field_name, value):
         """Add a lower bound for datetime ranges."""
@@ -91,10 +99,12 @@ class RecordFilter(GeoFilterSet):
                 min_date = parse(value)
             except ValueError:
                 # The parser could not parse the date string, so raise an error.
-                raise QueryParameterException('occurred_min', DATETIME_FORMAT_ERROR)
+                raise QueryParameterException(
+                    'occurred_min', DATETIME_FORMAT_ERROR)
 
         if not min_date.tzinfo:
-            raise QueryParameterException('occurred_min', DATETIME_FORMAT_ERROR)
+            raise QueryParameterException(
+                'occurred_min', DATETIME_FORMAT_ERROR)
         else:
             # In order to accommodate ranges, we only want to remove records where the
             # top of the range is <= the minimum date. For a detailed explanation
@@ -112,10 +122,12 @@ class RecordFilter(GeoFilterSet):
                 max_date = parse(value)
             except ValueError:
                 # The parser could not parse the date string, so raise an error.
-                raise QueryParameterException('occurred_max', DATETIME_FORMAT_ERROR)
+                raise QueryParameterException(
+                    'occurred_max', DATETIME_FORMAT_ERROR)
 
         if not max_date.tzinfo:
-            raise QueryParameterException('occurred_max', DATETIME_FORMAT_ERROR)
+            raise QueryParameterException(
+                'occurred_max', DATETIME_FORMAT_ERROR)
         else:
             # In order to accommodate ranges, we only want to remove records where the
             # bottom of the range is >= the maximum date. For a detailed explanation
@@ -131,7 +143,8 @@ class RecordFilter(GeoFilterSet):
 
 class RecordTypeFilter(django_filters.FilterSet):
 
-    record = django_filters.Filter(field_name='record', method='type_for_record')
+    record = django_filters.Filter(
+        field_name='record', method='type_for_record')
 
     def type_for_record(self, queryset, field_name, record_id):
         """ Filter down to only the record type that corresponds to the given record. """
@@ -148,7 +161,8 @@ class BoundaryFilter(GeoFilterSet):
 
     STATUS_SET = {status[0] for status in Boundary.StatusTypes.CHOICES}
 
-    status = django_filters.Filter(field_name='status', method='multi_filter_status')
+    status = django_filters.Filter(
+        field_name='status', method='multi_filter_status')
 
     def multi_filter_status(self, queryset, field_name, value):
         """ Method filter for multiple choice query on status
@@ -167,7 +181,8 @@ class BoundaryFilter(GeoFilterSet):
 
 class BoundaryPolygonFilter(GeoFilterSet):
 
-    boundary = django_filters.Filter(field_name='boundary', method='filter_boundary')
+    boundary = django_filters.Filter(
+        field_name='boundary', method='filter_boundary')
 
     def filter_boundary(self, queryset, field_name, value):
         """ Method filter for boundary polygons having a desired boundary (uuid)
@@ -180,7 +195,7 @@ class BoundaryPolygonFilter(GeoFilterSet):
     class Meta:
         model = BoundaryPolygon
         fields = ['data', 'boundary']
-        filter_overrides = FILTER_OVERRIDES 
+        filter_overrides = FILTER_OVERRIDES
 
 
 class JsonBFilterBackend(BaseFilterBackend):
@@ -194,6 +209,7 @@ class JsonBFilterBackend(BaseFilterBackend):
 
     EXAMPLE USAGE: /api/records/?jcontains={"Site": {"DPWH province name": "CAGAYAN"}}
     """
+
     def filter_queryset(self, request, queryset, view):
         """ Filter by configured jsonb_filters on jsonb_filter_field """
         lookup_name = 'jsonb'
