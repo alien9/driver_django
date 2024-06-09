@@ -72,7 +72,6 @@ export class ChartsComponent implements OnInit, OnChanges {
     //}
     this.filter['record_type'] = this.recordSchema['record_type']
     if(this.boundary_polygon_uuid){
-      console.log("has polygon uuid")
       this.filter["polygon_id"]=this.boundary_polygon_uuid
     }
     let ts = this.translateService
@@ -146,8 +145,6 @@ export class ChartsComponent implements OnInit, OnChanges {
               .style("fill", function (d) {
                 return `#${Math.round(colors(d.count)).toString(16)}`
               }).on('mouseover', function (d, i) {
-                console.log(d)
-                console.log(i)
                 $("#record_count_tip").html(i.count)
               })
           }, error: err => {
@@ -361,7 +358,6 @@ export class ChartsComponent implements OnInit, OnChanges {
               .enter()
               .append("text")
               .text(d => {
-                console.log(d)
                 if (
                   ((d.endAngle - d.startAngle) / (2 * Math.PI)) * 100 > 5 ||
                   enablePolylines
@@ -441,7 +437,7 @@ export class ChartsComponent implements OnInit, OnChanges {
                 return k[1] > 0
               }).map(k => {
                 return {
-                  'name': k[0],
+                  'name': ts.instant(k[0]),
                   'value': k[1],
                   'parent': 'all'
                 }
@@ -460,10 +456,9 @@ export class ChartsComponent implements OnInit, OnChanges {
               .range([.5, 1])
             const root = d3.stratify()
               .id(function (d) {
-                return d['name'];
+                return ts.instant(d["name"]);
               })   // Name of the entity (column name is name in csv)
               .parentId(function (d) {
-                console.log(d)
                 return d['parent'];
               })   // Name of the parent (column name is parent in csv)
               (du);

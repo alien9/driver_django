@@ -35,12 +35,10 @@ export class DuplicateComponent implements OnInit {
     this.loadDuplicates()
   }
   loadDuplicates() {
-    console.log(this.recordSchema)
     this.spinner.show()
     this.recordService.getDuplicates(this.recordTypeUuid, (this.duplicatePage - 1) * 50).pipe(first()).subscribe({
       next: data => {
         this.duplicates = data
-        console.log(data)
         this.spinner.hide()
       },
       error: err => {
@@ -49,7 +47,6 @@ export class DuplicateComponent implements OnInit {
     })
   }
   view(r: object, modal: any) {
-    console.log(r)
     this.record = r
     this.modalService.open(modal, { size: 'lg', animation: true, keyboard: false, backdrop: "static" });
     this.showMap()
@@ -106,22 +103,18 @@ export class DuplicateComponent implements OnInit {
     }, 10);
   }
   useRecord(m, k){
-    console.log('using this'+k)
     this.spinner.show()
     m.dismiss()
     this.recordService.resolveDuplicate(this.record['uuid'], this.record[k]['uuid']).pipe(first()).subscribe({next:data=>{
-      console.log(data)
       this.loadDuplicates()
     },error:err=>{
       console.log(err)
     }})
   }
   useBoth(m){
-    console.log('using both')
     this.spinner.show()
     m.dismiss()
     this.recordService.resolveDuplicate(this.record['uuid'], null).pipe(first()).subscribe({next:data=>{
-      console.log(data)
       this.loadDuplicates()
     },error:err=>{
       console.log(err)

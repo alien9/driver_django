@@ -137,11 +137,9 @@ def login_irap(request):
                  'user_private_key': token['user_private_key'],
                  'user_id': token['user_id']}
     if not hasattr(request.user, 'irap'):
-        print("has no irap")
         irap = Irap(keys=tokendata, settings={}, user=request.user)
         irap.save()
     else:
-        print("has irap")
         request.user.irap.keys = tokendata
         request.user.irap.save()
     return ok_response(message="Login successful")
@@ -241,11 +239,9 @@ def fatalitydata(request):
         user_auth_id=int(userAuthId),
         user_api_key=userApiKey,
         user_private_key=userPrivateKey)
-    print("created user")
     modal_info_response = app_user.get_modal_info_for_dataset(
         dataset_id, latitude, longitude, language)
     response = modal_info_response.response
-    print(response)
     existing = ['road_survey_date', 'motorcycle_star_rating_star', 'longitude', 'bicycle_star_rating_star', 'bicycle_fe',
                 'latitude', 'section', 'car_fe', 'dataset_id', 'location_id', 'motorcycle_fe', 'pedestrian_fe', 'countermeasures',
                 'car_star_rating_star', 'pedestrian_star_rating_star', 'road_name']

@@ -56,18 +56,19 @@
                 <div *ngIf="!k.value.multiple">
                     <ul class="list-group list-group-flush" *ngFor="let f of k.value.properties|keyvalue|display|orderBy">
                         <li class="list-group-item">{{f.key|translate}}:
-                            <span *ngIf="!editing && f.value.format!='checkbox'">{{record['data']|dict_dump:k.key:null:f.key|format:f.value|translate}}</span>
-                            <span *ngIf="!editing && f.value.format=='checkbox'">{{record['data']|dict_dump:k.key:null:f.key|format:f.value}}</span>
+                            <span *ngIf="!editing && f.value.format!='checkbox'  && f.value.displayType=='checkbox' && f.value.type!='array'">{{record['data']|dict_dump:k.key:null:f.key|format:f.value|translate}}</span>
+                            <span *ngIf="!editing && f.value.type=='array'">{{record['data']|dict_dump:k.key:null:f.key|format:f.value|arrayjoin}}</span>
+                            <span *ngIf="!editing && (f.value.format=='checkbox' || f.value.displayType=='checkbox')  && f.value.type!='array'">{{record['data']|dict_dump:k.key:null:f.key|format:f.value}}</span>
                             <span *ngIf="editing">
-                                <div *ngIf="f.value.format=='checkbox'">
-                                    <span *ngFor="let o of f.value.items.enum">
+                                <div *ngIf="f.value.displayType=='checkbox' || f.value.format=='checkbox'">
+                                    <div *ngFor="let o of f.value.items.enum">
                                         <label class="form-check-label">
                                             <input class="form-check-input" type="checkbox" [value]="o"
                                                 checked="{{record['data'][k.key][f.key]?.includes(o) ? 'checked' : null}}"
                                                 (change)="onSingleCheckChange($event, k.key, f.key)">
                                             {{o|translate}}
                                         </label>&nbsp;
-                                    </span>
+                                    </div>
                 </div>
                 <select class="form-select" *ngIf="f.value.displayType=='select'" [(ngModel)]="record['data'][k.key][f.key]">
                                     <option></option>

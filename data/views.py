@@ -106,9 +106,12 @@ def editor(request):
 
 def dictionary(request, code):
     d = Dictionary.objects.filter(language_code=code)
+    r={}
     if len(d):
-        return JsonResponse(d[0].content)
-    return JsonResponse({})
+        r=d[0].content
+    if settings.GOOGLE_OAUTH_CLIENT_ID:
+        r["GOOGLE_OAUTH_CLIENT_ID"]=settings.GOOGLE_OAUTH_CLIENT_ID
+    return JsonResponse(r)
 
 def mapillary_callback(request):
     j={"result":"FAIL"}
@@ -203,7 +206,6 @@ def maps(request, geometry, mapfile, layer, z, x, y):
         geometry=geometry,
         layer=layer
     )
-    print(path)    
     return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
  
 
@@ -229,6 +231,7 @@ def segment_sets(request):
 
 def download(request, filename):
     file_path = os.path.join('zip', filename)
+    logger.error(file_path)
     if os.path.exists(file_path):
         with open(file_path, 'rb') as fh:
             response = HttpResponse(fh.read(), content_type="application/zip")
@@ -392,8 +395,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                     request.session.modified = True
 
                 self._cache_tile_sql(tile_token, query_sql)
-                print("FONF ")
-                print(query_sql)
                 query_sql=query_sql.replace(') WHERE (', ') WHERE st_intersects(geom, !BOX!) AND (')
                 dbstring=connection.settings_dict['HOST']
                 if settings.DEBUG:
@@ -704,7 +705,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         if boundaries:
             # Add table labels
             parent = Boundary.objects.get(pk=tables_boundary)
-            response['table_labels'] = {str(poly.pk): poly.data[parent.display_field]
+            response['table_labels'] = {str(poly.pk): poly.data[parent.get_display_field()] or 'Label field not defined'
                                         for poly in boundaries}
             # Filter by polygon for counting
             for poly in boundaries:
@@ -727,7 +728,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         fq=self.get_filtered_queryset(request).order_by().values('geom')
         sql, params = fq.query.sql_with_params()
         fq = cursor.mogrify(sql, params).decode('utf-8')
-        display_field=b.roadmap.display_field
+        display_field=b.roadmap.get_display_field() or 'Label field not defined'
         where=re.search('WHERE (.*)$', fq).group(1)
         query_sql="select r.id, count(*) as c, r.name, r.geom \
          from data_recordsegment r\
@@ -748,10 +749,8 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
              join grout_record on grout_record.uuid=dr.driverrecord_id \
              LEFT JOIN grout_recordschema ON (grout_record.schema_id = grout_recordschema.uuid) \
              where st_intersects(!BOX!, r.geom) AND st_intersects(!BOX!, grout_record.geom) AND r.size={size} and {where} group by r.id, r.geom, r.name".format(where=where, display_field=display_field, size=b.size)
-        print(query_sql)
 
         sample=list(set(map(lambda x: x[1], [r for r in cursor.fetchall()])))
-        print(sample)
         #sample=sorted([r for r in cursor.fetchall()], key=lambda a: a[1])
 
         i=0
@@ -814,6 +813,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
     def quantiles(self, request):
         # this is a particular crosstabs request for aggregating by geo, and creating a mapfile
         # the mapfile is indexed by the boundary uuid and the session id.
+        language=request.query_params.get('language', None)
         blackspotset_uuid=request.query_params.get('critical', None)
         tables_boundary = request.query_params.get('aggregation_boundary', None)
         if (tables_boundary is None or not re.match(r'^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', tables_boundary, flags=re.IGNORECASE)) and (blackspotset_uuid is None or not re.match(r'^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', blackspotset_uuid, flags=re.IGNORECASE)):
@@ -847,13 +847,12 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         query_sql='SELECT "grout_boundarypolygon"."geom","grout_boundarypolygon"."uuid", count(*) as c FROM "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\'  LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") WHERE {where} GROUP BY "grout_boundarypolygon"."geom","grout_boundarypolygon"."uuid"'.format(where=where)
         
         #execute the small query
-        cursor.execute('SELECT "grout_boundarypolygon"."uuid", case when c.c is null then 0 else c.c end, "grout_boundarypolygon".data->\'{display_field}\' from "grout_boundarypolygon" left join (SELECT "grout_boundarypolygon"."uuid", count(*) as c, "grout_boundarypolygon".data->\'{display_field}\' as name FROM  "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\'  LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") WHERE {where} GROUP BY "grout_boundarypolygon"."uuid") c on c.uuid="grout_boundarypolygon"."uuid" WHERE "grout_boundarypolygon"."boundary_id" = \'{boundary_id}\''.format(where=where, display_field=b.display_field, boundary_id=tables_boundary))
+        cursor.execute('SELECT "grout_boundarypolygon"."uuid", case when c.c is null then 0 else c.c end, "grout_boundarypolygon".data->\'{display_field}\' from "grout_boundarypolygon" left join (SELECT "grout_boundarypolygon"."uuid", count(*) as c, "grout_boundarypolygon".data->\'{display_field}\' as name FROM  "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\'  LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") WHERE {where} GROUP BY "grout_boundarypolygon"."uuid") c on c.uuid="grout_boundarypolygon"."uuid" WHERE "grout_boundarypolygon"."boundary_id" = \'{boundary_id}\''.format(where=where, display_field=b.get_display_field() or language, boundary_id=tables_boundary))
         sample=sorted([r for r in cursor.fetchall()], key=lambda a: a[1])
         chunk=(len(sample)-1)/5.0
         i=0
         classes=[]
         last={'max':-1, 'min':-1}
-        print(sample)
         while i<5:
             min=sample[math.floor(i*chunk)][1]
             max=sample[math.ceil((i+1)*chunk)][1]
@@ -1414,13 +1413,13 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         polygons = BoundaryPolygon.objects.filter(boundary=boundary)
 
         # Sort the polygons by display_field and remove any items that have an empty label
-        polygons = sorted([p for p in polygons if p.data[boundary.display_field]],
-                          key=lambda p: p.data[boundary.display_field])
+        polygons = sorted([p for p in polygons if p.data[boundary.get_display_field()]] or 'Label field not defined',
+                          key=lambda p: p.data[boundary.get_display_field()] or 'Label field not defined')
         labels = [
             {
                 'key': str(poly.pk),
                 'label': [
-                    {'text': poly.data[boundary.display_field], 'translate': False}
+                    {'text': poly.data[boundary.get_display_field()] or 'Label field not defined', 'translate': False}
                 ]
             }
             for poly in polygons

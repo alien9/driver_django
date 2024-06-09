@@ -30,8 +30,6 @@ class ReportsTestCase(APITestCase):
             "plural_label":'Crashes'
             }, format='json')
         r=response.json()
-        print("REPORTS TEST RECORD TYPE")
-        print(r)
         self.record_type_uuid=r['uuid']
         fu=open('data/tests/test_schema.json') 
         tu=fu.read()
@@ -49,8 +47,6 @@ class ReportsTestCase(APITestCase):
         for record in records['results']:
             record['schema']=rt['uuid'] 
             response=self.client.post('/api/records/', record, format='json')
-            print("upa")
-            print(response.json())
 
     def setUpGeography(self):
         b=Boundary(

@@ -24,7 +24,7 @@ Postgresql
 
 ## Requirements
 
-Python 3.8.5; PostgreSQL 9.4; GDAL 2.4.1; PostGIS 2.5
+Python 3.8.5; PostgreSQL 9.4; GDAL 2.4.1; PostGIS 2.5; node v12.22.12; npm 6.14.16
 
 ## AngularJS front-end
 

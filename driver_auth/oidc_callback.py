@@ -65,5 +65,4 @@ class OIDC_RequestView(OIDCAuthenticationRequestView):
 
         query = urlencode(params)
         redirect_url = '{url}?{query}'.format(url=self.OIDC_OP_AUTH_ENDPOINT, query=query)
-        print(redirect_url)
         return HttpResponseRedirect(redirect_url)

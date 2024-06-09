@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { first } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
 import { RecordService } from '../record.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-login',
@@ -19,6 +20,7 @@ export class LoginComponent implements OnInit {
     errorMessage: string;
     @Output() entering = new EventEmitter<any>()
     backend: string = ""
+    hasGoogle:boolean=false
 
     constructor(
         private formBuilder: FormBuilder,
@@ -26,6 +28,7 @@ export class LoginComponent implements OnInit {
         private router: Router,
         private authenticationService: AuthService,
         private recordService: RecordService,
+        private translate: TranslateService,
     ) {
     }
     setCookie(name, value, days = 100) {
@@ -65,7 +68,9 @@ export class LoginComponent implements OnInit {
         }
         this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
         this.backend = this.recordService.getBackend()
+        this.translate.get("GOOGLE_OAUTH_CLIENT_ID").subscribe((k)=>{this.hasGoogle=k!='GOOGLE_OAUTH_CLIENT_ID'})        
     }  
+
     loginWithGoogle(): void {
         window.location.href=`${this.authenticationService.getBackend()}/oidc/authenticate/`
       }

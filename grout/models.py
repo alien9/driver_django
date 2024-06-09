@@ -1,6 +1,7 @@
 import os
 import shutil
-import uuid, logging
+import uuid
+import logging
 from django.db import connection
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
@@ -11,6 +12,7 @@ from django.core.validators import MinLengthValidator
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.loader import render_to_string
+from ordered_model.models import OrderedModel
 
 from rest_framework import serializers
 
@@ -28,7 +30,8 @@ class GroutModel(models.Model):
     """
     Base class providing attributes common to all Grout data types.
     """
-    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    uuid = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
 
@@ -66,11 +69,13 @@ class RecordType(GroutModel):
     def get_current_schema(self):
         schemas = self.schemas.order_by('-version')
         return schemas[0] if len(schemas) > 0 else None
+
     def __unicode__(self):
-         return self.label
+        return self.label
 
     def __str__(self):
         return self.label
+
 
 class RecordSchema(GroutModel):
     """
@@ -88,8 +93,9 @@ class RecordSchema(GroutModel):
 
     class Meta(object):
         unique_together = (('record_type', 'version'),)
-    #def __unicode__(self):
+    # def __unicode__(self):
     #    return "%s %s" % (self.record_type.label, self.version)
+
     def __str__(self):
         return "%s %s" % (self.record_type.label, self.version)
 
@@ -110,12 +116,15 @@ class RecordSchema(GroutModel):
             if schema is invalid
         """
         jsonschema.Draft4Validator.check_schema(schema)
+
     def save(self, *args, **kwargs):
-        
+
         if self.record_type is not None:
-            self.schema["record_type"]=str(self.record_type.uuid)
-        
+            self.schema["record_type"] = str(self.record_type.uuid)
+
         super(RecordSchema, self).save(*args, **kwargs)
+        from data.tasks import create_indexes
+        create_indexes.delay()
 
 
 class Record(GroutModel):
@@ -128,7 +137,8 @@ class Record(GroutModel):
     archived = models.BooleanField(default=False)
     occurred_from = models.DateTimeField(null=True, blank=True)
     occurred_to = models.DateTimeField(null=True, blank=True)
-    geom = models.GeometryField(srid=settings.GROUT['SRID'], null=True, blank=True)
+    geom = models.GeometryField(
+        srid=settings.GROUT['SRID'], null=True, blank=True)
     location_text = models.CharField(max_length=200, null=True, blank=True)
 
     class Meta(object):
@@ -256,10 +266,10 @@ class Record(GroutModel):
         self.clean()
         return super(Record, self).save(*args, **kwargs)
 
+
 class Imported(GroutModel):
     class Meta(object):
         abstract = True
-
 
     class StatusTypes(object):
         PENDING = 'PENDING'
@@ -278,25 +288,32 @@ class Imported(GroutModel):
     status = models.CharField(max_length=10,
                               choices=StatusTypes.CHOICES,
                               default=StatusTypes.PENDING)
-    label = models.CharField(max_length=128, unique=True, validators=[MinLengthValidator(3)])
+    label = models.CharField(max_length=128, unique=True, validators=[
+                             MinLengthValidator(3)])
     # Store any valid css color string
     color = models.CharField(max_length=64, default='blue')
     display_field = models.CharField(max_length=10, blank=True, null=True)
     data_fields = JSONField(blank=True, null=True)
     errors = JSONField(blank=True, null=True)
     source_file = models.FileField(upload_to='boundaries/%Y/%m/%d')
+
+    def get_display_field(self):
+        if self.display_field is not None:
+            return self.display_field
+
     def __unicode__(self):
-         return self.label
+        return self.label
 
     def __str__(self):
         return self.label
 
-            
-class Boundary(Imported):
+
+class Boundary(Imported, OrderedModel):
     """ MultiPolygon objects which contain related geometries for filtering/querying """
-    class Meta:
-            verbose_name_plural = _("Boundaries")
-            verbose_name = _('Boundary')
+    class Meta(OrderedModel.Meta):
+        verbose_name_plural = _("Boundaries")
+        verbose_name = _('Boundary')
+
     def load_shapefile(self):
         """ Validate the shapefile saved on disk and load into db """
         self.status = self.StatusTypes.PROCESSING
@@ -323,7 +340,8 @@ class Boundary(Imported):
             for feature in boundary_layer:
                 feature.geom.transform(settings.GROUT['SRID'])
                 geometry = make_multipolygon(feature.geom)
-                data = {field: feature.get(field) for field in self.data_fields}
+                data = {field: feature.get(field)
+                        for field in self.data_fields}
                 self.polygons.create(geom=geometry, data=data)
 
             self.status = self.StatusTypes.COMPLETE
@@ -338,22 +356,23 @@ class Boundary(Imported):
             self.save()
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
-            
+
     def write_mapfile(self):
-        color=[0,0,0]
+        color = [0, 0, 0]
         if self.color is not None:
-            h=self.color.lstrip('#')
-            color=tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
-        t=render_to_string('boundary.map', {
-            "connection":connection.settings_dict['HOST'],
-            "username":connection.settings_dict['USER'],
-            "dbname":connection.settings_dict['NAME'],
-            "password":connection.settings_dict['PASSWORD'],
-            "query":"geom from (select geom, uuid, data->'%s' as label from grout_boundarypolygon where st_intersects(geom, !BOX!) AND boundary_id='%s')as q using unique uuid using srid=4326" % (self.display_field, self.uuid,),
-            "color": "%s %s %s" % (color[0],color[1],color[2]),
+            h = self.color.lstrip('#')
+            color = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+        t = render_to_string('boundary.map', {
+            "connection": connection.settings_dict['HOST'],
+            "username": connection.settings_dict['USER'],
+            "dbname": connection.settings_dict['NAME'],
+            "password": connection.settings_dict['PASSWORD'],
+            "query": "geom from (select geom, uuid, data->'%s' as label from grout_boundarypolygon where st_intersects(geom, !BOX!) AND boundary_id='%s')as q using unique uuid using srid=4326" % (self.get_display_field(), self.uuid,),
+            "color": "%s %s %s" % (color[0], color[1], color[2]),
         })
         with open("./mapserver/boundary_%s.map" % (self.uuid), "w+") as m:
             m.write(t)
+
 
 @receiver(post_save, sender=Boundary, dispatch_uid="create_boundary")
 def post_create(sender, instance, created, **kwargs):
@@ -362,11 +381,12 @@ def post_create(sender, instance, created, **kwargs):
     # create mapserver file
     instance.write_mapfile()
 
+
 class BoundaryPolygon(GroutModel):
     """ Individual boundaries and associated data for each geom in a BoundaryUpload """
     class Meta:
-            verbose_name_plural = _("Boundary Polygons")
-            verbose_name = _('Boundary Polygon')
+        verbose_name_plural = _("Boundary Polygons")
+        verbose_name = _('Boundary Polygon')
     boundary = models.ForeignKey('Boundary',
                                  related_name='polygons',
                                  null=True,

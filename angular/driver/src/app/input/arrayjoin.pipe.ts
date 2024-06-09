@@ -11,6 +11,9 @@ export class ArrayJoinPipe implements PipeTransform {
     transform(all: string[]): string {
         if (!all.length)
             return ""
-        return all.map(k => this.translateService.instant(k)).join(", ")
+        if(Array.isArray(all))
+            return all.filter((k)=>k.length).map(k => this.translateService.instant(k)).join(", ")
+        else
+            return this.translateService.instant(all)
     }
 }

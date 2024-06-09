@@ -1,3 +1,4 @@
+from rest_framework_gis.filters import GeometryFilter
 import json
 import re
 import django_filters
@@ -79,7 +80,8 @@ class RecordFilter(GeoFilterSet):
         """ Method filter for containment within the polygon specified by poly_uuid"""
         if not poly_uuid:
             return queryset
-        rrg=re.compile('[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}', re.I)
+        rrg = re.compile(
+            '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}', re.I)
         if not rrg.match(poly_uuid):
             return queryset
         try:
@@ -183,6 +185,31 @@ class BoundaryPolygonFilter(GeoFilterSet):
 
     boundary = django_filters.Filter(
         field_name='boundary', method='filter_boundary')
+    filter = django_filters.Filter(
+        field_name='geom', method='filter_by_geometry')
+
+    def filter_by_geometry(self, queryset, field_name, value):
+        import logging
+        """ Method filter for containment within the polygon specified by poly_uuid"""
+        if not value:
+            return queryset
+        rrg = re.compile(
+            '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}', re.I)
+        if not rrg.match(value):
+            return queryset
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "select st_ashexewkb(st_buffer(gb.geom, 0.001)) from grout_boundarypolygon gb where gb.uuid = %s", [value])
+                row = cursor.fetchone()
+            return queryset.filter(geom__within=row[0])
+        except ValueError as e:
+            raise ParseError(e)
+        except BoundaryPolygon.DoesNotExist as e:
+            raise NotFound(e)
+
+    # filter = GeometryFilter(field_name='geom', lookup_expr='contains')
 
     def filter_boundary(self, queryset, field_name, value):
         """ Method filter for boundary polygons having a desired boundary (uuid)
@@ -190,6 +217,7 @@ class BoundaryPolygonFilter(GeoFilterSet):
         e.g. /api/boundarypolygons/?boundary=44a51b83-470f-4e3d-b71b-e3770ec79772
 
         """
+
         return queryset.filter(boundary=value)
 
     class Meta:

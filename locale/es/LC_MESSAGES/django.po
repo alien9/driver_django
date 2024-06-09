@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-30 09:41-0300\n"
+"POT-Creation-Date: 2024-06-03 20:27+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,47 +18,47 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: black_spots/models.py:21
-msgid "Road Maps"
-msgstr ""
-
-#: black_spots/models.py:22
-msgid "Road Map"
-msgstr ""
-
-#: black_spots/models.py:134 black_spots/models.py:135
+#: black_spots/apps.py:6 black_spots/models.py:138 black_spots/models.py:139
 msgid "Critical Spots"
 msgstr "Puntos Críticos"
 
-#: data/admin.py:14
+#: black_spots/models.py:22
+msgid "Road Maps"
+msgstr ""
+
+#: black_spots/models.py:23
+msgid "Road Map"
+msgstr ""
+
+#: data/admin.py:19
 msgid "DRIVER Database"
 msgstr ""
 
-#: data/admin.py:34 data/admin.py:87
+#: data/admin.py:61 data/admin.py:114
 msgid "Object listing disabled"
 msgstr ""
 
-#: data/models.py:22
+#: data/models.py:27
 msgid "Segment Set"
 msgstr ""
 
-#: data/models.py:23
+#: data/models.py:28
 msgid "Segment Sets"
 msgstr ""
 
-#: data/models.py:31
+#: data/models.py:36
 msgid "Segment"
 msgstr ""
 
-#: data/models.py:32
+#: data/models.py:37
 msgid "Segments"
 msgstr ""
 
-#: data/models.py:40
+#: data/models.py:45
 msgid "Record Segment"
 msgstr ""
 
-#: data/models.py:41
+#: data/models.py:46
 msgid "Record Segments"
 msgstr ""
 
@@ -70,78 +70,134 @@ msgstr ""
 msgid "Record Cost Configs"
 msgstr ""
 
-#: data/models.py:278
+#: data/models.py:285
 msgid "Dictionary"
 msgstr "Dicionario"
 
-#: data/models.py:279
+#: data/models.py:286
 msgid "Dictionaries"
 msgstr "Dicionarios"
 
-#: driver/settings.py:173 driver/settings_dev.py:40
-msgid "German"
-msgstr ""
-
-#: driver/settings.py:174 driver/settings_dev.py:41
+#: driver/settings.py:178 driver/settings_rename.py:43
 msgid "English"
 msgstr ""
 
-#: driver/settings.py:175 driver/settings_dev.py:42
-msgid "French"
+#: driver/settings.py:179
+msgid "Laotian"
 msgstr ""
 
-#: driver/settings.py:176 driver/settings_dev.py:43
+#: driver/settings.py:180
+msgid "Brazilian Portuguese"
+msgstr ""
+
+#: driver/settings.py:181 driver/settings_rename.py:45
 msgid "Spanish"
 msgstr ""
 
-#: driver/settings.py:177 driver/settings_dev.py:44
-msgid "Portuguese"
+#: driver/settings.py:182 driver/settings_rename.py:44
+msgid "French"
 msgstr ""
 
-#: driver/settings.py:524
+#: driver/settings.py:183
+msgid "Simplified Chinese"
+msgstr ""
+
+#: driver/settings.py:534
 msgid "segment_size"
 msgstr ""
 
-#: driver/settings.py:525
+#: driver/settings.py:535
 msgid "Latitude"
 msgstr ""
 
-#: driver/settings.py:526
+#: driver/settings.py:536
 msgid "Longitude"
 msgstr ""
 
-#: driver/settings.py:527
+#: driver/settings.py:537
 msgid "Zoom"
 msgstr ""
 
-#: driver/settings.py:528
+#: driver/settings.py:538
 msgid "Accident"
 msgstr ""
 
-#: driver/settings.py:530
-msgid "Languages"
+#: driver/settings.py:539
+msgid "Intervention"
 msgstr ""
 
-#: driver/settings.py:531
+#: driver/settings.py:541
 msgid "Host Name"
 msgstr ""
 
-#: driver/settings.py:532
+#: driver/settings.py:542
 msgid "Country Code"
 msgstr ""
 
-#: grout/models.py:297
+#: driver/settings.py:546
+msgid "Mapillary Client token"
+msgstr ""
+
+#: driver/settings.py:547
+msgid "Mapillary Client"
+msgstr ""
+
+#: driver/settings.py:548
+msgid "Mapillary secret"
+msgstr ""
+
+#: driver/settings.py:549
+msgid "Mapillary token"
+msgstr ""
+
+#: driver/settings.py:550
+msgid "Mapillary expiry date"
+msgstr ""
+
+#: driver/settings.py:551
+msgid "Nominatim key"
+msgstr ""
+
+#: driver/settings.py:552
+msgid "iRAP Auth ID"
+msgstr ""
+
+#: driver/settings.py:553
+msgid "iRAP API key"
+msgstr ""
+
+#: driver/settings.py:554
+msgid "iRAP Private key"
+msgstr ""
+
+#: driver/settings.py:555
+msgid "Open Weather API"
+msgstr ""
+
+#: driver/settings.py:556
+msgid "Currency"
+msgstr ""
+
+#: driver/settings_rename.py:42
+msgid "German"
+msgstr ""
+
+#: driver/settings_rename.py:46
+msgid "Portuguese"
+msgstr ""
+
+#: grout/models.py:304
 msgid "Boundaries"
 msgstr ""
 
-#: grout/models.py:298
+#: grout/models.py:305
 msgid "Boundary"
 msgstr ""
 
-#: grout/models.py:350
+#: grout/models.py:374
 msgid "Boundary Polygons"
 msgstr "Polígonos"
 
-#: grout/models.py:351
+#: grout/models.py:375
 msgid "Boundary Polygon"
 msgstr "Polígono"

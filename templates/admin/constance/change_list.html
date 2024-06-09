@@ -21,7 +21,6 @@
     (function () {
         if (!$) {
             $ = django.jQuery;
-            console.log("Loading")
         }        
         var auth_cookie = document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "mapillary_auth");
         if(auth_cookie.length){

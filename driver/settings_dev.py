@@ -4,25 +4,21 @@ import subprocess
 import os
 from django.utils.translation import ugettext_lazy as _
 
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS=['http://localhost:4201']
+
 DEVELOP = True
 STAGING = True if os.environ.get('DJANGO_ENV', 'staging') == 'staging' else False
 PRODUCTION = not DEVELOP and not STAGING
 
-f = open(".env", "r")
-e={}
-for k in [ t.split('=') for t in f.readlines() ]:
-    if len(k)>1:
-        e[k[0]]=k[1].replace("\n", "")
 
-DATABASE_NAME=e['DATABASE_NAME']
-DRIVER_DB_HOST=e['DATABASE_HOST']
-WINDSHAFT_HOST='localhost'#subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "windshaft-"+e["CONTAINER_NAME"]]).decode('utf8').strip()
-MAPSERVER_HOST=subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "mapserver-"+e["CONTAINER_NAME"]]).decode('utf8').strip()
-REDIS_HOST = subprocess.check_output(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "redis-server-"+e["CONTAINER_NAME"]]).decode('utf8').strip()
-CONTAINER_NAME=e['CONTAINER_NAME']
+WINDSHAFT_HOST='localhost'
+MAPSERVER_HOST='host.docker.internal:8999'
+REDIS_HOST = 'host.docker.internal'
+CONTAINER_NAME="development"
 CONSTANCE_CONFIG['WINDSHAFT']=("http://%s" % (WINDSHAFT_HOST,), "WindShaft")
 CONSTANCE_CONFIG['MAPSERVER']=("http://%s" % (MAPSERVER_HOST,), "Mapserver")
-CONSTANCE_CONFIG['GEOSERVER']=("http://%s" % (e['GEOSERVER'],), "GeoServer")
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
@@ -36,33 +32,7 @@ SECRET_KEY = 'sfdgljfkghdjkgfhjkghdskljhgljhsdjkghfgjklhdgjklshjkhg' # os.enviro
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DEVELOP
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': DATABASE_NAME,
-        'HOST': DRIVER_DB_HOST,
-        'PORT': os.environ.get('DRIVER_DB_PORT', 5432),
-        'USER': os.environ.get('DRIVER_DB_USER', 'driver'),
-        'PASSWORD': os.environ.get('DRIVER_DB_PASSWORD', 'driver'),
-        'CONN_MAX_AGE': 3600,  # in seconds
-        'OPTIONS': {
-        #    'sslmode': 'require'
-        }
-    }
-}
-
-from django.utils.translation import ugettext_lazy as _
-LANGUAGES = [
-   ('de', _('German')),
-   ('en', _('English')),
-   ('fr', _('French')),
-   ('es', _('Spanish')),
-   ('pt-br', _('Portuguese'))
-]
-
 TIME_ZONE = os.environ.get("DRIVER_LOCAL_TIME_ZONE", 'America/La_Paz')
-
-BLACKSPOT_RECORD_TYPE_LABEL = os.environ.get('BLACKSPOT_RECORD_TYPE_LABEL', 'Incident')
 
 # user and group settings
 

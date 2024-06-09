@@ -5,7 +5,7 @@ from django_redis import get_redis_connection
 import time, uuid, pytz, os, glob
 from data.models import DriverRecord, RecordType
 from grout.models import Boundary
-from black_spots.models import RoadMap, BlackSpotSet
+from black_spots.models import RoadMap, BlackSpotSet, BlackSpot
 from constance import config  
 from django.db import connection
 from datetime import datetime
@@ -25,7 +25,6 @@ def geocode_records(blackspotset):
 @shared_task(track_started=True)
 def generate_blackspots(blackspotset_uuid=None, user_id=None):
     logger.debug("DATA GENERATE BLACK SPOTS")
-    print(blackspotset_uuid)
     if blackspotset_uuid is None:
         rs=RecordType.objects.filter(active=True, label=config.PRIMARY_LABEL)
         if not len(rs):
@@ -52,7 +51,6 @@ def generate_blackspots(blackspotset_uuid=None, user_id=None):
 
     for blackspot in b.blackspot_set.all():
         blackspot.delete()
-    
     segments=set()
     with connection.cursor() as cursor:
         for r in records:
@@ -92,7 +90,7 @@ def generate_blackspots(blackspotset_uuid=None, user_id=None):
 @shared_task(track_started=True)
 def generate_roads_index(roadmap_id):
     roadmap=RoadMap.objects.get(pk=roadmap_id)
-    if roadmap.display_field is None:
+    if roadmap.get_display_field() is None:
         return
     schema = Schema(name=TEXT(stored=True),id=ID(stored=True),lat=NUMERIC(stored=True), lon=NUMERIC(stored=True), fullname=STORED)
     if not os.path.exists("indexdir"):

@@ -40,6 +40,7 @@ export class NavbarComponent implements OnInit {
   @Output() iRapChange = new EventEmitter<object>()
   @Output() newRecord = new EventEmitter<boolean>()
   @Output() startDownload = new EventEmitter<object>()
+  @Output() startGeography = new EventEmitter<object>()
   @Input() recordSchema: object
   @Input() stateSelected
   @Input() locale: string
@@ -59,7 +60,7 @@ export class NavbarComponent implements OnInit {
   public tabs = [
 
   ]
-  inserting: boolean
+  @Input() inserting: boolean
   public reportHeaders: object
   reportParameters: object
   public report: object
@@ -137,7 +138,7 @@ export class NavbarComponent implements OnInit {
     this.boundaryChange.emit(b)
   }
   getBoundaryPolygonLabel(b: any) {
-    return b.data[this.boundary.display_field]
+    return b.data[localStorage.getItem("Language")||this.boundary.display_field]
   }
   selectBoundaryPolygon(b: any) {
     this.boundaryPolygonChange.emit(b)
@@ -153,6 +154,9 @@ export class NavbarComponent implements OnInit {
         this.spinner.hide()
       }
     })
+  }
+  startGeometry(){
+    this.startGeography.emit()
   }
   startIrap(content: any) {
     console.log("starting irap")
@@ -396,6 +400,7 @@ export class NavbarComponent implements OnInit {
   }
 
   loadReport(p: any) {
+    console.log("will now load report")
     this.reportParameters = p
     let path = {};
     (['col', 'row']).forEach(tab => {
@@ -514,15 +519,12 @@ export class NavbarComponent implements OnInit {
     })
   }
   searchIrap(event) {
-    console.log(event)
     let tu = this.irapDataset["data"].filter(k => k.name === this.iRapSearchTerm).pop()
     if (tu) {
-      console.log("scroll", tu)
       let el: HTMLElement = document.getElementById(`accordion-irap-${tu['id']}-header`);
       el.scrollIntoView();
       (el.childNodes[0] as HTMLButtonElement).click()
     }
-    console.log("AQUIYUIYIUYUIYUI")
   }
   cancelReport(modal: any) {
     this.goBack.emit('Reports')
@@ -562,8 +564,6 @@ export class NavbarComponent implements OnInit {
     }
     this.recordService.getIRapDataset({ "body": this.iRapData }).pipe(first()).subscribe({
       next: data => {
-        console.log(data)
-        console.log("DATAESET WAS SET")
         this.iRapChange.emit({ dataset: data, iRap: this.iRapData })
         this.spinner.hide()
       },
@@ -580,7 +580,6 @@ export class NavbarComponent implements OnInit {
     this.iRapChange.emit({ dataset: this.irapDataset, iRap: this.iRapData }) // save selection
     this.recordService.getIRapData({ "body": b }).pipe(first()).subscribe({
       next: data => {
-        console.log("loaded an irap layer")
         this.iRapChange.emit({ layer: data, iRap: this.iRapData })
         this.spinner.hide()
         modal.close('ok')

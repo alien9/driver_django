@@ -1,18 +1,9 @@
 version: '3'
 services:
-  redis-server:
-    image: redis
-    container_name: "redis-server-${CONTAINER_NAME}"
-
   driver-django:
     build:
       context: ./
-    volumes:
-      - ./static:/var/www/static
-      - ./mapserver:/opt/app/mapserver
-      - ./indexdir:/opt/app/indexdir
     depends_on:
-      - redis-server
       - mapserver
     environment:
       - CENTER_LATITUDE=${CENTER_LATITUDE}
@@ -22,11 +13,11 @@ services:
       - HOSTNAME=${HOST_NAME}
       - TIMEZONE=${TIMEZONE}
       - DJANGO_ENV=production
-      - DRIVER_DB_HOST=${DATABASE_HOST}
-      - DRIVER_DB_NAME=${DATABASE_NAME}
-      - DRIVER_DB_USER=${DATABASE_USERNAME}
-      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
-      - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
+      - DRIVER_DB_HOST=${DRIVER_DB_HOST}
+      - DRIVER_DB_NAME=${DRIVER_DB_NAME}
+      - DRIVER_DB_USER=${DRIVER_DB_USER}
+      - DRIVER_DB_PASSWORD=${DRIVER_DB_PASSWORD}
+      - DRIVER_REDIS_HOST=172.17.0.1
       - STATIC_ROOT=/var/www/static/
       - STATIC_URL=${PROTOCOL}://${HOST_NAME}/static/ 
       - OAUTH_CLIENT_ID=${CLIENTID}
@@ -35,28 +26,57 @@ services:
       - CONTAINER_NAME=${CONTAINER_NAME}
     container_name: driver-django-${CONTAINER_NAME}
     image: alien9/driver-django
-      
+    command: ["./manage.py", "runserver", '0.0.0.0:4000', '--settings', 'driver.settings_dev']
+    volumes:
+      - ./data:/opt/app/data
+      - ./driver:/opt/app/driver
+      - ./driver_auth:/opt/app/driver_auth
+      - ./grout:/opt/app/grout
+      - ./locale:/opt/app/locale
+      - ./mapserver:/opt/app/mapserver
+      - ./user_filters:/opt/app/user_filters
+      - ./static:/var/www/static
+      - ./indexdir:/opt/app/indexdir
+      - ./requirements.txt:/opt/app/requirements.txt
+      - ./.env:/opt/app/.env
+      - ./zip:/opt/app/zip
+    ports:
+      - 8009:4000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   driver-celery:
     volumes:
-      - ./zip:/var/www/media
+      - ./zip:/opt/app/zip
       - ./indexdir:/opt/app/indexdir
-    depends_on:
-      - redis-server
+      - ./data:/opt/app/data
+      - ./driver:/opt/app/driver
+      - ./driver_auth:/opt/app/driver_auth
+      - ./grout:/opt/app/grout
+      - ./locale:/opt/app/locale
+      - ./mapserver:/opt/app/mapserver
+      - ./user_filters:/opt/app/user_filters
+      - ./static:/var/www/static
+      - ./requirements.txt:/opt/app/requirements.txt
+      - ./.env:/opt/app/.env
     environment:
       - HOST_URL=${PROTOCOL}://${HOST_NAME}
       - HOSTNAME=${HOST_NAME}
       - COUNTRY_CODE=${COUNTRY_CODE}
       - TIMEZONE=${TIMEZONE}
       - DJANGO_ENV=production
-      - DRIVER_DB_HOST=${DATABASE_HOST}
-      - DRIVER_DB_NAME=${DATABASE_NAME}
-      - DRIVER_DB_USER=${DATABASE_USERNAME}
-      - DRIVER_DB_PASSWORD=${DATABASE_PASSWORD}
-      - DRIVER_REDIS_HOST=redis-server-${CONTAINER_NAME}
+      - DRIVER_DB_HOST=${DRIVER_DB_HOST}
+      - DRIVER_DB_NAME=${DRIVER_DB_NAME}
+      - DRIVER_DB_USER=${DRIVER_DB_USER}
+      - DRIVER_DB_PASSWORD=${DRIVER_DB_PASSWORD}
+      - DRIVER_REDIS_HOST=172.17.0.1
       - STATIC_ROOT=/var/www/static/
       - STATIC_URL=${PROTOCOL}://${HOST_NAME}/static/ 
       - OAUTH_CLIENT_ID=${CLIENTID}
       - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
+      - DJANGO_SETTINGS_MODULE=driver.settings_dev
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     entrypoint: ["celery", "-A", "driver", "worker", "--queue=taskworker", "--loglevel=info", "--concurrency=4"]
     container_name: driver-celery-${CONTAINER_NAME}
     image: alien9/driver-django
@@ -66,3 +86,15 @@ services:
     volumes:
       - ./mapserver/:/etc/mapserver
     image: geodata/mapserver
+    ports:
+      - 8999:80
+
+  driver-angular:
+    container_name: angular-${CONTAINER_NAME}
+    image: alien9/driver-angular
+    build:
+      context: ./angular/driver/
+    volumes:
+      - ./angular/driver:/opt/driver
+    ports:
+      - 4201:4200

@@ -13,7 +13,9 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-import os, sys
+import os, sys, dotenv
+dotenv.load_dotenv(override=True)
+
 from django.utils.translation import ugettext_lazy as _
 import socket
 
@@ -40,20 +42,56 @@ TESTING = 'test' in sys.argv
 
 ALLOWED_HOSTS = ['*']
 # TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
-CORS_ORIGIN_ALLOW_ALL = False
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_METHODS = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
+#CORS_ORIGIN_ALLOW_ALL = False
+#CORS_ALLOW_CREDENTIALS = True
+#CORS_ALLOW_METHODS = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
 
-CORS_ALLOWED_ORIGINS = [
-    "%s://%s" % (os.environ.get('PROTOCOL', 'http'), os.environ.get("HOST_NAME", "localhost"),),
-    'http://localhost:8000',
-    'http://localhost:4200',
-]
-CORS_ALLOW_HEADERS = ('content-disposition', 'accept-encoding', 'responsetype',
-                      'content-type', 'accept', 'origin', 'authorization', 'x-csrftoken')
-LANGUAGE_CODE = 'pt-br'
+#CORS_ALLOWED_ORIGINS = [
+#    "%s://%s" % (os.environ.get('PROTOCOL', 'http'), os.environ.get("HOST_NAME", "localhost"),),
+#    'http://localhost:8000',
+#    'http://localhost:4200',
+#]
+#CORS_ALLOW_HEADERS = ('content-disposition', 'accept-encoding', 'responsetype',
+#                      'content-type', 'accept', 'origin', 'authorization', 'x-csrftoken')
+LANGUAGE_CODE = os.getenv("LANGUAGE_CODE", "en")
 
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
+
+
+# Internationalization
+# https://docs.djangoproject.com/en/1.8/topics/i18n/
+
+from django.utils.translation import ugettext_lazy as _
+from django.conf import locale
+
+if os.getenv('LANGUAGES', None):
+    names={
+    'en':'English',
+    'lo':'Laotian',
+    'pt-br': 'Brazilian Portuguese',
+    'es': 'Spanish',
+    'fr': 'French',  
+    'zh-hans': 'Simplified Chinese',        
+    }
+    LANGUAGES=list(map(lambda l: (l,_(names[l])), os.getenv('LANGUAGES').split(",")))
+    du=locale.LANG_INFO
+    du["lo"]={
+            'bidi': True,
+            'code': 'lo',
+            'name': 'Laotian',
+            'name_local': 'ລາວ',
+    }
+    locale.LANG_INFO = dict(du)
+
+else:
+    LANGUAGES = [
+        ('en', _('English')),
+        ('lo', _('Laotian')),
+        ('pt-br', _('Brazilian Portuguese')),
+        ('es', _('Spanish')),
+        ('fr', _('French')),  
+        ('zh-hans', _('Simplified Chinese')),
+    ]
 
 # Application definition
 
@@ -88,6 +126,7 @@ INSTALLED_APPS = (
     'django_admin_hstore_widget',
     'constance',
     'proxy',
+    'ordered_model',
 )
 
 MIDDLEWARE = (
@@ -160,7 +199,6 @@ DATABASES = {
         }
     }
 }
-print("Version after pull")
 POSTGIS_VERSION = tuple(
     map(int, os.environ.get('DJANGO_POSTGIS_VERSION', '2.1.3').split("."))
 )
@@ -168,18 +206,6 @@ POSTGIS_VERSION = tuple(
 # File storage
 #DEFAULT_FILE_STORAGE = 'storages.backends.overwrite.OverwriteStorage'
 
-# Internationalization
-# https://docs.djangoproject.com/en/1.8/topics/i18n/
-
-from django.utils.translation import ugettext_lazy as _
-
-LANGUAGES = [
-    ('en', _('English')),
-    ('pt-br', _('Brazilian Portuguese')),
-    ('es', _('Spanish')),
-    ('fr', _('French')),  
-    ('zh-hans', _('Simplified Chinese')),
-]
 
 TIME_ZONE = os.environ.get("TIMEZONE", 'America/Sao_Paulo')
 
@@ -197,7 +223,7 @@ BLACKSPOT_RECORD_TYPE_LABEL = os.environ.get('BLACKSPOT_RECORD_TYPE_LABEL', 'Inc
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = os.environ.get('STATIC_URL', '/static/')
-STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/driver/static/')
+STATIC_ROOT = os.environ.get('STATIC_ROOT', '/opt/app/static/')
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'templates/dist'),
@@ -384,7 +410,7 @@ CELERY_ROUTES = {
     'data.tasks.geocode_records.geocode_records': {'queue': 'taskworker'},
     'data.tasks.geocode_records.generate_blackspots': {'queue': 'taskworker'},
     'data.tasks.geocode_records.generate_roads_index': {'queue': 'taskworker'},
-
+    'data.tasks.create_indexes.create_indexes': {'queue': 'taskworker'},
 }
 # This needs to match the proxy configuration in nginx so that requests for files generated
 # by celery jobs go to the right place.

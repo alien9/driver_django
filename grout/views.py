@@ -43,6 +43,7 @@ class BoundaryPolygonViewSet(viewsets.ModelViewSet):
     pagination_class = OptionalLimitOffsetPagination
     bbox_filter_field = 'geom'
     jsonb_filter_field = 'data'
+    geometry_filter_field = 'filter'
     filter_backends = (InBBoxFilter, JsonBFilterBackend, DjangoFilterBackend)
 
     def get_serializer_class(self):
@@ -128,15 +129,12 @@ class RecordSchemaViewSet(SchemaViewSet):
         return super(RecordSchemaViewSet, self).get_serializer(*args, **kwargs)
 
 class BoundaryViewSet(viewsets.ModelViewSet):
-
-    queryset = Boundary.objects.all()
+    queryset = Boundary.objects.all().order_by('order')
     serializer_class = BoundarySerializer
     filter_class = BoundaryFilter
     pagination_class = OptionalLimitOffsetPagination
-    ordering = ('display_field',)
 
     def create(self, request, *args, **kwargs):
-        logging.info("creating boundary")
         """Overwritten to allow use of semantically important/appropriate status codes for
         informing users about the type of error they've encountered
         """

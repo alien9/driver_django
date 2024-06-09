@@ -41,13 +41,11 @@
                 var searchImages = function (inc) {
                     var bbox = [latlng[1] - inc, latlng[0] - inc, latlng[1] + inc, latlng[0] + inc]
                     url = `https://graph.mapillary.com/images?access_token=${token}&&bbox=${bbox.join(',')}`
-                console.log(url);
                     $.ajax(url, {
                         success: function (data) {
                             var current = null;
                             if (!data['data']) return;
                             l = data['data'].length;
-                            console.log(`${data['data'].length} retornado(s)`)
                             if(!l){
                                 searchImages(inc+0.001)
                             }

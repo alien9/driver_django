@@ -15,6 +15,7 @@ from django.forms.widgets import TextInput
 from django.contrib.auth.models import User
 from data.models import Irap
 from django.contrib.auth.admin import UserAdmin
+from ordered_model.admin import OrderedModelAdmin
 
 admin.site.index_title = _('DRIVER Database')
 
@@ -55,7 +56,8 @@ class BoundaryForm(ModelForm):
         widgets = {
             'color': TextInput(attrs={'type': 'color'}),
         }
-class BoundaryAdmin(admin.ModelAdmin):
+class BoundaryAdmin(OrderedModelAdmin):
+    list_display = ('label', 'order', 'move_up_down_links')
     form = BoundaryForm
     def render_delete_form(self, request, context):
         context['deleted_objects'] = [_('Object listing disabled')]

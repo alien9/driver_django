@@ -32,7 +32,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body" *ngIf="hasGoogle">
                     <div>
                         <button type="button" (click)="loginWithGoogle()" class="btn btn-danger">Login with
                             Google</button>

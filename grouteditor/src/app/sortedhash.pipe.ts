@@ -8,9 +8,7 @@ export class SortedhashPipe implements PipeTransform {
   transform(value: any, ...args: unknown[]): unknown {
     let keys = [];
     for (let key in value) {
-        console.log(key)
         if(value[key].options && value[key].options.hidden==true){
-          console.log("OPTIONS");
           console.log(value[key].options);
         }else{
           keys.push(key);

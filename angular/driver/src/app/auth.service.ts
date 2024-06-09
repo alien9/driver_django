@@ -17,7 +17,7 @@ export class AuthService {
   constructor(private http: HttpClient) { }
   login(user, pass) {
     let headers = new HttpHeaders({
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json'
     })
     let b=this.getBackend()
     let a=`${b}/api-token-auth/`

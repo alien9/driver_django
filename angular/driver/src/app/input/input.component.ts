@@ -73,6 +73,7 @@ export class InputComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    console.log("loading schema");
     this.schema = this.recordSchema['schema']
     let str = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
       {

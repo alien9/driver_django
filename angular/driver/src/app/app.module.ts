@@ -36,7 +36,7 @@ import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
 import { ModalModule } from 'ngx-bootstrap/modal';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { filter, funnel, threeDots, threeDotsVertical, calendar, x, textParagraph, pencilSquare, pinMapFill, arrowRepeat, questionLg } from 'ngx-bootstrap-icons';
+import { filter, funnel, threeDots, threeDotsVertical, calendar, x, textParagraph, pencilSquare, pinMapFill, arrowRepeat, questionLg, map as mapinski } from 'ngx-bootstrap-icons';
 
 import { NgxBootstrapIconsModule } from 'ngx-bootstrap-icons';
 import { ListComponent } from './list/list.component';
@@ -58,6 +58,7 @@ import localePt from '@angular/common/locales/pt';
 import localeEs from '@angular/common/locales/es';
 import localeFr from '@angular/common/locales/fr';
 import localeEn from '@angular/common/locales/en';
+import localeLo from '@angular/common/locales/lo';
 import { NgxSpinnerModule } from "ngx-spinner";
 import { ChartsComponent } from './charts/charts.component';
 import { IrapPopupComponent } from './irap-popup/irap-popup.component';
@@ -90,6 +91,7 @@ registerLocaleData(localePt);
 registerLocaleData(localeEs);
 registerLocaleData(localeFr);
 registerLocaleData(localeEn);
+registerLocaleData(localeLo);
 export function HttpLoaderFactory(httpClient: HttpClient) {
   let b = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
   return new MultiTranslateHttpLoader(httpClient, [
@@ -99,6 +101,7 @@ export function HttpLoaderFactory(httpClient: HttpClient) {
 }
 
 const icons = {
+  mapinski,
   filter,
   funnel,
   threeDots,
@@ -176,6 +179,7 @@ const icons = {
     { provide: LOCALE_ID, useValue: 'fr' },
     { provide: LOCALE_ID, useValue: 'es' },
     { provide: LOCALE_ID, useValue: 'en' },
+    { provide: LOCALE_ID, useValue: 'lo' },
     {
       provide: 'SocialAuthServiceConfig',
       useFactory: socialConfigFactory,

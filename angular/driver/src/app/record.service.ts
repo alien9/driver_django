@@ -104,6 +104,12 @@ export class RecordService {
   getBoundaryPolygons(boundary: any) {
     return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/?active=True&boundary=${boundary.uuid}&limit=all&nogeom=true`, { headers: this.getHeaders() })
   }
+  getFilteredBoundaryPolygons(boundary: any, filter:string) {
+    return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/?active=True&boundary=${boundary.uuid}&limit=all&nogeom=true&filter=${filter}`, { headers: this.getHeaders() })
+  }
+  getBoundaryPolygon(b:string){
+    return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/${b}/`, { headers: this.getHeaders() })
+  }
   getCritical() {
     return this.http.get<any[]>(`${this.getBackend()}/api/blackspotsets/`, { headers: this.getHeaders() })
   }
@@ -122,6 +128,7 @@ export class RecordService {
       .set('archived', 'False')
       .set('record_type', o)
       .set('calendar', 'gregorian')
+      .set('language', localStorage.getItem("Language") || 'en')
     Object.keys(q).forEach(k => {
       params = params.set(k, q[k])
     })
@@ -141,7 +148,6 @@ export class RecordService {
     return this.http.post(`${this.getBackend()}/api/irap-login/`, data, { headers: this.getHeaders() });
   }
   getIRapDataset(data: object) {
-    console.log("Getting irap dataset")
     return this.http.post(`${this.getBackend()}/api/irap-getdataset/`, data, { headers: this.getHeaders() });
   }
   getIRapData(data: object) {

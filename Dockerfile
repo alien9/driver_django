@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y \
 RUN ["gdal-config", "--version"]
 
 RUN mkdir -p /opt/app
+RUN mkdir -p /opt/app/web
+
 
 WORKDIR /opt/app
 
@@ -29,12 +31,14 @@ COPY user_filters /opt/app/user_filters
 COPY manage.py /opt/app/
 COPY requirements-production.txt /opt/app/requirements.txt
 COPY find_segments.sql /opt/app/find_segments.sql
-COPY angular/driver/dist/driver /opt/app/web/dist
-COPY favicon.ico /opt/app/web/dist/favicon.ico
-COPY DriverData.apk /opt/app/web/DriverData.apk
-COPY crontab /opt/app/web/crontab
+COPY angular/driver/dist/driver /opt/app/web/
+COPY angular /opt/app/
+COPY favicon.ico /opt/app/driver/favicon.ico
+COPY crontab /opt/app/driver/crontab
+COPY static /opt/app/static
 
 RUN pip install --no-cache-dir gunicorn
 RUN pip install --no-cache-dir -r requirements.txt
 
 CMD ["gunicorn", "driver.wsgi", "-w3", "-b:4000", "-kgevent", "--timeout", "4000"]
+

@@ -34,7 +34,6 @@ class RoadMap(Imported):
                 raise ValueError('Exactly one shapefile (.shp) required')
 
             shapefile_path = os.path.join(temp_dir, shapefiles[0])
-            print(shapefile_path)
             sql_path = os.path.join(temp_dir, "temp.sql")
             shape_datasource = GDALDataSource(shapefile_path)
             if len(shape_datasource) > 1:
@@ -68,7 +67,6 @@ class RoadMap(Imported):
             self.status = self.StatusTypes.COMPLETE
             self.save()
         except Exception as e:
-            print(str(e))
             if self.errors is None:
                 self.errors = {}
             self.errors['message'] = str(e)

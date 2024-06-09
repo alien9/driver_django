@@ -28,7 +28,6 @@ a.calculating{
 (function() {
     if (!$) {
         $ = django.jQuery;
-        console.log("Loading")
     }
     var calculating=true;
     var uuid='{{ original.uuid }}';
@@ -54,7 +53,6 @@ a.calculating{
                 }, 
                 success:function(data){
                     $('.calculate').addClass('calculating');
-                    console.log(data);
                     if(!data.taskid){
                         calculating=true;
                         return;
@@ -67,8 +65,6 @@ a.calculating{
                                 task:data.taskid,
                                 csrfmiddlewaretoken:csrf
                             }, success:function(data_retrieve){
-                                console.log('veio');
-                                console.log(data_retrieve);
                                 if(data_retrieve.status=="FAILURE"){
                                     return;
                                 }

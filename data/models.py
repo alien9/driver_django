@@ -20,6 +20,7 @@ from django.db.models import JSONField
 from grout.models import Boundary
 from astral import sun, LocationInfo
 import requests
+from black_spots.models import BlackSpotSet
 
 class SegmentSet(models.Model):
     class Meta(object):
@@ -88,14 +89,12 @@ class DriverRecord(Record):
     def geocode(self, roadmap_uuid, size):
         if self.geom:
             row=[None]
-            print("getting segment")
             seg=self.segment.filter(size=size)
             if seg.count():
                 return seg[0]
             with connection.cursor() as cursor:
                 cursor.execute("select * from works.find_segment(%s, %s, %s)", [self.geom.ewkt, size, str(roadmap_uuid)])
                 row = cursor.fetchone()
-                print(row)
             if row[0] is not None:
                 s=RecordSegment.objects.filter(
                     geom=GEOSGeometry(row[0]),
@@ -103,7 +102,6 @@ class DriverRecord(Record):
                     roadmap_id=roadmap_uuid
                 )
                 if not len(s):
-                    print("inedito segmento")
                     seg=RecordSegment(
                         roadmap_id=roadmap_uuid, 
                         data={},
@@ -114,7 +112,6 @@ class DriverRecord(Record):
                     seg.save()
                 else:
                     seg=s[0]
-                    print("reaproveita")
                 self.segment.add(seg)
                     
     def save(self, *args, **kwargs):
@@ -135,22 +132,6 @@ class DriverRecord(Record):
                     else:
                         self.light='night'
         super(DriverRecord, self).save(*args, **kwargs)
-
-""" @receiver(post_save, sender=DriverRecord)
-def record_after_save(sender, instance, **kwargs):
-    if instance.location_text is None and config.NOMINATIM!='':
-        r=requests.get("https://api.pickpoint.io/v1/reverse?format=json&key={key}&lat={lat}&lon={lon}".format(
-            key=config.NOMINATIM,
-            lat=instance.geom.y,
-            lon=instance.geom.x
-        ))
-        j=r.json()
-        print(j)
-        print("%s, %s" % (j['address']['road'],j['address']['city']))
-        if j:
-            instance.location_text="%s, %s" % (j['address']['road'],j['address']['city']) [0:199]
-            instance.save()
- """
 
 class MapillaryData(models.Model):
     record=models.OneToOneField(DriverRecord, on_delete=models.CASCADE, primary_key=True)
@@ -321,23 +302,30 @@ class Dictionary(models.Model):
             add_term(terms,sd.name)
         rs=RecordSchema.objects.all()
         for r in rs:
-            for k, value in r.schema['definitions'].items():
-                add_term(terms,value['title'])
-                add_term(terms,value['plural_title'])
-                add_term(terms,value['description'])
-                for u, t in value['properties'].items():
-                    add_term(terms,u)
-                    if 'enum' in t:
-                        for e in t['enum']:
-                            add_term(terms,e)
-                    if 'items' in t:
-                        if 'enum' in t['items']:
-                            for e in t['items']['enum']:
+            if 'definitions' in r.schema:
+                for k, value in r.schema['definitions'].items():
+                    add_term(terms,value['title'])
+                    add_term(terms,value['plural_title'])
+                    add_term(terms,value['description'])
+                    for u, t in value['properties'].items():
+                        add_term(terms,u)
+                        if 'enum' in t:
+                            for e in t['enum']:
                                 add_term(terms,e)
-
+                        if 'items' in t:
+                            if 'enum' in t['items']:
+                                for e in t['items']['enum']:
+                                    add_term(terms,e)
+            if 'properties' in r.schema:
+                for k, value in r.schema['definitions'].items():
+                    add_term(terms, value['title'])
+                    add_term(terms, value['plural_title'])
             for t in terms:
                 if t not in self.content:
                     self.content[t]=t
+        for b in BlackSpotSet.objects.all():
+            if not b.title in self.content:
+                self.content[b.title]=b.title
         h={}
         for k in sorted(self.content):
             h[k]=self.content[k]

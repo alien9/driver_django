@@ -1,11 +1,11 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="z-index:9999">
     <div class="container-fluid">
         <a class="navbar-brand px-1" href="#">DRIVER</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+        <!--button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <span class="navbar-toggler-icon">NAVBAR TOG</span>
+        </button-->
+        <div class="collapse navbar-collapse hidden-xs" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item dropdown flex-fill px-2">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
@@ -60,6 +60,8 @@
                         </li>
                     </ul>
                 </li>
+
+
                 <li class="nav-item dropdown px-2">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarBoundariesDropdown" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false" *ngIf=boundary>
@@ -101,10 +103,13 @@
                                 [ngModelOptions]="{standalone: true}" (change)=createRecord($event)>
                             <i-bs name="pin-map-fill"></i-bs>
                         </label>
-                    </form>
-                </li>
-                <li class="nav-item">
+                        <button *ngIf="stateSelected=='Map'" (click)=startGeometry()
+                            class="btn btn-outline-secondary mx-2" type="submit" id="geo_button" placement="bottom"
+                            ngbTooltip="{{'Geography'|translate}}">
+                            <i-bs name="mapinski"></i-bs>
+                        </button>
 
+                    </form>
                 </li>
             </ul>
 
@@ -270,7 +275,7 @@
             <select class="custom-select" [(ngModel)]=reportHeaders[tab.key] (change)=setReportHeaders($event)
                 id="{{tab.key}}_header">
                 <optgroup label="{{ 'Geography'|translate}}" *ngIf=boundaries.length>
-                    <option [value]="'boundary_id,'+item.uuid" *ngFor="let item of boundaries">{{item.label}}
+                    <option [value]="'boundary_id,'+item.uuid" *ngFor="let item of boundaries">{{item.label|translate}}
                     </option>
                 </optgroup>
                 <optgroup label="{{ 'Time'|translate}}" *ngIf=wantsTime(tab.key)>
@@ -284,7 +289,7 @@
                 <optgroup label="{{ 'Filter'|translate}}">
                     <option [value]=" 'choices_path,'+field[ 'table']+ ',properties,'+field[ 'title']"
                         *ngFor="let field of reportFilters">
-                        {{field['title']||translate}}</option>
+                        {{field['title']|translate}}</option>
                 </optgroup>
             </select>
         </div>
@@ -318,7 +323,8 @@
 
         <div *ngIf="irapDataset" class="modal-body">
             <label for="typeahead-basic">Search for a project:</label>
-            <input id="typeahead-basic" (change)="searchIrap($event)" type="search" class="form-control" [(ngModel)]="iRapSearchTerm" [ngbTypeahead]="searchIrapLayer" />
+            <input id="typeahead-basic" (change)="searchIrap($event)" type="search" class="form-control"
+                [(ngModel)]="iRapSearchTerm" [ngbTypeahead]="searchIrapLayer" />
         </div>
         <div class="modal-body irap-list">
             <div class="card" style=" max-width:300px;margin:auto;background-color:black;" *ngIf="!irapDataset">
@@ -361,8 +367,8 @@
 
             <div *ngIf="irapDataset">
                 <ngb-accordion #acc="ngbAccordion" activeIds="ngb-panel-irap" [closeOthers]="true">
-                    <ngb-panel [title]="d['name']" *ngFor="let d of irapDataset[ 'data']; let i=index" id="accordion-irap-{{d.id}}"
-                        [cardClass]="hasSelection(d[ 'dataset_data'])">
+                    <ngb-panel [title]="d['name']" *ngFor="let d of irapDataset[ 'data']; let i=index"
+                        id="accordion-irap-{{d.id}}" [cardClass]="hasSelection(d[ 'dataset_data'])">
                         <ng-template ngbPanelContent>
                             <div class="input-group" *ngFor="let de of d[ 'dataset_data']; let j=index">
                                 <label><input type="checkbox" [(ngModel)]="irapDataset[ 'selected'][de[ 'id']]">
@@ -375,10 +381,8 @@
         </div>
         <div class="modal-footer" *ngIf="irapDataset">
             <button type="button" class="btn btn-light" (click)="resetIrap()">{{'Reset'|translate}}</button>
-            <button type="button" class="btn btn-light"
-                (click)="applyIrap(modal)">{{'Apply'|translate}}</button>
-            <button type="button" class="btn btn-light"
-                (click)="modal.close( 'cancel')">{{'Close'|translate}}</button>
+            <button type="button" class="btn btn-light" (click)="applyIrap(modal)">{{'Apply'|translate}}</button>
+            <button type="button" class="btn btn-light" (click)="modal.close( 'cancel')">{{'Close'|translate}}</button>
         </div>
     </div>
 </ng-template>

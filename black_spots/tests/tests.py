@@ -57,7 +57,6 @@ class BlackSpotSetViewTestCase(APITestCase):
         )
         url = '%s?record_type=%s' % (self.list_url, self.record_type.pk)
         response_data = json.loads(self.client.get(url).content)
-        print(response_data)
         result = response_data['results'][0]
 
         self.assertEqual(str(self.record_type.pk), result['record_type'])
@@ -65,7 +64,6 @@ class BlackSpotSetViewTestCase(APITestCase):
         # Nothing should be returned if an invalid record_type is supplied
         url = '%s?record_type=does-not-exist' % (self.list_url)
         response_data = json.loads(self.client.get(url).content)
-        print(response_data)
         self.assertEqual('count' in response_data, False)
 
     def test_filter_by_effective_at(self):
