@@ -24,6 +24,9 @@ export class RecordService {
   getRecord(s: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.getBackend()}/api/records/${s}/`, { headers: this.getHeaders() })
   }
+  getAbout(lang:string):Observable<any[]>{
+    return this.http.get<any[]>(`${this.getBackend()}/about/${lang}/`, { headers: this.getHeaders() })
+  }
   getRecordSchema(s: string): Observable<any[]> {
     return this.http.get<any[]>(this.getBackend() + '/api/recordschemas/' + s + '/', { headers: this.getHeaders() })
   }
@@ -101,8 +104,14 @@ export class RecordService {
   getBoundaries(): Observable<any[]> {
     return this.http.get<any[]>(this.getBackend() + '/api/boundaries/', { headers: this.getHeaders() })
   }
-  getBoundaryPolygons(boundary: any) {
-    return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/?active=True&boundary=${boundary.uuid}&limit=all&nogeom=true`, { headers: this.getHeaders() })
+  getBoundaryPolygons(boundary: any, location:string=null) {
+    if(boundary){
+      return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/?active=True&boundary=${boundary.uuid}&limit=all&nogeom=true`, { headers: this.getHeaders() })
+    }
+    if(location){
+      return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/?active=True&location=${location}&limit=all&nogeom=true`, { headers: this.getHeaders() })
+    }
+
   }
   getFilteredBoundaryPolygons(boundary: any, filter:string) {
     return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/?active=True&boundary=${boundary.uuid}&limit=all&nogeom=true&filter=${filter}`, { headers: this.getHeaders() })

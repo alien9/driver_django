@@ -68,7 +68,9 @@ export class LoginComponent implements OnInit {
         }
         this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
         this.backend = this.recordService.getBackend()
-        this.translate.get("GOOGLE_OAUTH_CLIENT_ID").subscribe((k)=>{this.hasGoogle=k!='GOOGLE_OAUTH_CLIENT_ID'})        
+        this.translate.get("GOOGLE_OAUTH_CLIENT_ID").subscribe((k)=>{
+            this.hasGoogle=(k.length>0) && (k!='GOOGLE_OAUTH_CLIENT_ID')
+        })        
     }  
 
     loginWithGoogle(): void {

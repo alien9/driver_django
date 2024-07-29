@@ -115,3 +115,5 @@ mock==4.0.3
 py3rijndael==0.3.3
 dotenv
 django-ordered-model==3.7.4
+django-richtextfield==1.6.2
+django-ckeditor-5==0.2.13

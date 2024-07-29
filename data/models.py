@@ -21,6 +21,10 @@ from grout.models import Boundary
 from astral import sun, LocationInfo
 import requests
 from black_spots.models import BlackSpotSet
+#from djrichtextfield.models import RichTextField
+#from ckeditor.fields import RichTextField
+from django_ckeditor_5.fields import CKEditor5Field
+
 
 class SegmentSet(models.Model):
     class Meta(object):
@@ -290,6 +294,7 @@ class Dictionary(models.Model):
     language_code=models.TextField(max_length=8)
     name=models.TextField(max_length=100)
     content=HStoreField(null=True, blank=True)
+    about = CKEditor5Field('Text', config_name='extends')
     def save(self, *args, **kwargs):
         terms=[]
         rt=RecordType.objects.all()

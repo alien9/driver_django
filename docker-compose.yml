@@ -24,6 +24,7 @@ services:
       - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
       - DRIVER_ADMIN_PASSWORD=${DRIVER_ADMIN_PASSWORD}
       - CONTAINER_NAME=${CONTAINER_NAME}
+      - IDLE_TIMEOUT=${IDLE_TIMEOUT}
     container_name: driver-django-${CONTAINER_NAME}
     image: alien9/driver-django
     command: ["./manage.py", "runserver", '0.0.0.0:4000', '--settings', 'driver.settings_dev']
@@ -98,3 +99,14 @@ services:
       - ./angular/driver:/opt/driver
     ports:
       - 4201:4200
+
+  grouteditor:
+    container_name: grout-${CONTAINER_NAME}
+    image: alien9/grouteditor
+    build:
+      context: ./grouteditor/
+    volumes:
+      - ./grouteditor:/opt/driver
+    ports:
+      - 4222:4200
+

@@ -19,7 +19,7 @@ class QueryParameterException(APIException):
             return repr(self.detail)
 
 
-SCHEMA_MISMATCH_ERROR = ("Schema validation failed for RecordSchema {uuid}: " +
+SCHEMA_MISMATCH_ERROR = ("OSchema validation failed for RecordSchema {uuid}: " +
                          "{message}")
 GEOMETRY_TYPE_ERROR = ("Incoming Record geometry '{incoming}' does not match the " +
                        "expected geometry type '{expected}' of the RecordType {uuid}.")

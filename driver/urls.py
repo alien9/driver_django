@@ -5,13 +5,15 @@ from django.contrib import admin
 admin.autodiscover()
 admin.site.enable_nav_sidebar = False
 from rest_framework import routers
-
+import os
 from black_spots import views as black_spot_views
 from data import views as data_views
 from driver_auth import views as auth_views
 from user_filters import views as filt_views
 from django.conf.urls.i18n import i18n_patterns
 from vida.client import login_irap, getdataset, getlat_lon, fatalitydata
+from django.conf.urls.static import static
+
 router = routers.DefaultRouter()
 router.register('assignments', black_spot_views.EnforcerAssignmentViewSet)
 router.register('audit-log', data_views.DriverRecordAuditLogViewSet)
@@ -55,6 +57,7 @@ urlpatterns = [
     url(r'^retrieve_blackspots/(?P<pk>[-\w]{0,100})/$', data_views.retrieve_blackspots),
 
     url(r'^dictionary/(?P<code>\w*)/$', data_views.dictionary),
+    url(r'^about/(?P<code>\w*)/$', data_views.about),
     # get token for given username/password
     url(r'^api-token-auth/', auth_views.obtain_auth_token),
     url(r'^api/sso-token-auth/', auth_views.sso_auth_token),
@@ -93,3 +96,10 @@ if settings.DEBUG or settings.TESTING:
 urlpatterns += [
     path('captcha/', include('captcha.urls')),
 ]
+urlpatterns += [
+    path("ckeditor5/", include('django_ckeditor_5.urls')),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+admin.site.site_header = os.getenv('SITE_HEADER', "DRIVER Administration")
+admin.site.site_title = os.getenv('SITE_TITLE', "DRIVER Administration")
+admin.site.index_title = os.getenv('SITE_INDEX', "DRIVER Admin Start")

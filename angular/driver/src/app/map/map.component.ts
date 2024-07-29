@@ -27,7 +27,7 @@ export class MapComponent implements OnInit {
   @Output() onSetPolygon = new EventEmitter<object>()
   @Input() polygon: any
   @Output() setDrawing = new EventEmitter<boolean>()
-  @Output() newRecord=new EventEmitter<object>()
+  @Output() newRecord = new EventEmitter<object>()
   public drawnItems: FeatureGroup = featureGroup();
   public drawOptions: any
 
@@ -61,7 +61,7 @@ export class MapComponent implements OnInit {
         polyline: false,
         circlemarker: false,
         circle: false,
-        rectangle: { showArea: false, repeatMode:false }
+        rectangle: { showArea: false, repeatMode: false }
       },
       edit: {
         featureGroup: this.drawnItems
@@ -69,9 +69,10 @@ export class MapComponent implements OnInit {
     };
   }
   logout() {
-    document.cookie.split(/; /).map(k => k.split(/=/)).forEach(k => {
+    document.cookie.split(/;\s?/).map(k => k.split(/=/)).forEach(k => {
       document.cookie = `${k[0]}=; expires=Thu, 01 Jan 1970 00:00:00 UTC;`
     })
+    localStorage.removeItem("AuthService.token")
     this.router.navigateByUrl('/login')
   }
   onDrawCreated(e: any) {
@@ -88,9 +89,9 @@ export class MapComponent implements OnInit {
   }
   onMapReady(e: any) {
     this.map.emit(e)
-    e.on('overlayadd', e=>{
+    e.on('overlayadd', e => {
     })
-    e.on('baselayerchange', l=>{
+    e.on('baselayerchange', l => {
       localStorage.setItem("baselayer", l.name)
     })
   }
@@ -98,19 +99,17 @@ export class MapComponent implements OnInit {
     this.setDrawing.emit(true)
   }
   addLayerEvent(e: any) {
-    console.log('added')
     console.log(e)
   }
   removeLayer(e: any) {
-    console.log('removed')
     console.log(e)
   }
   clickMap(e: any) {
-    $('.leaflet-container').css('cursor','grab');
-    if(this.mapListening){
-      $('.leaflet-container').css('cursor','grab');
+    $('.leaflet-container').css('cursor', 'grab');
+    if (this.mapListening) {
+      $('.leaflet-container').css('cursor', 'grab');
       this.newRecord.emit({
-        'latlng':e.latlng
+        'latlng': e.latlng
       })
     }
   }

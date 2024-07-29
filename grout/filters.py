@@ -172,9 +172,11 @@ class BoundaryFilter(GeoFilterSet):
         e.g. /api/boundary/?status=ERROR,WARNING
 
         """
+       
         statuses = value.split(',')
         statuses = set(statuses) & self.STATUS_SET
         return queryset.filter(status__in=statuses)
+    
 
     class Meta:
         model = Boundary
@@ -187,9 +189,10 @@ class BoundaryPolygonFilter(GeoFilterSet):
         field_name='boundary', method='filter_boundary')
     filter = django_filters.Filter(
         field_name='geom', method='filter_by_geometry')
-
+    location = django_filters.Filter(
+        field_name='location', method='filter_by_location')
+    
     def filter_by_geometry(self, queryset, field_name, value):
-        import logging
         """ Method filter for containment within the polygon specified by poly_uuid"""
         if not value:
             return queryset
@@ -219,7 +222,17 @@ class BoundaryPolygonFilter(GeoFilterSet):
         """
 
         return queryset.filter(boundary=value)
+    
+    def filter_by_location(self, queryset, field_name, value):
+        import logging
+        logger = logging.getLogger(__name__)
 
+        logger.warn("LOCTION FILTER CATIVATED")
+        logger.warn(value)
+        print("fileterrerere")
+        pnt=GEOSGeometry(f"SRID=4326;POINT({value})")
+        return queryset.filter(geom__contains=pnt)
+    
     class Meta:
         model = BoundaryPolygon
         fields = ['data', 'boundary']

@@ -248,7 +248,7 @@ export class JSONEditorComponent implements OnInit {
       delete o.enum;
     } else {
       delete o.format;
-      o.displayType = 'select';
+      o.displayType = event.srcElement.value; // select or autocomplete
       o.type = "string";
       if (!o.enum)
         o.enum = (o.items && o.items.enum) ? o.items.enum : [];

@@ -106,6 +106,7 @@ class RecordSchema(GroutModel):
         :return: None if validation succeeds; jsonschema.exceptions.ValidationError if failure
                  (or jsonschema.exceptions.SchemaError if the schema is invalid)
         """
+        logging.error(self.schema)
         return jsonschema.validate(json_dict, self.schema)
 
     @classmethod
@@ -313,12 +314,11 @@ class Boundary(Imported, OrderedModel):
     class Meta(OrderedModel.Meta):
         verbose_name_plural = _("Boundaries")
         verbose_name = _('Boundary')
-
+    plural_label=models.CharField(max_length=128)
     def load_shapefile(self):
         """ Validate the shapefile saved on disk and load into db """
         self.status = self.StatusTypes.PROCESSING
         self.save()
-        logging.info("starting")
         if not self.source_file:
             return
         try:

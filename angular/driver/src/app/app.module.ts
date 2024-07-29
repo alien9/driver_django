@@ -35,8 +35,8 @@ import { RelatedPipe } from './input/related.pipe'
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
 import { ModalModule } from 'ngx-bootstrap/modal';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { filter, funnel, threeDots, threeDotsVertical, calendar, x, textParagraph, pencilSquare, pinMapFill, arrowRepeat, questionLg, map as mapinski } from 'ngx-bootstrap-icons';
+import { NgbModule, NgbTypeaheadModule } from '@ng-bootstrap/ng-bootstrap';
+import { gearFill, filter, funnel, threeDots, threeDotsVertical, calendar, x, textParagraph, pencilSquare, pinMapFill, arrowRepeat, questionLg, map as mapinski, filePlusFill, geoFill, globe, plusSquareFill } from 'ngx-bootstrap-icons';
 
 import { NgxBootstrapIconsModule } from 'ngx-bootstrap-icons';
 import { ListComponent } from './list/list.component';
@@ -67,6 +67,7 @@ import { map } from 'rxjs/operators';
 import { DuplicateComponent } from './duplicate/duplicate.component';
 import { LegendComponent } from './legend/legend.component';
 import { CounterComponent } from './counter/counter.component';
+import { geoBounds } from 'd3';
 
 const socialConfigFactory = (restService: AuthService) => {
   return restService.getGoogleClientId().pipe(map(config => {
@@ -101,10 +102,14 @@ export function HttpLoaderFactory(httpClient: HttpClient) {
 }
 
 const icons = {
+  filePlusFill,
+  geoFill, plusSquareFill,
+  globe,
   mapinski,
   filter,
   funnel,
   threeDots,
+  gearFill,
   threeDotsVertical,
   calendar,
   x,
@@ -167,6 +172,7 @@ const icons = {
     TooltipModule,
     ModalModule,
     NgbModule,
+    NgbTypeaheadModule,
     SafePipeModule,
     NgxBootstrapIconsModule.pick(icons),
     NgxSpinnerModule,

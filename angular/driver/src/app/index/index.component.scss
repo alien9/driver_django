@@ -62,3 +62,16 @@ body {
 .modal-body {
     overflow-y: visible;
 }
+
+.btn-outline-secondary {
+    background-color: white;
+}
+.btn-outline-secondary:hover {
+    background-color: darkgray;
+}
+button.clean,label.clean{
+    font-family: sans-serif;
+}
+html{
+    touch-action: pan-down
+}

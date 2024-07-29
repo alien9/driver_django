@@ -116,3 +116,5 @@ django-model-utils==4.0.0
 py3rijndael==0.3.3
 python-dotenv
 django-ordered-model==3.7.4
+django-richtextfield==1.6.2
+django-ckeditor-5==0.2.13

@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="z-index:9999">
     <div class="container-fluid">
-        <a class="navbar-brand px-1" href="#">DRIVER</a>
+        <a class="navbar-brand px-1" href="#" (click)="about($event)">DRIVER</a>
         <!--button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon">NAVBAR TOG</span>
@@ -31,9 +31,9 @@
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li>
+                        <!--li>
                             <a class="dropdown-item" href="/static/DriverData.apk">{{'Android app' | translate}}</a>
-                        </li>
+                        </li-->
                         <li>
                             <a class="dropdown-item" href="#" (click)=qrCode(qrcode)>{{'Android code' | translate}}</a>
                         </li>
@@ -56,13 +56,13 @@
                             <hr class="dropdown-divider">
                         </li>
                         <li>
-                            <a class="dropdown-item" (click)="logout()" href="#">{{'Exit'|translate}} </a>
+                            <a class="dropdown-item" (click)="logout()" href="#">{{'Log Out'|translate}} </a>
                         </li>
                     </ul>
                 </li>
 
 
-                <li class="nav-item dropdown px-2">
+                <!--li class="nav-item dropdown px-2">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarBoundariesDropdown" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false" *ngIf=boundary>
                         {{boundary.label|translate}}
@@ -85,43 +85,42 @@
                                 (click)=selectBoundaryPolygon(b)>
                                 {{getBoundaryPolygonLabel(b)}}</a></li>
                     </ul>
-                </li>
+                </li-->
                 <li class="nav-item">
                     <form class="form-inline my-2 my-lg-0">
-                        <button (click)=startFilters(viewpoint) class="btn btn-outline-secondary mx-2" type="submit"
+                        <button (click)=startFilters(viewpoint) class="btn btn-outline-secondary mx-2 clean" type="submit"
                             placement="bottom" ngbTooltip="{{'Filters'|translate}}">
                             <i-bs name="funnel"></i-bs>
                         </button>
                         <button *ngIf="stateSelected=='Reports'" (click)=startFilters(report)
-                            class="btn btn-outline-secondary mx-2" type="submit" id="report_button" placement="bottom"
+                            class="btn btn-outline-secondary mx-2 clean" type="submit" id="report_button" placement="bottom"
                             ngbTooltip="{{'Reports'|translate}}">
                             <i-bs name="text-paragraph"></i-bs>
                         </button>
-                        <label *ngIf="stateSelected=='Map'" class="btn btn-outline-secondary mx-2" placement="bottom"
+                        <label *ngIf="stateSelected=='Map'" class="btn btn-outline-secondary mx-2 clean" placement="bottom"
                             ngbTooltip="{{'Create Record'|translate}}" ngbButtonLabel>
                             <input type="checkbox" ngbButton [(ngModel)]="inserting"
                                 [ngModelOptions]="{standalone: true}" (change)=createRecord($event)>
-                            <i-bs name="pin-map-fill"></i-bs>
+                            <i-bs name="plus-square-fill"></i-bs>
                         </label>
                         <button *ngIf="stateSelected=='Map'" (click)=startGeometry()
-                            class="btn btn-outline-secondary mx-2" type="submit" id="geo_button" placement="bottom"
+                            class="btn btn-outline-secondary mx-2 clean" type="submit" id="geo_button" placement="bottom"
                             ngbTooltip="{{'Geography'|translate}}">
-                            <i-bs name="mapinski"></i-bs>
+                            <i-bs name="globe"></i-bs>
                         </button>
-
                     </form>
                 </li>
             </ul>
 
             <div class="btn-group" *ngIf="config['LANGUAGES'].length>1">
-                <button class="btn btn-light" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown"
+                <button class="btn btn-light clean" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown"
                     aria-haspopup="true" aria-expanded="false">
                     <i-bs name="three-dots-vertical"></i-bs>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
                     <li *ngFor="let l of config['LANGUAGES']; let i=index">
                         <div class="dropdown-item">
-                            <input class="form-check-input" [(ngModel)]="language" (change)="setlang(l['code'])"
+                            <input class="form-check-input" [(ngModel)]="locale" (change)="setlang(l['code'])"
                                 type="radio" name="language" id="lannguageSelector{{i}}" [value]="l['code']"> &nbsp;
                             <label class="form-check-label" for="lannguageSelector{{i}}">
                                 {{l['name']|translate}}
@@ -248,8 +247,8 @@
             <div class="card-body">
                 <h5 class="card-title">{{'Active filter'|translate}}</h5>
                 <p class="card-text" *ngIf="filter[ 'occurred_min'] && filter[ 'occurred_max']">
-                <p>{{'Occurred date'| translate}}: {{filter['occurred_min']|localizedDate:'shortDate':locale}}
-                    {{'to'|translate}} {{filter['occurred_max']|localizedDate:'shortDate':locale}}
+                <p>{{'Occurred date'| translate}}: {{filter['occurred_min']|localizedDate:'dd/MM/yyyy':locale}}
+                    {{'to'|translate}} {{filter['occurred_max']|localizedDate:'dd/MM/yyyy':locale}}
                 </p>
                 <span *ngFor="let tab of filterObject | keyvalue">
                     <p *ngFor="let field of tab.value | keyvalue">{{field.key|translate}}:

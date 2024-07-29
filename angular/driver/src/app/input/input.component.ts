@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, NgZone, Output, EventEmitter } from '@angular/core'
+import { Component, OnInit, Input, NgZone, Output, EventEmitter, ApplicationRef, TemplateRef } from '@angular/core'
 import * as L from 'leaflet'
 import { environment } from '../../environments/environment'
 import { WebService } from '../web.service'
@@ -7,14 +7,18 @@ import { getSunrise, getSunset } from 'sunrise-sunset-js';
 import { RecordService } from '../record.service'
 import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap'
 import { NgxSpinnerService } from "ngx-spinner";
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+
 import * as uuid from 'uuid';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
-import { Observable, of, OperatorFunction } from 'rxjs';
+import { of, OperatorFunction } from 'rxjs';
+import { Observable } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, tap, switchMap } from 'rxjs/operators';
-
+import { TranslateService } from '@ngx-translate/core';
 import "leaflet.vectorgrid";
 import { DYNAMIC_TYPE } from '@angular/compiler';
 import { textChangeRangeIsUnchanged } from 'typescript';
+
 
 @Component({
   selector: 'app-input',
@@ -31,6 +35,8 @@ export class InputComponent implements OnInit {
   @Input() roadmap_uuid: string
   @Output() mapillaryId = new EventEmitter<string>()
   @Output() reloadRecords = new EventEmitter<object>()
+  @Output() filterExpand = new EventEmitter<Date>()
+  @Input() boundaries: any
   public schema: object
   public options: any
   public layersControl: any
@@ -38,7 +44,9 @@ export class InputComponent implements OnInit {
   public edit: boolean = false
   private marker: L.marker
   private map: L.Map
-
+  public selectedBoundaries: any = []
+  public autocomplete_terms: any[] = ["a", "b", "c"]
+  public isDrawing = false
   backend: string
   latitude: number
   longitude: number
@@ -60,20 +68,27 @@ export class InputComponent implements OnInit {
     //'tornado',
     'wind'
   ]
-  lightValues=[
-    'dawn','day','dusk','night'
+  lightValues = [
+    'dawn', 'day', 'dusk', 'night'
   ]
   geocoding = false
   geocodeFailed = false
+  commentCanvas: any;
+  previousMousePosition = { x: 0, y: 0 }
+  currentMousePosition = { x: 0, y: 0 };
+  imageEditing: any;
   constructor(
     private webService: WebService,
     private zone: NgZone,
     private recordService: RecordService,
     private spinner: NgxSpinnerService,
+    private translateService: TranslateService,
+    private readonly applicationRef: ApplicationRef,    
+    private modalService: NgbModal,
+
   ) { }
 
   ngOnInit(): void {
-    console.log("loading schema");
     this.schema = this.recordSchema['schema']
     let str = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
       {
@@ -105,10 +120,6 @@ export class InputComponent implements OnInit {
       this.record['light'] = this.getLight(this.record['geom'].coordinates, new Date(this.record['occurred_from']))
     }
 
-    if (this.record['geom']) {
-      console.log(this.record['geom'])
-    }
-
     if (this.record['geom'].coordinates && !this.record['location_text']) {
       this.webService.getReverse(this.record['geom'].coordinates[1], this.record['geom'].coordinates[0]).pipe(first()).subscribe(address => {
         if (address && address['address']) {
@@ -137,6 +148,19 @@ export class InputComponent implements OnInit {
             this.record['weather'] = weatherData['current']['weather']['description']
         })
     }
+    this.recordService.getBoundaryPolygons(null, `${c[0]} ${c[1]}`).subscribe((d) => {
+      let h = {}
+      d['results'].forEach((l) => {
+        h[l.boundary] = l.data
+      })
+      this.selectedBoundaries = this.boundaries.map((b) => {
+        let t = h[b.uuid] && (h[b.uuid][localStorage.getItem("Language")] || h[b.uuid][b.display_field])
+        return {
+          "label": this.translateService.instant(b.label),
+          "value": t
+        }
+      })
+    })
 
     let bl = localStorage.getItem("input_baselayer") || 'CartoDB'
     if (this.layersControl.baseLayers[bl])
@@ -173,8 +197,8 @@ export class InputComponent implements OnInit {
         this.loadMapillary(imagery)
       })
     }
-
   }
+
   loadMapillary(imagery: any) {
     imagery['data'].forEach(img => {
       let l = new L.CircleMarker(img.geometry['coordinates'].reverse(), {
@@ -183,7 +207,6 @@ export class InputComponent implements OnInit {
         fillColor: '#009933',
         fillOpacity: 0.3
       }).on('click', (e) => {
-        console.log(`ckicked on ${img.id}`)
         e.sourceTarget.setStyle({ 'fillColor': "#ff0000", fillOpacity: 1 })
         this.zone.run(() => {
           this.setMapillaryId(img.id)
@@ -203,6 +226,7 @@ export class InputComponent implements OnInit {
     this.spinner.show()
     this.recordService.upload(this.record).pipe(first()).subscribe({
       next: data => {
+        this.filterExpand.emit(this.record['occurred_from'])
         this.reloadRecords.emit(this.record)
         modal.dismiss()
         this.spinner.hide()
@@ -305,10 +329,20 @@ export class InputComponent implements OnInit {
   }
   addElement(what: string) {
     let o = { '_localId': uuid.v4() }
-    Object.keys(this.recordSchema['schema']['definitions'][what]['properties']).forEach(k => {
-      console.log(k)
-    })
     this.record['data'][what].push(o)
+  }
+  removeElement(what: string, i:number) {
+    this.record['data'][what]=this.record['data'][what].filter((e:string, n:number)=>n!=i)
+  }
+  setDateField(e: any, table: string, field: string, index: number = -1) {
+    let d = null
+    if (e) {
+      d = new Date()
+      d.setFullYear(e['year'], e['month'] - 1, e['day'])
+    }
+    if (index < 0) { } else {
+      this.record['data'][table][index][field] = d
+    }
   }
   setDate(e: any) {
     let d = new Date()
@@ -319,6 +353,14 @@ export class InputComponent implements OnInit {
     this.record['occurred_from'] = d
     this.record['occurred_to'] = d
   }
+  search: OperatorFunction<string, readonly string[]> = (text$: Observable<string>) =>
+    text$.pipe(
+      debounceTime(200),
+      distinctUntilChanged(),
+      map((term) =>
+        term.length < 2 ? [] : this.autocomplete_terms.filter((v) => v.toLowerCase().indexOf(term.toLowerCase()) > -1).slice(0, 10)
+      )
+    );
   geocode: OperatorFunction<string, readonly { text, lat, lon }[]> = (text$: Observable<string>) =>
     text$.pipe(
       debounceTime(300),
@@ -395,4 +437,128 @@ export class InputComponent implements OnInit {
       this.map.panTo(latlng)
     }
   }
+  setAutocompleteTerms(terms: string[]) {
+    this.autocomplete_terms = terms.map((t) => this.translateService.instant(t))
+  }
+  startScribble(e) {
+    console.log("Start Scribble")
+    console.log(e)
+
+    this.isDrawing = true
+    //setTimeout(()=>this.startDraw(e), 500)
+  }
+
+  startDraw(modal: TemplateRef<any>, definition:any, editing:boolean) {
+    if(!editing)return
+    $(".modal-header").hide()
+    $(".modal-body").hide()
+    $(".modal-footer").hide()
+    this.imageEditing=definition
+    this.modalService.open(modal, { size: 'lg' });
+    var container = document.querySelector<HTMLElement>(".canvas-container")
+    container.style.height=`${window.innerHeight-200}px`;
+    var canvas = document.querySelector<HTMLCanvasElement>("#scribble");
+    if (!canvas) return;
+    //make a 2D context
+    let commentCanvasContext = canvas.getContext("2d");
+    //set the line parameters
+    canvas.width=container.offsetWidth
+    canvas.height=container.offsetHeight
+    commentCanvasContext.lineWidth = 3;
+    commentCanvasContext.lineJoin = 'round';
+    commentCanvasContext.lineCap = 'round';
+    commentCanvasContext.strokeStyle = 'black';
+    commentCanvasContext.translate(0.5, 0.5);
+
+    canvas.addEventListener("mousemove", function (e:any) {
+      //store the old current mouse position and the previous mouse position
+      var modalDialog = $(".modal-dialog")[0];
+      mousePositions.push({"x":e.pageX - (container.offsetLeft + modalDialog.offsetLeft),"y":
+        e.pageY - (container.offsetTop + modalDialog.offsetTop)
+      })
+    });
+    canvas.addEventListener("touchmove", function (e:any) {
+      let modalDialog = $(".modal-dialog")[0];
+      e.stopPropagation()
+      mousePositions.push({"x":e.touches[0].pageX - (container.offsetLeft + modalDialog.offsetLeft),"y":
+        e.touches[0].pageY - (container.offsetTop + modalDialog.offsetTop)
+      })
+    });
+    var onPaint = this.onPaint
+    //mouse down 
+    canvas.addEventListener('mousedown', function (e) {
+      var modalDialog = $(".modal-dialog")[0];
+      mousePositions=[
+        {"x":e.pageX - (container.offsetLeft + modalDialog.offsetLeft),"y":
+        e.pageY - (container.offsetTop + modalDialog.offsetTop)
+      }
+      ]
+      canvas.addEventListener('mousemove', onPaint);
+    });
+    canvas.addEventListener('touchstart', function (e) {
+      e.stopPropagation()
+      //add an additional listener to draw
+      var modalDialog = $(".modal-dialog")[0];
+      mousePositions=[{"x":e.touches[0].pageX - (container.offsetLeft + modalDialog.offsetLeft),"y":
+        e.touches[0].pageY - (container.offsetTop + modalDialog.offsetTop)
+      }]
+      canvas.addEventListener('touchmove', onPaint);
+    });
+
+    //mouse up
+    canvas.addEventListener('mouseup', function () {
+      //remove the additional mouse move listener
+      mousePositions=[]
+      canvas.removeEventListener('mousemove', onPaint);
+    });
+    canvas.addEventListener('touchend', function (e) {
+      e.stopPropagation()
+      canvas.removeEventListener('touchmove', onPaint);
+    });
+  }
+  endDrawing(event) {
+    var canvas = document.querySelector<HTMLCanvasElement>("#scribble");
+    var dataURL = canvas.toDataURL("image/png");
+    if(this.imageEditing){
+      if("index" in this.imageEditing){
+        this.record['data'][this.imageEditing.table][this.imageEditing.index][this.imageEditing.field]=dataURL
+      }
+    } 
+    this.isDrawing = false
+    event.close()
+    $(".modal-header").show()
+    $(".modal-body").show()
+    $(".modal-footer").show()
+  }
+  cancelDrawing(modal:any){
+    this.isDrawing = false
+    modal.close(0)
+    $(".modal-header").show()
+    $(".modal-body").show()
+    $(".modal-footer").show()
+  }
+  resetDrawing(){
+    let canvas = document.querySelector<HTMLCanvasElement>("#scribble");
+    let ctx = canvas.getContext("2d");
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  onPaint(event:any) {
+    event.stopPropagation()
+    var canvas = document.querySelector<HTMLCanvasElement>("#scribble");
+    let commentCanvasContext = canvas.getContext("2d");
+    //draw the line
+    commentCanvasContext.beginPath();
+    let last=null
+    while(mousePositions.length>1){
+      let pos=mousePositions.shift()
+      commentCanvasContext.moveTo(pos["x"], pos["y"])
+      last={"x":(mousePositions[0]["x"]+pos["x"])/2, "y":(mousePositions[0]["y"]+pos["y"])/2}
+      commentCanvasContext.quadraticCurveTo(pos["x"], pos["y"], last["x"], last["y"])
+    }
+    if(mousePositions.length) commentCanvasContext.lineTo(mousePositions[0]["x"],mousePositions[0]["y"])
+    commentCanvasContext.closePath();
+    commentCanvasContext.stroke();
+  };
 }
+var mousePositions:Array<object>=[]

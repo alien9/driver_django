@@ -32,7 +32,6 @@ COPY manage.py /opt/app/
 COPY requirements-production.txt /opt/app/requirements.txt
 COPY find_segments.sql /opt/app/find_segments.sql
 COPY angular/driver/dist/driver /opt/app/web/
-COPY angular /opt/app/
 COPY favicon.ico /opt/app/driver/favicon.ico
 COPY crontab /opt/app/driver/crontab
 COPY static /opt/app/static

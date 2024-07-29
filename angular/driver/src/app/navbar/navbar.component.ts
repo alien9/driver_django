@@ -1,7 +1,7 @@
 import { Component, Input, OnInit, Output, EventEmitter, HostListener } from '@angular/core'
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap'
 import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap'
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { RecordService } from './../record.service'
 import { first } from 'rxjs/operators';
@@ -41,9 +41,11 @@ export class NavbarComponent implements OnInit {
   @Output() newRecord = new EventEmitter<boolean>()
   @Output() startDownload = new EventEmitter<object>()
   @Output() startGeography = new EventEmitter<object>()
+  @Output() aboutCaller=new EventEmitter()
   @Input() recordSchema: object
   @Input() stateSelected
   @Input() locale: string
+  @ViewChild('viewpoint') filterContent: any;
   public authenticated: boolean = true
   public occurred_min: Date
   public occurred_max: Date
@@ -91,6 +93,7 @@ export class NavbarComponent implements OnInit {
     private recordService: RecordService,
     public readonly translate: TranslateService,
     private router: Router,
+    private route: ActivatedRoute,
     private modalService: NgbModal,
     private spinner: NgxSpinnerService) {
   }
@@ -105,29 +108,11 @@ export class NavbarComponent implements OnInit {
     }
     this.schema = this.recordSchema['schema']
     let l = localStorage.getItem("Language") || navigator.language
-    if (this.config["LANGUAGES"]) {
-      this.config["LANGUAGES"].forEach(fu => {
-        if (fu["code"] == l) {
-          localStorage.setItem("Language", fu["code"])
-          this.language = fu["code"]
-        }
-      })
-      if (!this.language) {
-        if (this.config["LANGUAGES"].length) {
-          this.language = this.config["LANGUAGES"][0]["code"]
-          localStorage.setItem("Language", this.language)
-          location.reload()
-        }
-      }
-    }
-    if (!this.language) {
-      this.language = "en"
-      localStorage.setItem("Language", this.language)
-    }
-    this.locale = this.language
+    this.locale = l
     this.initDataFrame()
     this.qrvalue = this.recordService.getBackend()
     if (!this.qrvalue.length) this.qrvalue = window.document.location.href
+    this.qrvalue = `${this.qrvalue}?language=${localStorage.getItem("Language")}`
   }
   onStateSelected(state) {
     this.stateSelected = state
@@ -138,7 +123,7 @@ export class NavbarComponent implements OnInit {
     this.boundaryChange.emit(b)
   }
   getBoundaryPolygonLabel(b: any) {
-    return b.data[localStorage.getItem("Language")||this.boundary.display_field]
+    return b.data[localStorage.getItem("Language")] || b.data[this.boundary.display_field]
   }
   selectBoundaryPolygon(b: any) {
     this.boundaryPolygonChange.emit(b)
@@ -146,6 +131,10 @@ export class NavbarComponent implements OnInit {
   startHelp(content: any) {
     this.modalService.open(content, { size: 'xl', scrollable: true });
   }
+  triggerStartFiltgers(){
+    this.startFilters(this.filterContent)
+  }
+
   startFilters(content: any) {
     this.modalService.open(content, { size: 'lg' });
     this.recordService.getSavedFilters({ limit: 50 }).pipe(first()).subscribe({
@@ -155,14 +144,12 @@ export class NavbarComponent implements OnInit {
       }
     })
   }
-  startGeometry(){
+  startGeometry() {
     this.startGeography.emit()
   }
   startIrap(content: any) {
-    console.log("starting irap")
     this.modalService.open(content, {});
     //if (this.iRap) {
-    console.log("there's irap")
     this.spinner.show()
     this.loadIrapDataset()
     //}
@@ -400,7 +387,6 @@ export class NavbarComponent implements OnInit {
   }
 
   loadReport(p: any) {
-    console.log("will now load report")
     this.reportParameters = p
     let path = {};
     (['col', 'row']).forEach(tab => {
@@ -434,7 +420,6 @@ export class NavbarComponent implements OnInit {
   }
   setFilter(fj: any, m: any) {
     let f = fj['filter_json']
-    console.log(f)
     Object.entries(this.filterPage).forEach(v => {
       Object.keys(v[1]).forEach(k => {
         v[1][k] = {}
@@ -541,7 +526,6 @@ export class NavbarComponent implements OnInit {
       }
     }).pipe(first()).subscribe({
       next: data => {
-        console.log("login ", data)
         this.iRapChange.emit({ iRap: data })
         this.iRapData = data['data']
         this.loadIrapDataset()
@@ -618,5 +602,8 @@ export class NavbarComponent implements OnInit {
   }
   qrCode(mod) {
     this.modalService.open(mod, { size: 'lg' });
+  }
+  about(event:any){
+    this.aboutCaller.emit()
   }
 }

@@ -74,7 +74,7 @@ export class DuplicateComponent implements OnInit {
       L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {})
     ]
     this.backend = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
-    this.layersControl = this.keys.map((k, i)=>{ console.log(i);return {
+    this.layersControl = this.keys.map((k, i)=>{ return {
       baseLayers: {
         'Open Street Map': osm[i][0],
         'Satellite Map': sat[i]

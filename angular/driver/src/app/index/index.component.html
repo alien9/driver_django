@@ -4,7 +4,8 @@
     [boundaryPolygons]=boundaryPolygons [boundaryPolygon]=boundaryPolygon (filterChange)=setFilter($event)
     (stateChange)=selectState($event) (reportChange)=setReport($event) [stateSelected]=state (goBack)=goBack($event)
     (iRapChange)=setIrap($event) [iRapData]=iRapData [irapDataset]=irapDataset (newRecord)=startRecord($event)
-    [inserting]=listening (startDownload)=download($event) [canWrite]="canWrite" (startGeography)="startGeometry(geoviewpoint)">
+    [inserting]=listening (startDownload)=download($event) [canWrite]="canWrite"
+    (startGeography)="startGeometry(geoviewpoint)" (aboutCaller)="about(aboutview)">
 </app-navbar>
 <app-list *ngIf="state=='List'" [filter]=filter [listPage]=listPage (setListPage)=setListPage($event)
     [boundary_polygon_uuid]=boundary_polygon_uuid [recordSchema]=recordSchema [recordList]=recordList
@@ -33,9 +34,9 @@
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
-    <app-input [config]=config *ngIf=record [locale]="locale" [roadmap_uuid]="roadmap_uuid" [record]=record
+    <app-input [config]=config *ngIf=record [locale]="locale" [roadmap_uuid]="roadmap_uuid" [record]=record [boundaries]="boundaries"
         [recordSchema]=recordSchema [editing]=editing (mapillaryId)="setMapillary($event)" [modal]=modal
-        (reloadRecords)="reloadRecords($event)">
+        (reloadRecords)="reloadRecords($event)" (filterExpand)=expandFilter($event)>
     </app-input>
 </ng-template>
 
@@ -50,21 +51,74 @@
     <input id="record-uuid" value="-uuid-" type=hidden>
     <a href="#" id="open-record-popup" (click)=popClick($event)>{{'View'|translate}}</a>
 </div>
-<div id="floating-commands" style="position:absolute;bottom:0;right:0;z-index:500">
+<div id="floating-commands" style="position:absolute;bottom:0;right:0;z-index:5000">
     <form class="form-inline my-2 my-lg-0 p-4 d-sm-block d-lg-none">
-        <button (click)=startGeometry(geoviewpoint) class="btn btn-outline-secondary mx-2" type="submit"
-            ngbTooltip="{{'Geometry'|translate}}">
-            <i-bs name="mapinski"></i-bs>
+        <button (click)=startLanguageSelector(langselect) class="btn btn-outline-secondary mx-2 clean" type="submit"
+            ngbTooltip="{{'Languages'|translate}}">
+            <i-bs name="gear-fill"></i-bs>
         </button>
-        <label *ngIf="state=='Map'" class="btn btn-outline-secondary mx-2" ngbTooltip="{{'Create Record'|translate}}"
+        <button (click)=startFilters() class="btn btn-outline-secondary mx-2 clean" type="submit"
+            ngbTooltip="{{'Filters'|translate}}">
+            <i-bs name="funnel"></i-bs>
+        </button>
+        <button (click)=startGeometry(geoviewpoint) class="btn btn-outline-secondary mx-2 clean" type="submit"
+            ngbTooltip="{{'Geometry'|translate}}">
+            <i-bs name="globe"></i-bs>
+        </button>
+        <label *ngIf="state=='Map'" class="btn btn-outline-secondary mx-2 clean" ngbTooltip="{{'Create Record'|translate}}"
             ngbButtonLabel>
             <input type="checkbox" ngbButton [(ngModel)]="listening" [ngModelOptions]="{standalone: true}"
                 (change)=setMapCursor($event)>
-            <i-bs name="pin-map-fill"></i-bs>
+            <i-bs name="plus-square-fill"></i-bs>
         </label>
-
     </form>
 </div>
+
+<ng-template #langselect let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title">{{'Languages'|translate}}</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="form-group">
+            <ul class="list-group list-group-flush" *ngIf="config['LANGUAGES'].length>1">
+                <li class="list-group-item" *ngFor="let l of config['LANGUAGES']; let i=index">
+                    <div>
+                        <input class="form-check-input" [(ngModel)]="locale" (change)="setLanguage(l['code'])"
+                            type="radio" name="language" id="lannguageSelector{{i}}" [value]="l['code']"> &nbsp;
+                        <label class="form-check-label" for="lannguageSelector{{i}}">
+                            {{l['name']|translate}}
+                        </label>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="form-group d-flex justify-content-center">
+            <button (click)="logout()" type="button" class="btn btn-light">{{"Log Out"|translate}}</button>
+
+        </div>
+    </div>
+</ng-template>
+
+
+<ng-template #aboutview let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title">{{'About DRIVER'|translate}}</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="form-group" [innerHTML]="about_content">
+        </div>
+        <div class="form-group d-flex justify-content-center">
+            <button (click)="modal.close()" type="button" class="btn btn-light">{{"Ok"|translate}}</button>
+        </div>
+    </div>
+</ng-template>
+
 
 <ng-template #geoviewpoint let-modal>
     <div class="modal-header">
@@ -78,11 +132,14 @@
             <div *ngFor="let b of boundaries" class="mt-2">
                 <label for="dpf">{{b.label | translate}}</label>
                 <div class="mt-2">
-                <select [(ngModel)]="selectedBoundaryPolygon[b.uuid]" (change)="selectPolygon($event, b.uuid)" name="{{b.uuid}}" class="form-select form-select-lg">
-                    <option [value]="null">{{'All'|translate}}</option>
-                    <option [value]="null" *ngIf="!boundaryPolygonsObject[b.uuid].length">{{'Searching'|translate}}...</option>
-                    <option [value]="c.uuid" *ngFor="let c of boundaryPolygonsObject[b.uuid]">{{getBoundaryPolygonLabel(c)}}</option>
-                </select>
+                    <select [(ngModel)]="selectedBoundaryPolygon[b.uuid]" (change)="selectPolygon($event, b.uuid)"
+                        name="{{b.uuid}}" class="form-select form-select-lg">
+                        <option [value]="null">{{'All'|translate}}</option>
+                        <option [value]="null" *ngIf="!boundaryPolygonsObject[b.uuid].length">
+                            {{'Searching'|translate}}...</option>
+                        <option [value]="c.uuid" *ngFor="let c of boundaryPolygonsObject[b.uuid]">
+                            {{getBoundaryPolygonLabel(c)}}</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -94,6 +151,7 @@
             (click)="modal.close('Close click')">{{'Close'|translate}}</button>
     </div>
 </ng-template>
+
 
 
 <app-report *ngIf="state=='Reports'" [locale]="locale" [recordSchema]=recordSchema [boundaries]=boundaries

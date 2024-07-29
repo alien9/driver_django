@@ -113,6 +113,13 @@ def dictionary(request, code):
         r["GOOGLE_OAUTH_CLIENT_ID"]=settings.GOOGLE_OAUTH_CLIENT_ID
     return JsonResponse(r)
 
+def about(request, code):
+    d = Dictionary.objects.filter(language_code=code)
+    r={}
+    if len(d):
+        r=d[0].about
+    return JsonResponse({"result":r})
+
 def mapillary_callback(request):
     j={"result":"FAIL"}
     if 'code' in request.GET:
@@ -347,6 +354,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
 
     @transaction.atomic
     def perform_update(self, serializer):
+        logging.warn("here it chgeososo")
         instance = serializer.save()
         self.add_to_audit_log(self.request, instance, RecordAuditLogEntry.ActionTypes.UPDATE)
 

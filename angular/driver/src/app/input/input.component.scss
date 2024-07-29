@@ -9,3 +9,29 @@
     width: 100%;
     position: relative;
 }
+
+.pic{
+    width:70%;
+}
+
+.canvas-container{
+    background:light-gray;
+    cursor:crosshair;
+    position:relative;
+    height:300px;
+}
+
+.canvas-container canvas{
+    background:white;
+    cursor:crosshair;
+    border:1px solid light-gray;
+}
+.canvas-container .floating-commands{
+    bottom:0;
+    z-index:99;
+    position:absolute;
+    right:15px;
+}
+.top-float-right{
+    float:right;
+}

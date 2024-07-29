@@ -15,6 +15,8 @@ import { IrapPopupComponent } from '../irap-popup/irap-popup.component';
 import writeXlsxFile from 'write-excel-file'
 import { TranslateService } from '@ngx-translate/core';
 import * as uuid from 'uuid';
+import "leaflet.locatecontrol";
+import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 
 @Component({
   selector: 'app-index',
@@ -23,6 +25,7 @@ import * as uuid from 'uuid';
 })
 export class IndexComponent implements OnInit {
   iRapBounds: L.LatLngBounds;
+  about_content: string;
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
     if (event.key && event.key == 'Escape') {
@@ -38,7 +41,7 @@ export class IndexComponent implements OnInit {
   public boundaryPolygons: any[]
   public boundaryPolygonsObject = {}
   public selectedBoundaryPolygon: any = {}
-  protected boundaryGeometries: any=[] 
+  protected boundaryGeometries: any = []
   public boundaryPolygon: any
   public currentLanguage: string
   public polygon: any
@@ -113,17 +116,27 @@ export class IndexComponent implements OnInit {
   ngOnInit(): void {
     let cu = document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")
     if (!cu.length) {
-      console.log("this is not auythenticated")
       this.router.navigateByUrl('/login')
       return
     }
-    this.currentLanguage = this.translateService.currentLang
-    console.log(this.currentLanguage)
     this.locale = localStorage.getItem("Language") || navigator.language
+    localStorage.setItem("Language", this.locale)
     let du = (new Date()).toLocaleDateString(this.locale)
     this.supportsLocalDate = !du.match(/^Invalid/)
     this.recordService.getConfig().pipe(first()).subscribe(data => {
       this.config = data
+      if (this.route.snapshot.queryParamMap.get('language') && (this.route.snapshot.queryParamMap.get('language') != this.locale)) {
+        if (this.config['LANGUAGES'] && (this.config['LANGUAGES'].map((k) => k.code).indexOf(this.route.snapshot.queryParamMap.get('language')) >= 0)) {
+          localStorage.setItem("Language", this.route.snapshot.queryParamMap.get('language'))
+          let lang = this.route.snapshot.queryParamMap.get('language')
+          this.locale = this.route.snapshot.queryParamMap.get('language')
+          localStorage.setItem("Language", this.locale)
+          this.router.navigateByUrl('/').finally(()=>{
+            this.setLanguage(this.locale)
+          })
+        }
+      }
+
       this.recordService.getRecordType().subscribe({
         next: rata => {
           if (rata['results']) {
@@ -487,16 +500,13 @@ export class IndexComponent implements OnInit {
     }
   }
   setBoundaryPolygon(b: any) {
-    this.boundaryGeometries.forEach((p)=>{
+    this.boundaryGeometries.forEach((p) => {
       p.remove()
     })
     if (b) {
       this.recordService.getBoundaryPolygon(b.uuid).subscribe((k) => {
-        console.log("buscado o poliigono")
-        console.log(k["geometry"].coordinates[0][0])
         for (let sub in k["geometry"].coordinates) {
-          var polygon = L.polygon(k["geometry"].coordinates[0][0].map((c) => [c[1], c[0]]), { color: 'gray', fillOpacity:0, dashArray: '5,10'});
-          console.log(polygon)
+          var polygon = L.polygon(k["geometry"].coordinates[0][0].map((c) => [c[1], c[0]]), { color: 'gray', fillOpacity: 0, dashArray: '5,10', interactive: false });
           polygon.addTo(this.map);
           this.boundaryGeometries.push(polygon)
         }
@@ -549,14 +559,16 @@ export class IndexComponent implements OnInit {
               df = new Date(data['results'][0].occurred_from)
             } else {
               di = new Date()
+              di.setDate(di.getDate() + 1)
               df = new Date()
             }
+
             df.setMonth(di.getMonth() - 3)
             let fu = {
               'occurred_max': di.toISOString(),
               'occurred_min': df.toISOString()
             }
-            localStorage.setItem("current_filter", JSON.stringify(fu))
+            //localStorage.setItem("current_filter", JSON.stringify(fu))
             this.setFilter(fu)
           } else {
             this.refreshList()
@@ -732,6 +744,20 @@ export class IndexComponent implements OnInit {
     })
     this.setLegends()
   }
+  expandFilter(e: any) {
+    var d = e
+    if (this.filter && this.filter['occurred_min'] && this.filter['occurred_max']) {
+      if (Date.parse(this.filter['occurred_min']) > e) {
+        d.setDate(d.getDate() - 1)
+        this.filter['occurred_min'] = d.toISOString()
+      }
+      if (Date.parse(this.filter['occurred_max']) < e) {
+        d.setDate(d.getDate() + 1)
+        this.filter['occurred_max'] = d.toISOString()
+      }
+    }
+    this.setFilter(this.filter)
+  }
   viewRecord(content: any, uuid: string) {
     this.record_uuid = uuid
     this.mapClick(content)
@@ -742,14 +768,8 @@ export class IndexComponent implements OnInit {
 
   startRecord(l: boolean) {
     this.listening = l
-    console.log(l)
-    console.log(this.listening)
-    console.log("insert nb")
-    //this.listening = !this.listening
-    console.log(this.listening)
   }
   newRecord(v: any, content: any) {
-    console.log("new record")
     this.listening = false
     //this.navbar.inserting = false
     let d = new Date()
@@ -774,15 +794,13 @@ export class IndexComponent implements OnInit {
     this.modalService.open(content, { size: 'lg', animation: false, keyboard: false, backdrop: "static" });
   }
 
-  applyGeometry(e: Event) {
+  applyGeometry(e: any) {
+    e.close()
     let i = this.boundaries.length
     let p = null
     while (i > 0) {
       i--
-      console.log(i)
       if (this.selectedBoundaryPolygon[this.boundaries[i].uuid] && (this.selectedBoundaryPolygon[this.boundaries[i].uuid] != "null")) {
-        console.log("selected id")
-        console.log(this.selectedBoundaryPolygon[this.boundaries[i].uuid])
         p = this.selectedBoundaryPolygon[this.boundaries[i].uuid]
         if (p) {
           let q = this.boundaryPolygonsObject[this.boundaries[i].uuid].filter((k) => k.uuid == p).pop()
@@ -794,8 +812,6 @@ export class IndexComponent implements OnInit {
         i = 0
       }
     }
-    console.log(p)
-    console.log("apply geometry")
     this.setBoundaryPolygon(null)
   }
   startGeometry(content: TemplateRef<any>) {
@@ -809,9 +825,7 @@ export class IndexComponent implements OnInit {
     }
     let i = 1
     while (i < this.boundaries.length) {
-      console.log(this.boundaries[i])
-      if (this.selectedBoundaryPolygon[this.boundaries[i-1].uuid]) {
-        console.log("this one byust be got")
+      if (this.selectedBoundaryPolygon[this.boundaries[i - 1].uuid]) {
         this.downloadGeometries(this.boundaries[i], this.selectedBoundaryPolygon[this.boundaries[i - 1].uuid])
       }
       i++
@@ -837,18 +851,13 @@ export class IndexComponent implements OnInit {
       filter = this.selectedBoundaryPolygon[this.boundaries[i].uuid]
     }
     if (i < this.boundaries.length - 1) { // vou baixar o próximo nivel de boundary
-      console.log("will get geometries for")
-      console.log(filter)
       if (filter && filter != "null")
         this.downloadGeometries(this.boundaries[i + 1], filter)
-      console.log(filter == "null")
     }
   }
 
 
   downloadGeometries(boundary: any, filter: string = null) {
-    console.log("will get geometries for insider")
-    console.log(filter)
     if (!filter) {
       this.recordService.getBoundaryPolygons(boundary).subscribe((res) => {
         this.boundaryPolygonsObject[boundary.uuid] = res["results"]
@@ -864,7 +873,7 @@ export class IndexComponent implements OnInit {
     console.log("reset geometry")
   }
   getBoundaryPolygonLabel(b: any) {
-    return b.data[localStorage.getItem("Language") || this.boundary.display_field]
+    return b.data[localStorage.getItem("Language")] || b.data[this.boundary.display_field]
   }
   selectBoundaryPolygon(e: any) {
     console.log(e)
@@ -884,6 +893,7 @@ export class IndexComponent implements OnInit {
   }
   setMap(e: L.Map) {
     this.map = e
+    L.control.locate({ drawMarker: false }).addTo(this.map)
   }
   popClick(e: any) {
     console.log(e)
@@ -947,7 +957,6 @@ export class IndexComponent implements OnInit {
     this.mapillary_id = null
   }
   setIrap(e: object) {
-    console.log("setting irap", e)
     if (e['iRap']) {
       this.iRapData = e['iRap']
     }
@@ -1054,7 +1063,6 @@ export class IndexComponent implements OnInit {
       this.iRapCenter(null)
   }
   removeIrap() {
-    console.log('removeIrap')
     this.hasIrap = false
     this.removeIrapLayer()
   }
@@ -1134,9 +1142,28 @@ export class IndexComponent implements OnInit {
         break
       case 'Map':
       case 'List':
-        console.log('download should start')
         break
     }
+  }
+  setLanguage(code: string) {
+    localStorage.setItem("Language", code)
+    location.reload()
+  }
+  startLanguageSelector(element: any) {
+    this.modalService.open(element, { size: 's' });
+  }
+  startFilters() {
+    this.navbar.triggerStartFiltgers()
+  }
+  logout(){
+    this.navbar.logout()
+  }
+  about(a:any){
+    this.modalService.open(a, { size: 'lg', animation: false, keyboard: false, backdrop: "static" });
+    this.recordService.getAbout(this.locale).subscribe((d)=>{
+      this.about_content=d["result"]
+    })
+
   }
 }
 
