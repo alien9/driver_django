@@ -1,0 +1,80 @@
+<ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs mt-1" (navChange)=activeIdChange($event)>
+    <li [ngbNavItem]="1">
+        <a ngbNavLink>{{'Day / Time'| translate}}</a>
+        <ng-template ngbNavContent>
+            <h3 class="m-3">{{'Time of day / Day of week'|translate}}</h3>
+            <div id=toddow class="m-3" [ngbTooltip]=toddowtip></div>
+        </ng-template>
+        <ng-template #toddowtip>{{'Record count'| translate}}: <b id="record_count_tip">{{tip}}</b></ng-template>
+    </li>
+    <li [ngbNavItem]="2">
+        <a ngbNavLink>{{'Time interval'| translate}}</a>
+        <ng-template ngbNavContent>
+            <h5 class="m-3">
+                <label>{{'Interval'|translate}}:
+                    <select [(ngModel)]="barChart['interval']" (change)=loadChart(active)>
+                        <option value="day">{{'day'|translate}}</option>
+                        <option value="day_of_week">{{'day_of_week'|translate}}</option>
+                        <option value="hour_of_day">{{'hour_of_day'|translate}}</option>
+                        <option value="month">{{'month'|translate}}</option>
+                        <option value="week">{{'week'|translate}}</option>
+                        <option value="year">{{'year'|translate}}</option>
+                    </select>
+                </label>
+            </h5>
+            <h5 class="m-3">{{'Field'|translate}}:
+                <select class="custom-select" [(ngModel)]="barChart['field']" (change)=loadChart(active)>
+                    <option [value]="field['table']+',properties,'+field['title']"
+                        *ngFor="let field of reportFilters">
+                        {{field['title']|translate}}</option>
+                </select>
+            </h5>
+
+            <div id=interval class="m-3"></div>
+            <div id="interval_legend" class="mr-3 ml-3"></div>
+        </ng-template>
+    </li>
+    <li [ngbNavItem]="3">
+        <a ngbNavLink>{{'Pie'| translate}}</a>
+        <ng-template ngbNavContent>
+            <h5 class="m-3">{{'Field'|translate}}:
+                <select class="custom-select" [(ngModel)]="barChart['field']" (change)=loadChart(active)>
+                    <option [value]="field['table']+',properties,'+field['title']"
+                        *ngFor="let field of reportFilters">
+                        {{field['title']|translate}}</option>
+                </select>
+            </h5>
+
+            <div id=pizza class="m-3"></div>
+            <div id="pizza_legend" class="mr-3 ml-3"></div>
+        </ng-template>
+    </li>
+    <li [ngbNavItem]="4">
+        <a ngbNavLink>{{'Treemap'| translate}}</a>
+        <ng-template ngbNavContent>
+            <h5 class="m-3">{{'Field'|translate}}:
+                <select class="custom-select" [(ngModel)]="barChart['field']" (change)=loadChart(active)>
+                    <option></option>
+                    <option [value]="field['table']+',properties,'+field['title']"
+                        *ngFor="let field of reportFilters">
+                        {{field['title']|translate}}</option>
+                    <option [value]="'boundary_id'" *ngFor="let bound of boundaries">{{bound.label|translate}}</option>
+                    
+                </select>
+                <select class="custom-select" [(ngModel)]="barChart['parent_field']" (change)=loadChart(active) style="display:none">
+                    <option></option>
+                    <option [value]="field['table']+',properties,'+field['title']"
+                        *ngFor="let field of reportFilters">
+                        {{field['title']|translate}}</option>
+                </select>
+            </h5>
+
+            <div id=treemap class="m-3"></div>
+            <div id="treemap_legend" class="mr-3 ml-3"></div>
+        </ng-template>
+    </li>
+</ul>
+
+<div [ngbNavOutlet]="nav" class="mt-2"></div>
+
+<ngx-spinner></ngx-spinner>

@@ -1,0 +1,139 @@
+MAP
+    DEBUG 5
+    IMAGECOLOR 0 255 0
+    OUTPUTFORMAT
+        NAME "PNG24"
+        DRIVER 'GD/PNG'
+        MIMETYPE 'image/png'
+        IMAGEMODE RGBA
+        EXTENSION 'png'
+    END
+    OUTPUTFORMAT
+        NAME "UTFGrid"
+        DRIVER UTFGRID
+        EXTENSION "json"
+        FORMATOPTION "LABELS=true"
+        FORMATOPTION "UTFRESOLUTION=4"
+        FORMATOPTION "DUPLICATES=false"
+    END
+    IMAGETYPE      "PNG24"
+    EXTENT -20037508.3427892480 -20037508.3427892480 20037508.3427892480 20037508.3427892480
+    SIZE           256 256
+
+    PROJECTION
+        "init=epsg:3857"
+    END
+    WEB
+        METADATA 
+            WMS_ENABLE_REQUEST "*" 
+            "wms_srs" "EPSG:3857 EPSG:4326"
+            "wms_title" "DRIVER"
+            "wms_name" "Driver Maps"
+            "wms_server_version" "1.1.1"
+            "wms_format" "image/png"
+            "tile_map_edge_buffer" "20"
+            "tile_metatile_level" "0"
+        END
+    END
+
+    LAYER
+        NAME        "critical"
+        DATA        "geom from ({{query|safe}})as q using unique id using srid=4326"
+        CONNECTIONTYPE  POSTGIS
+        CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
+        
+        UTFITEM   "id"
+        UTFDATA   "{\"id\":\"[id]\",\"name\":\"[name]\", \"num_records\":\"[c]\"}"
+        PROCESSING "KERNELDENSITY_RADIUS=10"
+        
+        TYPE LINE
+        PROJECTION
+            "init=epsg:4326"
+        END
+        {% for class in classes %}
+        CLASS
+            EXPRESSION ([c]>={{class.min}} AND [c]<={{class.max}})
+            NAME "{{class.name}}"
+            STYLE
+                WIDTH 10
+                OPACITY {{class.opacity}}
+                COLOR {{class.color}}
+            END
+        END
+        {% endfor %}
+    END
+
+    LAYER
+        NAME        "critical_legend"
+        DATA        "geom from ({{query|safe}})as q using unique id using srid=4326"
+        CONNECTIONTYPE  POSTGIS
+        CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
+        
+        UTFITEM   "id"
+        UTFDATA   "{\"id\":\"[id]\",\"name\":\"[name]\", \"num_records\":\"[c]\"}"
+        PROCESSING "KERNELDENSITY_RADIUS=10"
+        
+        TYPE LINE
+        PROJECTION
+            "init=epsg:4326"
+        END
+        {% for class in classes_legend %}
+        CLASS
+            EXPRESSION ([c]>={{class.min}} AND [c]<={{class.max}})
+            NAME "{{class.name}}"
+            STYLE
+                WIDTH 10
+                OPACITY {{class.opacity}}
+                COLOR {{class.color}}
+            END
+        END
+        {% endfor %}
+    END
+
+    LAYER
+        NAME        "critical_offset"
+        DATA        "{{query|safe}}"
+        CONNECTIONTYPE  POSTGIS
+        CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
+        
+        UTFITEM   "uuid"
+        UTFDATA   "{\"uuid\":\"[uuid]\",\"name\":\"[name]\", \"cost\":\"[severity_score]\", \"num_records\":\"[num_records]\"}"
+        PROCESSING "KERNELDENSITY_RADIUS=10"
+        
+        TYPE LINE
+        PROJECTION
+            "init=epsg:4326"
+        END
+        CLASS
+            STYLE
+                COLOR 250 0 0
+                WIDTH 10
+                OPACITY 70
+                OFFSET 3 3
+            END
+        END
+    END
+
+    LAYER
+        NAME        "segments"
+        DATA "geom from (select id, geom, name from data_recordsegment where size={{size}} and st_intersects(geom, !BOX!)) as a using unique id using srid=4326"
+        CONNECTIONTYPE  POSTGIS
+        CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
+        
+        UTFITEM   "id"
+        UTFDATA   "{\"id\":\"[id]\",\"name\":\"[name]\"}"
+        PROCESSING "KERNELDENSITY_RADIUS=10"
+        
+        TYPE LINE
+        PROJECTION
+            "init=epsg:4326"
+        END
+        CLASS
+            STYLE
+                COLOR 250 0 0
+                WIDTH 10
+                OPACITY 70
+            END
+        END
+    END
+END

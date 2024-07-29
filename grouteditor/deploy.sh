@@ -7,3 +7,4 @@ D=$(egrep -r 'script src' ../grout/static/dist/grouteditor/index.html | sed "s/<
 D=$(echo $D | sed "s/src=\"/src=\"{% static \"dist\/grouteditor\//g" | sed "s/\" defer/\" %}\"/g" | sed "s/\"/\\\"/g")
 D=$(echo $D | sed "s/\//\\\\\//g")
 sed -i -e "s/^<script src.*$/${D}/" ../grout/templates/grouteditor.html
+echo "Remember to execute collectstatic."

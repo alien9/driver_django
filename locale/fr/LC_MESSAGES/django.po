@@ -1,0 +1,206 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-06-03 20:27+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: black_spots/apps.py:6 black_spots/models.py:138 black_spots/models.py:139
+msgid "Critical Spots"
+msgstr ""
+
+#: black_spots/models.py:22
+msgid "Road Maps"
+msgstr ""
+
+#: black_spots/models.py:23
+msgid "Road Map"
+msgstr ""
+
+#: data/admin.py:19
+msgid "DRIVER Database"
+msgstr ""
+
+#: data/admin.py:61 data/admin.py:114
+msgid "Object listing disabled"
+msgstr ""
+
+#: data/models.py:27
+msgid "Segment Set"
+msgstr ""
+
+#: data/models.py:28
+msgid "Segment Sets"
+msgstr ""
+
+#: data/models.py:36
+msgid "Segment"
+msgstr ""
+
+#: data/models.py:37
+msgid "Segments"
+msgstr ""
+
+#: data/models.py:45
+msgid "Record Segment"
+msgstr ""
+
+#: data/models.py:46
+msgid "Record Segments"
+msgstr ""
+
+#: data/models.py:240
+msgid "Record Cost Config"
+msgstr ""
+
+#: data/models.py:241
+msgid "Record Cost Configs"
+msgstr ""
+
+#: data/models.py:285
+msgid "Dictionary"
+msgstr ""
+
+#: data/models.py:286
+msgid "Dictionaries"
+msgstr ""
+
+#: driver/settings.py:178 driver/settings_rename.py:43
+msgid "English"
+msgstr ""
+
+#: driver/settings.py:179
+msgid "Laotian"
+msgstr ""
+
+#: driver/settings.py:180
+msgid "Brazilian Portuguese"
+msgstr ""
+
+#: driver/settings.py:181 driver/settings_rename.py:45
+msgid "Spanish"
+msgstr ""
+
+#: driver/settings.py:182 driver/settings_rename.py:44
+msgid "French"
+msgstr ""
+
+#: driver/settings.py:183
+msgid "Simplified Chinese"
+msgstr ""
+
+#: driver/settings.py:534
+msgid "segment_size"
+msgstr ""
+
+#: driver/settings.py:535
+msgid "Latitude"
+msgstr ""
+
+#: driver/settings.py:536
+msgid "Longitude"
+msgstr ""
+
+#: driver/settings.py:537
+msgid "Zoom"
+msgstr ""
+
+#: driver/settings.py:538
+msgid "Accident"
+msgstr ""
+
+#: driver/settings.py:539
+msgid "Intervention"
+msgstr ""
+
+#: driver/settings.py:541
+msgid "Host Name"
+msgstr ""
+
+#: driver/settings.py:542
+msgid "Country Code"
+msgstr ""
+
+#: driver/settings.py:546
+msgid "Mapillary Client token"
+msgstr ""
+
+#: driver/settings.py:547
+msgid "Mapillary Client"
+msgstr ""
+
+#: driver/settings.py:548
+msgid "Mapillary secret"
+msgstr ""
+
+#: driver/settings.py:549
+msgid "Mapillary token"
+msgstr ""
+
+#: driver/settings.py:550
+msgid "Mapillary expiry date"
+msgstr ""
+
+#: driver/settings.py:551
+msgid "Nominatim key"
+msgstr ""
+
+#: driver/settings.py:552
+msgid "iRAP Auth ID"
+msgstr ""
+
+#: driver/settings.py:553
+msgid "iRAP API key"
+msgstr ""
+
+#: driver/settings.py:554
+msgid "iRAP Private key"
+msgstr ""
+
+#: driver/settings.py:555
+msgid "Open Weather API"
+msgstr ""
+
+#: driver/settings.py:556
+msgid "Currency"
+msgstr ""
+
+#: driver/settings_rename.py:42
+msgid "German"
+msgstr ""
+
+#: driver/settings_rename.py:46
+msgid "Portuguese"
+msgstr ""
+
+#: grout/models.py:304
+msgid "Boundaries"
+msgstr ""
+
+#: grout/models.py:305
+msgid "Boundary"
+msgstr ""
+
+#: grout/models.py:374
+msgid "Boundary Polygons"
+msgstr ""
+
+#: grout/models.py:375
+msgid "Boundary Polygon"
+msgstr ""
+
+#~ msgid "My Index Title"
+#~ msgstr "DRIVER"

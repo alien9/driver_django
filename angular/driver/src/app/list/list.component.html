@@ -1,0 +1,22 @@
+<div class=scrollable-container>
+    <ngx-spinner></ngx-spinner>
+    <table class="table">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">{{'Date and time'|translate}}</th>
+                <th scope="col">{{'Location'|translate}}</th>
+                <td *ngIf="field">{{field}}</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor=" let r of recordList?recordList[ 'results']:[] ">
+                <th scope="row "><a href="#" (click)="view(r.uuid)">{{r.occurred_from|date:"medium"}}</a></th>
+                <td>{{r.location_text|firstpart}}</td>
+                <td *ngIf="field && r.data">{{r.data[table]?r.data[table][field]:" "}}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<div class=list-footer *ngIf=recordList>
+    <ngb-pagination class="d-flex justify-content-center" [boundaryLinks]="true" [maxSize]="5" [collectionSize]="recordList['count']" [pageSize]=50 [(page)]="listPage" (pageChange)=setPage()></ngb-pagination>
+</div>

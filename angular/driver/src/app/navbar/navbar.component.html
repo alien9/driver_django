@@ -1,0 +1,394 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="z-index:9999">
+    <div class="container-fluid">
+        <a class="navbar-brand px-1" href="#" (click)="about($event)">DRIVER</a>
+        <!--button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon">NAVBAR TOG</span>
+        </button-->
+        <div class="collapse navbar-collapse hidden-xs" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item dropdown flex-fill px-2">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        {{stateSelected | translate}}
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="#" (click)="onStateSelected('Map')">{{'Map' |
+                                translate}}</a></li>
+                        <li><a class="dropdown-item" href="#" (click)="onStateSelected('List')">{{'List' |
+                                translate}}</a></li>
+                        <li><a class="dropdown-item" href="#" (click)="onStateSelected('Reports')">{{'Reports' |
+                                translate}}</a></li>
+                        <li><a class="dropdown-item" href="#" (click)="onStateSelected('Charts')">{{'Charts' |
+                                translate}}</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" (click)="onStateSelected('Duplicates')" href="#">{{'Duplicates' |
+                                translate}}</a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <!--li>
+                            <a class="dropdown-item" href="/static/DriverData.apk">{{'Android app' | translate}}</a>
+                        </li-->
+                        <li>
+                            <a class="dropdown-item" href="#" (click)=qrCode(qrcode)>{{'Android code' | translate}}</a>
+                        </li>
+                        <li *ngIf="config['IRAP_AUTH_ID']">
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li *ngIf="config['IRAP_AUTH_ID']">
+                            <a class="dropdown-item" (click)="startIrap(vida)" href="#">ViDA</a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li style="display: flex;" *ngIf="hasDownload()">
+                            <a class="dropdown-item" (click)="preDownload()" href="#">{{'Download' | translate}}
+                                <div class="spinner-border spinner-border-sm" role="status" *ngIf="downloading">
+                                </div>
+                            </a>
+                        </li>
+                        <li *ngIf="hasDownload()">
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" (click)="logout()" href="#">{{'Log Out'|translate}} </a>
+                        </li>
+                    </ul>
+                </li>
+
+
+                <!--li class="nav-item dropdown px-2">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarBoundariesDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false" *ngIf=boundary>
+                        {{boundary.label|translate}}
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarBoundariesDropdown" *ngIf=boundaries.length>
+                        <li *ngFor="let b of boundaries"><a class="dropdown-item" href="#"
+                                (click)=selectBoundary(b)>{{b.label|translate}}</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown px-2">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarBoundaryPolygonsDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <span *ngIf=!boundaryPolygon>{{'All'|translate}}</span>
+                        <span *ngIf=boundaryPolygon>{{getBoundaryPolygonLabel(boundaryPolygon)|translate}}</span>
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarBoundaryPolygonsDropdown">
+                        <li><a class="dropdown-item" href="#"
+                                (click)=selectBoundaryPolygon(null)>{{'All'|translate}}</a></li>
+                        <li *ngFor="let b of boundaryPolygons"><a class="dropdown-item" href="#"
+                                (click)=selectBoundaryPolygon(b)>
+                                {{getBoundaryPolygonLabel(b)}}</a></li>
+                    </ul>
+                </li-->
+                <li class="nav-item">
+                    <form class="form-inline my-2 my-lg-0">
+                        <button (click)=startFilters(viewpoint) class="btn btn-outline-secondary mx-2 clean" type="submit"
+                            placement="bottom" ngbTooltip="{{'Filters'|translate}}">
+                            <i-bs name="funnel"></i-bs>
+                        </button>
+                        <button *ngIf="stateSelected=='Reports'" (click)=startFilters(report)
+                            class="btn btn-outline-secondary mx-2 clean" type="submit" id="report_button" placement="bottom"
+                            ngbTooltip="{{'Reports'|translate}}">
+                            <i-bs name="text-paragraph"></i-bs>
+                        </button>
+                        <label *ngIf="stateSelected=='Map'" class="btn btn-outline-secondary mx-2 clean" placement="bottom"
+                            ngbTooltip="{{'Create Record'|translate}}" ngbButtonLabel>
+                            <input type="checkbox" ngbButton [(ngModel)]="inserting"
+                                [ngModelOptions]="{standalone: true}" (change)=createRecord($event)>
+                            <i-bs name="plus-square-fill"></i-bs>
+                        </label>
+                        <button *ngIf="stateSelected=='Map'" (click)=startGeometry()
+                            class="btn btn-outline-secondary mx-2 clean" type="submit" id="geo_button" placement="bottom"
+                            ngbTooltip="{{'Geography'|translate}}">
+                            <i-bs name="globe"></i-bs>
+                        </button>
+                    </form>
+                </li>
+            </ul>
+
+            <div class="btn-group" *ngIf="config['LANGUAGES'].length>1">
+                <button class="btn btn-light clean" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                    <i-bs name="three-dots-vertical"></i-bs>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
+                    <li *ngFor="let l of config['LANGUAGES']; let i=index">
+                        <div class="dropdown-item">
+                            <input class="form-check-input" [(ngModel)]="locale" (change)="setlang(l['code'])"
+                                type="radio" name="language" id="lannguageSelector{{i}}" [value]="l['code']"> &nbsp;
+                            <label class="form-check-label" for="lannguageSelector{{i}}">
+                                {{l['name']|translate}}
+                            </label>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+<ngx-spinner></ngx-spinner>
+<ng-template #viewpoint let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title">{{'Filters'|translate}}</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="form-group">
+            <div class="row">
+                <label for="dpf">{{'Interval' | translate}}</label>
+            </div>
+            <div class="row">
+                <div class="input-group">
+                    <input class="form-control" placeholder="yyyy-mm-dd" name="dpf" [(ngModel)]="occurred_min_ngb"
+                        ngbDatepicker #df="ngbDatepicker">
+                    <button class="btn btn-outline-secondary calendar" (click)="df.toggle()" type="button">
+                        <i-bs name="calendar"></i-bs>
+                    </button>
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">{{"to"|translate}}</span>
+                    </div>
+                    <input class="form-control" placeholder="yyyy-mm-dd" name="dpt" [(ngModel)]="occurred_max_ngb"
+                        ngbDatepicker #dt="ngbDatepicker">
+                    <button class="btn btn-outline-secondary calendar" (click)="dt.toggle()" type="button">
+                        <i-bs name="calendar"></i-bs>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="table-group" *ngFor="let t of tables">
+            <div class="form-group"
+                *ngFor="let k of schema.definitions[t].properties | keyvalue | isSearchable | orderBy">
+                <div class="row" *ngIf="k.value.enum || k.value.items">
+                    <label *ngIf="!schema.definitions[t].multiple">{{schema.definitions[t].title|translate}}:
+                        {{k.key|translate}}</label>
+                    <label *ngIf="schema.definitions[t].multiple">{{schema.definitions[t].title|translate}}:
+                        {{k.key|translate}}</label>
+                    <div class="input-group mb-3">
+                        <div class="col">
+                            <div class="form-check" *ngFor="let option of k.value | enum">
+                                <input [(ngModel)]="filterPage[t][k.key][option]" class="form-check-input"
+                                    type="checkbox" id="checkbox__{{t}}_{{k.key}}_{{option}}">
+                                <label class="form-check-label"
+                                    for="checkbox__{{t}}_{{k.key}}_{{option}}">{{option|translate}}</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" *ngIf="k.value.type=='integer' || k.value.type=='number'">
+                    <label>{{k.key|translate}}</label>
+                    <div class="input-group mb-3">
+                        <input type="number" class="form-control" aria-label="minimum"
+                            [(ngModel)]="filterPage[t][k.key].minimum">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">{{'to'|translate}}</span>
+                        </div>
+                        <input type="number" class="form-control" aria-label="maximum"
+                            [(ngModel)]="filterPage[t][k.key].maximum">
+                        <button (click)="filterPage[t][k.key].minimum=null;filterPage[t][k.key].maximum=null">
+                            <i-bs name="x"></i-bs>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group" *ngIf=savedFilters>
+            <div class="row">
+                <label for="dpf">{{'Saved filters' | translate}}</label>
+            </div>
+            <div class="row">
+                <div class="input-group mb-3">
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr *ngFor="let filter of savedFilters; index as i">
+                                <th>
+                                    {{ filter.label }}
+                                </th>
+                                <td><a href="javascript:void(0);" (click)="setFilter(filter, modal)">{{ 'Load' |
+                                        translate }}</a></td>
+                                <td><a href="javascript:void(0);" (click)="deleteFilter(filter)">{{ 'Delete' | translate
+                                        }}</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <input type="text" [(ngModel)]=filterLabel placeholder="{{'Filter name'| translate}}">
+        <button type="button" class="btn btn-outline-secondary" (click)="saveFilter(modal);"
+            [disabled]="filterLabel.length<1 || filtering">{{'Save'|translate}}</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="applyFilter(modal);"
+            [disabled]="filtering">{{'Apply'|translate}}</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="resetFilter()"
+            [disabled]="filtering">{{'Reset'|translate}}</button>
+        <button type="button" class="btn btn-outline-secondary"
+            (click)="modal.close('Close click')">{{'Close'|translate}}</button>
+    </div>
+</ng-template>
+
+<ng-template #report let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title">{{'Report' | translate}}</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss( 'Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="card" *ngIf=filter>
+            <div class="card-body">
+                <h5 class="card-title">{{'Active filter'|translate}}</h5>
+                <p class="card-text" *ngIf="filter[ 'occurred_min'] && filter[ 'occurred_max']">
+                <p>{{'Occurred date'| translate}}: {{filter['occurred_min']|localizedDate:'dd/MM/yyyy':locale}}
+                    {{'to'|translate}} {{filter['occurred_max']|localizedDate:'dd/MM/yyyy':locale}}
+                </p>
+                <span *ngFor="let tab of filterObject | keyvalue">
+                    <p *ngFor="let field of tab.value | keyvalue">{{field.key|translate}}:
+                        <span *ngIf="field.value[ 'contains']"><span
+                                *ngFor="let val of field.value[ 'contains']; let i=index; let isLast=last">{{val|translate}}{{isLast?"
+                                ":","}}</span>
+                        </span>
+                        <span *ngIf="field.value['min']">
+                            {{'from'|translate}} {{field.value['min']}}
+                        </span>
+                        <span *ngIf="field.value['max']">
+                            {{'up to'|translate}} {{field.value['max']}}
+                        </span>
+                    </p>
+                </span>
+            </div>
+        </div>
+        <div style="display:none">{{'Rows'|translate}}, {{'Columns'|translate}}</div>
+        <div class="input-group mb-3 mt-3" *ngFor="let tab of tabs">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon3">{{tab['label']|translate}}:</span>
+            </div>
+            <select class="custom-select" [(ngModel)]=reportHeaders[tab.key] (change)=setReportHeaders($event)
+                id="{{tab.key}}_header">
+                <optgroup label="{{ 'Geography'|translate}}" *ngIf=boundaries.length>
+                    <option [value]="'boundary_id,'+item.uuid" *ngFor="let item of boundaries">{{item.label|translate}}
+                    </option>
+                </optgroup>
+                <optgroup label="{{ 'Time'|translate}}" *ngIf=wantsTime(tab.key)>
+                    <option value="period_type,day">{{'day'|translate}}</option>
+                    <option value="period_type,day_of_week">{{'day_of_week'|translate}}</option>
+                    <option value="period_type,hour_of_day">{{'hour_of_day'|translate}}</option>
+                    <option value="period_type,month">{{'month'|translate}}</option>
+                    <option value="period_type,week">{{'week'|translate}}</option>
+                    <option value="period_type,year">{{'year'|translate}}</option>
+                </optgroup>
+                <optgroup label="{{ 'Filter'|translate}}">
+                    <option [value]=" 'choices_path,'+field[ 'table']+ ',properties,'+field[ 'title']"
+                        *ngFor="let field of reportFilters">
+                        {{field['title']|translate}}</option>
+                </optgroup>
+            </select>
+        </div>
+        <div class="input-group mb-3" *ngIf="boundaries.length && wantsGeography()">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon3">{{'Aggregate by boundary'|translate}}:</span>
+            </div>
+            <select class="custom-select" [(ngModel)]="reportHeaders[ 'boundary']" (change)="setReportHeaders($event)">
+                <option></option>
+                <option [value]="item.uuid" *ngFor="let item of boundaries">{{item.label}}</option>
+            </select>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-light"
+            (click)="resetReport();startFilters(viewpoint)">{{'Reset'|translate}}</button>
+        <button type="button" class="btn btn-light" [disabled]="!reportHeaders[ 'row'] || !reportHeaders[ 'col']"
+            (click)="applyReport(modal)">{{'Apply'|translate}}</button>
+        <button type="button" class="btn btn-light" (click)="cancelReport(modal)">{{'Close'|translate}}</button>
+    </div>
+</ng-template>
+
+<ng-template #vida let-modal>
+    <div class="irap">
+        <div class="modal-header">
+            <h4 class="modal-title">iRap ViDA</h4>
+            <button type="button" class="close" aria-label="Close" (click)="modal.dismiss( 'Cross click')">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+
+        <div *ngIf="irapDataset" class="modal-body">
+            <label for="typeahead-basic">Search for a project:</label>
+            <input id="typeahead-basic" (change)="searchIrap($event)" type="search" class="form-control"
+                [(ngModel)]="iRapSearchTerm" [ngbTypeahead]="searchIrapLayer" />
+        </div>
+        <div class="modal-body irap-list">
+            <div class="card" style=" max-width:300px;margin:auto;background-color:black;" *ngIf="!irapDataset">
+                <div class="card-body">
+                    <div class="text-center">
+                        <form>
+                            <img src="https://sso.irap.org/img/iRAP_logo_200x79.png" style="margin-bottom:5%"
+                                width="100px">
+                            <label class="sr-only" for="email">Email</label>
+                            <input autofocus="" class="form-control" [ngModelOptions]="{standalone: true}"
+                                id="emailaddress" placeholder="Email" required="" type="email" [(ngModel)]="irap_email"
+                                ng-reflect-model="jvelasquez@worldbank.org">
+                            <label class="sr-only" for="password">Password</label>
+                            <input autofocus="" class="form-control" [ngModelOptions]="{standalone: true}" id="password"
+                                placeholder="Password" required="" type="password" ng-reflect-model="Admin@123"
+                                [(ngModel)]=irap_password>
+                            <div class="mt-3">
+                                <button class="btn btn-md btn-primary btn-block"
+                                    style="background-color: white;color: black;" (click)=iRapLogin(vida)>
+                                    {{'Sign In'|translate}}
+                                </button>
+                            </div>
+                            <div class="row" style="margin-top:5%;">
+                                <label class="w-50 float-left">
+                                    <a href="https://sso.irap.org/register?broker_id=8" style="color: orange;"
+                                        target="_blank">{{'Register'|translate}}</a>
+                                </label>
+                                <label class="w-50 float-left">
+                                    <a href="https://sso.irap.org/forgotten_password?broker_id=8" style="color: orange;"
+                                        target="_blank" ng-reflect-translate="">
+                                        {{'Forgot Password'|translate}}
+                                    </a>
+                                </label>
+                            </div>
+                            <div class="row" style="color:orangered">{{irap_err}}</div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div *ngIf="irapDataset">
+                <ngb-accordion #acc="ngbAccordion" activeIds="ngb-panel-irap" [closeOthers]="true">
+                    <ngb-panel [title]="d['name']" *ngFor="let d of irapDataset[ 'data']; let i=index"
+                        id="accordion-irap-{{d.id}}" [cardClass]="hasSelection(d[ 'dataset_data'])">
+                        <ng-template ngbPanelContent>
+                            <div class="input-group" *ngFor="let de of d[ 'dataset_data']; let j=index">
+                                <label><input type="checkbox" [(ngModel)]="irapDataset[ 'selected'][de[ 'id']]">
+                                    {{de['name']}}</label>
+                            </div>
+                        </ng-template>
+                    </ngb-panel>
+                </ngb-accordion>
+            </div>
+        </div>
+        <div class="modal-footer" *ngIf="irapDataset">
+            <button type="button" class="btn btn-light" (click)="resetIrap()">{{'Reset'|translate}}</button>
+            <button type="button" class="btn btn-light" (click)="applyIrap(modal)">{{'Apply'|translate}}</button>
+            <button type="button" class="btn btn-light" (click)="modal.close( 'cancel')">{{'Close'|translate}}</button>
+        </div>
+    </div>
+</ng-template>
+
+<ng-template #qrcode let-modal>
+    <div id="qrcode-content" style="text-align:center" class="mt-3 mb-3" *ngIf="qrvalue">
+        <h4>{{'Place the QR scanner to set up the Android app'|translate}}</h4>
+        <qrcode [qrdata]="qrvalue" [width]="512" [errorCorrectionLevel]="'M'"></qrcode>
+    </div>
+</ng-template>

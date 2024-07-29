@@ -1,0 +1,47 @@
+<div class="counter">
+    <div>
+        {{filter['occurred_min']|date:'dd/MM/yyyy':'America/Sao_Paulo':'pt-BR'}} -
+        {{filter['occurred_max']|date:'dd/MM/yyyy':'America/Sao_Paulo':'pt-BR'}}
+        <br>
+    </div>
+    <div class="filter">
+        <div *ngFor="let fld of fields">
+            {{fld}}
+        </div>
+    </div>
+    <div>
+        <div class="irap-control" *ngIf="irapLayer && irapLayer['title'] && irapLayer['title'].length">
+            <strong>iRAP Star Rating Layer</strong>
+            <div *ngFor="let t of irapLayer['title']" class="iraplink" (click)="iRapCenter(irapLayer)">{{t['name']}}
+            </div>
+            <div>
+                <label>{{'Road user'|translate}}: </label>
+                <select [(ngModel)]="irapLayer['what']" (change)=drawIrap($event)>
+                    <option value="pedestrian">{{'Pedestrian'|translate}}</option>
+                    <option value="bicycle">{{'Bicycle'|translate}}</option>
+                    <option value="motorcycle">{{'Motorcycle'|translate}}</option>
+                    <option value="car">{{'Car'|translate}}</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div *ngIf="counts['total_crashes']==null">
+            <span class="spinner-border spinner-border-sm ml-3 mr-3 pr-3 pl-3"></span>
+        </div>
+        <div *ngIf="counts['total_crashes']!=null">{{counts['total_crashes']||('Zero'|translate)}} <span
+                *ngIf="counts['total_crashes']==1">{{config['PRIMARY_LABEL']|translate}}</span>
+            <span *ngIf="counts['total_crashes']!=1">{{config['PRIMARY_LABEL_PLURAL']|translate}}</span>
+        </div>
+    </div>
+    <div *ngIf="counts['total']!=null" class="filter">
+        <div *ngIf="!subtotals" class="filter-details" (click)="flipTotals()">
+            {{"Social costs:"|translate}}:<br>{{counts['total']|localcurrency:config['CURRENCY']:language}}<br>
+        </div>
+        <div *ngIf="subtotals" class="filter-details" (click)="flipTotals()">
+            <div *ngFor="let v of counts['subtotals'] | keyvalue">
+                {{v.key|translate}}: {{v.value|localcurrency:config['CURRENCY']:language}}
+            </div>
+        </div>
+    </div>
+</div>

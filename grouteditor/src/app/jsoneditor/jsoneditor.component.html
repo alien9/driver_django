@@ -4,7 +4,7 @@
     <textarea [hidden]="mode!='code'" name="schema" (change)="load($event)" [(ngModel)]=dict_json>
   </textarea>
     <div *ngIf="mode=='tree'" class="tree">
-        <div *ngFor="let item of dict.properties | sortedhash; let i =index " class="subtype">
+        <div *ngFor="let item of dict.definitions | sortedhash; let i =index " class="subtype">
             <div class="positioncontrols">
                 <a (click)="deleteObject(item)">⨯</a>
             </div>
@@ -17,16 +17,20 @@
             <div>
                 Title: <input [(ngModel)]="dict.definitions[item.key].title" (change)="renameModel(item.key, $event)">
             </div>
-            <div (click)="setActive(dict.definitions[item.key], 'plural_title')" *ngIf="dict.definitions[item.key].multiple">
+            <div>
+                <label class="block">Multiple <input type="checkbox" [(ngModel)]="dict.definitions[item.key].multiple"  (focus)="setActive(null)" (change)="setReferables()"></label>
+            </div>
+            <div (click)="setActive(dict.definitions[item.key], 'plural_title')" *ngIf=dict.definitions[item.key].multiple>
                 Plural Title: <input [(ngModel)]="dict.definitions[item.key].plural_title" (change)="setPluralTitle(dict.properties[item.key],$event)">
             </div>
+            <div *ngIf="!dict.definitions[item.key].multiple">
+                <label class="block">Details <input type="radio" [checked]=dict.definitions[item.key].details (focus)="setActive(null)" name="definitions_details" (change)="setDetails($event,dict.definitions[item.key], item.key)"></label>
+            </div>
+
             <div (click)="setActive(dict.definitions[item.key],'description')">
                 Description: <br>
-                <textarea class="note" [(ngModel)]="dict.definitions[item.key].description"></textarea>
+                <textarea class="note" [(ngModel)]="dict.definitions[item.key].description" (change)=save()></textarea>
             </div>
-            <div><label class="block">Multiple <input type="checkbox" [(ngModel)]="dict.definitions[item.key].multiple"  (focus)="setActive(null)" (change)="setReferables()"></label></div>
-            <div><label class="block">Details <input type="checkbox" [(ngModel)]="dict.definitions[item.key].details"  (focus)="setActive(null)"></label></div>
-
             <div class="props">
                 <div *ngFor="let pair of dict.definitions[item.key].properties | sortedhash; let i=index" class="properties">
                     <div><input [value]="pair.key" (change)="renamekey(dict.definitions[item.key], pair.key, $event)"></div>
@@ -40,56 +44,63 @@
                         <a (click)="moveFieldDown(dict.definitions[item.key], pair.key)">&#x2193;</a>
                     </div>
                     <div>
-                        <label>Searchable <input type="checkbox" [(ngModel)]="pair.value.isSearchable" (focus)="setActive(null)"></label>
+                        <label>Searchable <input type="checkbox" [(ngModel)]="pair.value.isSearchable" (focus)="setActive(null)" (change)=save()></label>
                     </div>
                     <div>
                         <label>Required <input type="checkbox" [ngModel]="contains(dict.definitions[item.key].required,pair.key)" (focus)="setActive(null)" (change)="setRequired(pair.key, item.key, $event)"></label>
                     </div>
                     <div>Type:{{pair.value.options}}
-                        <select [(ngModel)]="dict.definitions[item.key].properties[pair.key].fieldType" [compareWith]="compareByOptionId" (focus)="setActive(null)" (ngModelChange)="setTarget(dict.definitions[item.key].properties[pair.key], $event)">
-              <option *ngFor="let item of fieldtypes" [ngValue]="item.id" [selected]="item.id===pair.value.fieldType">
-                {{item.name}}
-              </option>
-            </select>
+                        <select [(ngModel)]="dict.definitions[item.key].properties[pair.key].fieldType" [compareWith]="compareByOptionId" (focus)="setActive(null)" (ngModelChange)="setTarget(dict.definitions[item.key].properties[pair.key], $event)" (change)=save()>
+                        <option *ngFor="let item of fieldtypes" [ngValue]="item.id" [selected]="item.id===pair.value.fieldType">
+                            {{item.name}}
+                        </option>
+                        </select>
                         <span *ngIf="hasFormat(pair.value.fieldType)">
-              Format:
-              <select [(ngModel)]="dict.definitions[item.key].properties[pair.key].format" [compareWith]="compareByOptionId" (focus)="setActive(null)" (ngModelChange)="setTarget(dict.definitions[item.key].properties[pair.key], $event)">
-                <option *ngFor="let item of formats" [ngValue]="item.id" [selected]="item.id===pair.value.format">
-                  {{item.name}}
-                </option>
-              </select>
-            </span>
-                        <select *ngIf="pair.value.fieldType==='reference'" [(ngModel)]="pair.value.watch.target">
+                            Format:
+                            <select [(ngModel)]="dict.definitions[item.key].properties[pair.key].format" [compareWith]="compareByOptionId" (focus)="setActive(null)" (ngModelChange)="setTarget(dict.definitions[item.key].properties[pair.key], $event)" (change)=save()>
+                                <option *ngFor="let item of formats" [ngValue]="item.id" [selected]="item.id===pair.value.format">
+                                {{item.name}}
+                                </option>
+                            </select>
+                        </span>
+                        <span *ngIf="pair.value.fieldType=='image'">
+                            Source:
+                            <select [(ngModel)]="pair.value.imageSource" (change)=save()>
+                                <option value="photo">photo</option>
+                                <option value="canvas">canvas</option>
+                            </select>
+                        </span>
+                        <select *ngIf="pair.value.fieldType==='reference'" [(ngModel)]="pair.value.watch.target" (change)=save()>
               <option *ngFor="let item of referables" [ngValue]="item.key" [selected]="item.key==pair.value.watch.target">{{item.value.title}}</option>
             </select>
                     </div>
                     <div *ngIf="pair.value.fieldType==='selectlist'">
-                        <div *ngIf="pair.value.displayType==='select'">
+                        <div *ngIf="(pair.value.displayType==='select') || (pair.value.displayType==='autocomplete')">
+                            <div class="tag"><a href="javascript:void(0)" (click)="newOption(pair.value,item.key,pair.key)"> + </a></div>
                             <div class="tag" *ngFor="let a of pair.value.enum; let i = index">
-                                <a *ngIf="isActive(pair.value.enum, i)==false" href="javascript:void(0);" (click)="setActive(pair.value.enum, i)">{{a}}</a>
-                                <input *ngIf="isActive(pair.value.enum, i)" [value]="dict.definitions[item.key].properties[pair.key].enum[i]" (change)="setPropertyValue(pair.value.enum, i, $event)">
+                                <input id="{{item.key}}_{{pair.key}}_{{i}}" [value]="a" (change)="setPropertyValue(pair.value.enum, i, $event)">
                                 <a (click)="removeOption(pair.value, i)"> - </a>
                             </div>
-                            <div class="tag"><a href="javascript:void(0)" (click)="newOption(pair.value)"> + </a></div>
                         </div>
                         <div *ngIf="pair.value.format==='checkbox'">
+                            <div class="tag"><a href="javascript:void(0)" (click)="newOption(pair.value,item.key,pair.key)"> + </a></div>
                             <div class="tag" *ngFor="let a of pair.value.items.enum; let i = index">
-                                <a *ngIf="isActive(pair.value.items.enum, i)==false" href="javascript:void(0);" (click)="setActive(pair.value.items.enum, i)">{{a}}</a>
-                                <input *ngIf="isActive(pair.value.items.enum, i)" [value]="dict.definitions[item.key].properties[pair.key].items.enum[i]" (change)="setPropertyValue(pair.value.items.enum, i, $event)">
+                                <input id="{{item.key}}_{{pair.key}}_{{i}}" [value]="a" (change)="setPropertyValue(pair.value.items.enum, i, $event)">
                                 <a (click)="removeOption(pair.value, i)"> - </a>
                             </div>
-                            <div class="tag"><a href="javascript:void(0)" (click)="newOption(pair.value)"> + </a></div>
                         </div>
-                        <div *ngIf="pair.value.displayType==='select'">
+                        <div *ngIf="(pair.value.displayType==='select')||(pair.value.displayType==='autocomplete')">
                             Display: <select [(ngModel)]="pair.value.displayType" (focus)="setActive(null)" (change)="setDisplayType(pair.value, $event)">
               <option value="checkbox">checkbox</option>
               <option value="select">select</option>
+              <option value="autocomplete">autocomplete </option>
               </select>
                         </div>
                         <div *ngIf="pair.value.format==='checkbox'">
                             Display: <select [(ngModel)]="pair.value.format" (focus)="setActive(null)" (change)="setDisplayType(pair.value, $event)">
               <option value="checkbox">checkbox</option>
               <option value="select">select</option>
+              <option value="autocomplete">autocomplete </option>
               </select>
                         </div>
                     </div>
@@ -98,7 +109,7 @@
             </div>
         </div>
         <div class="subtype">
-            <div><a href="javascript:void(0);" (click)="newTable('NewType')">New...</a></div>
+            <div><a href="javascript:void(0);" (click)="newTable()">New...</a></div>
         </div>
     </div>
 </div>

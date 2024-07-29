@@ -15,3 +15,17 @@ class GenerateViewsetQuery(object):
         query_str = cursor.mogrify(sql, params)
         cursor.close()
         return query_str.decode('utf-8')
+
+    def generate_mapserver_query_sql(self, request):
+        qset = self.get_super_queryset().values('uuid', 'geom', 'location_text', 'occurred_from' )
+        # apply filters
+        # get sql for the query that should be run
+        for backend in list(self.filter_backends):
+            qset = backend().filter_queryset(request, qset, self)
+        qset=qset.order_by()
+        cursor = connection.cursor().cursor
+        sql, params = qset.query.sql_with_params()
+        # get properly escaped string representation of the query
+        query_str = cursor.mogrify(sql, params)
+        cursor.close()
+        return query_str.decode('utf-8')

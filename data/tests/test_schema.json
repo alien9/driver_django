@@ -1,0 +1,295 @@
+{
+    "type": "object",
+    "title": "Accident",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "properties": {
+        "driverVictim": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/driverVictim"
+            },
+            "title": "Victim",
+            "options": {
+                "collapsed": true
+            },
+            "plural_title": "Victims",
+            "propertyOrder": 6
+        },
+        "driverVehicle": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/driverVehicle"
+            },
+            "title": "Vehicle",
+            "options": {
+                "collapsed": true
+            },
+            "plural_title": "Vehicles",
+            "propertyOrder": 5
+        },
+        "driverAccidentDetails": {
+            "$ref": "#/definitions/driverAccidentDetails",
+            "options": {
+                "collapsed": true
+            },
+            "propertyOrder": 1
+        }
+    },
+    "definitions": {
+        "driverVictim": {
+            "type": "object",
+            "title": "Victim",
+            "multiple": true,
+            "required": [
+                "_localId"
+            ],
+            "properties": {
+                "Age": {
+                    "type": "number",
+                    "fieldType": "number",
+                    "isSearchable": true,
+                    "propertyOrder": 1
+                },
+                "Vehicle": {
+                    "type": "string",
+                    "watch": {
+                        "target": "driverVehicle"
+                    },
+                    "fieldType": "reference",
+                    "enumSource": [
+                        {
+                            "title": "{{item.Vehicle}} {{item.Vehicle type}}",
+                            "value": "{{item._localId}}",
+                            "source": "target"
+                        }
+                    ],
+                    "propertyOrder": 0
+                },
+                "_localId": {
+                    "type": "string",
+                    "options": {
+                        "hidden": true
+                    },
+                    "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+                },
+                "Condition": {
+                    "enum": [
+                        "Dead",
+                        "Injured"
+                    ],
+                    "type": "string",
+                    "fieldType": "selectlist",
+                    "displayType": "select",
+                    "isSearchable": true,
+                    "propertyOrder": 2
+                },
+                "Victim type": {
+                    "enum": [
+                        "Conductor",
+                        "Passenger",
+                        "Pedestrian",
+                        "No information"
+                    ],
+                    "type": "string",
+                    "fieldType": "selectlist",
+                    "displayType": "select",
+                    "isSearchable": true,
+                    "propertyOrder": 3
+                }
+            },
+            "definitions": {},
+            "description": "Victim of a crash",
+            "plural_title": "Victims"
+        },
+        "driverVehicle": {
+            "type": "object",
+            "title": "Vehicle",
+            "multiple": true,
+            "required": [
+                "_localId"
+            ],
+            "properties": {
+                "Vehicle": {
+                    "enum": [
+                        "Auto",
+                        "Motorcycle",
+                        "Bus",
+                        "Truck",
+                        "Bike",
+                        "Charter / Intercity Bus",
+                        "Urban Bus",
+                        "Micro Bus",
+                        "Van",
+                        "Vuc",
+                        "Wagon",
+                        "Pickup / Pickup Truck",
+                        "Jeep",
+                        "Cart",
+                        "Others",
+                        "No information"
+                    ],
+                    "type": "string",
+                    "fieldType": "selectlist",
+                    "displayType": "select",
+                    "isSearchable": false,
+                    "propertyOrder": 1
+                },
+                "_localId": {
+                    "type": "string",
+                    "options": {
+                        "hidden": true
+                    },
+                    "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+                },
+                "Vehicle type": {
+                    "enum": [
+                        "Car",
+                        "Motorcycle",
+                        "Bus",
+                        "Truck",
+                        "Bike",
+                        "Cart",
+                        "Wagon",
+                        "No information",
+                        "Others"
+                    ],
+                    "type": "string",
+                    "fieldType": "selectlist",
+                    "displayType": "select",
+                    "isSearchable": true,
+                    "propertyOrder": 0
+                }
+            },
+            "definitions": {},
+            "description": "Vehicle Involved in a crash",
+            "plural_title": "Vehicles"
+        },
+        "driverAccidentDetails": {
+            "type": "object",
+            "title": "Accident Details",
+            "details": true,
+            "multiple": false,
+            "required": [
+                "_localId"
+            ],
+            "properties": {
+                "Dead": {
+                    "type": "integer",
+                    "fieldType": "integer",
+                    "isSearchable": false,
+                    "propertyOrder": 4
+                },
+                "Address": {
+                    "type": "string",
+                    "format": "text",
+                    "fieldType": "text",
+                    "isSearchable": true,
+                    "propertyOrder": 0
+                },
+                "Injured": {
+                    "type": "integer",
+                    "fieldType": "integer",
+                    "isSearchable": false,
+                    "propertyOrder": 7
+                },
+                "Victims": {
+                    "type": "integer",
+                    "fieldType": "integer",
+                    "isSearchable": false,
+                    "propertyOrder": 6
+                },
+                "Accident": {
+                    "enum": [
+                        "Collision",
+                        "Frontal collision",
+                        "Rear collision",
+                        "Side collision",
+                        "Transverse collision",
+                        "Overturning",
+                        "Tipping",
+                        "Shock",
+                        "Run over",
+                        "Animal trampling",
+                        "Fall motorcycle / bicycle",
+                        "Fall motorcycle",
+                        "Fall bicycle",
+                        "Falling vehicle",
+                        "Fall occupant inside",
+                        "Falling occupant outside",
+                        "Others",
+                        "No information"
+                    ],
+                    "type": "string",
+                    "fieldType": "selectlist",
+                    "displayType": "select",
+                    "isSearchable": false,
+                    "propertyOrder": 3
+                },
+                "Distrito": {
+                    "type": "string",
+                    "fieldType": "text",
+                    "isSearchable": false,
+                    "propertyOrder": 10
+                },
+                "Severity": {
+                    "enum": [
+                        "Injured victims",
+                        "Fatal victims"
+                    ],
+                    "type": "string",
+                    "fieldType": "selectlist",
+                    "displayType": "select",
+                    "isSearchable": true,
+                    "propertyOrder": 1
+                },
+                "Vehicles": {
+                    "type": "integer",
+                    "fieldType": "integer",
+                    "isSearchable": false,
+                    "propertyOrder": 5
+                },
+                "_localId": {
+                    "type": "string",
+                    "options": {
+                        "hidden": true
+                    },
+                    "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+                },
+                "acidente_id": {
+                    "type": "string",
+                    "fieldType": "text",
+                    "isSearchable": false,
+                    "propertyOrder": 8
+                },
+                "Accident type": {
+                    "enum": [
+                        "Run over",
+                        "Collision",
+                        "Shock",
+                        "Fall",
+                        "Overturning",
+                        "No information",
+                        "Others"
+                    ],
+                    "type": "string",
+                    "fieldType": "selectlist",
+                    "displayType": "select",
+                    "isSearchable": true,
+                    "propertyOrder": 2
+                },
+                "Subprefeitura": {
+                    "type": "string",
+                    "fieldType": "text",
+                    "isSearchable": false,
+                    "propertyOrder": 9
+                }
+            },
+            "definitions": {},
+            "description": "Details for Accident",
+            "plural_title": "Accident Details",
+            "propertyOrder": 0
+        }
+    },
+    "description": "",
+    "plural_title": "Accidents"
+}

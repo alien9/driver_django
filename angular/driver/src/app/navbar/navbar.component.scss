@@ -1,0 +1,29 @@
+@media only screen and (min-width: 960px) {
+    .nav-item:first-of-type {
+        border-left: 2px solid white;
+    }
+}
+
+::ng-deep .btn-link {
+    color: black;
+    text-decoration: none;
+}
+
+::ng-deep .has-selected .btn-link {
+    font-weight: bold;
+}
+
+.nav-item label input[type="checkbox"] {
+    position: fixed;
+    z-index: -10;
+    opacity: 0;
+    left: 0;
+    top: 0;
+}
+.irap-list{
+    height: calc(100vh - 290px);
+    overflow-y:auto;
+}
+button.clean,label.clean{
+    font-family: sans-serif;
+}

@@ -3,12 +3,14 @@ from rest_framework import mixins as drf_mixins
 from rest_framework.response import Response
 from django_redis import get_redis_connection
 from django.utils import timezone
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
 
 from data.models import DriverRecord
-from black_spots.models import (BlackSpot, BlackSpotSet, BlackSpotConfig)
+from black_spots.models import (BlackSpot, BlackSpotSet, BlackSpotConfig, RoadMap)
 from black_spots.serializers import (BlackSpotSerializer, BlackSpotSetSerializer,
                                      BlackSpotConfigSerializer, EnforcerAssignmentInputSerializer,
-                                     EnforcerAssignmentSerializer)
+                                     EnforcerAssignmentSerializer, RoadMapSerializer)
 from black_spots.filters import (BlackSpotFilter, BlackSpotSetFilter, EnforcerAssignmentFilter)
 from data.views import build_toddow
 from rest_framework.decorators import action
@@ -22,6 +24,10 @@ import uuid
 from dateutil import rrule
 from data.tasks import generate_blackspots
 from celery import states
+from rest_framework.decorators import api_view
+from whoosh.index import open_dir
+from whoosh.qparser import QueryParser,FuzzyTermPlugin
+from urllib.parse import urlparse, parse_qs
 
 
 class BlackSpotViewSet(viewsets.ModelViewSet, mixins.GenerateViewsetQuery):
@@ -93,7 +99,7 @@ class BlackSpotSetViewSet(viewsets.ModelViewSet):
                 return Response({'status': job_result.state, 'error': str(e)})
             return Response({'status': job_result.state, 'result': "OK"})
         return Response({'status': job_result.state, 'info': job_result.info})
-
+    
 class BlackSpotConfigViewSet(drf_mixins.ListModelMixin, drf_mixins.RetrieveModelMixin,
                              drf_mixins.UpdateModelMixin, viewsets.GenericViewSet):
     """ViewSet for BlackSpot configuration
@@ -240,3 +246,32 @@ class EnforcerAssignmentViewSet(drf_mixins.ListModelMixin, viewsets.GenericViewS
 
         output_serializer = self.get_serializer(assignments, many=True)
         return Response(output_serializer.data)
+
+class RoadMapViewSet(viewsets.GenericViewSet):
+    serializer_class = RoadMapSerializer
+    queryset=RoadMap.objects.all()
+    def list(self,request):
+        queryset=RoadMap.objects.all()
+        serializer = RoadMapSerializer(queryset, many=True)
+        return Response(serializer.data)
+    
+    def retrieve(self, request, pk=None):
+        queryset = RoadMap.objects.all()
+        map = get_object_or_404(queryset, pk=pk)
+        serializer = RoadMapSerializer(map)
+        return Response(serializer.data)
+
+    @action(methods=['get'], detail=True)
+    def forward(self, request, pk=None):
+        ix = open_dir("indexdir/{road}".format(road=pk))
+        searcher = ix.searcher()
+        parser = QueryParser("name", schema=ix.schema)
+        parser.add_plugin(FuzzyTermPlugin())
+        qs=parse_qs(request.META['QUERY_STRING'])
+        res = []
+        if 'q' in qs:
+            term = str(qs['q'][0])+'~'
+            question = parser.parse(term)
+            res = searcher.search(question)
+        return JsonResponse([{'lat':r['lat'],'lon':r['lon'],'address':{'road':r['name'],'fullname':r['fullname'], 'id': r['id']}} for r in res], safe=False)
+

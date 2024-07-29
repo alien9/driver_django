@@ -10,7 +10,11 @@ def add_to_default_group(sender, **kwargs):
     user = kwargs["instance"]
     if kwargs["created"]:
         from django.contrib.auth.models import Group
-        group = Group.objects.get(name=READ_GROUP)
+        try:
+            group = Group.objects.get(name=READ_GROUP)
+        except:
+            group=Group(name=READ_GROUP)
+            group.save()
         user.groups.add(group)
 
 

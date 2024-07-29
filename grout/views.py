@@ -1,5 +1,5 @@
 from collections import OrderedDict
-import logging
+import logging, json
 from django.db import IntegrityError
 from dateutil.parser import parse
 
@@ -9,13 +9,17 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from rest_framework.exceptions import ParseError
 from rest_framework_gis.filters import InBBoxFilter
+from django.http import JsonResponse
+from django.db import connection
 
 from grout import exceptions
 from grout.models import (Boundary,
                           BoundaryPolygon,
                           Record,
                           RecordType,
-                          RecordSchema)
+                          RecordSchema
+                          )
+from data.models import Dictionary
 from grout.serializers import (BoundarySerializer,
                                BoundaryPolygonSerializer,
                                BoundaryPolygonNoGeomSerializer,
@@ -39,6 +43,7 @@ class BoundaryPolygonViewSet(viewsets.ModelViewSet):
     pagination_class = OptionalLimitOffsetPagination
     bbox_filter_field = 'geom'
     jsonb_filter_field = 'data'
+    geometry_filter_field = 'filter'
     filter_backends = (InBBoxFilter, JsonBFilterBackend, DjangoFilterBackend)
 
     def get_serializer_class(self):
@@ -124,15 +129,12 @@ class RecordSchemaViewSet(SchemaViewSet):
         return super(RecordSchemaViewSet, self).get_serializer(*args, **kwargs)
 
 class BoundaryViewSet(viewsets.ModelViewSet):
-
-    queryset = Boundary.objects.all()
+    queryset = Boundary.objects.all().order_by('order')
     serializer_class = BoundarySerializer
     filter_class = BoundaryFilter
     pagination_class = OptionalLimitOffsetPagination
-    ordering = ('display_field',)
 
     def create(self, request, *args, **kwargs):
-        logging.info("creating boundary")
         """Overwritten to allow use of semantically important/appropriate status codes for
         informing users about the type of error they've encountered
         """
@@ -159,3 +161,28 @@ class BoundaryViewSet(viewsets.ModelViewSet):
             ('features', features)
         ))
         return Response(data)
+
+    @action(methods=['get', 'post'], detail=False)
+    def mapfile(self, request):
+
+        color=[0,0,0]
+        if self.color is not None:
+            h=self.color.lstrip('#')
+            color=tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+        t=render_to_string('boundary_theme.map', {
+            "connection":connection.settings_dict['HOST'],
+            "username":connection.settings_dict['USER'],
+            "dbname":connection.settings_dict['NAME'],
+            "password":connection.settings_dict['PASSWORD'],
+            "query":"geom from (select geom, uuid from grout_boundarypolygon where boundary_id='%s')as q using unique uuid using srid=4326" % (self.uuid,),
+            "color": "%s %s %s" % (color[0],color[1],color[2]),
+        })
+        with open("./mapserver/boundary_{boundary_id}_theme_.map" % (self.uuid), "w+") as m:
+            m.write(t)
+        #query="select geom, uuid from maps.bouundary_polygon
+        return JsonResponse({'errors': {'uuid': 'Denied'}},
+            status=status.HTTP_200_OK)
+
+class DictionaryViewSet(viewsets.ModelViewSet):
+    queryset = Dictionary.objects.all()
+    

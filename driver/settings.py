@@ -13,9 +13,15 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-import os, sys
-from django.utils.translation import ugettext_lazy as _
+from driver.tz_list import TZ_LIST
+from django.conf import locale
 import socket
+from django.utils.translation import ugettext_lazy as _
+import os
+import sys
+import dotenv
+dotenv.load_dotenv(override=True)
+
 
 try:
     HOSTNAME = socket.gethostname()
@@ -24,15 +30,18 @@ except:
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-DEVELOP = True if os.environ.get('DJANGO_ENV', 'development') == 'development' else False
-STAGING = True if os.environ.get('DJANGO_ENV', 'staging') == 'staging' else False
+DEVELOP = True if os.environ.get(
+    'DJANGO_ENV', 'development') == 'development' else False
+STAGING = True if os.environ.get(
+    'DJANGO_ENV', 'staging') == 'staging' else False
 PRODUCTION = not DEVELOP and not STAGING
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'sfdgljfkghdjkgfhjkghdskljhgljhsdjkghfgjklhdgjklshjkhg' # os.environ['DJANGO_SECRET_KEY']
+# os.environ['DJANGO_SECRET_KEY']
+SECRET_KEY = 'sfdgljfkghdjkgfhjkghdskljhgljhsdjkghfgjklhdgjklshjkhg'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DEVELOP
@@ -40,20 +49,60 @@ TESTING = 'test' in sys.argv
 
 ALLOWED_HOSTS = ['*']
 # TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:8000',
-    'http://localhost:4200',
-]
+# CORS_ORIGIN_ALLOW_ALL = False
+# CORS_ALLOW_CREDENTIALS = True
+# CORS_ALLOW_METHODS = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
 
-#LANGUAGE_CODE = 'pt-br'
-USE_I18N = False
-USE_L10N = False
+# CORS_ALLOWED_ORIGINS = [
+#    "%s://%s" % (os.environ.get('PROTOCOL', 'http'), os.environ.get("HOST_NAME", "localhost"),),
+#    'http://localhost:8000',
+#    'http://localhost:4200',
+# ]
+# CORS_ALLOW_HEADERS = ('content-disposition', 'accept-encoding', 'responsetype',
+#                      'content-type', 'accept', 'origin', 'authorization', 'x-csrftoken')
+LANGUAGE_CODE = os.getenv("LANGUAGE_CODE", "en")
+
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
+
+
+# Internationalization
+# https://docs.djangoproject.com/en/1.8/topics/i18n/
+
+
+if os.getenv('LANGUAGES', None):
+    names = {
+        'en': 'English',
+        'lo': 'Laotian',
+        'pt-br': 'Brazilian Portuguese',
+        'es': 'Spanish',
+        'fr': 'French',
+        'zh-hans': 'Simplified Chinese',
+    }
+    LANGUAGES = list(
+        map(lambda l: (l, _(names[l])), os.getenv('LANGUAGES').split(",")))
+    du = locale.LANG_INFO
+    du["lo"] = {
+        'bidi': True,
+        'code': 'lo',
+        'name': 'Laotian',
+        'name_local': 'ລາວ',
+    }
+    locale.LANG_INFO = dict(du)
+
+else:
+    LANGUAGES = [
+        ('en', _('English')),
+        ('lo', _('Laotian')),
+        ('pt-br', _('Brazilian Portuguese')),
+        ('es', _('Spanish')),
+        ('fr', _('French')),
+        ('zh-hans', _('Simplified Chinese')),
+    ]
 
 # Application definition
 
 INSTALLED_APPS = (
+    'grout',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -66,12 +115,11 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework.authtoken',
     'storages',
-
+    'captcha',
     'django_extensions',
 
     'django_filters',
     'rest_framework_gis',
-    'grout',
 
     'driver',
     'driver_auth',
@@ -84,6 +132,7 @@ INSTALLED_APPS = (
     'django_admin_hstore_widget',
     'constance',
     'proxy',
+    'ordered_model', 'django_ckeditor_5',
 )
 
 MIDDLEWARE = (
@@ -94,13 +143,12 @@ MIDDLEWARE = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    #'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+    # 'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
 )
-print(DEBUG)
-print("is debug")
+
 if DEBUG:
     # Perform set up for Django Debug Toolbar
     INSTALLED_APPS += (
@@ -137,7 +185,7 @@ TEMPLATES = [
     },
 ]
 
-#WSGI_APPLICATION = 'driver.wsgi.application'
+# WSGI_APPLICATION = 'driver.wsgi.application'
 
 
 # Database
@@ -153,31 +201,19 @@ DATABASES = {
         'PASSWORD': os.environ.get('DRIVER_DB_PASSWORD', 'driver'),
         'CONN_MAX_AGE': 0,  # in seconds
         'OPTIONS': {
-        #    'sslmode': 'require'
+            #    'sslmode': 'require'
         }
     }
 }
-
 POSTGIS_VERSION = tuple(
     map(int, os.environ.get('DJANGO_POSTGIS_VERSION', '2.1.3').split("."))
 )
 
 # File storage
-#DEFAULT_FILE_STORAGE = 'storages.backends.overwrite.OverwriteStorage'
+# DEFAULT_FILE_STORAGE = 'storages.backends.overwrite.OverwriteStorage'
 
-# Internationalization
-# https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-from django.utils.translation import ugettext_lazy as _
-LANGUAGES = ( 
-   ('de', _('German')),
-   ('en', _('English')),
-   ('fr', _('French')),
-   ('es', _('Spanish')),
-   ('pt-br', _('Portuguese'))
-)
-
-TIME_ZONE = os.environ.get("DRIVER_LOCAL_TIME_ZONE", 'America/Sao_Paulo')
+TIME_ZONE = os.environ.get("TIMEZONE", 'America/Sao_Paulo')
 
 USE_I18N = True
 
@@ -188,22 +224,24 @@ USE_TZ = True
 OSM_EXTRACT_URL = os.environ.get('DRIVER_OSM_EXTRACT_URL',
                                  'https://download.geofabrik.de/asia/philippines-latest.osm.pbf')
 
-BLACKSPOT_RECORD_TYPE_LABEL = os.environ.get('BLACKSPOT_RECORD_TYPE_LABEL', 'Incident')
+BLACKSPOT_RECORD_TYPE_LABEL = os.environ.get(
+    'BLACKSPOT_RECORD_TYPE_LABEL', 'Incident')
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = os.environ.get('STATIC_URL', '/static/')
-STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/driver/static/')
+STATIC_ROOT = os.environ.get('STATIC_ROOT', '/opt/app/static/')
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'templates/dist'),
     os.path.join(BASE_DIR, 'templates/schema_editor/dist'),
+    os.path.join(BASE_DIR, 'web'),
 )
 
 # Media files (uploaded via API)
 # https://docs.djangoproject.com/en/1.8/topics/files/
 
-MEDIA_ROOT = os.environ.get('MEDIA_ROOT', 'static/')
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT', 'media/')
 MEDIA_URL = '/media/'
 
 # use cookie-based sessions
@@ -268,11 +306,12 @@ LOGGING = {
         }
     }
 }
-DEFAULT_AUTO_FIELD='django.db.models.AutoField'
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # user and group settings
-DEFAULT_ADMIN_EMAIL = os.environ.get("DRIVER_ADMIN_EMAIL", 'systems+driver@azavea.com')
-DEFAULT_ADMIN_USERNAME = os.environ.get("DRIVER_ADMIN_USERNAME", 'admin')
-DEFAULT_ADMIN_PASSWORD = os.environ.get("DRIVER_ADMIN_PASSWORD", 'admin')
+DEFAULT_ADMIN_EMAIL = os.environ.get(
+    "DRIVER_ADMIN_EMAIL", 'vdasegura@cetsp.com.br')
+DEFAULT_ADMIN_USERNAME = os.environ.get("DRIVER_ADMIN_USERNAME", None)
+DEFAULT_ADMIN_PASSWORD = os.environ.get("DRIVER_ADMIN_PASSWORD", None)
 # the client keeps these group names in the editor's config.js
 DRIVER_GROUPS = {
     'READ_ONLY': os.environ.get('DRIVER_READ_ONLY_GROUP', 'public'),
@@ -308,7 +347,8 @@ REDIS_HOST = os.environ.get('DRIVER_REDIS_HOST', '127.0.0.1')
 REDIS_PORT = os.environ.get('DRIVER_REDIS_PORT', '6379')
 
 # JAR file cache TLL (keep in redis for this many seconds since creation or last retrieval)
-JARFILE_REDIS_TTL_SECONDS = os.environ.get('DRIVER_JAR_TTL_SECONDS', 60 * 60 * 24 * 30) # 30 days
+JARFILE_REDIS_TTL_SECONDS = os.environ.get(
+    'DRIVER_JAR_TTL_SECONDS', 60 * 60 * 24 * 30)  # 30 days
 
 CACHES = {
     "default": {
@@ -322,7 +362,8 @@ CACHES = {
             'SOCKET_CONNECT_TIMEOUT': 5,  # seconds
             'SOCKET_TIMEOUT': 5,  # seconds
             'MAX_ENTRIES': 900,  # defaults to 300
-            'CULL_FREQUENCY': 4,  # fraction culled when max reached (1 / CULL_FREQ); default: 3
+            # fraction culled when max reached (1 / CULL_FREQ); default: 3
+            'CULL_FREQUENCY': 4,
             # 'COMPRESS_MIN_LEN': 0, # set to value > 0 to enable compression
         }
     },
@@ -337,7 +378,8 @@ CACHES = {
             'SOCKET_CONNECT_TIMEOUT': 5,  # seconds
             'SOCKET_TIMEOUT': 5,  # seconds
             'MAX_ENTRIES': 300,  # defaults to 300
-            'CULL_FREQUENCY': 4,  # fraction culled when max reached (1 / CULL_FREQ); default: 3
+            # fraction culled when max reached (1 / CULL_FREQ); default: 3
+            'CULL_FREQUENCY': 4,
             # 'COMPRESS_MIN_LEN': 0, # set to value > 0 to enable compression
         }
     },
@@ -378,7 +420,8 @@ CELERY_ROUTES = {
     'data.tasks.fetch_record_csv.export_records': {'queue': 'taskworker'},
     'data.tasks.geocode_records.geocode_records': {'queue': 'taskworker'},
     'data.tasks.geocode_records.generate_blackspots': {'queue': 'taskworker'},
-
+    'data.tasks.geocode_records.generate_roads_index': {'queue': 'taskworker'},
+    'data.tasks.create_indexes.create_indexes': {'queue': 'taskworker'},
 }
 # This needs to match the proxy configuration in nginx so that requests for files generated
 # by celery jobs go to the right place.
@@ -386,9 +429,11 @@ CELERY_DOWNLOAD_PREFIX = '/download/'
 CELERY_EXPORTS_FILE_PATH = '/var/www/media'
 
 # Deduplication settings
-DEDUPE_TIME_RANGE_HOURS = float(os.environ.get('DRIVER_DEDUPE_TIME_RANGE_HOURS', '12'))
+DEDUPE_TIME_RANGE_HOURS = float(os.environ.get(
+    'DRIVER_DEDUPE_TIME_RANGE_HOURS', '12'))
 # .001 ~= 110m
-DEDUPE_DISTANCE_DEGREES = float(os.environ.get('DRIVER_DEDUPE_DISTANCE_DEGREES', '0.0008'))
+DEDUPE_DISTANCE_DEGREES = float(os.environ.get(
+    'DRIVER_DEDUPE_DISTANCE_DEGREES', '0.0008'))
 
 GROUT = {
     # It is suggested to change this if you know that your data will be limited to
@@ -397,14 +442,18 @@ GROUT = {
     'SRID': 4326,
 }
 
-## django-oidc settings
-HOST_URL = os.environ.get('HOST_URL', 'https://titopop.com')
+# django-oidc settings
+HOST_URL = os.environ.get('HOST_URL', '')
 
 # TODO: conditionally set for GLUU in production
-GOOGLE_OAUTH_CLIENT_ID = os.environ.get('OAUTH_CLIENT_ID', '418431456233-i69dc0paqp9ujj40gha8ru5a1tflbjl2.apps.googleusercontent.com')
-GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('OAUTH_CLIENT_SECRET', 'E_8AybgrjZ5LdegXBENy0u83')
-OIDC_RP_CLIENT_ID = os.environ.get('OAUTH_CLIENT_ID', '418431456233-i69dc0paqp9ujj40gha8ru5a1tflbjl2.apps.googleusercontent.com')
-OIDC_RP_CLIENT_SECRET = os.environ.get('OAUTH_CLIENT_SECRET', 'fqN1UoPadvcoTLSSH98WzIRF')
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get(
+    'OAUTH_CLIENT_ID', '418431456233-i69dc0paqp9ujj40gha8ru5a1tflbjl2.apps.googleusercontent.com')
+GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get(
+    'OAUTH_CLIENT_SECRET', 'E_8AybgrjZ5LdegXBENy0u83')
+OIDC_RP_CLIENT_ID = os.environ.get(
+    'OAUTH_CLIENT_ID', '418431456233-i69dc0paqp9ujj40gha8ru5a1tflbjl2.apps.googleusercontent.com')
+OIDC_RP_CLIENT_SECRET = os.environ.get(
+    'OAUTH_CLIENT_SECRET', 'fqN1UoPadvcoTLSSH98WzIRF')
 
 # Forecast.io settings
 FORECAST_IO_API_KEY = os.environ.get('FORECAST_IO_API_KEY', '')
@@ -413,18 +462,18 @@ FORECAST_IO_API_KEY = os.environ.get('FORECAST_IO_API_KEY', '')
 AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
 
 if GOOGLE_OAUTH_CLIENT_ID:
-    AUTHENTICATION_BACKENDS += ('mozilla_django_oidc.auth.OIDCAuthenticationBackend',)
-    #AUTHENTICATION_BACKENDS += ('driver_auth.oidc_callback.OIDC_Callback',)
-    OIDC_OP_AUTHORIZATION_ENDPOINT='https://accounts.google.com/o/oauth2/v2/auth'
-    OIDC_OP_TOKEN_ENDPOINT='https://www.googleapis.com/oauth2/v4/token'
-    OIDC_OP_USER_ENDPOINT="https://www.googleapis.com/oauth2/v3/userinfo"
-    #OIDC_REDIRECT_REQUIRE_HTTPS=True
-    OIDC_RP_SIGN_ALGO="RS256"
-    OIDC_OP_JWKS_ENDPOINT="https://www.googleapis.com/oauth2/v3/certs"
-    LOGIN_REDIRECT_URL="/"
-    OIDC_USE_NONCE=True
-    OIDC_CALLBACK_CLASS='driver_auth.oidc_callback.OIDC_CallbackView'
-    OIDC_AUTHENTICATE_CLASS='driver_auth.oidc_callback.OIDC_RequestView'
+    AUTHENTICATION_BACKENDS += (
+        'mozilla_django_oidc.auth.OIDCAuthenticationBackend',)
+    OIDC_OP_AUTHORIZATION_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth'
+    OIDC_OP_TOKEN_ENDPOINT = 'https://www.googleapis.com/oauth2/v4/token'
+    OIDC_OP_USER_ENDPOINT = "https://www.googleapis.com/oauth2/v3/userinfo"
+    OIDC_REDIRECT_REQUIRE_HTTPS = not DEBUG
+    OIDC_RP_SIGN_ALGO = "RS256"
+    OIDC_OP_JWKS_ENDPOINT = "https://www.googleapis.com/oauth2/v3/certs"
+    LOGIN_REDIRECT_URL = "/"
+    OIDC_USE_NONCE = True
+    OIDC_CALLBACK_CLASS = 'driver_auth.oidc_callback.OIDC_CallbackView'
+    OIDC_AUTHENTICATE_CLASS = 'driver_auth.oidc_callback.OIDC_RequestView'
 """
 LOGIN_URL = 'openid'
 
@@ -505,7 +554,6 @@ if len(GOOGLE_OAUTH_CLIENT_ID) > 0:
     }
 """
 # These fields will be visible to read-only users
-from driver.tz_list import TZ_LIST
 READ_ONLY_FIELDS_REGEX = r'Det'
 
 CONSTANCE_REDIS_CONNECTION = {
@@ -518,6 +566,9 @@ CONSTANCE_ADDITIONAL_FIELDS = {
         'widget': 'django.forms.Select',
         'choices': list(map(lambda x: [x, x], TZ_LIST))
     }],
+    'locales': ['django.forms.fields.ChoiceField', {
+
+    }]
 }
 
 CONSTANCE_CONFIG = {
@@ -525,11 +576,137 @@ CONSTANCE_CONFIG = {
     'MAP_CENTER_LATITUDE': (os.getenv('CENTER_LATITUDE', -23.5), _("Latitude")),
     'MAP_CENTER_LONGITUDE': (os.getenv('CENTER_LONGITUDE', -46.7), _("Longitude")),
     'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
-    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Accident"), _("Accident")),
-    "WINDSHAFT": ("", "WindShaft"),
-    "LANGUAGES": ('[{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}]', _("Languages")),
-    "HOSTNAME": ("%s://%s" % ((os.getenv('PROTOCOL', "http"), os.getenv('HOSTNAME', "localhost:8000"))), _("Host Name")),
+    "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Sinistro"), _("Accident")),
+    "SECONDARY_LABEL": (os.getenv('SECONDARYLABEL', "Intervention"), _("Intervention")),
+    "WINDSHAFT": ("http://windshaft-%s" % (os.getenv("CONTAINER_NAME", 'driver')), "WindShaft"),
+    "HOSTNAME": (os.getenv('HOST_URL', os.getenv('PROTOCOL', "https")+"://"+os.getenv('HOSTNAME', "localhost:8000")), _("Host Name")),
     "COUNTRY_CODE": (os.getenv('COUNTRY', "ic"), _("Country Code")),
-    "MAPSERVER": ("mapserver-%s" % (os.getenv('CONTAINER_NAME', 'driver')), "MapServer"),
-    'TIMEZONE': ('America/Sao_Paulo', 'Time Zone', 'tzselect')
-}   
+    "MAPSERVER": ("http://mapserver-%s" % (os.getenv('CONTAINER_NAME', 'driver')), "MapServer"),
+    'TIMEZONE': (os.getenv('TIMEZONE', 'America/Sao_Paulo'), 'Time Zone', 'tzselect'),
+    "GEOSERVER": (os.getenv('GEOSERVER', ''), "GeoServer"),
+    'MAPILLARY_CLIENT_TOKEN': ("", _("Mapillary Client token")),
+    'MAPILLARY_CLIENT_ID': ("", _("Mapillary Client")),
+    'MAPILLARY_SECRET': ("", _("Mapillary secret")),
+    'MAPILLARY_TOKEN': ("", _("Mapillary token")),
+    'MAPILLARY_EXPIRES': ("", _("Mapillary expiry date")),
+    'NOMINATIM': ("", _("Nominatim key")),
+    'IRAP_AUTH_ID': ("", _("iRAP Auth ID")),
+    'IRAP_API_KEY': ("", _("iRAP API key")),
+    'IRAP_PRIVATE_KEY': ("", _("iRAP Private key")),
+    'OPENWEATHER_RAPID_KEY': ((os.getenv('OPENWEATHER_RAPID_KEY', '')), _("Open Weather API")),
+    'CURRENCY': ((os.getenv('CURRENCY', '')), _("Currency")),
+    'IDLE_TIMEOUT': ((os.getenv('IDLE_TIMEOUT', '')), _("Idle Timeout")),
+}
+CAPTCHA_OUTPUT_FORMAT = u'%(image)s %(hidden_field)s %(text_field)s'
+
+
+EMAIL_HOST = os.environ.get("EMAIL_HOST", 'localhost')
+EMAIL_PORT = os.environ.get('EMAIL_PORT', 25)
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 0) == '1'
+DEFAULT_FROM_EMAIL = os.environ.get(
+    'DEFAULT_FROM_EMAIL', 'vidasegura@vidasegura.cetsp.com.br')
+
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', None)
+if EMAIL_HOST_USER:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+DEFAULT_FROM_EMAIL = os.environ.get(
+    'DEFAULT_FROM_EMAIL', 'vidasegura@vidasegura.cetsp.com.br')
+
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', None)
+
+
+# start rich
+
+customColorPalette = [
+    {
+        'color': 'hsl(4, 90%, 58%)',
+        'label': 'Red'
+    },
+    {
+        'color': 'hsl(340, 82%, 52%)',
+        'label': 'Pink'
+    },
+    {
+        'color': 'hsl(291, 64%, 42%)',
+        'label': 'Purple'
+    },
+    {
+        'color': 'hsl(262, 52%, 47%)',
+        'label': 'Deep Purple'
+    },
+    {
+        'color': 'hsl(231, 48%, 48%)',
+        'label': 'Indigo'
+    },
+    {
+        'color': 'hsl(207, 90%, 54%)',
+        'label': 'Blue'
+    },
+]
+
+#CKEDITOR_5_CUSTOM_CSS = 'path_to.css'  # optional
+#CKEDITOR_5_FILE_STORAGE = "path_to_storage.CustomStorage"  # optional
+CKEDITOR_5_CONFIGS = {
+    'default': {
+        'toolbar': ['heading', '|', 'bold', 'italic', 'link',
+                    'bulletedList', 'numberedList', 'blockQuote', 'imageUpload', ],
+
+    },
+    'extends': {
+        'blockToolbar': [
+            'paragraph', 'heading1', 'heading2', 'heading3',
+            '|',
+            'bulletedList', 'numberedList',
+            '|',
+            'blockQuote',
+        ],
+        'toolbar': ['heading', '|', 'outdent', 'indent', '|', 'bold', 'italic', 'link', 'underline', 'strikethrough',
+        'code','subscript', 'superscript', 'highlight', '|', 'codeBlock', 'sourceEditing', 'insertImage', 
+         '|', 'alignment:left', 'alignment:right', 'alignment:center', 'alignment:justify',
+                    'bulletedList', 'numberedList', 'todoList', '|',  'blockQuote', 'imageUpload', '|',
+                    'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', 'mediaEmbed', 'removeFormat',
+                    'insertTable',],
+        'image': {
+            'toolbar': ['imageTextAlternative', '|', 'imageStyle:alignLeft',
+                        'imageStyle:alignRight', 'imageStyle:alignCenter', 'imageStyle:side',  '|'],
+            'styles': [
+                'full',
+                'side',
+                'alignLeft',
+                'alignRight',
+                'alignCenter',
+            ]
+
+        },
+        'table': {
+            'contentToolbar': [ 'tableColumn', 'tableRow', 'mergeTableCells',
+            'tableProperties', 'tableCellProperties' ],
+            'tableProperties': {
+                'borderColors': customColorPalette,
+                'backgroundColors': customColorPalette
+            },
+            'tableCellProperties': {
+                'borderColors': customColorPalette,
+                'backgroundColors': customColorPalette
+            }
+        },
+        'heading' : {
+            'options': [
+                { 'model': 'paragraph', 'title': 'Paragraph', 'class': 'ck-heading_paragraph' },
+                { 'model': 'heading1', 'view': 'h1', 'title': 'Heading 1', 'class': 'ck-heading_heading1' },
+                { 'model': 'heading2', 'view': 'h2', 'title': 'Heading 2', 'class': 'ck-heading_heading2' },
+                { 'model': 'heading3', 'view': 'h3', 'title': 'Heading 3', 'class': 'ck-heading_heading3' }
+            ]
+        }
+    },
+    'list': {
+        'properties': {
+            'styles': 'true',
+            'startIndex': 'true',
+            'reversed': 'true',
+        }
+    }
+}
+
+# end rich

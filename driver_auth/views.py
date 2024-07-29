@@ -1,12 +1,21 @@
 import logging
+import json
 from urllib.parse import quote
 from urllib.parse import parse_qs
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User, Group
+from data.models import Dictionary
 from django.http import JsonResponse
 from django.shortcuts import redirect
-
+from django import forms
+from captcha.fields import CaptchaField
+from captcha.models import CaptchaStore
+from django.http import HttpResponse
+from django.utils import timezone
+import hashlib
+import datetime
+import random
 from oauth2client import client, crypt
 from django.urls import reverse
 
@@ -17,7 +26,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.shortcuts import render 
+from django.shortcuts import render
 from constance import config
 #from mozilla_django_oidc import OIDCError
 #from djangooidc.oidc import OIDCError
@@ -37,8 +46,10 @@ ADMIN_COOKIE = 'AuthService.isAdmin'
 
 logger = logging.getLogger(__name__)
 
+
 def get_oidc_endpoint(request):
-    return render(request, "oidc.html") 
+    return render(request, "oidc.html")
+
 
 def authz_cb(request):
     """
@@ -66,13 +77,14 @@ def authz_cb(request):
                 response.set_cookie(CAN_WRITE_COOKIE, 'true')
             if is_admin(user):
                 response.set_cookie(ADMIN_COOKIE, 'true')
-            response.set_cookie(TOKEN_COOKIE, quote('"' + token.key + '"', safe=''))
+            response.set_cookie(TOKEN_COOKIE, quote(
+                '"' + token.key + '"', safe=''))
             return response
         else:
             # authentication failed
             # return 403 here instead of raising error
             return JsonResponse({'error': 'This login is not valid in this application'},
-                            status=status.HTTP_403_FORBIDDEN)
+                                status=status.HTTP_403_FORBIDDEN)
     except Exception as err:
         return JsonResponse({'error': str(err), 'callback': query}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -81,6 +93,10 @@ def authz_cb(request):
 def get_oidc_client_list(request):
     url = reverse('oidc_authentication_init')
     return JsonResponse({'clients': ["google.com"]})
+
+
+def get_google_client_id(request):
+    return JsonResponse({'clientId': config.GOOGLE_OAUTH_CLIENT_ID})
 
 
 class DriverSsoAuthToken(APIView):
@@ -110,7 +126,8 @@ def validate_oauth_token(token):
         # have a good token; get API token now
         user = authenticate(**idinfo)
         if user:
-            logger.debug('validated SSO token code for user: {email}'.format(email=user.email))
+            logger.debug(
+                'validated SSO token code for user: {email}'.format(email=user.email))
             token, created = Token.objects.get_or_create(user=user)
             return Response({'token': token.key, 'user': token.user_id})
         else:
@@ -147,44 +164,105 @@ class GroupViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = OptionalLimitOffsetPagination
 
+
 class DriverObtainAuthToken(ObtainAuthToken):
     @csrf_exempt
     def post(self, request):
         serializer = self.serializer_class(data=request.data,
                                            context={'request': request})
-        print("instanced serializer")   
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
-        o={
+        conf = {}
+        for k, v in settings.CONSTANCE_CONFIG.items():
+            conf[k] = getattr(config, k)
+        conf['LANGUAGES'] = []
+        for ds in Dictionary.objects.all():
+            conf['LANGUAGES'].append(
+                {"code": ds.language_code, "name": ds.name})
+        if hasattr(user, 'irap'):
+            conf['IRAP_KEYS'] = user.irap.keys
+            conf['IRAP_SETTINGS'] = user.irap.settings
+
+        o = {
             'token': token.key,
             'user': token.user_id,
             'username': user.username,
             'email': user.email,
             'groups': list(map(lambda x: x.name, list(user.groups.all())))[0],
-            'group':list(map(lambda x: x.id, list(user.groups.all()))),
+            'group': list(map(lambda x: x.id, list(user.groups.all()))),
             'groups_name': list(map(lambda x: x.name, list(user.groups.all()))),
-            'config': {
-                'MAP_CENTER_LATITUDE': config.MAP_CENTER_LATITUDE,
-                'MAP_CENTER_LONGITUDE': config.MAP_CENTER_LONGITUDE,
-                'MAP_ZOOM': config.MAP_ZOOM,
-                "PRIMARY_LABEL": config.PRIMARY_LABEL,
-            }
+            'config': conf,
         }
-        """
-        this.storage.set('groups', res[0].group[1]).subscribe(() = > {});
-
-        // localStorage.setItem('groups_name', res[0].group[0]);
-        this.storage.set('groups_name', res[0].group[0]).subscribe(() = > {});
-
-
-        localStorage.setItem('staff_status', res[0].staff_status)
-        localStorage.setItem('superuser_status', res[0].superuser_status)
-        // localStorage.setItem('email', res[0].email_address)
-        this.storage.set('email', res[0].email_address).subscribe(() = > {});
-        """
         return Response(o)
 
 
-obtain_auth_token = DriverObtainAuthToken.as_view()
+obtain_auth_token = csrf_exempt(DriverObtainAuthToken.as_view())
 sso_auth_token = DriverSsoAuthToken.as_view()
+
+
+def get_config(request):
+    conf = {}
+    for k, v in settings.CONSTANCE_CONFIG.items():
+        conf[k] = getattr(config, k)
+    conf['LANGUAGES'] = []
+    for ds in Dictionary.objects.all():
+        conf['LANGUAGES'].append({"code": ds.language_code, "name": ds.name})
+    for k in [
+        'MAPILLARY_CLIENT_TOKEN',
+        'MAPILLARY_SECRET',
+        'MAPILLARY_TOKEN',
+        # 'IRAP_API_KEY',
+        # 'IRAP_AUTH_ID',
+        'IRAP_PRIVATE_KEY',
+    ]:
+        if k in conf:
+            del conf[k]
+
+    return JsonResponse(conf)
+
+
+@csrf_exempt
+def user_create(request):
+    d = json.loads(request.body)
+    if not 'email' in d:
+        return JsonResponse({'username': 'LOGIN.EMAIL_NEEDED'}, status=status.HTTP_400_BAD_REQUEST)
+    if not 'captcha_0' in d or not 'captcha_1' in d:
+        return JsonResponse({'captcha_1': 'LOGIN.CAPTCHA_MISSING'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        CaptchaStore.objects.get(response=d['captcha_1'].lower(
+        ), hashkey=d['captcha_0'], expiration__gt=timezone.now()).delete()
+    except CaptchaStore.DoesNotExist:
+        return JsonResponse({'captcha_1': 'LOGIN.CAPTCHA_ERROR'}, status=status.HTTP_400_BAD_REQUEST)
+
+    chars = hashlib.sha1()
+    chars.update(("%s%s" % (datetime.datetime.now(),
+                 str(random.random()*99999))).encode('utf8'))
+    d['groups'] = []
+    d['username'] = d['email']
+    d['password'] = chars.hexdigest()
+
+    serialized = UserSerializer(data=d, context={"request": request})
+    if serialized.is_valid():
+        #my_group = Group.objects.get(name='analyst')
+        u = serialized.save()
+        # my_group.user_set.add(u) unfortunately thats too dangerous
+        return JsonResponse(serialized.data, status=status.HTTP_201_CREATED)
+    else:
+        return JsonResponse(serialized.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@csrf_exempt
+def signup(request):
+    if request.POST:
+        nop
+    else:
+        form = CaptchaSignupForm()
+        r = HttpResponse(form.as_p())
+
+        return r
+
+
+class CaptchaSignupForm(forms.Form):
+    email = forms.CharField()
+    captcha = CaptchaField()

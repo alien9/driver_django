@@ -3149,7 +3149,6 @@ function() {
                 })
             }),
             j.getOptions().then(function(a) {
-                console.log(a);
                 r.rowColAggs = a
             })
         }
@@ -4831,7 +4830,6 @@ function() {
                 scope: "openid",
                 flowName:"GeneralOAuthFlow"
             };
-            console.log(new URLSearchParams(params).toString());
             e.location.href = "/oidc/authenticate/"
         }
         ;

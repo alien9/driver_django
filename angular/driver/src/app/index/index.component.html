@@ -1,0 +1,169 @@
+<app-navbar *ngIf="recordSchema && filter" [locale]="locale" [recordSchema]=recordSchema class=navbar-fixed
+    [config]=config [filter]=filter [filterObject]=filterObject [boundaries]=boundaries
+    (boundaryChange)=setBoundary($event) (boundaryPolygonChange)=setBoundaryPolygon($event) [boundary]=boundary
+    [boundaryPolygons]=boundaryPolygons [boundaryPolygon]=boundaryPolygon (filterChange)=setFilter($event)
+    (stateChange)=selectState($event) (reportChange)=setReport($event) [stateSelected]=state (goBack)=goBack($event)
+    (iRapChange)=setIrap($event) [iRapData]=iRapData [irapDataset]=irapDataset (newRecord)=startRecord($event)
+    [inserting]=listening (startDownload)=download($event) [canWrite]="canWrite"
+    (startGeography)="startGeometry(geoviewpoint)" (aboutCaller)="about(aboutview)">
+</app-navbar>
+<app-list *ngIf="state=='List'" [filter]=filter [listPage]=listPage (setListPage)=setListPage($event)
+    [boundary_polygon_uuid]=boundary_polygon_uuid [recordSchema]=recordSchema [recordList]=recordList
+    (viewRecord)="viewRecord(viewpoint, $event)"></app-list>
+<app-map *ngIf="state=='Map'" (setDrawing)=setDrawing($event) [fitBounds]=fitBounds [options]=options [layers]=layers
+    [layersControl]=layersControl [boundary_polygon_uuid]=boundary_polygon_uuid (map)=setMap($event)
+    (onSetPolygon)=setPolygon($event) [polygon]=polygon [mapListening]=listening
+    (newRecord)=newRecord($event,viewpoint)></app-map>
+
+<app-legend [config]="config" [legends]=legends [subtitles]=subtitles
+    *ngIf=legends.length||subtitles.length></app-legend>
+<app-counter (iRapCenterChange)="iRapCenter($event)" (iRapChange)="drawIrap($event)" [irapLayer]=iraplayer
+    [config]="config" [counts]=counts [filter]="filter" [fields]="filterAsText"
+    *ngIf="counts && state=='Map'"></app-counter>
+
+<button (click)=mapClick(viewpoint) [hidden]="true" id="map-popup-button"></button>
+<ng-template #viewpoint let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title">{{'Record' | translate}}
+            <button type="button" class="btn float-left mx-2" aria-label="Edit" (click)="editRecord()"
+                *ngIf="(!editing) && canWrite">
+                <i-bs name="pencil-square"></i-bs>
+            </button>
+        </h4>
+        <button type="button" class="close" aria-label="Close" (click)="closeRecord(modal)">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <app-input [config]=config *ngIf=record [locale]="locale" [roadmap_uuid]="roadmap_uuid" [record]=record [boundaries]="boundaries"
+        [recordSchema]=recordSchema [editing]=editing (mapillaryId)="setMapillary($event)" [modal]=modal
+        (reloadRecords)="reloadRecords($event)" (filterExpand)=expandFilter($event)>
+    </app-input>
+</ng-template>
+
+<div id="popup-content">
+    <h5>-name-</h5>
+    <!--p>{{'Cost'| translate}}: -cost-</p-->
+    <p>{{'Count'| translate}}: -total-</p>
+</div>
+<div id="record-popup-content">
+    <h3>-date-</h3>
+    <p>-location-</p>
+    <input id="record-uuid" value="-uuid-" type=hidden>
+    <a href="#" id="open-record-popup" (click)=popClick($event)>{{'View'|translate}}</a>
+</div>
+<div id="floating-commands" style="position:absolute;bottom:0;right:0;z-index:5000">
+    <form class="form-inline my-2 my-lg-0 p-4 d-sm-block d-lg-none">
+        <button (click)=startLanguageSelector(langselect) class="btn btn-outline-secondary mx-2 clean" type="submit"
+            ngbTooltip="{{'Languages'|translate}}">
+            <i-bs name="gear-fill"></i-bs>
+        </button>
+        <button (click)=startFilters() class="btn btn-outline-secondary mx-2 clean" type="submit"
+            ngbTooltip="{{'Filters'|translate}}">
+            <i-bs name="funnel"></i-bs>
+        </button>
+        <button (click)=startGeometry(geoviewpoint) class="btn btn-outline-secondary mx-2 clean" type="submit"
+            ngbTooltip="{{'Geometry'|translate}}">
+            <i-bs name="globe"></i-bs>
+        </button>
+        <label *ngIf="state=='Map'" class="btn btn-outline-secondary mx-2 clean" ngbTooltip="{{'Create Record'|translate}}"
+            ngbButtonLabel>
+            <input type="checkbox" ngbButton [(ngModel)]="listening" [ngModelOptions]="{standalone: true}"
+                (change)=setMapCursor($event)>
+            <i-bs name="plus-square-fill"></i-bs>
+        </label>
+    </form>
+</div>
+
+<ng-template #langselect let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title">{{'Languages'|translate}}</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="form-group">
+            <ul class="list-group list-group-flush" *ngIf="config['LANGUAGES'].length>1">
+                <li class="list-group-item" *ngFor="let l of config['LANGUAGES']; let i=index">
+                    <div>
+                        <input class="form-check-input" [(ngModel)]="locale" (change)="setLanguage(l['code'])"
+                            type="radio" name="language" id="lannguageSelector{{i}}" [value]="l['code']"> &nbsp;
+                        <label class="form-check-label" for="lannguageSelector{{i}}">
+                            {{l['name']|translate}}
+                        </label>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="form-group d-flex justify-content-center">
+            <button (click)="logout()" type="button" class="btn btn-light">{{"Log Out"|translate}}</button>
+
+        </div>
+    </div>
+</ng-template>
+
+
+<ng-template #aboutview let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title">{{'About DRIVER'|translate}}</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="form-group" [innerHTML]="about_content">
+        </div>
+        <div class="form-group d-flex justify-content-center">
+            <button (click)="modal.close()" type="button" class="btn btn-light">{{"Ok"|translate}}</button>
+        </div>
+    </div>
+</ng-template>
+
+
+<ng-template #geoviewpoint let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title">{{'Geometry'|translate}}</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="form-group">
+            <div *ngFor="let b of boundaries" class="mt-2">
+                <label for="dpf">{{b.label | translate}}</label>
+                <div class="mt-2">
+                    <select [(ngModel)]="selectedBoundaryPolygon[b.uuid]" (change)="selectPolygon($event, b.uuid)"
+                        name="{{b.uuid}}" class="form-select form-select-lg">
+                        <option [value]="null">{{'All'|translate}}</option>
+                        <option [value]="null" *ngIf="!boundaryPolygonsObject[b.uuid].length">
+                            {{'Searching'|translate}}...</option>
+                        <option [value]="c.uuid" *ngFor="let c of boundaryPolygonsObject[b.uuid]">
+                            {{getBoundaryPolygonLabel(c)}}</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary"
+            (click)="applyGeometry(modal);">{{'Apply'|translate}}</button>
+        <button type="button" class="btn btn-outline-secondary"
+            (click)="modal.close('Close click')">{{'Close'|translate}}</button>
+    </div>
+</ng-template>
+
+
+
+<app-report *ngIf="state=='Reports'" [locale]="locale" [recordSchema]=recordSchema [boundaries]=boundaries
+    [report]=report [config]=config (reloadReport)=reloadReport($event)></app-report>
+<app-charts *ngIf="state=='Charts'" [recordSchema]=recordSchema [boundaries]=boundaries [reportFilters]=reportFilters
+    [filter]=filter [boundary_polygon_uuid]=boundary_polygon_uuid [weekdays]=weekdays></app-charts>
+<app-duplicate *ngIf="state=='Duplicates'" [locale]="locale" [recordTypeUuid]="recordtype_uuid"
+    [recordSchema]=recordSchema></app-duplicate>
+<button *ngIf="mapillary_id" type="button" class="close mapillary-close" aria-label="Close" (click)="mapillary_id=null">
+    <span aria-hidden="true">&times;</span>
+</button>
+<iframe class="mapillaryPop" *ngIf="mapillary_id"
+    [src]="'https://www.mapillary.com/embed?image_key='+mapillary_id+ '&style=photo' | safe : 'resourceUrl'"
+    height="100%" width="100%" frameborder="0">
+</iframe>

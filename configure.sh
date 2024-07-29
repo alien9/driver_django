@@ -1,19 +1,14 @@
 #!/bin/bash
 
-if [[ ! -d "nginx" ]]; then
-     mkdir nginx
-fi
+docker-compose up -d
 if [[ ! -d "zip" ]]; then
      mkdir zip
 fi
-if [[ ! -d "postgres_data" ]]; then
-     mkdir postgres_data
-     docker-compose restart postgres
-fi
+
 while read line; do export "$line"; done < .env
-echo "START"
 
 while read line; do echo "$line"; done < .env
+
 
 echo ${CONTAINER_NAME}
 
@@ -27,34 +22,24 @@ CELERY_HOST="localhost"
 if [ "${EXISTE_CELERY}" != "" ]; then
      CELERY_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' driver-celery-${CONTAINER_NAME})
 fi
-WINDSHAFT_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' windshaft-${CONTAINER_NAME})
-if [ "${WINDSHAFT_HOST}" == "" ]; then
-     echo "Windshaft did not start."
-     exit
+if [ "${PROTOCOL}" == "" ]; then
+     PROTOCOL='http'
+fi
+if [ -d "static" ]; then
+     sudo rm -rf static/*
 fi
 
-
-LANGUAGES=$(tr \' " " <<<"$LANGUAGES")
-sed -e "s/PROTOCOL/${PROTOCOL}/g" \
-     -e "s/HOST_NAME/${HOST_NAME}/g" \
-     -e "s/NOMINATIM/${NOMINATIM}/g" \
-     -e "s/PRIMARYLABEL/${PRIMARYLABEL}/g" \
-     -e "s/SECONDARYLABEL/${SECONDARYLABEL}/g" \
-     -e "s/CLIENTID/${CLIENTID}/g" \
-     -e "s/COUNTRY/${COUNTRY}/g" \
-     -e "s/CENTER/${CENTER}/g" \
-     -e "s/ZOOM/${ZOOM}/g" \
-     -e "s/LANGUAGES/${LANGUAGES}/g" \
-scripts.template.js > web/dist/scripts/scripts.698e6068.js
-
-cp driver-app.conf driver.conf
-sed -i -e "s/HOST_NAME/${HOST_NAME}/g" \
-	-e "s,    root \/opt\/web\/dist,    root $STATIC_ROOT\/web\/dist,g" \
-	-e "s,STATIC_ROOT,$STATIC_ROOT,g" \
--e "s/driver-django/${DJANGO_HOST}/g" \
--e "s/driver-celery/${CELERY_HOST}/g" \
--e "s/windshaft/$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' windshaft-${CONTAINER_NAME})/g" \
-driver.conf
+STATIC_ROOT=$(pwd)
+if [[ ! -f driver-${CONTAINER_NAME}.conf ]]; then
+     cp driver.conf driver-${CONTAINER_NAME}.conf
+fi
+sed -i -e "s/\s[^ ]*\s*#HOST_NAME$/ ${HOST_NAME}; #HOST_NAME/g" \
+-e "s,\s[^ ]*\s*#STATIC_ROOT$, ${STATIC_ROOT}; #STATIC_ROOT,g" \
+-e "s,\s[^ ]*\s*#STATIC_ROOT_MEDIA$, ${STATIC_ROOT}/zip/; #STATIC_ROOT_MEDIA,g" \
+-e "s/http.*#driver-django$/http:\/\/${DJANGO_HOST}:4000; #driver-django/g" \
+-e "s,\s[^ ]*\s*#ALPHA_ROOT$, ${STATIC_ROOT}/static/dist/; #ALPHA_ROOT,g" \
+-e "s,\s[^ ]*\s*#FAVICON$, ${STATIC_ROOT}/static/dist/favicon.ico; #FAVICON,g" \
+driver-${CONTAINER_NAME}.conf
 
 #docker exec driver-nginx sed -i -e "s/HOST_NAME/${HOST_NAME}/g" /etc/nginx/conf.d/driver-app.conf
 
@@ -65,25 +50,33 @@ else
      echo "HTTPS"
  #    docker exec driver-nginx certbot
 fi
-if [ "${EXISTE_DJANGO}" != "" ]; then
+[ -e "./static/*" ] && sudo rm ./static/*
+if [ "${EXISTE_DJANGO}" != "" ]; then 
+     [ -e "${STATIC_ROOT}/static/*" ] && sudo rm -rf ${STATIC_ROOT}/static/*
      docker exec "driver-django-${CONTAINER_NAME}" ./manage.py collectstatic --noinput
      docker exec "driver-django-${CONTAINER_NAME}" ./manage.py migrate
-     while true; do
-          read -p "Create superuser?" yn
-          case $yn in
-               [Yy]* ) docker exec -it $(docker inspect -f '{{.ID}}' driver-django-${CONTAINER_NAME}) python manage.py createsuperuser; break;;
-               [Nn]* ) break;;
-               * ) echo "Please answer yes or no.";;
-          esac
-     done
-
-
+#     while true; do
+#          read -p "Create superuser?" yn
+#          case $yn in
+#               [Yy]* ) docker exec -it $(docker inspect -f '{{.ID}}' driver-django-${CONTAINER_NAME}) python manage.py createsuperuser; break;;
+#               [Nn]* ) break;;
+#               * ) echo "Please answer yes or no.";;
+#          esac
+#     done
+     docker-compose up -d
 fi
-if [ $STATIC_ROOT != $WINDSHAFT_FILES ]; then
-     sudo cp -r web "$STATIC_ROOT/"
-     sudo cp -r static "$STATIC_ROOT/"
+
+[ -e "./mapserver/*" ] && sudo rm ./mapserver/*
+
+if [ -h "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf" ]; then
+     sudo rm "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
+else
+     if [ $PROTOCOL == "http" ]
+     then
+          echo "Remember to run certbot now."
+     fi
 fi
-sudo mv driver.conf /etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf
+sudo ln -s "$(pwd)/driver-${CONTAINER_NAME}.conf" "/etc/nginx/sites-enabled/driver-${CONTAINER_NAME}.conf"
 sudo service nginx restart
-echo "Remember to run certbot now."
+
 #docker-compose restart driver-nginx 

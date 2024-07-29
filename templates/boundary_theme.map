@@ -1,0 +1,80 @@
+MAP
+    DEBUG {{debug}}
+    IMAGECOLOR 0 255 0
+    OUTPUTFORMAT
+        NAME "PNG24"
+        DRIVER 'GD/PNG'
+        MIMETYPE 'image/png'
+        IMAGEMODE RGBA
+        EXTENSION 'png'
+    END
+
+    IMAGETYPE      "PNG24"
+    EXTENT -20037508.3427892480 -20037508.3427892480 20037508.3427892480 20037508.3427892480
+    SIZE           256 256
+
+    PROJECTION
+        "init=epsg:3857"
+    END
+    WEB
+        METADATA 
+            WMS_ENABLE_REQUEST "*" 
+            "wms_srs" "EPSG:3857 EPSG:4326"
+            "wms_title" "DRIVER"
+            "wms_name" "Driver Maps"
+            "wms_server_version" "1.1.1"
+            "wms_format" "image/png"
+            "tile_map_edge_buffer" "20"
+            "tile_metatile_level" "0"
+        END
+    END 
+    LAYER
+        NAME        "border"
+        DATA        "geom from (select geom, uuid from grout_boundarypolygon where st_intersects(geom, !BOX!) AND boundary_id='{{boundary_id}}') c using unique uuid using srid=4326"
+        CONNECTIONTYPE  POSTGIS 
+        CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
+        
+        TYPE POLYGON
+        PROJECTION
+            "init=epsg:4326"
+        END
+        CLASS
+            STYLE
+                WIDTH 1
+                OUTLINECOLOR 200 200 200
+                OPACITY 50
+            END
+        END
+    END
+    LAYER
+        NAME        "theme"
+        DATA        "geom from ({{query|safe}})as q using unique uuid using srid=4326"
+        CONNECTIONTYPE  POSTGIS
+        CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
+        
+        TYPE POLYGON
+        PROJECTION
+            "init=epsg:4326"
+        END
+        {% for class in classes %}
+        CLASS
+            EXPRESSION ([c]>={{class.min}} AND [c]<={{class.max}})
+            NAME "{{class.name}}"
+            STYLE
+                WIDTH 1
+                OPACITY 50
+                COLOR {{class.color}}
+            END
+        END
+        {% endfor %}
+    END
+    SYMBOL
+        NAME "circlef"
+        TYPE ellipse
+        FILLED true
+        POINTS
+            10 10
+        END # POINTS
+        TRANSPARENT 60
+    END # SYMBOL
+END

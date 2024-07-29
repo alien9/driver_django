@@ -1,0 +1,11 @@
+.scrollable-container {
+    max-height: calc(100% - 56px - 54px);
+    overflow: hidden auto;
+}
+
+.list-footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background-color: white;
+}

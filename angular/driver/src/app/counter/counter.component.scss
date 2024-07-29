@@ -1,0 +1,31 @@
+div.counter {
+    background-color: white;
+    position: absolute;
+    left: 15px;
+    z-index: 1001;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.filter {
+    font-size: small;
+}
+
+.filter-details {
+    cursor: pointer;
+}
+.iraplink{
+    cursor:pointer;
+}
+@media (max-width: 994px) {
+    .counter {
+        bottom:96px !important;
+    }
+  }
+  @media (min-width: 995px) {
+    .counter {
+        bottom:15px !important;
+    }
+  }
+  

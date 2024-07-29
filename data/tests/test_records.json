@@ -1,0 +1,498 @@
+{
+    "count": 10,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "uuid": "f90e243f-985e-4849-ae9f-31d4ebcd45ed",
+            "data": {
+                "driverVictim": [],
+                "driverVehicle": [
+                    {
+                        "Vehicle": "Motorcycle",
+                        "_localId": "db8ab9ed-b76e-4baa-a9c1-1682c9a3e22d",
+                        "Vehicle type": "Motorcycle"
+                    }
+                ],
+                "driverAccidentDetails": {
+                    "_localId": "11e4d75d-af53-4801-ac60-710acecbded9",
+                    "Accident type": "Run over"
+                }
+            },
+            "modified_by": "barufi@gmail.com",
+            "created": "2022-01-25T09:49:23.791999-04:00",
+            "modified": "2022-02-01T15:16:44.945093-04:00",
+            "archived": false,
+            "occurred_from": "2021-12-20T17:23:00.850000-04:00",
+            "occurred_to": "2021-12-20T17:23:00.850000-04:00",
+            "geom": {
+                "type": "Point",
+                "coordinates": [
+                    -46.716694235801704,
+                    -23.65206218376903
+                ]
+            },
+            "location_text": "Avenida Mário Lopes Leão, São Paulo",
+            "weather": null,
+            "light": "day",
+            "city": null,
+            "city_district": null,
+            "county": null,
+            "neighborhood": null,
+            "road": null,
+            "state": null,
+            "mapillary": null,
+            "schema": "205348bf-95f6-4a59-82e1-1945cd32c2ca",
+            "segment": []
+        },
+        {
+            "uuid": "ddd67270-e45e-4dc2-bc0e-56652f422e7c",
+            "data": {
+                "driverVictim": [
+                    {
+                        "Age": 10,
+                        "Vehicle": "87336651-d807-407f-b8c8-a57b2d4ec031",
+                        "_localId": "59198f02-deb2-4db4-95d9-f45b4d3e5225",
+                        "Condition": "Dead"
+                    },
+                    {
+                        "Age": 30,
+                        "Vehicle": "87336651-d807-407f-b8c8-a57b2d4ec031",
+                        "_localId": "9d0190b7-bd25-4605-9c24-109856e84d7a",
+                        "Condition": "Injured"
+                    },
+                    {
+                        "Age": 33,
+                        "Vehicle": "f2764a2d-fe52-42a0-b351-9ded4d93433c",
+                        "_localId": "78405d0d-9008-4cdb-a324-91715d0b6568",
+                        "Condition": "Dead",
+                        "Victim type": "Conductor"
+                    }
+                ],
+                "driverVehicle": [
+                    {
+                        "Vehicle": "Bus",
+                        "_localId": "87336651-d807-407f-b8c8-a57b2d4ec031",
+                        "Vehicle type": "Bus"
+                    },
+                    {
+                        "Vehicle": "Motorcycle",
+                        "_localId": "f2764a2d-fe52-42a0-b351-9ded4d93433c",
+                        "Vehicle type": "Motorcycle"
+                    }
+                ],
+                "driverAccidentDetails": {
+                    "Dead": 0,
+                    "Address": "",
+                    "Injured": 0,
+                    "Victims": 0,
+                    "Distrito": "",
+                    "Severity": "Fatal victims",
+                    "Vehicles": 0,
+                    "_localId": "a6298a24-da19-49a7-95bb-18746c2d0360",
+                    "acidente_id": "",
+                    "Accident type": "Collision",
+                    "Subprefeitura": ""
+                }
+            },
+            "modified_by": "barufi@gmail.com",
+            "created": "2021-12-20T17:23:48.793515-04:00",
+            "modified": "2022-01-13T08:15:02.892541-04:00",
+            "archived": false,
+            "occurred_from": "2021-12-20T17:23:00.772000-04:00",
+            "occurred_to": "2021-12-20T17:23:00.772000-04:00",
+            "geom": {
+                "type": "Point",
+                "coordinates": [
+                    -46.71661376953126,
+                    -23.652072011367167
+                ]
+            },
+            "location_text": "Avenida Mário Lopes Leão, São Paulo",
+            "weather": null,
+            "light": "dusk",
+            "city": null,
+            "city_district": null,
+            "county": null,
+            "neighborhood": null,
+            "road": null,
+            "state": null,
+            "schema": "205348bf-95f6-4a59-82e1-1945cd32c2ca",
+            "segment": []
+        },
+        {
+            "uuid": "606e60d8-d9a9-48d9-9f0a-f5d03721a79d",
+            "data": {
+                "driverVictim": [
+                    {
+                        "Age": 100,
+                        "Vehicle": "dcc38c75-ad40-4cb3-b2ae-2ffdd4869885",
+                        "_localId": "1746f41c-f002-4879-a0e4-9a7a2e42edb0",
+                        "Condition": "Injured",
+                        "Victim type": "Passenger"
+                    }
+                ],
+                "driverVehicle": [
+                    {
+                        "_localId": "dcc38c75-ad40-4cb3-b2ae-2ffdd4869885",
+                        "Vehicle type": "Bus"
+                    },
+                    {
+                        "Vehicle": "Motorcycle",
+                        "_localId": "5648b4c5-01a3-42e1-8ecf-c479a69636aa",
+                        "Vehicle type": "Motorcycle"
+                    }
+                ],
+                "driverAccidentDetails": {
+                    "Dead": 0,
+                    "Address": "",
+                    "Injured": 0,
+                    "Victims": 0,
+                    "Distrito": "",
+                    "Vehicles": 0,
+                    "_localId": "d13dd47c-3d35-4ada-bfdd-2b986f69ddf9",
+                    "acidente_id": "",
+                    "Subprefeitura": ""
+                }
+            },
+            "modified_by": "barufi@gmail.com",
+            "created": "2021-12-14T15:52:23.454062-04:00",
+            "modified": "2022-02-01T15:17:17.536580-04:00",
+            "archived": false,
+            "occurred_from": "2021-12-14T15:50:00.448000-04:00",
+            "occurred_to": "2021-12-14T15:50:00.448000-04:00",
+            "geom": {
+                "type": "Point",
+                "coordinates": [
+                    -46.66667103767395,
+                    -23.584991306963996
+                ]
+            },
+            "location_text": "Rua Feliciano Maia, São Paulo",
+            "weather": null,
+            "light": "day",
+            "city": null,
+            "city_district": null,
+            "county": null,
+            "neighborhood": null,
+            "road": null,
+            "state": null,
+            "schema": "205348bf-95f6-4a59-82e1-1945cd32c2ca",
+            "segment": []
+        },
+        {
+            "uuid": "3d411e39-80f6-49b5-b8ae-390c8d3565c5",
+            "data": {
+                "driverVictim": [],
+                "driverVehicle": [
+                    {
+                        "_localId": "afc5432b-ea11-4bfb-a83e-c4b9ac30d6a9",
+                        "Vehicle type": "Motorcycle"
+                    },
+                    {
+                        "_localId": "32a84a6c-8740-417d-9b0f-701daa956bc3",
+                        "Vehicle type": "Motorcycle"
+                    }
+                ],
+                "driverAccidentDetails": {
+                    "Severity": "Injured victims",
+                    "_localId": "42ca3d19-8917-469b-9994-93f264a7d047",
+                    "Accident type": "Shock"
+                }
+            },
+            "modified_by": "barufi@gmail.com",
+            "created": "2021-12-13T16:22:24.739802-04:00",
+            "modified": "2022-02-01T15:17:42.005492-04:00",
+            "archived": false,
+            "occurred_from": "2021-12-13T16:22:00.902000-04:00",
+            "occurred_to": "2021-12-13T16:22:00.902000-04:00",
+            "geom": {
+                "type": "Point",
+                "coordinates": [
+                    -46.62550449371338,
+                    -23.582906772783502
+                ]
+            },
+            "location_text": "Rua Luis Delfino, São Paulo",
+            "weather": null,
+            "light": "day",
+            "city": null,
+            "city_district": null,
+            "county": null,
+            "neighborhood": null,
+            "road": null,
+            "state": null,
+            "schema": "205348bf-95f6-4a59-82e1-1945cd32c2ca",
+            "segment": []
+        },
+        {
+            "uuid": "8351e505-e2bf-407e-b5ab-ab1a519a369d",
+            "data": {
+                "driverVictim": [],
+                "driverVehicle": [],
+                "driverAccidentDetails": {
+                    "Dead": 0,
+                    "Address": "Rua Agostinho Asquini",
+                    "Injured": 0,
+                    "Victims": 0,
+                    "Accident": "Fall motorcycle / bicycle",
+                    "Distrito": "",
+                    "Severity": "Injured victims",
+                    "Vehicles": 0,
+                    "_localId": "f7869003-9b9e-4d4a-993e-339856b82d91",
+                    "acidente_id": "",
+                    "Accident type": "Shock",
+                    "Subprefeitura": ""
+                }
+            },
+            "modified_by": "barufi@gmail.com",
+            "created": "2021-12-13T16:12:10.616983-04:00",
+            "modified": "2021-12-13T16:12:10.617005-04:00",
+            "archived": false,
+            "occurred_from": "2021-12-13T13:11:46.823000-04:00",
+            "occurred_to": "2021-12-13T13:11:46.823000-04:00",
+            "geom": {
+                "type": "Point",
+                "coordinates": [
+                    -11.454620361328125,
+                    8.928487062665504
+                ]
+            },
+            "location_text": "Balea, Koinadugu District, Northern Province, Sierra Leone",
+            "weather": null,
+            "light": "day",
+            "city": null,
+            "city_district": null,
+            "county": null,
+            "neighborhood": null,
+            "road": null,
+            "state": "Koinadugu District",
+            "mapillary": null,
+            "schema": "205348bf-95f6-4a59-82e1-1945cd32c2ca",
+            "segment": []
+        },
+        {
+            "uuid": "c6b16d7c-ecbe-43b4-ac2e-262c9c56998b",
+            "data": {
+                "driverVictim": [],
+                "driverVehicle": [],
+                "driverAccidentDetails": {
+                    "Dead": 0,
+                    "Address": "",
+                    "Injured": 0,
+                    "Victims": 0,
+                    "Distrito": "",
+                    "Severity": "Injured victims",
+                    "Vehicles": 0,
+                    "_localId": "9d292411-c726-4dc8-a085-1fb16687d953",
+                    "acidente_id": "",
+                    "Accident type": "Collision",
+                    "Subprefeitura": ""
+                }
+            },
+            "modified_by": "barufi@gmail.com",
+            "created": "2021-12-08T09:58:40.032948-04:00",
+            "modified": "2021-12-20T11:57:36.689052-04:00",
+            "archived": false,
+            "occurred_from": "2021-12-08T06:58:00.561000-04:00",
+            "occurred_to": "2021-12-08T06:58:00.561000-04:00",
+            "geom": {
+                "type": "Point",
+                "coordinates": [
+                    -46.677217483520515,
+                    -23.54945137198236
+                ]
+            },
+            "location_text": "Avenida Paulo VI, São Paulo",
+            "weather": null,
+            "light": "day",
+            "city": "São Paulo",
+            "city_district": "Perdizes",
+            "county": "Região Imediata de São Paulo",
+            "neighborhood": null,
+            "road": "Avenida Paulo VI",
+            "state": "SP",
+            "schema": "205348bf-95f6-4a59-82e1-1945cd32c2ca",
+            "segment": []
+        },
+        {
+            "uuid": "d7004af4-8eee-46ab-b4d1-e3296ae32b84",
+            "data": {
+                "driverVictim": [],
+                "driverVehicle": [],
+                "driverAccidentDetails": {
+                    "_localId": "961c8f35-7d20-4683-8b00-09341d5cab9c",
+                    "Accident type": "Collision"
+                }
+            },
+            "modified_by": "barufi@gmail.com",
+            "created": "2021-12-07T16:51:17.091833-04:00",
+            "modified": "2021-12-08T09:11:15.640448-04:00",
+            "archived": false,
+            "occurred_from": "2021-12-07T16:50:48.625000-04:00",
+            "occurred_to": "2021-12-07T16:50:48.625000-04:00",
+            "geom": {
+                "type": "Point",
+                "coordinates": [
+                    -46.69946908950806,
+                    -23.49790434998449
+                ]
+            },
+            "location_text": "Rua Francisco Pedroso, Nossa Senhora do Ó, Freguesia do Ó, São Paulo, Região Imediata de São Paulo, RMSP, Região Intermediária de São Paulo, SP, Região Sudeste, 02960-020, Brasil",
+            "weather": null,
+            "light": "Day",
+            "city": null,
+            "city_district": null,
+            "county": null,
+            "neighborhood": null,
+            "road": null,
+            "state": null,
+            "mapillary": null,
+            "schema": "205348bf-95f6-4a59-82e1-1945cd32c2ca",
+            "segment": []
+        },
+        {
+            "uuid": "b4b92af5-b7f3-437e-bfa4-88fe6b353019",
+            "data": {
+                "driverVictim": [],
+                "driverVehicle": [],
+                "driverAccidentDetails": {
+                    "_localId": "961c8f35-7d20-4683-8b00-09341d5cab9c",
+                    "Accident type": "Shock"
+                }
+            },
+            "modified_by": "barufi@gmail.com",
+            "created": "2021-12-17T10:11:23.598297-04:00",
+            "modified": "2021-12-20T18:49:28.312856-04:00",
+            "archived": false,
+            "occurred_from": "2021-12-07T16:50:00.188000-04:00",
+            "occurred_to": "2021-12-07T16:50:00.188000-04:00",
+            "geom": {
+                "type": "Point",
+                "coordinates": [
+                    -46.69430851936341,
+                    -23.499567154773164
+                ]
+            },
+            "location_text": "Rua José Domingos Garcia, São Paulo",
+            "weather": null,
+            "light": "Day",
+            "city": null,
+            "city_district": null,
+            "county": null,
+            "neighborhood": null,
+            "road": null,
+            "state": null,
+            "schema": "205348bf-95f6-4a59-82e1-1945cd32c2ca",
+            "segment": []
+        },
+        {
+            "uuid": "b7a546eb-85bc-464f-b1b5-ecd18d8ced26",
+            "data": {
+                "driverVictim": [
+                    {
+                        "Age": 1,
+                        "Vehicle": "",
+                        "_localId": "c2c0372d-0bcc-40cd-b4a6-551d64d9289e",
+                        "Condition": "Dead"
+                    }
+                ],
+                "driverVehicle": [],
+                "driverAccidentDetails": {
+                    "Dead": 0,
+                    "Address": "",
+                    "Injured": 0,
+                    "Victims": 0,
+                    "Distrito": "",
+                    "Vehicles": 0,
+                    "_localId": "7cf4af90-1b0b-45a8-905a-3850bc063bf0",
+                    "acidente_id": "",
+                    "Accident type": "Others",
+                    "Subprefeitura": ""
+                }
+            },
+            "modified_by": "barufi@gmail.com",
+            "created": "2021-12-17T10:42:58.340842-04:00",
+            "modified": "2022-01-12T10:23:23.359302-04:00",
+            "archived": false,
+            "occurred_from": "2021-12-07T10:40:00-04:00",
+            "occurred_to": "2021-12-07T10:40:00-04:00",
+            "geom": {
+                "type": "Point",
+                "coordinates": [
+                    -46.64245605468751,
+                    -23.531254824436434
+                ]
+            },
+            "location_text": "Alameda Cleveland, São Paulo",
+            "weather": null,
+            "light": "day",
+            "city": null,
+            "city_district": null,
+            "county": null,
+            "neighborhood": null,
+            "road": null,
+            "state": null,
+            "schema": "205348bf-95f6-4a59-82e1-1945cd32c2ca",
+            "segment": []
+        },
+        {
+            "uuid": "d5dc2fb2-e435-497f-a52c-ac090bef8608",
+            "data": {
+                "driverVictim": [
+                    {
+                        "Age": 44,
+                        "Vehicle": "128a28b5-8ff6-46c4-8c2d-4465f44dd61b",
+                        "_localId": "c15952a3-f4f6-4eec-8f4e-abd5d7b3e02d",
+                        "Condition": "Dead",
+                        "Victim type": "Conductor"
+                    }
+                ],
+                "driverVehicle": [
+                    {
+                        "Vehicle": "Motorcycle",
+                        "_localId": "128a28b5-8ff6-46c4-8c2d-4465f44dd61b",
+                        "Vehicle type": "Motorcycle"
+                    }
+                ],
+                "driverAccidentDetails": {
+                    "Dead": 0,
+                    "Address": "",
+                    "Injured": 0,
+                    "Victims": 0,
+                    "Distrito": "",
+                    "Severity": "Fatal victims",
+                    "Vehicles": 0,
+                    "_localId": "01c46f23-c2c9-48d6-a36d-b8b5fae0ea01",
+                    "acidente_id": "",
+                    "Accident type": "Collision",
+                    "Subprefeitura": ""
+                }
+            },
+            "modified_by": "barufi@gmail.com",
+            "created": "2021-12-08T09:59:16.379915-04:00",
+            "modified": "2022-01-13T08:19:30.484142-04:00",
+            "archived": false,
+            "occurred_from": "2021-12-06T20:58:00.354000-04:00",
+            "occurred_to": "2021-12-06T20:58:00.354000-04:00",
+            "geom": {
+                "type": "Point",
+                "coordinates": [
+                    -46.702945232391365,
+                    -23.545054923334828
+                ]
+            },
+            "location_text": "Rua João Batista Leme da Silva, São Paulo",
+            "weather": null,
+            "light": "night",
+            "city": "São Paulo",
+            "city_district": "Alto de Pinheiros",
+            "county": "Região Imediata de São Paulo",
+            "neighborhood": null,
+            "road": "Rua Sebastião Rodrigues",
+            "state": "SP",
+            "schema": "205348bf-95f6-4a59-82e1-1945cd32c2ca",
+            "segment": []
+        }
+    ]
+}

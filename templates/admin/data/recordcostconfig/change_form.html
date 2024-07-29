@@ -1,0 +1,93 @@
+{% extends "admin/change_form.html" %} 
+{% load record_schema %}
+{% block after_field_sets %}
+{% autoescape off %}
+ 
+<script type="text/javascript">
+var txt='{{ original.record_type| get_json }}';
+var schema={}
+if(txt.length){
+    schema=JSON.parse(txt);
+}
+var content_type_key='{{original.content_type_key}}';
+var property_key='{{original.property_key}}';
+txt='{{original.enum_costs|as_json}}';
+var enum_costs={}
+if(txt.length) enum_costs=JSON.parse(txt);
+var table=content_type_key;
+var field=property_key;
+
+(function() {
+    //var schema={{ original.record_type| get_json }};
+    $ = django.jQuery;
+    writeType=function(recordtype){
+        $.ajax(`/api/recordtypes/${record_type}`, {success:function(d){
+            if(d.current_schema){
+                $.ajax(`/api/recordschemas/${d.current_schema}`, {success:function(s){
+                    schema=s.schema;
+                    opt='<select name="content_type_key" id="id_content_type_key"><option>--select--</option>';
+                    for(var k in schema.definitions){
+                        if(!schema.definitions[k].multiple){
+                            isSelected=(content_type_key==k)?' selected':'';
+                            opt+=`<option value="${k}"${isSelected}>${schema.definitions[k]['title']}</option>`
+                        }
+                    }
+                    opt+='</select>'
+                    $("#id_content_type_key").replaceWith(opt)
+                    $('#id_content_type_key').change(function(e){
+                        table=$(e.target).val();
+                        if(!table) return;
+                        writeTable(table);
+                    });
+                }});
+            }
+        }});
+    }
+    writeField=function(field){
+        var a=schema.definitions[table].properties[field].enum;
+        if(!a)a=[];
+        for(var i=0;i<a.length;i++){
+            if(!enum_costs[a[i]])
+                enum_costs[a[i]]="";
+        }
+        for(var k in enum_costs){
+            if(a.indexOf(k)<0)
+                delete enum_costs[k]
+        }
+        $("#id_enum_costs").val(JSON.stringify(enum_costs));
+        $("#hstore-enum_costs .hstore-toggle-txtarea").click()
+        $("#hstore-enum_costs .hstore-toggle-txtarea").click()
+    }
+    writeTable=function(table){
+        var a=schema.definitions[table].properties;
+        opt='<select name="property_key" id="id_property_key"><option>--select--</option>';
+        for(var k in a){
+            if(a[k] && a[k].enum){
+                isSelected=(property_key==k)?' selected':'';
+                opt+=`<option value='${k}'${isSelected}>${k}</option>`;
+            }
+        }
+        opt+='</select>';
+        $("#id_property_key").replaceWith(opt);
+    
+        $('#id_property_key').change(function(e){
+            field=$(e.target).val();
+            writeField(field);
+        });
+    };
+    $('#id_content_type_key').change(function(e){
+        table=$(e.target).val();
+        if(!table) return;
+        writeTable(table);
+    });
+    $("#id_record_type").change(function(e){
+        record_type=$(e.target).val();
+        writeType(record_type);
+
+    });
+    if(table.length)
+        writeTable(table);
+})();
+</script>
+{% endautoescape %}
+{% endblock %}

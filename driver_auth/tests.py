@@ -26,24 +26,39 @@ class UserViewTestCase(TestCase):
         url = '/api/users/'
         self.client.force_authenticate(user=self.admin)
         response = json.loads(self.client.get(url).content)
-        self.assertEqual(len(response['results']), 3)  # Built-in admin always exists
+        self.assertEqual(len(response['results']), 2)  
         self.client.force_authenticate(user=self.public)
         response = json.loads(self.client.get(url).content)
         self.assertEqual(len(response['results']), 1)
-
 
 class PermissionsTestCase(TestCase):
     def setUp(self):
         super(PermissionsTestCase, self).setUp()
 
-        self.public_group = Group.objects.get(name=settings.DRIVER_GROUPS['READ_ONLY'])
+        try:
+            self.public_group = Group.objects.get(name=settings.DRIVER_GROUPS['READ_ONLY'])
+        except:
+            self.public_group = Group(name=settings.DRIVER_GROUPS['READ_ONLY'])
+            self.public_group.save()
+
         self.public_user = User.objects.create(username='public')
 
         self.analyst = User.objects.create(username='analyst')
-        analyst_group = Group.objects.get(name=settings.DRIVER_GROUPS['READ_WRITE'])
+        try:
+            analyst_group = Group.objects.get(name=settings.DRIVER_GROUPS['READ_WRITE'])
+        except:
+            analyst_group=Group(name=settings.DRIVER_GROUPS['READ_WRITE'])
+            analyst_group.save()
         self.analyst.groups.add(analyst_group)
-
-        self.admin = User.objects.get(username=settings.DEFAULT_ADMIN_USERNAME)
+        luser=settings.DEFAULT_ADMIN_USERNAME
+        if luser is None:
+            luser='admin'
+        self.admin = User.objects.create(username=luser, is_staff=True, is_superuser=True)
+        self.admin.save()
+        admin_group = Group.objects.get(name=settings.DRIVER_GROUPS['ADMIN'])
+        self.admin.groups.add(admin_group)
+        self.admin.save()
+        #self.admin = User.objects.get(username=settings.DEFAULT_ADMIN_USERNAME)
 
         self.request = Mock(spec=Request)
 
