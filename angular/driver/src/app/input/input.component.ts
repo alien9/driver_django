@@ -340,7 +340,9 @@ export class InputComponent implements OnInit {
       d = new Date()
       d.setFullYear(e['year'], e['month'] - 1, e['day'])
     }
-    if (index < 0) { } else {
+    if (index < 0) {
+      this.record['data'][table][field] = d
+     } else {
       this.record['data'][table][index][field] = d
     }
   }

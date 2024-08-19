@@ -69,6 +69,9 @@
                     <ul class="list-group list-group-flush"
                         *ngFor="let f of k.value.properties|keyvalue|display|orderBy">
                         <li class="list-group-item">{{f.key|translate}}:
+                            <span *ngIf="!editing && f.value.format=='datetime' && record['data'][k.key][f.key]">
+                                {{record['data']|dict_dump:k.key:null:f.key|localizedDate:'dd/MM/yyyy':locale}}
+                            </span>
                             <span
                                 *ngIf="!editing && f.value.format!='checkbox'  && f.value.displayType=='checkbox' && f.value.type!='array'">{{record['data']|dict_dump:k.key:null:f.key|format:f.value|translate}}</span>
                             <span
@@ -96,17 +99,34 @@
                                     [ngbTypeahead]="search" autocomplete="off"
                                     (focus)="setAutocompleteTerms(f.value.enum)">
                                 <input class="form-control" type="text" [(ngModel)]="record['data'][k.key][f.key]"
-                                    *ngIf="f.value.fieldType=='text' && f.value.type=='string'">
+                                    *ngIf="f.value.fieldType=='text' && f.value.type=='string' && f.value.format!='datetime'">
                                 <input class="form-control" type="number" [(ngModel)]="record['data'][k.key][f.key]"
                                     *ngIf="f.value.fieldType=='integer'">
                                 <input class="form-control" type="number" [(ngModel)]="record['data'][k.key][f.key]"
                                     *ngIf="f.value.fieldType=='number'">
+                                <span *ngIf="f.value.format=='datetime'">
+                                    <input class="form-control" type=hidden placeholder="yyyy-mm-dd"
+                                        value="record['data'][k.key][f.key]|localizedDate:'yyyy-MM-dd'"
+                                        ngbDatepicker #df="ngbDatepicker"
+                                        (dateSelect)="setDateField($event, k.key, f.key)">
+
+                                    <a href="#" (click)=df.toggle()>
+                                        {{record['data'][k.key][f.key]|localizedDate:'dd/MM/yyyy':locale}}
+                                    </a>
+                                    &nbsp;
+                                    <a href="#" (click)="setDateField(null, k.key, f.key)">
+                                        x
+                                    </a>
+                                    <input class="form-control" type="hidden"
+                                        [(ngModel)]="record['data'][k.key][f.key]"
+                                        *ngIf="f.value.fieldType=='text' && f.value.type=='string'">
+                                </span>
                             </span>
                             <img [src]="record['data'][k.key][f.key]"
                                 *ngIf="f.value.media && record['data'][k.key] && record['data'][k.key][f.key]">
 
                             <span
-                                *ngIf="f.value.fieldType=='text' &&  f.value.type=='string' && !editing">{{record['data'][k.key][f.key]}}</span>
+                                *ngIf="f.value.fieldType=='text' &&  f.value.type=='string' && !editing && f.value.format!='datetime'">{{record['data'][k.key][f.key]}}</span>
                         </li>
                     </ul>
                 </div>
@@ -132,7 +152,7 @@
                                         *ngIf="!editing && f.value.fieldType!='reference' && f.value.type!='array' && f.value.format!='datetime'">
                                         {{record['data']|dict_dump:k.key:i:f.key|format:f.value|translate}}
                                     </span>
-                                    <span *ngIf="!editing && f.value.format=='datetime'">
+                                    <span *ngIf="!editing && f.value.format=='datetime' && record['data'][k.key][i][f.key]">
                                         {{record['data']|dict_dump:k.key:i:f.key|localizedDate:'dd/MM/yyyy':locale}}
                                     </span>
                                     <span
@@ -213,7 +233,7 @@
                                     <img [src]="record['data'][k.key][i][f.key]" class="pic" (click)="startDraw(canvasmode,{table:k.key, index:i, field:f.key},editing)"
                                         *ngIf="f.value.imageSource=='canvas'&& f.value.media && record['data'][k.key] && record['data'][k.key].length>i && record['data'][k.key][i][f.key]">
                                     <span
-                                        *ngIf="f.value.fieldType=='text' &&  f.value.type=='string' && !editing">{{record['data'][k.key][i][f.key]}}</span>
+                                        *ngIf="f.value.fieldType=='text' &&  f.value.type=='string' && !editing && f.value.format!='datetime'">{{record['data'][k.key][i][f.key]}}</span>
                                 </li>
                             </ul>
                         </div>
