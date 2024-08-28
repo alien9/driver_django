@@ -57,7 +57,7 @@
                         </select>
                         <span *ngIf="hasFormat(pair.value.fieldType)">
                             Format:
-                            <select [(ngModel)]="dict.definitions[item.key].properties[pair.key].format" [compareWith]="compareByOptionId" (focus)="setActive(null)" (ngModelChange)="setTarget(dict.definitions[item.key].properties[pair.key], $event)" (change)=save()>
+                            <select [(ngModel)]="dict.definitions[item.key].properties[pair.key].format" [compareWith]="compareByOptionId" (focus)="setActive(null)" (ngModelChange)="setTarget(dict.definitions[item.key].properties[pair.key], $event, true)" (change)=save()>
                                 <option *ngFor="let item of formats" [ngValue]="item.id" [selected]="item.id===pair.value.format">
                                 {{item.name}}
                                 </option>
@@ -73,6 +73,10 @@
                         <select *ngIf="pair.value.fieldType==='reference'" [(ngModel)]="pair.value.watch.target" (change)=save()>
               <option *ngFor="let item of referables" [ngValue]="item.key" [selected]="item.key==pair.value.watch.target">{{item.value.title}}</option>
             </select>
+                    </div>
+                    <div  *ngIf="pair.value.format==='suggest'">
+                        Extra:
+                        <input type="text" [(ngModel)]="pair.value.extra" (focus)="setActive(null)" (change)="setExtra(pair.value, $event)">
                     </div>
                     <div *ngIf="pair.value.fieldType==='selectlist'">
                         <div *ngIf="(pair.value.displayType==='select') || (pair.value.displayType==='autocomplete')">
@@ -94,7 +98,10 @@
               <option value="checkbox">checkbox</option>
               <option value="select">select</option>
               <option value="autocomplete">autocomplete </option>
-              </select>
+              </select><span *ngIf="pair.value.displayType==='autocomplete'"> Extra:
+<input type="text" [(ngModel)]="pair.value.extra" (focus)="setActive(null)" (change)="setExtra(pair.value, $event)">
+
+              </span>
                         </div>
                         <div *ngIf="pair.value.format==='checkbox'">
                             Display: <select [(ngModel)]="pair.value.format" (focus)="setActive(null)" (change)="setDisplayType(pair.value, $event)">

@@ -94,12 +94,18 @@
                                     <option></option>
                                     <option *ngFor="let o of f.value.enum" [ngValue]="o">{{o|translate}}</option>
                                 </select>
+                                        <input class="form-control" type="text"
+                                        [(ngModel)]="record['data'][k.key][f.key]" 
+                                        *ngIf="f.value.fieldType=='text' && f.value.type=='string' && f.value.format=='suggest'"
+                                        [ngbTypeahead]="search" autocomplete="off"
+                                            (focus)="setAutocompleteTerms(f.value.enum, f.value.extra)"
+                                            >
                                 <input class="form-control" type="text" [(ngModel)]="record['data'][k.key][f.key]"
                                     *ngIf="f.value.fieldType=='selectlist' && f.value.displayType=='autocomplete'"
                                     [ngbTypeahead]="search" autocomplete="off"
-                                    (focus)="setAutocompleteTerms(f.value.enum)">
+                                    (focus)="setAutocompleteTerms(f.value.enum, f.value.extra)">
                                 <input class="form-control" type="text" [(ngModel)]="record['data'][k.key][f.key]"
-                                    *ngIf="f.value.fieldType=='text' && f.value.type=='string' && f.value.format!='datetime'">
+                                    *ngIf="f.value.fieldType=='text' && f.value.type=='string' && f.value.format!='datetime' && f.value.format!='suggest' ">
                                 <input class="form-control" type="number" [(ngModel)]="record['data'][k.key][f.key]"
                                     *ngIf="f.value.fieldType=='integer'">
                                 <input class="form-control" type="number" [(ngModel)]="record['data'][k.key][f.key]"
@@ -119,7 +125,8 @@
                                     </a>
                                     <input class="form-control" type="hidden"
                                         [(ngModel)]="record['data'][k.key][f.key]"
-                                        *ngIf="f.value.fieldType=='text' && f.value.type=='string'">
+                                        *ngIf="f.value.fieldType=='text' && f.value.type=='string' && f.value.format!='suggest'">
+                                        
                                 </span>
                             </span>
                             <img [src]="record['data'][k.key][f.key]"
@@ -127,6 +134,7 @@
 
                             <span
                                 *ngIf="f.value.fieldType=='text' &&  f.value.type=='string' && !editing && f.value.format!='datetime'">{{record['data'][k.key][f.key]}}</span>
+                            
                         </li>
                     </ul>
                 </div>
@@ -187,7 +195,14 @@
                                         <input class="form-control" type="text"
                                         [(ngModel)]="record['data'][k.key][i][f.key]" ngbDatepicker
                                         #df="ngbDatepicker"
-                                        *ngIf="f.value.fieldType=='text' && f.value.type=='string' && f.value.format!='datetime'">
+                                        *ngIf="f.value.fieldType=='text' && f.value.type=='string' && f.value.format!='datetime' && f.value.format!='suggest'">
+
+                                        <input class="form-control" type="text"
+                                        [(ngModel)]="record['data'][k.key][i][f.key]" 
+                                        *ngIf="f.value.fieldType=='text' && f.value.type=='string' && f.value.format=='suggest'"
+                                        [ngbTypeahead]="search" autocomplete="off"
+                                            (focus)="setAutocompleteTerms(f.value.enum, f.value.extra)"
+                                            >
                                 
                                         <span *ngIf="f.value.format=='datetime'">
                                             <input class="form-control" type=hidden placeholder="yyyy-mm-dd"
@@ -210,7 +225,7 @@
                                             [(ngModel)]="record['data'][k.key][i][f.key]"
                                             *ngIf="f.value.fieldType=='selectlist' && f.value.displayType=='autocomplete'"
                                             [ngbTypeahead]="search" autocomplete="off"
-                                            (focus)="setAutocompleteTerms(f.value.enum)">
+                                            (focus)="setAutocompleteTerms(f.value.enum, f.value.extra)">
                                         <input class="form-control" type="number"
                                             [(ngModel)]="record['data'][k.key][i][f.key]"
                                             *ngIf="f.value.fieldType=='integer'">

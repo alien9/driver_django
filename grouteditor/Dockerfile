@@ -10,12 +10,11 @@ COPY tsconfig.app.json /opt/driver/
 COPY tsconfig.json /opt/driver/
 COPY tsconfig.spec.json /opt/driver/
 COPY tslint.json /opt/driver/
+COPY tsconfig.base.json /opt/driver/
 
-
-RUN n | npm i -g @angular/cli@12.2.18
+RUN npm i -g @angular/cli@12.2.18
 RUN npm update
 RUN npm install -g --save-dev @angular-devkit/build-angular
 RUN npm install
 EXPOSE 4200
-
 CMD ["ng", "serve", "--host", "0.0.0.0", "--port", "4200"]

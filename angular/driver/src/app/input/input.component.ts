@@ -439,15 +439,16 @@ export class InputComponent implements OnInit {
       this.map.panTo(latlng)
     }
   }
-  setAutocompleteTerms(terms: string[]) {
+  setAutocompleteTerms(terms: string[], extra: string) {
+    if(extra){
+      this.recordService.getNames(extra,localStorage.getItem("Language")).pipe(first()).subscribe((d)=>{
+        this.autocomplete_terms=d["result"]
+      })
+    }else
     this.autocomplete_terms = terms.map((t) => this.translateService.instant(t))
   }
   startScribble(e) {
-    console.log("Start Scribble")
-    console.log(e)
-
     this.isDrawing = true
-    //setTimeout(()=>this.startDraw(e), 500)
   }
 
   startDraw(modal: TemplateRef<any>, definition:any, editing:boolean) {

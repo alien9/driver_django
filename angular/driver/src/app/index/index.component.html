@@ -51,7 +51,7 @@
     <input id="record-uuid" value="-uuid-" type=hidden>
     <a href="#" id="open-record-popup" (click)=popClick($event)>{{'View'|translate}}</a>
 </div>
-<div id="floating-commands" style="position:absolute;bottom:0;right:0;z-index:5000">
+<div id="floating-commands">
     <form class="form-inline my-2 my-lg-0 p-4 d-sm-block d-lg-none">
         <button (click)=startLanguageSelector(langselect) class="btn btn-outline-secondary mx-2 clean" type="submit"
             ngbTooltip="{{'Languages'|translate}}">

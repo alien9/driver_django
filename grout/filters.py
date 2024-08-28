@@ -226,10 +226,6 @@ class BoundaryPolygonFilter(GeoFilterSet):
     def filter_by_location(self, queryset, field_name, value):
         import logging
         logger = logging.getLogger(__name__)
-
-        logger.warn("LOCTION FILTER CATIVATED")
-        logger.warn(value)
-        print("fileterrerere")
         pnt=GEOSGeometry(f"SRID=4326;POINT({value})")
         return queryset.filter(geom__contains=pnt)
     

@@ -15,6 +15,10 @@ export class RecordService {
       'Authorization': 'Token ' + (document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")[0][1])
     })
   }
+  getNames(url: string, lang: string): Observable<any[]> {
+    return this.http.get<any[]>(`${url}?lang=${lang}`, { headers: this.getHeaders() })
+  }
+
   getBackend(): string {
     return localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
   }
@@ -24,7 +28,7 @@ export class RecordService {
   getRecord(s: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.getBackend()}/api/records/${s}/`, { headers: this.getHeaders() })
   }
-  getAbout(lang:string):Observable<any[]>{
+  getAbout(lang: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.getBackend()}/about/${lang}/`, { headers: this.getHeaders() })
   }
   getRecordSchema(s: string): Observable<any[]> {
@@ -41,7 +45,7 @@ export class RecordService {
     let params = new HttpParams()
       .set('archived', 'false')
       .set('details_only', 'false')
-      .set('limit', o['limit']?o['limit']:'50')
+      .set('limit', o['limit'] ? o['limit'] : '50')
       .set('record_type', o['uuid'])
       .set('active', 'true')
     if (q) {
@@ -104,19 +108,19 @@ export class RecordService {
   getBoundaries(): Observable<any[]> {
     return this.http.get<any[]>(this.getBackend() + '/api/boundaries/', { headers: this.getHeaders() })
   }
-  getBoundaryPolygons(boundary: any, location:string=null) {
-    if(boundary){
+  getBoundaryPolygons(boundary: any, location: string = null) {
+    if (boundary) {
       return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/?active=True&boundary=${boundary.uuid}&limit=all&nogeom=true`, { headers: this.getHeaders() })
     }
-    if(location){
+    if (location) {
       return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/?active=True&location=${location}&limit=all&nogeom=true`, { headers: this.getHeaders() })
     }
 
   }
-  getFilteredBoundaryPolygons(boundary: any, filter:string) {
+  getFilteredBoundaryPolygons(boundary: any, filter: string) {
     return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/?active=True&boundary=${boundary.uuid}&limit=all&nogeom=true&filter=${filter}`, { headers: this.getHeaders() })
   }
-  getBoundaryPolygon(b:string){
+  getBoundaryPolygon(b: string) {
     return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/${b}/`, { headers: this.getHeaders() })
   }
   getCritical() {
@@ -204,15 +208,15 @@ export class RecordService {
     let params = {
       'uuid': uuid
     }
-    if(record_uuid) params['recordUUID']=record_uuid
+    if (record_uuid) params['recordUUID'] = record_uuid
     let q = { limit: 'all', resolved: 'False' }
     return this.http.patch(`${this.getBackend()}/api/duplicates/${uuid}/resolve/?${Utils.toQueryString(q)}`, params, { headers: this.getHeaders() })
   }
-  postCsv(tilekey:string){
-    let data={"tilekey":tilekey}
+  postCsv(tilekey: string) {
+    let data = { "tilekey": tilekey }
     return this.http.post(`${this.getBackend()}/api/csv-export/`, data, { headers: this.getHeaders() })
   }
-  getCsv(tilekey:string){
+  getCsv(tilekey: string) {
     return this.http.get<any[]>(`${this.getBackend()}/api/csv-export/${tilekey}/`, { headers: this.getHeaders() })
   }
   getRecordCosts(o: Object, q: any): Observable<any[]> {
@@ -230,10 +234,10 @@ export class RecordService {
     }
     return this.http.get<any[]>(this.getBackend() + '/api/records/costs/', { headers: this.getHeaders(), params: params })
   }
-  getRoadMap(){
+  getRoadMap() {
     return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/`, { headers: this.getHeaders() })
   }
-  getForward(roadmap:string, params: object) {
+  getForward(roadmap: string, params: object) {
     return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/${roadmap}/forward/?limit=15&q=${params['term']}&viewBox=${params['bbox']}`, { headers: this.getHeaders() })
   }
 }

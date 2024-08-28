@@ -8,3 +8,14 @@ div.legend {
     border-radius: 5px;
     padding: 10px;
 }
+@media (max-width: 994px) {
+    div.legend {
+        bottom: 96px !important;
+    }
+}
+
+@media (min-width: 995px) {
+    div.legend {
+        bottom: 25px !important;
+    }
+}

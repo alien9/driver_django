@@ -77,6 +77,7 @@ if os.getenv('LANGUAGES', None):
         'es': 'Spanish',
         'fr': 'French',
         'zh-hans': 'Simplified Chinese',
+        'ar': 'Arabic',
     }
     LANGUAGES = list(
         map(lambda l: (l, _(names[l])), os.getenv('LANGUAGES').split(",")))

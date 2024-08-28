@@ -21,6 +21,18 @@ class RoadMap(Imported):
     class Meta:
         verbose_name_plural = _("Road Maps")
         verbose_name = _('Road Map')
+        
+    def write_mapfile(self):
+        t=render_to_string('roads.map', {
+            "connection":connection.settings_dict['HOST'],
+            "username":connection.settings_dict['USER'],
+            "password":connection.settings_dict['PASSWORD'],
+            "dbname":connection.settings_dict['NAME'],
+            "roadmap_id":  self.uuid,
+        })
+        with open("./mapserver/roadmap_%s.map" % (self.uuid), "w+") as m:
+            m.write(t)
+        
     def load_shapefile(self):
         """ Validate the shapefile saved on disk and load into db """
         self.status = self.StatusTypes.PROCESSING
