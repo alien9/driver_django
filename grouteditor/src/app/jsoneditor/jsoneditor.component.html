@@ -68,6 +68,7 @@
                             <select [(ngModel)]="pair.value.imageSource" (change)=save()>
                                 <option value="photo">photo</option>
                                 <option value="canvas">canvas</option>
+                                <option value="map">map</option>
                             </select>
                         </span>
                         <select *ngIf="pair.value.fieldType==='reference'" [(ngModel)]="pair.value.watch.target" (change)=save()>
@@ -78,6 +79,7 @@
                         Extra:
                         <input type="text" [(ngModel)]="pair.value.extra" (focus)="setActive(null)" (change)="setExtra(pair.value, $event)">
                     </div>
+
                     <div *ngIf="pair.value.fieldType==='selectlist'">
                         <div *ngIf="(pair.value.displayType==='select') || (pair.value.displayType==='autocomplete')">
                             <div class="tag"><a href="javascript:void(0)" (click)="newOption(pair.value,item.key,pair.key)"> + </a></div>

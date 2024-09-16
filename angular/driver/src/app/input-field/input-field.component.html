@@ -1,0 +1,99 @@
+<div>
+
+    <span *ngIf="!editing">
+        <span
+            *ngIf="(prop.value.fieldType=='reference') && data[tableName][index] && data[tableName][index][fieldName]">
+            {{(data[prop.value.watch.target]|related:data[tableName][index][fieldName])[schema['definitions'][prop.value.watch.target].properties|keyvalue|arrayfirst]|translate}}
+        </span>
+
+        <span *ngIf="prop.format=='datetime' && value">
+            {{data|dict_dump:tableName:index:fieldName|localizedDate:'dd/MM/yyyy':locale}}
+        </span>
+        <span
+            *ngIf="prop.format!='checkbox' && prop.displayType=='checkbox' && prop.type!='array'">{{data|dict_dump:tableName:index:fieldName|format:prop|translate}}</span>
+        <span *ngIf="prop.type=='array'">{{data|dict_dump:tableName:index:fieldName|format:prop.value|arrayjoin}}</span>
+
+        <span
+            *ngIf="prop.value.fieldType!='reference' && !(prop.format=='checkbox' || prop.displayType=='checkbox')  && prop.type!='array' && prop.value.fieldType!='image'">{{data|dict_dump:tableName:index:fieldName|format:prop}}</span>
+        <img [src]="value" class="pic" (click)="startDraw({table:tableName, field:fieldName, index:index})"
+            *ngIf="['canvas','map'].indexOf(prop.imageSource)>-1 && prop.media && data[tableName] && value">
+    </span>
+    <span *ngIf="editing">
+        <span *ngIf="prop.value.fieldType=='image' &&  ['canvas','map'].indexOf(prop.value.imageSource)>-1">
+            <button class="btn btn-light"
+                (click)="startDraw({table:tableName, field:fieldName, index:index})">{{'Draw'|translate}}</button>
+        </span>
+
+        <span *ngIf="prop.value.format=='datetime'">
+            <input class="form-control" type=hidden placeholder="yyyy-mm-dd" value="value|localizedDate:'yyyy-MM-dd'"
+                ngbDatepicker #df="ngbDatepicker" (dateSelect)="setDateField($event, tableName, fieldName)">
+
+            <a href="#" (click)=df.toggle()>
+                {{value|localizedDate:'dd/MM/yyyy':locale}}
+            </a>
+            &nbsp;
+            <a href="#" (click)="setDateField(null, tableName, fieldName)">
+                x
+            </a>
+            <input class="form-control" type="hidden" [value]="getValue()" (change)="setFieldValue($event)"
+                *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format!='suggest'">
+        </span>
+
+        <span *ngIf="prop.value['fieldType']=='image' && ['canvas','map'].indexOf(prop.value.imageSource )>-1">
+            <input class="form-control" type="file" (change)="loadFile($event, data[tableName],fieldName)"
+                accept="image/*" capture="environment">
+            <input type="hidden" [value]="getValue()">
+        </span>
+
+        <div *ngIf="prop.value.displayType=='checkbox' || prop.value.format=='checkbox'">
+            <div *ngFor="let o of prop.value.items.enum">
+                <label class="form-check-label">
+                    <input class="form-check-input" type="checkbox" [value]="o"
+                        checked="{{value?.includes(o) ? 'checked' : null}}"
+                        (change)="setCheckField($event, tableName, fieldName, index)">
+                    {{o|translate}}
+                </label>&nbsp;
+            </div>
+        </div>
+
+        <select class="form-select" *ngIf="prop.value.fieldType!='reference' && prop.value.displayType=='select'"
+            [value]="getValue()" (change)="setFieldValue($event)">
+            <option></option>
+            <option *ngFor="let o of prop.value.enum" [ngValue]="o" [selected]="o==getValue()">{{o|translate}}</option>
+        </select>
+
+        <select class="form-select" *ngIf="prop.value.fieldType=='reference'" (change)="setFieldValue($event)">
+            <option></option>
+            <option *ngFor="let related of data[prop.value.watch.target]" [ngValue]="related['_localId']"
+                [value]="related['_localId']" [selected]="related['_localId']==getValue()">
+                {{related[schema['definitions'][prop.value.watch.target].properties|keyvalue|arrayfirst]|translate}}
+            </option>
+        </select>
+
+        <input class="form-control" type="text" [value]="getValue()" (change)="setFieldValue($event)"
+            *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format=='suggest'"
+            [ngbTypeahead]="search" autocomplete="off" aria-autocomplete="both" aria-haspopup="false"
+            autocomplete="nope" autocorrect="off"
+            (focus)="setFieldAutoCompleteTerms($event, prop.value.enum, prop.value.extra)">
+
+        <input class="form-control" type="text" [value]="getValue()" (change)="setFieldValue($event)"
+            *ngIf="prop.value.fieldType=='selectlist' && prop.value.displayType=='autocomplete'" [ngbTypeahead]="search"
+            aria-autocomplete="both" aria-haspopup="false" autocomplete="nope" autocorrect="off" autocomplete="off"
+            (focus)="setFieldAutoCompleteTerms($event, prop.value.enum, prop.value.extra)">
+
+        <input class="form-control" type="text" [value]="getValue()" (change)="setFieldValue($event)"
+            *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format!='datetime' && prop.value.format!='suggest' ">
+
+        <input class="form-control" type="number" [value]="getValue()" (change)="setFieldValue($event)"
+            *ngIf="prop.value.fieldType=='integer'">
+
+        <input class="form-control" type="number" [value]="getValue()" (change)="setFieldValue($event)"
+            *ngIf="prop.value.fieldType=='number'">
+
+    </span>
+
+    <span *ngIf="prop.value.format=='datetime' && value">
+        {{data|dict_dump:tableName:null:fieldName|localizedDate:'dd/MM/yyyy':locale}}</span>
+    <img crossorigin="anonymous" [src]="getValue()" class="pic"
+        (click)="startDraw({table:tableName, field:fieldName, index:index})" *ngIf="prop.value.imageSource">
+</div>

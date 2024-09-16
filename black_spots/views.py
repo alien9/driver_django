@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from proxy.views import proxy_view
 from constance import config
+from rest_framework.decorators import authentication_classes, permission_classes
 
 from data.models import DriverRecord
 from black_spots.models import (
@@ -271,27 +272,23 @@ class RoadMapViewSet(drf_mixins.RetrieveModelMixin,viewsets.GenericViewSet):
         return Response(serializer.data)
     
     @action(methods=['get'], detail=True)
+    @authentication_classes([])
+    @permission_classes([])
     def map(self,request, pk=None):
         if not os.path.exists("./mapserver/roadmap_%s.map" % (pk)):
             queryset = RoadMap.objects.all()
             p=get_object_or_404(queryset, pk=pk)
             p.write_mapfile()
-        print(request.query_params)  
         from pyproj import Transformer
         transformer = Transformer.from_crs("EPSG:4326","EPSG:3857")
-        print(request.query_params.get("latlong").split(","))
         x,y=transformer.transform(*request.query_params.get("latlong").split(",")) 
-
-        print(x,y)
-        """"""
-        x0=x-10000
-        x1=x+10000
-        y0=y-10000
-        y1=y+10000
-        
+        x0=x-50
+        x1=x+50
+        y0=y-50
+        y1=y+50
         path = f"?map=/etc/mapserver/roadmap_{pk}.map&SERVICE=WMS&\
 VERSION=1.1.1&REQUEST=GetMap&LAYERS=roads&STYLES=&SRS=EPSG:3857&\
-BBOX={x0},{y0},{x1},{y1}&WIDTH=250&HEIGHT=250&format=image/png"
+BBOX={x0},{y0},{x1},{y1}&WIDTH=1000&HEIGHT=1000&format=image/png"
 
         print(path)
         return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))

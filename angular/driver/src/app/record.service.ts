@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams, } from '@angular/common/http';
-import { Observable } from 'rxjs'; import { HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Observable} from 'rxjs'; import { HttpClientModule } from '@angular/common/http';
 
 import { environment } from '../environments/environment';
 import Utils from '../assets/utils';
@@ -12,6 +12,12 @@ export class RecordService {
   getHeaders(): HttpHeaders {
     return new HttpHeaders({
       'Content-Type': 'application/json',
+      'Authorization': 'Token ' + (document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")[0][1])
+    })
+  }
+  getBlobHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      'Content-Type': 'application/octet-stream',
       'Authorization': 'Token ' + (document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")[0][1])
     })
   }
@@ -232,10 +238,13 @@ export class RecordService {
         }
       }
     }
-    return this.http.get<any[]>(this.getBackend() + '/api/records/costs/', { headers: this.getHeaders(), params: params })
+    return this.http.get<any[]>(this.getBackend() + '/api/records/costs/', { headers: this.getHeaders(), params: params})
   }
   getRoadMap() {
     return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/`, { headers: this.getHeaders() })
+  }
+  getRoadMapByCords(params:any) {
+    return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/ab06162a-8ccd-4cc6-a3b4-ec097bfbc8dc/map/?latlong=${params.latlng[1]},${params.latlng[0]}`, {headers: this.getBlobHeaders() }, )
   }
   getForward(roadmap: string, params: object) {
     return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/${roadmap}/forward/?limit=15&q=${params['term']}&viewBox=${params['bbox']}`, { headers: this.getHeaders() })

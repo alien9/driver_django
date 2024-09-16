@@ -34,16 +34,17 @@ MAP
         CONNECTIONTYPE  POSTGIS 
         CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
         
-        TYPE POLYGON
+        TYPE LINE
         PROJECTION
             "init=epsg:4326"
         END
         CLASS
             STYLE
-                WIDTH 1
-                OUTLINECOLOR 200 200 200
-                COLOR 255 0 0
-                OPACITY 50
+                WIDTH 20
+                OUTLINECOLOR 230 230 200
+                COLOR 200 200 180
+                OPACITY 100
+                LINECAP SQUARE
             END
         END
     END

@@ -122,6 +122,9 @@ export class IndexComponent implements OnInit {
     this.locale = localStorage.getItem("Language") || navigator.language
     localStorage.setItem("Language", this.locale)
     let du = (new Date()).toLocaleDateString(this.locale)
+    if(this.locale=='ar'){
+      document.getElementsByTagName('html')[0].setAttribute("dir","rtl")
+    }
     this.supportsLocalDate = !du.match(/^Invalid/)
     this.recordService.getConfig().pipe(first()).subscribe(data => {
       this.config = data

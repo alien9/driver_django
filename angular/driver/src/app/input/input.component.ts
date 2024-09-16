@@ -45,7 +45,7 @@ export class InputComponent implements OnInit {
   private marker: L.marker
   private map: L.Map
   public selectedBoundaries: any = []
-  public autocomplete_terms: any[] = ["a", "b", "c"]
+  public autocomplete_terms: any[] = []
   public isDrawing = false
   backend: string
   latitude: number
@@ -77,13 +77,15 @@ export class InputComponent implements OnInit {
   previousMousePosition = { x: 0, y: 0 }
   currentMousePosition = { x: 0, y: 0 };
   imageEditing: any;
+  hasRoadMap: boolean = false
+
   constructor(
     private webService: WebService,
     private zone: NgZone,
     private recordService: RecordService,
     private spinner: NgxSpinnerService,
     private translateService: TranslateService,
-    private readonly applicationRef: ApplicationRef,    
+    private readonly applicationRef: ApplicationRef,
     private modalService: NgbModal,
 
   ) { }
@@ -222,6 +224,7 @@ export class InputComponent implements OnInit {
     return { day: date.getDate(), month: date.getMonth() + 1, year: date.getFullYear() }
   }
   saveRecord(modal: any) {
+    console.log("will save")
     this.setDate(null)
     this.spinner.show()
     this.recordService.upload(this.record).pipe(first()).subscribe({
@@ -329,10 +332,11 @@ export class InputComponent implements OnInit {
   }
   addElement(what: string) {
     let o = { '_localId': uuid.v4() }
+    if (!this.record['data'][what]) this.record['data'][what] = []
     this.record['data'][what].push(o)
   }
-  removeElement(what: string, i:number) {
-    this.record['data'][what]=this.record['data'][what].filter((e:string, n:number)=>n!=i)
+  removeElement(what: string, i: number) {
+    this.record['data'][what] = this.record['data'][what].filter((e: string, n: number) => n != i)
   }
   setDateField(e: any, table: string, field: string, index: number = -1) {
     let d = null
@@ -342,8 +346,15 @@ export class InputComponent implements OnInit {
     }
     if (index < 0) {
       this.record['data'][table][field] = d
-     } else {
+    } else {
       this.record['data'][table][index][field] = d
+    }
+  }
+  setInputDateField(e: any) {
+    if (e.index < 0) {
+      this.record['data'][e.table][e.field] = e.value
+    } else {
+      this.record['data'][e.table][e.index][e.field] = e.value
     }
   }
   setDate(e: any) {
@@ -395,6 +406,17 @@ export class InputComponent implements OnInit {
     }
     return x
   }
+  setFieldValue(e) {
+    console.log("SETTING THE F|IELD VALUEEEEEE")
+    if (e.index >= 0) {
+      this.record['data'][e.table][e.index][e.field] = e.event.srcElement.value
+    } else {
+      this.record['data'][e.table][e.field] = e.event.srcElement.value
+    }
+  }
+  loadFieldFile(eve) {
+    this.loadFile(eve.event, eve.table, eve.field)
+  }
   loadFile(e: any, table: any, field: string) {
     if (e.srcElement['files'] && e.srcElement['files'].length) {
       let file = e.srcElement['files'][0]
@@ -404,6 +426,46 @@ export class InputComponent implements OnInit {
         table[field] = reader.result
       }
     }
+  }
+  setCheckField(e: any) {
+    let elem = e.event.srcElement
+    if (("index" in e) && (e.index > -1)) {
+      if (!this.record['data'][e.table])
+        this.record['data'][e.table] = []
+      while (this.record['data'][e.table].length < e.index + 1)
+        this.record['data'][e.table].push({})
+      if (!this.record['data'][e.table][e.index][e.field]) {
+        this.record['data'][e.table][e.index][e.field] = []
+      }
+      if (elem.checked) {
+        if (this.record['data'][e.table][e.index][e.field].indexOf(elem.value) < 0)
+          this.record['data'][e.table][e.index][e.field].push(elem.value)
+      } else {
+        let i = this.record['data'][e.table][e.index][e.field].indexOf(elem.value)
+        if (i > -1) {
+          this.record['data'][e.table][e.index][e.field].splice(i, 1)
+        }
+      }
+    } else {
+      if (!this.record['data'][e.table])
+        this.record['data'][e.table] = {}
+      if (!this.record['data'][e.table][e.field]) {
+        this.record['data'][e.table][e.field] = []
+      }
+      if (elem.checked) {
+        if (this.record['data'][e.table][e.field].indexOf(elem.value) < 0)
+          this.record['data'][e.table][e.field].push(elem.value)
+      } else {
+        let i = this.record['data'][e.table][e.field].indexOf(elem.value)
+        if (i > -1) {
+          this.record['data'][e.table].splice(i, 1)
+        }
+      }
+    }
+    console.log(this.record['data'][e.table])
+
+    console.log("setting scheckfield")
+    console.log(e)
   }
   onMultipleCheckChange(e: any, t: string, idx: number, f: any) {
     if (!this.record['data'][t][idx][f])
@@ -439,62 +501,94 @@ export class InputComponent implements OnInit {
       this.map.panTo(latlng)
     }
   }
-  setAutocompleteTerms(terms: string[], extra: string) {
-    if(extra){
-      this.recordService.getNames(extra,localStorage.getItem("Language")).pipe(first()).subscribe((d)=>{
-        this.autocomplete_terms=d["result"]
+  setAutocompleteTerms(e: any) {
+    console.log("setanddodododododod")
+    console.log(e)
+    let terms = e.terms
+    let extra = e.extra
+    if (extra) {
+      this.recordService.getNames(extra, localStorage.getItem("Language")).pipe(first()).subscribe((d) => {
+        this.autocomplete_terms = d["result"]
       })
-    }else
-    this.autocomplete_terms = terms.map((t) => this.translateService.instant(t))
+    } else
+      this.autocomplete_terms = terms.map((t) => this.translateService.instant(t))
   }
   startScribble(e) {
     this.isDrawing = true
   }
+  startDrawingCanvas(e, canvas) {
+    console.log(e)
+    console.log("JJHKHKHKHKHDRARWRWRWRWRWRW")
+    this.startDraw(canvas, e, true)
+  }
 
-  startDraw(modal: TemplateRef<any>, definition:any, editing:boolean) {
-    if(!editing)return
+  startDraw(modal: TemplateRef<any>, definition: any, editing: boolean) {
+    if (!editing) return
     $(".modal-header").hide()
     $(".modal-body").hide()
     $(".modal-footer").hide()
-    this.imageEditing=definition
+    this.imageEditing = definition
+    let bg = null
     this.modalService.open(modal, { size: 'lg' });
     var container = document.querySelector<HTMLElement>(".canvas-container")
-    container.style.height=`${window.innerHeight-200}px`;
+    container.style.height = `${window.innerHeight - 200}px`;
     var canvas = document.querySelector<HTMLCanvasElement>("#scribble");
     if (!canvas) return;
+
     //make a 2D context
     let commentCanvasContext = canvas.getContext("2d");
     //set the line parameters
-    canvas.width=container.offsetWidth
-    canvas.height=container.offsetHeight
+    canvas.width = container.offsetWidth
+    canvas.height = container.offsetHeight
+    if ("value" in definition) {
+      var image = new Image();
+      image.onload = function () {
+        commentCanvasContext.drawImage(image, 0, 0);
+      };
+      image.src = definition.value
+    } else {
+      // console.log("will gret the mapDEFINITIONSSSSSSSS")
+      console.log(definition)
+    }
+    this.hasRoadMap = false
+    if ("format" in definition) {
+      if (definition.format == "map") {
+        this.hasRoadMap = true
+        this.loadMap()
+      }
+    }
+    console.log(definition)
     commentCanvasContext.lineWidth = 3;
     commentCanvasContext.lineJoin = 'round';
     commentCanvasContext.lineCap = 'round';
     commentCanvasContext.strokeStyle = 'black';
     commentCanvasContext.translate(0.5, 0.5);
 
-    canvas.addEventListener("mousemove", function (e:any) {
+    canvas.addEventListener("mousemove", function (e: any) {
       //store the old current mouse position and the previous mouse position
       var modalDialog = $(".modal-dialog")[0];
-      mousePositions.push({"x":e.pageX - (container.offsetLeft + modalDialog.offsetLeft),"y":
-        e.pageY - (container.offsetTop + modalDialog.offsetTop)
+      mousePositions.push({
+        "x": e.pageX - (container.offsetLeft + modalDialog.offsetLeft), "y":
+          e.pageY - (container.offsetTop + modalDialog.offsetTop)
       })
     });
-    canvas.addEventListener("touchmove", function (e:any) {
+    canvas.addEventListener("touchmove", function (e: any) {
       let modalDialog = $(".modal-dialog")[0];
       e.stopPropagation()
-      mousePositions.push({"x":e.touches[0].pageX - (container.offsetLeft + modalDialog.offsetLeft),"y":
-        e.touches[0].pageY - (container.offsetTop + modalDialog.offsetTop)
+      mousePositions.push({
+        "x": e.touches[0].pageX - (container.offsetLeft + modalDialog.offsetLeft), "y":
+          e.touches[0].pageY - (container.offsetTop + modalDialog.offsetTop)
       })
     });
     var onPaint = this.onPaint
     //mouse down 
     canvas.addEventListener('mousedown', function (e) {
       var modalDialog = $(".modal-dialog")[0];
-      mousePositions=[
-        {"x":e.pageX - (container.offsetLeft + modalDialog.offsetLeft),"y":
-        e.pageY - (container.offsetTop + modalDialog.offsetTop)
-      }
+      mousePositions = [
+        {
+          "x": e.pageX - (container.offsetLeft + modalDialog.offsetLeft), "y":
+            e.pageY - (container.offsetTop + modalDialog.offsetTop)
+        }
       ]
       canvas.addEventListener('mousemove', onPaint);
     });
@@ -502,8 +596,9 @@ export class InputComponent implements OnInit {
       e.stopPropagation()
       //add an additional listener to draw
       var modalDialog = $(".modal-dialog")[0];
-      mousePositions=[{"x":e.touches[0].pageX - (container.offsetLeft + modalDialog.offsetLeft),"y":
-        e.touches[0].pageY - (container.offsetTop + modalDialog.offsetTop)
+      mousePositions = [{
+        "x": e.touches[0].pageX - (container.offsetLeft + modalDialog.offsetLeft), "y":
+          e.touches[0].pageY - (container.offsetTop + modalDialog.offsetTop)
       }]
       canvas.addEventListener('touchmove', onPaint);
     });
@@ -511,7 +606,7 @@ export class InputComponent implements OnInit {
     //mouse up
     canvas.addEventListener('mouseup', function () {
       //remove the additional mouse move listener
-      mousePositions=[]
+      mousePositions = []
       canvas.removeEventListener('mousemove', onPaint);
     });
     canvas.addEventListener('touchend', function (e) {
@@ -519,49 +614,94 @@ export class InputComponent implements OnInit {
       canvas.removeEventListener('touchmove', onPaint);
     });
   }
-  endDrawing(event) {
+
+  loadMap() {
     var canvas = document.querySelector<HTMLCanvasElement>("#scribble");
-    var dataURL = canvas.toDataURL("image/png");
-    if(this.imageEditing){
-      if("index" in this.imageEditing){
-        this.record['data'][this.imageEditing.table][this.imageEditing.index][this.imageEditing.field]=dataURL
+    let commentCanvasContext = canvas.getContext("2d");
+    let yx = this.record["geom"].coordinates
+
+
+    console.log(`${this.recordService.getBackend()}/api/roadmaps/ab06162a-8ccd-4cc6-a3b4-ec097bfbc8dc/map/?latlong=${yx[1]},${yx[0]}`)
+    let bg = new Image();
+    //bg.setAttribute('crossorigin', 'anonymous');
+    bg.onload = function () {
+      let sx = 0.5 * (1000 - canvas.width)
+      let dx = 0
+      if (sx < 0) {
+        dx = -1 * sx
+        sx = 0
       }
-    } 
-    this.isDrawing = false
+      let dy = 0
+      let sy = 0.5 * (1000 - canvas.height)
+      if (sy < 0) {
+        dy = -1 * sy
+        sy = 0
+      }
+      commentCanvasContext.drawImage(bg, sx, sy, canvas.width, canvas.height, dx, dy, canvas.width, canvas.height);
+      bg.setAttribute('crossorigin', 'anonymous');
+    };
+    //this.recordService.getRoadMapByCords({ latlng: yx }).pipe(first()).subscribe((d: any) => {
+      //bg.src=URL.createObjectURL(d);
+    //  console.log(d.blob())
+    //})
+    bg.src = `${this.recordService.getBackend()}/api/roadmaps/ab06162a-8ccd-4cc6-a3b4-ec097bfbc8dc/map/?latlong=${yx[1]},${yx[0]}`
+  }
+
+
+  endDrawing(event) {
+    console.log("ending drawing")
     event.close()
     $(".modal-header").show()
     $(".modal-body").show()
     $(".modal-footer").show()
+    var canvas = document.querySelector<HTMLCanvasElement>("#scribble");
+    var dataURL = canvas.toDataURL("image/png");
+    console.log(this.imageEditing)
+    console.log(dataURL)
+    let d = JSON.parse(JSON.stringify(this.record['data']))
+
+    if (this.imageEditing) {
+      if ("index" in this.imageEditing && this.imageEditing["index"] > -1) {
+        d[this.imageEditing.table][this.imageEditing.index][this.imageEditing.field] = dataURL
+      } else {
+        d[this.imageEditing.table][this.imageEditing.field] = dataURL
+      }
+    }
+    this.record['data'] = d
+    console.log(this.record["data"])
+    this.isDrawing = false
   }
-  cancelDrawing(modal:any){
+  cancelDrawing(modal: any) {
     this.isDrawing = false
     modal.close(0)
     $(".modal-header").show()
     $(".modal-body").show()
     $(".modal-footer").show()
   }
-  resetDrawing(){
+  resetDrawing() {
     let canvas = document.querySelector<HTMLCanvasElement>("#scribble");
     let ctx = canvas.getContext("2d");
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (this.hasRoadMap)
+      this.loadMap()
   }
-  onPaint(event:any) {
+  onPaint(event: any) {
     event.stopPropagation()
     var canvas = document.querySelector<HTMLCanvasElement>("#scribble");
     let commentCanvasContext = canvas.getContext("2d");
     //draw the line
     commentCanvasContext.beginPath();
-    let last=null
-    while(mousePositions.length>1){
-      let pos=mousePositions.shift()
+    let last = null
+    while (mousePositions.length > 1) {
+      let pos = mousePositions.shift()
       commentCanvasContext.moveTo(pos["x"], pos["y"])
-      last={"x":(mousePositions[0]["x"]+pos["x"])/2, "y":(mousePositions[0]["y"]+pos["y"])/2}
+      last = { "x": (mousePositions[0]["x"] + pos["x"]) / 2, "y": (mousePositions[0]["y"] + pos["y"]) / 2 }
       commentCanvasContext.quadraticCurveTo(pos["x"], pos["y"], last["x"], last["y"])
     }
-    if(mousePositions.length) commentCanvasContext.lineTo(mousePositions[0]["x"],mousePositions[0]["y"])
+    if (mousePositions.length) commentCanvasContext.lineTo(mousePositions[0]["x"], mousePositions[0]["y"])
     commentCanvasContext.closePath();
     commentCanvasContext.stroke();
   };
 }
-var mousePositions:Array<object>=[]
+var mousePositions: Array<object> = []

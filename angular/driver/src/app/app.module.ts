@@ -9,6 +9,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { MapComponent } from './map/map.component';
 import { InputComponent } from './input/input.component';
+
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { LeafletModule } from '@asymmetrik/ngx-leaflet';
 import { LeafletDrawModule } from '@asymmetrik/ngx-leaflet-draw';
@@ -59,6 +60,7 @@ import localeEs from '@angular/common/locales/es';
 import localeFr from '@angular/common/locales/fr';
 import localeEn from '@angular/common/locales/en';
 import localeLo from '@angular/common/locales/lo';
+import localeAr from '@angular/common/locales/ar';
 import { NgxSpinnerModule } from "ngx-spinner";
 import { ChartsComponent } from './charts/charts.component';
 import { IrapPopupComponent } from './irap-popup/irap-popup.component';
@@ -68,6 +70,7 @@ import { DuplicateComponent } from './duplicate/duplicate.component';
 import { LegendComponent } from './legend/legend.component';
 import { CounterComponent } from './counter/counter.component';
 import { geoBounds } from 'd3';
+import { InputFieldComponent } from './input-field/input-field.component';
 
 const socialConfigFactory = (restService: AuthService) => {
   return restService.getGoogleClientId().pipe(map(config => {
@@ -93,6 +96,7 @@ registerLocaleData(localeEs);
 registerLocaleData(localeFr);
 registerLocaleData(localeEn);
 registerLocaleData(localeLo);
+registerLocaleData(localeAr);
 export function HttpLoaderFactory(httpClient: HttpClient) {
   let b = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
   return new MultiTranslateHttpLoader(httpClient, [
@@ -151,6 +155,7 @@ const icons = {
     DuplicateComponent,
     LegendComponent,
     CounterComponent,
+    InputFieldComponent,
   ],
   imports: [
     BrowserModule,
