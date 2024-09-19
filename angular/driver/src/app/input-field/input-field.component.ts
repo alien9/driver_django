@@ -76,6 +76,8 @@ export class InputFieldComponent implements OnInit {
       d = new Date()
       d.setFullYear(e['year'], e['month'] - 1, e['day'])
     }
+    console.log("date field")
+    console.log(e)
     this.setDateFieldValueChanged.emit({ "table": table, "field": field, "index": index, "value": d })
   }
   setFieldAutoCompleteTerms(e: any, words: any, extra: any) {

@@ -249,4 +249,7 @@ export class RecordService {
   getForward(roadmap: string, params: object) {
     return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/${roadmap}/forward/?limit=15&q=${params['term']}&viewBox=${params['bbox']}`, { headers: this.getHeaders() })
   }
+  getReverse(roadmap:string, lat: string, lng: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/${roadmap}/reverse/?lat=${lat}&lon=${lng}&format=json`, { headers: this.getHeaders() })
+  }
 }

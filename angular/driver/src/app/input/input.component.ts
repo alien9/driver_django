@@ -128,6 +128,9 @@ export class InputComponent implements OnInit {
           let lt = []
           if (address['address']['road']) lt.push(address['address']['road'])
           if (address['address']['city']) lt.push(address['address']['city'])
+          if (address['address']['village']) lt.push(address['address']['village'])
+          if (address['address']['county']) lt.push(address['address']['county'])
+          if (address['address']['state']) lt.push(address['address']['state'])
           this.record['location_text'] = lt.join(", ")
         }
       })
@@ -227,6 +230,39 @@ export class InputComponent implements OnInit {
     console.log("will save")
     this.setDate(null)
     this.spinner.show()
+    Object.keys(this.record['data']).forEach((k) => {
+      console.log(k)
+      let change = this.record['data'][k]
+      if (!this.recordSchema['schema'].definitions[k].multiple) {
+        change = [this.record['data'][k]]
+      }
+      console.log(change)
+      for (let i = 0; i < change.length; i++) {
+        Object.keys(this.recordSchema['schema'].definitions[k].properties).forEach((l) => {
+          console.log(l)
+          console.log(this.recordSchema['schema'].definitions[k].properties[l].type)
+          let t = this.recordSchema['schema'].definitions[k].properties[l].type
+          switch (t) {
+            case 'integer':
+              if (!isNaN(parseInt(change[i][l]))) {
+                change[i][l] = parseInt(change[i][l])
+              } else {
+                delete change[i][l]
+              }
+              break;
+            case 'number':
+              if (!isNaN(parseFloat(change[i][l]))) {
+                change[i][l] = parseFloat(change[i][l])
+              } else {
+                delete change[i][l]
+              }
+              break;
+            default:
+              if (change[i][l] == '') delete change[i][l]
+          }
+        })
+      }
+    })
     this.recordService.upload(this.record).pipe(first()).subscribe({
       next: data => {
         this.filterExpand.emit(this.record['occurred_from'])
@@ -234,8 +270,13 @@ export class InputComponent implements OnInit {
         modal.dismiss()
         this.spinner.hide()
       }, error: err => {
-        console.log(err)
-        alert(err['error']['data'])
+        let message = err["error"]
+        if ("detail" in message) {
+          alert(message["detail"])
+        }
+        if ("data" in message) {
+          alert(message["data"])
+        }
         this.spinner.hide()
       }
     })
@@ -282,6 +323,9 @@ export class InputComponent implements OnInit {
               let lt = []
               if (address['address']['road']) lt.push(address['address']['road'])
               if (address['address']['city']) lt.push(address['address']['city'])
+              if (address['address']['village']) lt.push(address['address']['village'])
+              if (address['address']['county']) lt.push(address['address']['county'])
+              if (address['address']['state']) lt.push(address['address']['state'])
               this.record['location_text'] = lt.join(", ")
             }
           })
@@ -351,6 +395,8 @@ export class InputComponent implements OnInit {
     }
   }
   setInputDateField(e: any) {
+    console.log("other sited")
+    console.log(e)
     if (e.index < 0) {
       this.record['data'][e.table][e.field] = e.value
     } else {
@@ -502,8 +548,6 @@ export class InputComponent implements OnInit {
     }
   }
   setAutocompleteTerms(e: any) {
-    console.log("setanddodododododod")
-    console.log(e)
     let terms = e.terms
     let extra = e.extra
     if (extra) {
@@ -517,8 +561,6 @@ export class InputComponent implements OnInit {
     this.isDrawing = true
   }
   startDrawingCanvas(e, canvas) {
-    console.log(e)
-    console.log("JJHKHKHKHKHDRARWRWRWRWRWRW")
     this.startDraw(canvas, e, true)
   }
 
@@ -621,7 +663,6 @@ export class InputComponent implements OnInit {
     let yx = this.record["geom"].coordinates
 
 
-    console.log(`${this.recordService.getBackend()}/api/roadmaps/ab06162a-8ccd-4cc6-a3b4-ec097bfbc8dc/map/?latlong=${yx[1]},${yx[0]}`)
     let bg = new Image();
     //bg.setAttribute('crossorigin', 'anonymous');
     bg.onload = function () {
@@ -641,10 +682,10 @@ export class InputComponent implements OnInit {
       bg.setAttribute('crossorigin', 'anonymous');
     };
     //this.recordService.getRoadMapByCords({ latlng: yx }).pipe(first()).subscribe((d: any) => {
-      //bg.src=URL.createObjectURL(d);
+    //bg.src=URL.createObjectURL(d);
     //  console.log(d.blob())
     //})
-    bg.src = `${this.recordService.getBackend()}/api/roadmaps/ab06162a-8ccd-4cc6-a3b4-ec097bfbc8dc/map/?latlong=${yx[1]},${yx[0]}`
+    bg.src = `${this.recordService.getBackend()}/api/roadmaps/${this.roadmap_uuid}/map/?latlong=${yx[1]},${yx[0]}`
   }
 
 

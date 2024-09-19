@@ -227,9 +227,9 @@ class Record(GroutModel):
         try:
             return self.schema.validate_json(self.data)
         except jsonschema.exceptions.ValidationError as e:
+            print(e)
             return {
-                'data': SCHEMA_MISMATCH_ERROR.format(uuid=self.schema.uuid,
-                                                     message=e.message)
+                "data":_("Schema validation failed for ")+_(self.schema.record_type.label)+": " +f"{e.message}"
             }
 
     def clean(self):

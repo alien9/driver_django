@@ -26,13 +26,13 @@
 
         <span *ngIf="prop.value.format=='datetime'">
             <input class="form-control" type=hidden placeholder="yyyy-mm-dd" value="value|localizedDate:'yyyy-MM-dd'"
-                ngbDatepicker #df="ngbDatepicker" (dateSelect)="setDateField($event, tableName, fieldName)">
+                ngbDatepicker #df="ngbDatepicker" (dateSelect)="setDateField($event, tableName, fieldName, index)">
 
             <a href="#" (click)=df.toggle()>
-                {{value|localizedDate:'dd/MM/yyyy':locale}}
+                {{getValue()|localizedDate:'dd/MM/yyyy':locale}}
             </a>
             &nbsp;
-            <a href="#" (click)="setDateField(null, tableName, fieldName)">
+            <a href="#" (click)="setDateField(null, tableName, fieldName,index)">
                 x
             </a>
             <input class="form-control" type="hidden" [value]="getValue()" (change)="setFieldValue($event)"
