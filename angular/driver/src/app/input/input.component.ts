@@ -226,17 +226,12 @@ export class InputComponent implements OnInit {
   asNgbDateStruct(date: Date) {
     return { day: date.getDate(), month: date.getMonth() + 1, year: date.getFullYear() }
   }
-  saveRecord(modal: any) {
-    console.log("will save")
-    this.setDate(null)
-    this.spinner.show()
+  cleanup(){
     Object.keys(this.record['data']).forEach((k) => {
-      console.log(k)
       let change = this.record['data'][k]
       if (!this.recordSchema['schema'].definitions[k].multiple) {
         change = [this.record['data'][k]]
       }
-      console.log(change)
       for (let i = 0; i < change.length; i++) {
         Object.keys(this.recordSchema['schema'].definitions[k].properties).forEach((l) => {
           console.log(l)
@@ -263,6 +258,11 @@ export class InputComponent implements OnInit {
         })
       }
     })
+  }
+  saveRecord(modal: any) {
+    this.setDate(null)
+    this.spinner.show()
+    this.cleanup()    
     this.recordService.upload(this.record).pipe(first()).subscribe({
       next: data => {
         this.filterExpand.emit(this.record['occurred_from'])
@@ -284,11 +284,14 @@ export class InputComponent implements OnInit {
   deleteRecord(modal: any) {
     this.setDate(null)
     this.spinner.show()
+    this.cleanup()
     this.record['archived'] = true
     this.recordService.upload(this.record).pipe(first()).subscribe({
       next: data => {
+        this.reloadRecords.emit(this.record)
         modal.dismiss()
         this.spinner.hide()
+        
       }, error: err => {
         console.log(err)
         this.spinner.hide()
