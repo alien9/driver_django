@@ -122,19 +122,27 @@ export class IndexComponent implements OnInit {
     this.locale = localStorage.getItem("Language") || navigator.language
     localStorage.setItem("Language", this.locale)
     let du = (new Date()).toLocaleDateString(this.locale)
-    if(this.locale=='ar'){
-      document.getElementsByTagName('html')[0].setAttribute("dir","rtl")
+    if (this.locale == 'ar') {
+      document.getElementsByTagName('html')[0].setAttribute("dir", "rtl")
     }
     this.supportsLocalDate = !du.match(/^Invalid/)
     this.recordService.getConfig().pipe(first()).subscribe(data => {
       this.config = data
+      if (data['DEFAULT_LANGUAGE']?.length) {
+        let current = localStorage.getItem("Language") || navigator.language
+        let langs = data['LANGUAGES'] || []
+        if(langs.map((k)=>k.code).indexOf(current)<0){
+          this.setLanguage(data['DEFAULT_LANGUAGE'])
+        }
+      }
+      this.locale=localStorage.getItem("Language")
       if (this.route.snapshot.queryParamMap.get('language') && (this.route.snapshot.queryParamMap.get('language') != this.locale)) {
         if (this.config['LANGUAGES'] && (this.config['LANGUAGES'].map((k) => k.code).indexOf(this.route.snapshot.queryParamMap.get('language')) >= 0)) {
           localStorage.setItem("Language", this.route.snapshot.queryParamMap.get('language'))
           let lang = this.route.snapshot.queryParamMap.get('language')
           this.locale = this.route.snapshot.queryParamMap.get('language')
           localStorage.setItem("Language", this.locale)
-          this.router.navigateByUrl('/').finally(()=>{
+          this.router.navigateByUrl('/').finally(() => {
             this.setLanguage(this.locale)
           })
         }
@@ -1158,13 +1166,13 @@ export class IndexComponent implements OnInit {
   startFilters() {
     this.navbar.triggerStartFiltgers()
   }
-  logout(){
+  logout() {
     this.navbar.logout()
   }
-  about(a:any){
+  about(a: any) {
     this.modalService.open(a, { size: 'lg', animation: false, keyboard: false, backdrop: "static" });
-    this.recordService.getAbout(this.locale).subscribe((d)=>{
-      this.about_content=d["result"]
+    this.recordService.getAbout(this.locale).subscribe((d) => {
+      this.about_content = d["result"]
     })
 
   }

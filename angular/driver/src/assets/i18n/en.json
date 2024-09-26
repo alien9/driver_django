@@ -1,5 +1,5 @@
 {
-	"About DRIVER": "",
+	"About DRIVER": "About DRIVER",
 	"Active filter": "Active filter",
 	"Aggregate by boundary": "Aggregate by boundary",
 	"All": "All",
@@ -83,7 +83,7 @@
 	"dawn": "Dawn",
 	"day": "Day",
 	"day_of_week": "Day of week",
-	"dusk": "Dusk",
+	"dusk": "Dark",
 	"fog": "Fog",
 	"for": "for",
 	"from": "from",

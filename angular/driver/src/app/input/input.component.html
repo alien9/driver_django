@@ -41,7 +41,8 @@
                                 (change)=setDate($event)></ngb-timepicker>
                         </span>
                     </li>
-                    <li class="list-group-item">
+                    <li class="list-group-item" *ngIf="config['OPENWEATHER_RAPID_KEY']">
+                        {{config['OPENWEATHER_RAPID_KEY']}}
                         <span>{{'Weather'|translate}}</span>: <span
                             *ngIf="!editing">{{record["weather"]|translate}}</span>
                         <select *ngIf="editing" class="form-select" [(ngModel)]="record['weather']">
@@ -67,17 +68,17 @@
                 </ul>
                 <div *ngIf="!k.value.multiple">
 
-                    <ul class="list-group list-group-flush"
-                        >
-                        <li class="list-group-item" *ngFor="let f of k.value.properties|keyvalue|display|orderBy">{{f.key|translate}}:
-                        <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="-1" [editing]="editing" [prop]="f" (setFieldCheckFieldChanged)="setCheckField($event)"
-                            [data]="record['data']" [locale]="locale" [canvasmode]="canvasmode" (setDateFieldValueChanged)="setInputDateField($event)"
-                            (setFileChanged)="loadFieldFile($event)" (fieldChanged)="setFieldValue($event)" [autocomplete_terms]="autocomplete_terms"
-                            (startDrawing)="startDrawingCanvas($event, canvasmode)" (turnOnAutoComplete)="setAutocompleteTerms($event)"></app-input-field>
-                    
-                            <span
-                                *ngIf="f.value.fieldType=='text' &&  f.value.type=='string' && !editing && f.value.format!='datetime' && record['data'][k.key]">{{record['data'][k.key][f.key]}}</span>
-
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item" *ngFor="let f of k.value.properties|keyvalue|display|orderBy">
+                            {{f.key|translate}}:
+                            <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="-1" [editing]="editing"
+                                [prop]="f" (setFieldCheckFieldChanged)="setCheckField($event)" [data]="record['data']"
+                                [locale]="locale" [canvasmode]="canvasmode"
+                                (setDateFieldValueChanged)="setInputDateField($event)"
+                                (setFileChanged)="loadFieldFile($event)" (fieldChanged)="setFieldValue($event)"
+                                [autocomplete_terms]="autocomplete_terms"
+                                (startDrawing)="startDrawingCanvas($event, canvasmode)"
+                                (turnOnAutoComplete)="setAutocompleteTerms($event)"></app-input-field>
                         </li>
                     </ul>
                 </div>
@@ -93,109 +94,21 @@
                                 <h5 class="card-title">{{k.value.title|translate}}</h5>
                             </div>
                             <h6 class="card-subtitle mb-2 text-muted">{{k.value.description|translate}}</h6>
-                            <ul class="list-group list-group-flush"><li class="list-group-item" 
-                                *ngFor="let f of k.value.properties|keyvalue|display|orderBy">{{f.key|translate}}:
-                                <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="i" [editing]="editing" [prop]="f" (setFieldCheckFieldChanged)="setCheckField($event)"
-                                [data]="record['data']" [locale]="locale" [canvasmode]="canvasmode" (setDateFieldValueChanged)="setInputDateField($event)"
-                                (setFileChanged)="loadFieldFile($event)" (fieldChanged)="setFieldValue($event)" [autocomplete_terms]="autocomplete_terms"
-                                (startDrawing)="startDrawingCanvas($event, canvasmode)" (turnOnAutoComplete)="setAutocompleteTerms($event)"
-                                [schema]="schema"
-                                ></app-input-field>
-                            </li>
-                                <!--li class="list-group-item">{{f.key|translate}}:
-                                    <span
-                                        *ngIf="!editing && (f.value.fieldType=='reference') && record['data'][k.key][i] && record['data'][k.key][i][f.key]">
-                                        {{(record['data'][f.value.watch.target]|related:record['data'][k.key][i][f.key])[schema['definitions'][f.value.watch.target].properties|keyvalue|arrayfirst]|translate}}
-                                    </span>
-                                    <span
-                                        *ngIf="!editing && f.value.fieldType!='reference' && f.value.type!='array' && f.value.format!='datetime'">
-                                        {{record['data']|dict_dump:k.key:i:f.key|format:f.value|translate}}
-                                    </span>
-                                    <span
-                                        *ngIf="!editing && f.value.format=='datetime' && record['data'][k.key][i][f.key]">
-                                        {{record['data']|dict_dump:k.key:i:f.key|localizedDate:'dd/MM/yyyy':locale}}
-                                    </span>
-                                    <span
-                                        *ngIf="!editing && f.value.type=='array'">{{record['data']|dict_dump:k.key:i:f.key|format:f.value|arrayjoin}}</span>
-                                    <span *ngIf="editing">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item"
+                                    *ngFor="let f of k.value.properties|keyvalue|display|orderBy">{{f.key|translate}}:
+                                    <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="i"
+                                        [editing]="editing" [prop]="f"
+                                        (setFieldCheckFieldChanged)="setCheckField($event)" [data]="record['data']"
+                                        [locale]="locale" [canvasmode]="canvasmode"
+                                        (setDateFieldValueChanged)="setInputDateField($event)"
+                                        (setFileChanged)="loadFieldFile($event)" (fieldChanged)="setFieldValue($event)"
+                                        [autocomplete_terms]="autocomplete_terms"
+                                        (startDrawing)="startDrawingCanvas($event, canvasmode)"
+                                        (turnOnAutoComplete)="setAutocompleteTerms($event)"
+                                        [schema]="schema"></app-input-field>
+                                </li>
 
-                                        <span
-                                            *ngIf="f.value['fieldType']=='image' && ['canvas','map'].indexOf(f.value.imageSource )>-1">
-                                            <label for="formFile" class="form-label">{{f.key|translate}}</label>
-                                            <input class="form-control" type="file"
-                                                (change)="loadFile($event, record['data'][k.key][i],f.key)"
-                                                accept="image/*" capture="environment">
-                                            <input type="hidden" [(ngModel)]="record['data'][k.key][i][f.key]">
-                                        </span>
-                                        <select class="form-select"
-                                            *ngIf="(f.value.fieldType=='text' || f.value.fieldType=='selectlist') && f.value.displayType=='select'"
-                                            [(ngModel)]="record['data'][k.key][i][f.key]">
-                                            <option></option>
-                                            <option *ngFor="let o of f.value.enum" [ngValue]="o">{{o|translate}}
-                                            </option>
-                                        </select>
-                                        <span *ngIf="f.value.items">
-                                            <span *ngFor="let o of f.value.items.enum">
-                                                <label class="form-check-label">
-                                                    <input class="form-check-input" type="checkbox" [value]="o"
-                                                        checked="{{record['data'][k.key][i][f.key]?.includes(o) ? 'checked' : null}}"
-                                                        (change)="onMultipleCheckChange($event, k.key, i, f.key)">
-
-                                                    {{o|translate}}
-                                                </label>&nbsp;
-                                            </span>
-                                        </span>
-                                        <input class="form-control" type="text"
-                                            [(ngModel)]="record['data'][k.key][i][f.key]" ngbDatepicker
-                                            #df="ngbDatepicker"
-                                            *ngIf="f.value.fieldType=='text' && f.value.type=='string' && f.value.format!='datetime' && f.value.format!='suggest'">
-
-
-                                        <span *ngIf="f.value.format=='datetime'">
-                                            <input class="form-control" type=hidden placeholder="yyyy-mm-dd"
-                                                value="record['data'][k.key][i][f.key]|localizedDate:'yyyy-MM-dd'"
-                                                ngbDatepicker #df="ngbDatepicker"
-                                                (dateSelect)="setDateField($event, k.key, f.key, i)">
-
-                                            <a href="#" (click)=df.toggle()>
-                                                {{record['data'][k.key][i][f.key]|localizedDate:'dd/MM/yyyy':locale}}
-                                            </a>
-                                            &nbsp;
-                                            <a href="#" (click)="setDateField(null, k.key, f.key, i)">
-                                                x
-                                            </a>
-                                            <input class="form-control" type="hidden"
-                                                [(ngModel)]="record['data'][k.key][i][f.key]"
-                                                *ngIf="f.value.fieldType=='text' && f.value.type=='string'">
-                                        </span>
-                                        <input class="form-control" type="number"
-                                            [(ngModel)]="record['data'][k.key][i][f.key]"
-                                            *ngIf="f.value.fieldType=='integer'">
-                                        <input class="form-control" type="number"
-                                            [(ngModel)]="record['data'][k.key][i][f.key]"
-                                            *ngIf="f.value.fieldType=='number'">
-                                        <select class="form-select" *ngIf="f.value.fieldType=='reference'"
-                                            [(ngModel)]="record['data'][k.key][i][f.key]">
-                                            <option></option>
-                                            <option *ngFor="let related of record['data'][f.value.watch.target]"
-                                                [ngValue]="related['_localId']">
-                                                {{related[schema['definitions'][f.value.watch.target].properties|keyvalue|arrayfirst]|translate}}
-                                            </option>
-                                        </select>
-                                    </span>
-                                    <span
-                                        *ngIf="f.value['fieldType']=='image' &&  ['canvas','map'].indexOf(f.value.imageSource)>-1 && !record['data'][k.key][i][f.key] && editing">
-                                        <button class="btn btn-light"
-                                            (click)="startDraw(canvasmode,{table:k.key, index:i, field:f.key},editing)">{{'Draw'|translate}}</button>
-                                    </span>
-                                    <img [src]="record['data'][k.key][i][f.key]" class="pic"
-                                        *ngIf="!(['canvas','map'].indexOf(f.value.imageSource)>-1) && f.value.media && record['data'][k.key] && record['data'][k.key].length>i && record['data'][k.key][i][f.key]">
-                                    <img [src]="record['data'][k.key][i][f.key]" class="pic"
-                                        (click)="startDraw(canvasmode,{table:k.key, index:i, field:f.key},editing)"
-                                        *ngIf="['canvas','map'].indexOf(f.value.imageSource)>-1 && f.value.media && record['data'][k.key] && record['data'][k.key].length>i && record['data'][k.key][i][f.key]">
-                                    <span
-                                        *ngIf="f.value.fieldType=='text' &&  f.value.type=='string' && !editing && f.value.format!='datetime'">{{record['data'][k.key][i][f.key]}}</span>
-                                </li-->
                             </ul>
                         </div>
                     </div>

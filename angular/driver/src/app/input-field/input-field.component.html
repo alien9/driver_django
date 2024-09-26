@@ -10,18 +10,42 @@
             {{data|dict_dump:tableName:index:fieldName|localizedDate:'dd/MM/yyyy':locale}}
         </span>
         <span
-            *ngIf="prop.format!='checkbox' && prop.displayType=='checkbox' && prop.type!='array'">{{data|dict_dump:tableName:index:fieldName|format:prop|translate}}</span>
-        <span *ngIf="prop.type=='array'">{{data|dict_dump:tableName:index:fieldName|format:prop.value|arrayjoin}}</span>
+            *ngIf="prop.format!='checkbox' && prop.displayType=='checkbox' && prop.type!='array'">{{data|dict_dump:tableName:index:fieldName|format:prop|translate}}
+        </span>
+
+        <span *ngIf="prop.type=='array'">
+            {{data|dict_dump:tableName:index:fieldName|format:prop.value|arrayjoin}}
+        </span>
 
         <span
-            *ngIf="prop.value.fieldType!='reference' && !(prop.format=='checkbox' || prop.displayType=='checkbox')  && prop.type!='array' && prop.value.fieldType!='image'">{{data|dict_dump:tableName:index:fieldName|format:prop}}</span>
+            *ngIf="prop.value.format!='textarea' && prop.value.fieldType!='reference' && !(prop.value.format=='checkbox' || prop.value.displayType=='checkbox')  && prop.type!='array' && prop.value.fieldType!='image'">
+            {{data|dict_dump:tableName:index:fieldName|format:prop|translate}}
+        </span>
+
+        <span *ngIf="prop.value.format=='checkbox'">
+            {{data|dict_dump:tableName:index:fieldName|arrayjoin}}
+        </span>
+
+
+
         <img [src]="value" class="pic" (click)="startDraw({table:tableName, field:fieldName, index:index})"
             *ngIf="['canvas','map'].indexOf(prop.imageSource)>-1 && prop.media && data[tableName] && value">
+
+        <textarea readonly=true rows="5" class="form-control invis" [value]="getValue()"
+            (change)="setFieldValue($event)"
+            *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format=='textarea'"></textarea>
     </span>
     <span *ngIf="editing">
         <span *ngIf="prop.value.fieldType=='image' &&  ['canvas','map'].indexOf(prop.value.imageSource)>-1">
             <button class="btn btn-light"
                 (click)="startDraw({table:tableName, field:fieldName, index:index})">{{'Draw'|translate}}</button>
+        </span>
+
+        <span *ngIf="prop.value.format=='time'">
+            <input size="4" class="form-control timed" type=number max="23" min="0" [value]="getValue()|format_time:'h'"
+                (change)="setTimeField($event, tableName, fieldName, index, 'hour')">:
+            <input size="4" class="form-control timed" type=number max="59" min="0" [value]="getValue()|format_time:'m'"
+                (change)="setTimeField($event, tableName, fieldName, index, 'minute')">
         </span>
 
         <span *ngIf="prop.value.format=='datetime'">
@@ -57,9 +81,9 @@
         </div>
 
         <select class="form-select" *ngIf="prop.value.fieldType!='reference' && prop.value.displayType=='select'"
-            [value]="getValue()" (change)="setFieldValue($event)">
+            [value]="value" (change)="setFieldValue($event)">
             <option></option>
-            <option *ngFor="let o of prop.value.enum" [ngValue]="o" [selected]="o==getValue()">{{o|translate}}</option>
+            <option *ngFor="let o of prop.value.enum" [value]="o" [selected]="o==value">{{o|translate}}</option>
         </select>
 
         <select class="form-select" *ngIf="prop.value.fieldType=='reference'" (change)="setFieldValue($event)">
@@ -82,7 +106,10 @@
             (focus)="setFieldAutoCompleteTerms($event, prop.value.enum, prop.value.extra)">
 
         <input class="form-control" type="text" [value]="getValue()" (change)="setFieldValue($event)"
-            *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format!='datetime' && prop.value.format!='suggest' ">
+            *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format!='datetime' && prop.value.format!='time' && prop.value.format!='suggest' && prop.value.format!='textarea'">
+
+        <textarea rows="5" class="form-control" [value]="getValue()" (change)="setFieldValue($event)"
+            *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format=='textarea'"></textarea>
 
         <input class="form-control" type="number" [value]="getValue()" (change)="setFieldValue($event)"
             *ngIf="prop.value.fieldType=='integer'">

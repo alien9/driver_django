@@ -36,6 +36,7 @@ export class JSONEditorComponent implements OnInit {
     { id: "color", name: "HTML Color" },
     { id: "tel", name: "Telephone number" },
     { id: "datetime", name: "Date / Time" },
+    { id: "time", name: "Time" },
     { id: "url", name: "Website URL" },
     { id: "suggest", name: "Auto Complete" },
   ]

@@ -56,7 +56,7 @@ urlpatterns = [
     url(r'^calculate_blackspots/(?P<uuid>[-\w]{0,100})/$', data_views.run_calculate_blackspots),
     url(r'^retrieve_blackspots/(?P<pk>[-\w]{0,100})/$', data_views.retrieve_blackspots),
 
-    url(r'^dictionary/(?P<code>\w*)/$', data_views.dictionary),
+    url(r'^dictionary/(?P<code>[-\w]*)/$', data_views.dictionary),
     url(r'^about/(?P<code>\w*)/$', data_views.about),
     # get token for given username/password
     url(r'^api-token-auth/', auth_views.obtain_auth_token),

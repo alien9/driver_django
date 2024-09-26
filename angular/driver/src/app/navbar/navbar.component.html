@@ -25,6 +25,10 @@
                             <hr class="dropdown-divider">
                         </li>
                         <li>
+                            <a class="dropdown-item" (click)="onStateSelected('Duplicates')" href="#">{{'Language' |
+                                translate}}</a>
+                        </li>
+                        <li>
                             <a class="dropdown-item" (click)="onStateSelected('Duplicates')" href="#">{{'Duplicates' |
                                 translate}}</a>
                         </li>
@@ -117,7 +121,7 @@
                     aria-haspopup="true" aria-expanded="false">
                     <i-bs name="three-dots-vertical"></i-bs>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
+                <ul [class]="getLangPosition()" aria-labelledby="dropdownMenuButton1">
                     <li *ngFor="let l of config['LANGUAGES']; let i=index">
                         <div class="dropdown-item">
                             <input class="form-check-input" [(ngModel)]="locale" (change)="setlang(l['code'])"

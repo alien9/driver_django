@@ -70,6 +70,7 @@
                                 <option value="canvas">canvas</option>
                                 <option value="map">map</option>
                             </select>
+                            Extra: <input type="text" [(ngModel)]="pair.value.extra" (focus)="setActive(null)" (change)="setExtra(pair.value, $event)">
                         </span>
                         <select *ngIf="pair.value.fieldType==='reference'" [(ngModel)]="pair.value.watch.target" (change)=save()>
               <option *ngFor="let item of referables" [ngValue]="item.key" [selected]="item.key==pair.value.watch.target">{{item.value.title}}</option>

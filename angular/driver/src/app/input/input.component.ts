@@ -78,6 +78,8 @@ export class InputComponent implements OnInit {
   currentMousePosition = { x: 0, y: 0 };
   imageEditing: any;
   hasRoadMap: boolean = false
+  reverse_trans: {};
+  canvas_extra: any = null;
 
   constructor(
     private webService: WebService,
@@ -146,7 +148,7 @@ export class InputComponent implements OnInit {
     let c = this.record['geom'].coordinates
     let latlng = new L.latLng([c[1], c[0]])
     this.setMarker(latlng)
-    if (!this.record['weather']) {
+    if (!this.record['weather'] && (this.config['OPENWEATHER_RAPID_KEY']) && this.config['OPENWEATHER_RAPID_KEY'].length) {
       this.webService.getHistoryWeather({ lat: c[1], lon: c[0], appid: this.config['OPENWEATHER_RAPID_KEY'] })
         .pipe(first()).subscribe(weatherData => {
           if (weatherData['current'] && weatherData['current']['weather'] && weatherData['current']['weather'].length)
@@ -226,43 +228,51 @@ export class InputComponent implements OnInit {
   asNgbDateStruct(date: Date) {
     return { day: date.getDate(), month: date.getMonth() + 1, year: date.getFullYear() }
   }
-  cleanup(){
+  cleanup() {
     Object.keys(this.record['data']).forEach((k) => {
       let change = this.record['data'][k]
-      if (!this.recordSchema['schema'].definitions[k].multiple) {
-        change = [this.record['data'][k]]
-      }
-      for (let i = 0; i < change.length; i++) {
-        Object.keys(this.recordSchema['schema'].definitions[k].properties).forEach((l) => {
-          console.log(l)
-          console.log(this.recordSchema['schema'].definitions[k].properties[l].type)
-          let t = this.recordSchema['schema'].definitions[k].properties[l].type
-          switch (t) {
-            case 'integer':
-              if (!isNaN(parseInt(change[i][l]))) {
-                change[i][l] = parseInt(change[i][l])
-              } else {
-                delete change[i][l]
-              }
-              break;
-            case 'number':
-              if (!isNaN(parseFloat(change[i][l]))) {
-                change[i][l] = parseFloat(change[i][l])
-              } else {
-                delete change[i][l]
-              }
-              break;
-            default:
-              if (change[i][l] == '') delete change[i][l]
-          }
-        })
+      if (this.recordSchema['schema'].definitions[k]) {
+        if (!this.recordSchema['schema'].definitions[k].multiple) {
+          change = [this.record['data'][k]]
+        }
+        for (let i = 0; i < change.length; i++) {
+          Object.keys(this.recordSchema['schema'].definitions[k].properties).forEach((l) => {
+            let t = this.recordSchema['schema'].definitions[k].properties[l].type
+            switch (t) {
+              case 'integer':
+                if (!isNaN(parseInt(change[i][l]))) {
+                  change[i][l] = parseInt(change[i][l])
+                } else {
+                  delete change[i][l]
+                }
+                break;
+              case 'number':
+                if (!isNaN(parseFloat(change[i][l]))) {
+                  change[i][l] = parseFloat(change[i][l])
+                } else {
+                  delete change[i][l]
+                }
+                break;
+              case 'string':
+                if (this.recordSchema['schema'].definitions[k].properties[l].format == 'time') {
+                  if (!change[i][l]?.match(/\d+:\d+/)) {
+                    delete change[i][l]
+                  }
+                }
+                if (change[i][l] == '') delete change[i][l]
+                break;
+              default:
+                if (change[i][l] == '') delete change[i][l]
+            }
+          })
+        }
       }
     })
   }
   saveRecord(modal: any) {
     this.setDate(null)
     this.spinner.show()
-    this.cleanup()    
+    this.cleanup()
     this.recordService.upload(this.record).pipe(first()).subscribe({
       next: data => {
         this.filterExpand.emit(this.record['occurred_from'])
@@ -274,8 +284,16 @@ export class InputComponent implements OnInit {
         if ("detail" in message) {
           alert(message["detail"])
         }
-        if ("data" in message) {
+        else if ("data" in message) {
           alert(message["data"])
+        }
+        else if ("occurred_from" in message) {
+          alert(message["occurred_from"])
+        }
+        else {
+          Object.keys(message).forEach((k) => {
+            alert(`${k}: ${message[k]}`)
+          })
         }
         this.spinner.hide()
       }
@@ -291,7 +309,7 @@ export class InputComponent implements OnInit {
         this.reloadRecords.emit(this.record)
         modal.dismiss()
         this.spinner.hide()
-        
+
       }, error: err => {
         console.log(err)
         this.spinner.hide()
@@ -457,10 +475,12 @@ export class InputComponent implements OnInit {
   }
   setFieldValue(e) {
     console.log("SETTING THE F|IELD VALUEEEEEE")
+    let xterm = e.event.srcElement.value
+    if (this.reverse_trans && xterm in this.reverse_trans) xterm = this.reverse_trans[xterm]
     if (e.index >= 0) {
-      this.record['data'][e.table][e.index][e.field] = e.event.srcElement.value
+      this.record['data'][e.table][e.index][e.field] = xterm
     } else {
-      this.record['data'][e.table][e.field] = e.event.srcElement.value
+      this.record['data'][e.table][e.field] = xterm
     }
   }
   loadFieldFile(eve) {
@@ -507,7 +527,7 @@ export class InputComponent implements OnInit {
       } else {
         let i = this.record['data'][e.table][e.field].indexOf(elem.value)
         if (i > -1) {
-          this.record['data'][e.table].splice(i, 1)
+          this.record['data'][e.table][e.field].splice(i, 1)
         }
       }
     }
@@ -551,14 +571,21 @@ export class InputComponent implements OnInit {
     }
   }
   setAutocompleteTerms(e: any) {
-    let terms = e.terms
+    let terms = e.words
     let extra = e.extra
     if (extra) {
       this.recordService.getNames(extra, localStorage.getItem("Language")).pipe(first()).subscribe((d) => {
         this.autocomplete_terms = d["result"]
       })
-    } else
-      this.autocomplete_terms = terms.map((t) => this.translateService.instant(t))
+    } else {
+      this.autocomplete_terms = []
+      this.reverse_trans = {}
+      terms.forEach((t) => {
+        let translated = this.translateService.instant(t)
+        this.reverse_trans[translated] = t
+        this.autocomplete_terms.push(translated)
+      })
+    }
   }
   startScribble(e) {
     this.isDrawing = true
@@ -601,6 +628,11 @@ export class InputComponent implements OnInit {
         this.hasRoadMap = true
         this.loadMap()
       }
+    }
+    this.canvas_extra = null
+    if (("extra" in definition) && definition["extra"].length) {
+      this.canvas_extra = definition["extra"]
+      this.loadImageFromUrl(this.canvas_extra)
     }
     console.log(definition)
     commentCanvasContext.lineWidth = 3;
@@ -658,6 +690,18 @@ export class InputComponent implements OnInit {
       e.stopPropagation()
       canvas.removeEventListener('touchmove', onPaint);
     });
+  }
+
+  loadImageFromUrl(url) {
+    var image = new Image();
+    var canvas = document.querySelector<HTMLCanvasElement>("#scribble");
+    image.onload = function () {
+      var hRatio = canvas.width / image.width;
+      var vRatio = canvas.height / image.height;
+      var ratio = Math.min(hRatio, vRatio);
+      canvas.getContext("2d").drawImage(image, 0, 0, image.width, image.height, 0, 0, image.width * ratio, image.height * ratio);
+    };
+    image.src = url
   }
 
   loadMap() {
@@ -729,6 +773,9 @@ export class InputComponent implements OnInit {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     if (this.hasRoadMap)
       this.loadMap()
+    if (this.canvas_extra) {
+      this.loadImageFromUrl(this.canvas_extra)
+    }
   }
   onPaint(event: any) {
     event.stopPropagation()

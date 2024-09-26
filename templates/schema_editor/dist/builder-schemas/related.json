@@ -67,6 +67,7 @@
                         "color",
                         "tel",
                         "datetime",
+                        "time",
                         "url"
                     ],
                     "options": {
@@ -77,6 +78,7 @@
                             "HTML Color",
                             "Telephone number",
                             "Date / Time",
+                            "Time",
                             "Website URL"
                         ]
                     }

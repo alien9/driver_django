@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Input, NgZone, Output, EventEmitter, ApplicationRef, TemplateRef } from '@angular/core'
 import { Observable, OperatorFunction } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, tap, switchMap } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-input-field',
@@ -18,7 +19,7 @@ export class InputFieldComponent implements OnInit {
   @Input() locale: string
   @Input() canvasmode: any
   @Input() autocomplete_terms: any[] = []
-  @Input() schema:any
+  @Input() schema: any
   @Output() startDrawing = new EventEmitter<any>()
   @Output() setDateFieldValueChanged = new EventEmitter<any>()
   @Output() setFieldCheckFieldChanged = new EventEmitter<any>()
@@ -27,10 +28,11 @@ export class InputFieldComponent implements OnInit {
   @Output() turnOnAutoComplete = new EventEmitter<any>()
 
   public value: any = ""
-  constructor() { }
+  constructor(private translateService: TranslateService
+  ) { }
 
   ngOnInit(): void {
-    this.getValue()
+    //this.getValue()
   }
   getValue(): any {
     if (this.index >= 0) {
@@ -53,18 +55,16 @@ export class InputFieldComponent implements OnInit {
       }
       this.value = this.data[this.tableName][this.fieldName]
     }
-    return this.value
+    if (!this.value) return ""
+    return this.translateService.instant(this.value)
   }
 
   startDraw(what: any) {
-    let current:string = this.getValue()
+    let current: string = this.getValue()
     if (current != "")
       what.value = current
-    what.format=this.prop.value["imageSource"]
-    if("imageSource" in this.prop.value){
-      console.log("eeeeee")
-      console.log(this.data)
-    }
+    what.format = this.prop.value["imageSource"]
+    what.extra = this.prop.value["extra"]
     this.startDrawing.emit(what)
   }
   setFieldValue(e: any) {
@@ -76,9 +76,27 @@ export class InputFieldComponent implements OnInit {
       d = new Date()
       d.setFullYear(e['year'], e['month'] - 1, e['day'])
     }
-    console.log("date field")
-    console.log(e)
     this.setDateFieldValueChanged.emit({ "table": table, "field": field, "index": index, "value": d })
+  }
+  setTimeField(e: any, table: string, field: string, index: number = -1, part: string = "hour") {
+    let current = this.getValue()
+    if (part == "hour") {
+      let h = ''
+      if (e.srcElement.value.length) {
+        let hour = ((e.srcElement.value > 23) || (e.srcElement.value < 0)) ? '0' : e.srcElement.value
+        h = String(hour).padStart(2, '0');
+      }
+      current = current.replace(/^([^:]*):?/, `${h}:`);
+    }
+    else {
+      let m = ''
+      if (e.srcElement.value.length) {
+        let min = ((e.srcElement.value > 59) || (e.srcElement.value < 0)) ? '0' : e.srcElement.value
+        m = String(min).padStart(2, '0');
+      }
+      current = current.replace(/:?([^:]*)$/, `:${m}`);
+    }
+    this.fieldChanged.emit({ "event": { srcElement: { value: current } }, "table": this.tableName, "field": this.fieldName, "index": this.index })
   }
   setFieldAutoCompleteTerms(e: any, words: any, extra: any) {
     this.turnOnAutoComplete.emit({ "event": e, "words": words, "extra": extra })
@@ -92,7 +110,7 @@ export class InputFieldComponent implements OnInit {
       )
     );
 
-  setCheckField(e: any, t: string, f: string, i: number=null) {
+  setCheckField(e: any, t: string, f: string, i: number = null) {
     console.log("setting check field")
     this.setFieldCheckFieldChanged.emit({ "event": e, "table": t, "field": f, "index": i })
   }

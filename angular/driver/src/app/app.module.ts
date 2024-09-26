@@ -20,6 +20,7 @@ import { GoogleLoginProvider } from 'angularx-social-login';
 import { LoginComponent } from './login/login.component';
 
 import { NavbarComponent } from './navbar/navbar.component';
+import { FormatTimePipe } from './format-time.pipe';
 import { OrderedFieldsPipe } from './ordered-fields.pipe';
 import { SearchableFilterPipe } from './navbar/search-field.pipe'
 import { OrderPipe } from './navbar/order-field.pipe'
@@ -134,6 +135,7 @@ const icons = {
     ByPassSecurityPipe,
     LocalCurrencyPipe,
     OrderedFieldsPipe,
+    FormatTimePipe,
     SearchableFilterPipe,
     OrderPipe,
     RelatedPipe,

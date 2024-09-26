@@ -41,7 +41,7 @@ export class NavbarComponent implements OnInit {
   @Output() newRecord = new EventEmitter<boolean>()
   @Output() startDownload = new EventEmitter<object>()
   @Output() startGeography = new EventEmitter<object>()
-  @Output() aboutCaller=new EventEmitter()
+  @Output() aboutCaller = new EventEmitter()
   @Input() recordSchema: object
   @Input() stateSelected
   @Input() locale: string
@@ -131,7 +131,7 @@ export class NavbarComponent implements OnInit {
   startHelp(content: any) {
     this.modalService.open(content, { size: 'xl', scrollable: true });
   }
-  triggerStartFiltgers(){
+  triggerStartFiltgers() {
     this.startFilters(this.filterContent)
   }
 
@@ -603,7 +603,12 @@ export class NavbarComponent implements OnInit {
   qrCode(mod) {
     this.modalService.open(mod, { size: 'lg' });
   }
-  about(event:any){
+  about(event: any) {
     this.aboutCaller.emit()
+  }
+  getLangPosition() {
+    if (['ar'].indexOf(localStorage.getItem("Language")) > -1)
+      return "dropdown-menu dropdown-menu-start"
+    else return "dropdown-menu dropdown-menu-end"
   }
 }

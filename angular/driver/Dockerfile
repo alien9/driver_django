@@ -12,7 +12,7 @@ COPY tsconfig.spec.json /opt/driver/
 COPY tslint.json /opt/driver/
 
 
-RUN n | npm i -g @angular/cli@12.2.18
+RUN npm i -g @angular/cli@12.2.18
 RUN npm update
 RUN npm install -g --save-dev @angular-devkit/build-angular
 RUN npm install
