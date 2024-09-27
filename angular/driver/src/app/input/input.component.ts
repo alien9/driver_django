@@ -619,7 +619,6 @@ export class InputComponent implements OnInit {
       };
       image.src = definition.value
     } else {
-      // console.log("will gret the mapDEFINITIONSSSSSSSS")
       console.log(definition)
     }
     this.hasRoadMap = false
@@ -630,7 +629,7 @@ export class InputComponent implements OnInit {
       }
     }
     this.canvas_extra = null
-    if (("extra" in definition) && definition["extra"].length) {
+    if (("extra" in definition) && definition["extra"] && definition["extra"].length) {
       this.canvas_extra = definition["extra"]
       this.loadImageFromUrl(this.canvas_extra)
     }
