@@ -101,6 +101,7 @@ export class IndexComponent implements OnInit {
   popContent: any
   iRapData: object
   iraplayer: object = { when: 'after', what: 'pedestrian' }
+  localRecords: any[] = JSON.parse(localStorage.getItem("records") || "[]")
   constructor(
     private recordService: RecordService,
     private router: Router,
@@ -131,11 +132,11 @@ export class IndexComponent implements OnInit {
       if (data['DEFAULT_LANGUAGE']?.length) {
         let current = localStorage.getItem("Language") || navigator.language
         let langs = data['LANGUAGES'] || []
-        if(langs.map((k)=>k.code).indexOf(current)<0){
+        if (langs.map((k) => k.code).indexOf(current) < 0) {
           this.setLanguage(data['DEFAULT_LANGUAGE'])
         }
       }
-      this.locale=localStorage.getItem("Language")
+      this.locale = localStorage.getItem("Language")
       if (this.route.snapshot.queryParamMap.get('language') && (this.route.snapshot.queryParamMap.get('language') != this.locale)) {
         if (this.config['LANGUAGES'] && (this.config['LANGUAGES'].map((k) => k.code).indexOf(this.route.snapshot.queryParamMap.get('language')) >= 0)) {
           localStorage.setItem("Language", this.route.snapshot.queryParamMap.get('language'))
@@ -780,6 +781,13 @@ export class IndexComponent implements OnInit {
   startRecord(l: boolean) {
     this.listening = l
   }
+  createRecord(content: any) {
+    console.log("create a record")
+    this.recordService.getPosition().then((p) => {
+      console.log(p)
+      this.newRecord({ "latlng": p }, content)
+    })
+  }
   newRecord(v: any, content: any) {
     this.listening = false
     //this.navbar.inserting = false
@@ -803,6 +811,11 @@ export class IndexComponent implements OnInit {
     })
     this.editing = true
     this.modalService.open(content, { size: 'lg', animation: false, keyboard: false, backdrop: "static" });
+  }
+  setRecords(r) {
+    console.log("settiting recordsss")
+    console.log(r)
+    this.localRecords = r
   }
 
   applyGeometry(e: any) {
@@ -901,6 +914,11 @@ export class IndexComponent implements OnInit {
       this.record_uuid = null
     }
 
+  }
+  openRecord(content, data: any) {
+    this.record = data
+    this.modalService.open(content, { size: 'lg', animation: false, keyboard: false, backdrop: "static" });
+    if(this.canWrite) this.editRecord()
   }
   setMap(e: L.Map) {
     this.map = e

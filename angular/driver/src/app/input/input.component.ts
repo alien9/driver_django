@@ -18,7 +18,8 @@ import { TranslateService } from '@ngx-translate/core';
 import "leaflet.vectorgrid";
 import { DYNAMIC_TYPE } from '@angular/compiler';
 import { textChangeRangeIsUnchanged } from 'typescript';
-
+import "leaflet.locatecontrol";
+import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 
 @Component({
   selector: 'app-input',
@@ -36,6 +37,7 @@ export class InputComponent implements OnInit {
   @Output() mapillaryId = new EventEmitter<string>()
   @Output() reloadRecords = new EventEmitter<object>()
   @Output() filterExpand = new EventEmitter<Date>()
+  @Output() storeRecord = new EventEmitter<object>()
   @Input() boundaries: any
   public schema: object
   public options: any
@@ -231,6 +233,7 @@ export class InputComponent implements OnInit {
   cleanup() {
     Object.keys(this.record['data']).forEach((k) => {
       let change = this.record['data'][k]
+      this.record['schema'] = this.recordSchema['uuid']
       if (this.recordSchema['schema'].definitions[k]) {
         if (!this.recordSchema['schema'].definitions[k].multiple) {
           change = [this.record['data'][k]]
@@ -292,8 +295,15 @@ export class InputComponent implements OnInit {
         }
         else {
           Object.keys(message).forEach((k) => {
-            alert(`${k}: ${message[k]}`)
+            console.log(`${k}: ${message[k]}`)
           })
+          let records = JSON.parse(localStorage.getItem("records") || "[]")
+          records.push(this.record)
+          localStorage.setItem("records", JSON.stringify(records))
+          this.storeRecord.emit(records)
+          alert("Record was stored in the device.")
+          modal.dismiss()
+          this.spinner.hide()
         }
         this.spinner.hide()
       }
@@ -315,6 +325,10 @@ export class InputComponent implements OnInit {
         this.spinner.hide()
       }
     })
+  }
+  setMap(e: L.Map) {
+    this.map=e
+    L.control.locate({ drawMarker: false }).addTo(this.map)
   }
 
   setMapillaryId(id: string) {
@@ -368,6 +382,7 @@ export class InputComponent implements OnInit {
     e.on('baselayerchange', l => {
       localStorage.setItem("input_baselayer", l.name)
     })
+    this.setMap(e)
   }
   tabChange(e: any) {
     if (this.schema['definitions'][e.nextId]['details']) {// it's returning to the map pane
@@ -502,7 +517,7 @@ export class InputComponent implements OnInit {
       if (!this.record['data'][e.table])
         this.record['data'][e.table] = []
       while (this.record['data'][e.table].length < e.index + 1)
-        this.record['data'][e.table].push({})
+        this.record['data'][e.table].push({ "_localId": uuid.v4() })
       if (!this.record['data'][e.table][e.index][e.field]) {
         this.record['data'][e.table][e.index][e.field] = []
       }
@@ -517,7 +532,7 @@ export class InputComponent implements OnInit {
       }
     } else {
       if (!this.record['data'][e.table])
-        this.record['data'][e.table] = {}
+        this.record['data'][e.table] = { "_localId": uuid.v4() }
       if (!this.record['data'][e.table][e.field]) {
         this.record['data'][e.table][e.field] = []
       }
@@ -601,7 +616,9 @@ export class InputComponent implements OnInit {
     $(".modal-footer").hide()
     this.imageEditing = definition
     let bg = null
-    this.modalService.open(modal, { size: 'lg' });
+    this.modalService.open(modal, {
+      size: 'lg', backdrop: 'static', keyboard: false
+    });
     var container = document.querySelector<HTMLElement>(".canvas-container")
     container.style.height = `${window.innerHeight - 200}px`;
     var canvas = document.querySelector<HTMLCanvasElement>("#scribble");
@@ -612,6 +629,11 @@ export class InputComponent implements OnInit {
     //set the line parameters
     canvas.width = container.offsetWidth
     canvas.height = container.offsetHeight
+    this.hasRoadMap = false
+    this.canvas_extra = null
+    if (("extra" in definition) && definition["extra"] && definition["extra"].length) {
+      this.canvas_extra = definition["extra"]
+    }
     if ("value" in definition) {
       var image = new Image();
       image.onload = function () {
@@ -619,19 +641,14 @@ export class InputComponent implements OnInit {
       };
       image.src = definition.value
     } else {
-      console.log(definition)
-    }
-    this.hasRoadMap = false
-    if ("format" in definition) {
-      if (definition.format == "map") {
-        this.hasRoadMap = true
-        this.loadMap()
+      if ("format" in definition) {
+        if (definition.format == "map") {
+          this.hasRoadMap = true
+          this.loadMap()
+        }
       }
-    }
-    this.canvas_extra = null
-    if (("extra" in definition) && definition["extra"] && definition["extra"].length) {
-      this.canvas_extra = definition["extra"]
-      this.loadImageFromUrl(this.canvas_extra)
+      if (this.canvas_extra)
+        this.loadImageFromUrl(this.canvas_extra)
     }
     console.log(definition)
     commentCanvasContext.lineWidth = 3;

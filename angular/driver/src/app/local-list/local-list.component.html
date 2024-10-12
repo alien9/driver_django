@@ -1,0 +1,16 @@
+<div class=scrollable-container>
+    <ngx-spinner></ngx-spinner>
+    <table class="table">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">{{'Date and time'|translate}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor=" let r of records ">
+                <th scope="row "><a href="#" (click)="edit(r)">{{r.occurred_from|date:"medium"}}</a></th>
+                <td>{{r.location_text|firstpart}}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>

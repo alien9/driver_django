@@ -73,7 +73,7 @@
             <div *ngFor="let o of prop.value.items.enum">
                 <label class="form-check-label">
                     <input class="form-check-input" type="checkbox" [value]="o"
-                        checked="{{value?.includes(o) ? 'checked' : null}}"
+                        checked="{{getValue()?.includes(o) ? 'checked' : null}}"
                         (change)="setCheckField($event, tableName, fieldName, index)">
                     {{o|translate}}
                 </label>&nbsp;

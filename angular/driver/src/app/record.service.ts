@@ -252,4 +252,14 @@ export class RecordService {
   getReverse(roadmap:string, lat: string, lng: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/${roadmap}/reverse/?lat=${lat}&lon=${lng}&format=json`, { headers: this.getHeaders() })
   }
+  getPosition(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resp => {
+        resolve({ lng: resp.coords.longitude, lat: resp.coords.latitude });
+      },
+        err => {
+          reject(err);
+        });
+    });
+  }
 }

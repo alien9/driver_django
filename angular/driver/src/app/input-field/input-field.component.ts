@@ -3,6 +3,7 @@ import { Input, NgZone, Output, EventEmitter, ApplicationRef, TemplateRef } from
 import { Observable, OperatorFunction } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, tap, switchMap } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
+import * as uuid from 'uuid';
 
 @Component({
   selector: 'app-input-field',
@@ -40,7 +41,7 @@ export class InputFieldComponent implements OnInit {
         this.data[this.tableName] = []
       }
       while (this.data[this.tableName].length < this.index + 1) {
-        this.data[this.tableName].push({})
+        this.data[this.tableName].push({"_localId":uuid.v4()})
       }
       if (!(this.fieldName in this.data[this.tableName][this.index])) {
         this.data[this.tableName][this.index][this.fieldName] = ""
@@ -48,7 +49,7 @@ export class InputFieldComponent implements OnInit {
       this.value = this.data[this.tableName][this.index][this.fieldName]
     } else {
       if (!(this.tableName in this.data)) {
-        this.data[this.tableName] = {}
+        this.data[this.tableName] = {"_localId":uuid.v4()}
       }
       if (!(this.fieldName in this.data[this.tableName])) {
         this.data[this.tableName][this.fieldName] = ""
@@ -56,6 +57,7 @@ export class InputFieldComponent implements OnInit {
       this.value = this.data[this.tableName][this.fieldName]
     }
     if (!this.value) return ""
+    if((typeof this.value)!='string') return this.value
     return this.translateService.instant(this.value)
   }
 

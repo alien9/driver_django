@@ -6,7 +6,7 @@
             <ng-template ngbNavContent>
                 <input [(ngModel)]="record['occurred_from']" type="hidden">
                 <div class="small-map" *ngIf="k.value.details">
-                    <div class="input-map" leaflet [leafletLayers]=layers [leafletLayersControl]="layersControl"
+                    <div class="input-map" leaflet [leafletLayers]=layers [leafletLayersControl]="layersControl" (map)=setMap($event)
                         [leafletOptions]="options" (leafletMapReady)=mapReady($event)></div>
                 </div>
                 <ul class="list-group list-group-flush" *ngIf="k.value.details">
