@@ -18,8 +18,6 @@ export class FontLoaderService {
       default:
         fontFamily = 'Roboto'; // Default font
     }
-    console.log("Loading font")
-    console.log(language)
     WebFont.load({
       google: {
         families: [fontFamily],

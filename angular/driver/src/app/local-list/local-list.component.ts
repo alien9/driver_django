@@ -7,14 +7,14 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 })
 export class LocalListComponent implements OnInit {
   @Input() records: any[]
-  @Output() editRecord = new EventEmitter<any>()
+  @Output() editLocalRecord = new EventEmitter<any>()
   constructor() { }
 
   ngOnInit(): void {
   }
-  edit(record) {
+  edit(record, i) {
     console.log(record)
-    this.editRecord.emit(record)
+    this.editLocalRecord.emit({"data":record, "index":i})
   }
 
 }

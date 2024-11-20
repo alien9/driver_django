@@ -27,13 +27,13 @@ export class InputFieldComponent implements OnInit {
   @Output() setFileChanged = new EventEmitter<any>()
   @Output() fieldChanged = new EventEmitter<any>()
   @Output() turnOnAutoComplete = new EventEmitter<any>()
-
+  public fontFamily=document.body.style.fontFamily
   public value: any = ""
+  fileFieldId: any;
   constructor(private translateService: TranslateService
   ) { }
 
   ngOnInit(): void {
-    //this.getValue()
   }
   getValue(): any {
     if (this.index >= 0) {
@@ -41,7 +41,7 @@ export class InputFieldComponent implements OnInit {
         this.data[this.tableName] = []
       }
       while (this.data[this.tableName].length < this.index + 1) {
-        this.data[this.tableName].push({"_localId":uuid.v4()})
+        this.data[this.tableName].push({ "_localId": uuid.v4() })
       }
       if (!(this.fieldName in this.data[this.tableName][this.index])) {
         this.data[this.tableName][this.index][this.fieldName] = ""
@@ -49,7 +49,7 @@ export class InputFieldComponent implements OnInit {
       this.value = this.data[this.tableName][this.index][this.fieldName]
     } else {
       if (!(this.tableName in this.data)) {
-        this.data[this.tableName] = {"_localId":uuid.v4()}
+        this.data[this.tableName] = { "_localId": uuid.v4() }
       }
       if (!(this.fieldName in this.data[this.tableName])) {
         this.data[this.tableName][this.fieldName] = ""
@@ -57,7 +57,7 @@ export class InputFieldComponent implements OnInit {
       this.value = this.data[this.tableName][this.fieldName]
     }
     if (!this.value) return ""
-    if((typeof this.value)!='string') return this.value
+    if ((typeof this.value) != 'string') return this.value
     return this.translateService.instant(this.value)
   }
 
@@ -70,6 +70,7 @@ export class InputFieldComponent implements OnInit {
     this.startDrawing.emit(what)
   }
   setFieldValue(e: any) {
+    console.log("will set field value")
     this.fieldChanged.emit({ "event": e, "table": this.tableName, "field": this.fieldName, "index": this.index })
   }
   setDateField(e: any, table: string, field: string, index: number = -1) {
@@ -116,7 +117,13 @@ export class InputFieldComponent implements OnInit {
     console.log("setting check field")
     this.setFieldCheckFieldChanged.emit({ "event": e, "table": t, "field": f, "index": i })
   }
-  loadFile(e: any, table: any, field: string) {
-    this.setFileChanged.emit({ "event": e, "table": table, "field": field })
+  loadFile(e: any, table: any, field: string, index: number) {
+    this.setFileChanged.emit({ "event": e, "table": table, "field": field, "index": index })
+  }
+  rememberImageField() {
+    localStorage.setItem("image-field", this.getImageFieldId())
+  }
+  getImageFieldId(){
+    return `${this.tableName}_${this.fieldName}_${(this.index && (this.index>=0))?this.index:""}`
   }
 }

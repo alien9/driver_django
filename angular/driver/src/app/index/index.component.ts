@@ -17,6 +17,7 @@ import { TranslateService } from '@ngx-translate/core';
 import * as uuid from 'uuid';
 import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
+import sha256 from 'crypto-js/sha256';
 
 @Component({
   selector: 'app-index',
@@ -24,8 +25,12 @@ import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
   styleUrls: ['./index.component.scss']
 })
 export class IndexComponent implements OnInit {
+  @ViewChild('blocker') blockerDialog;
   iRapBounds: L.LatLngBounds;
   about_content: string;
+  screenTimeout: any;
+  lockTimeout: any;
+  locked: boolean = false;
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
     if (event.key && event.key == 'Escape') {
@@ -34,6 +39,7 @@ export class IndexComponent implements OnInit {
       $('.leaflet-container').css('cursor', 'grab');
     }
   }
+  public fontFamily = document.body.style.fontFamily
   public ready: boolean = false
   public config: object = {}
   public boundaries: any[] = []
@@ -69,6 +75,7 @@ export class IndexComponent implements OnInit {
   private lastState: string
   public mapillary_id: string
   public irapDataset;
+  public localRecordIndex = -1
   supportsLocalDate: boolean
   roadmap_uuid: string
   listPage: number = 1
@@ -115,8 +122,17 @@ export class IndexComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    if (this.route.snapshot.queryParamMap.get('language')) {
+      let lang = this.route.snapshot.queryParamMap.get('language')
+      this.locale = this.route.snapshot.queryParamMap.get('language')
+      localStorage.setItem("Language", this.locale)
+      this.router.navigateByUrl('/').finally(() => {
+        this.setLanguage(this.locale)
+      })
+    }
+    console.log("ack")
     let cu = document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")
-    if (!cu.length) {
+    if (!cu?.length) {
       this.router.navigateByUrl('/login')
       return
     }
@@ -153,7 +169,7 @@ export class IndexComponent implements OnInit {
         next: rata => {
           if (rata['results']) {
             let schema_uuid;
-            for (let i = 0; i < rata['results'].length; i++) {
+            for (let i = 0; i < rata['results']?.length; i++) {
               if (rata['results'][i]['label'] == data['PRIMARY_LABEL']) {
                 schema_uuid = rata['results'][i]['current_schema'];
                 this.recordtype_uuid = rata['results'][i]['uuid']
@@ -180,7 +196,36 @@ export class IndexComponent implements OnInit {
       })
     })
   }
+  startLock(blocker) {
+    this.modalService.open(blocker, { size: 's', backdrop: 'static' });
+  }
+  checkLockPassword(event, blocker) {
+    if (sha256(event.srcElement.value) == localStorage.getItem("password")) {
+      blocker.close('unlocked')
+      this.locked = false
+      this.resetTimeout()
+    }
+  }
+  resetTimeout() {
+    if (!this.config["IDLE_TIMEOUT"] || this.config["IDLE_TIMEOUT"] == "0") return
+    if (this.lockTimeout) clearTimeout(this.lockTimeout)
+    this.lockTimeout = window.setTimeout(() => {
+      $("#blocked-trigger").trigger('click')
+      this.locked = true
+    }, this.config["IDLE_TIMEOUT"] * 1000)
+  }
   afterInit() {
+    if (this.config["IDLE_TIMEOUT"]) {
+      let bode = window.document.getElementsByTagName('body')[0]
+      let fu = () => {
+        if (!this.locked)
+          this.resetTimeout()
+      }
+      bode.onmousemove = fu
+      bode.onkeydown = fu
+      bode.ontouchstart = fu
+    }
+    this.resetTimeout()
     let w = document.cookie.match(/AuthService\.canWrite=([^;]*);/)
     if (w && w.length && w[1] == 'true') this.canWrite = true
     this.state = localStorage.getItem('state') || 'Map'
@@ -813,9 +858,19 @@ export class IndexComponent implements OnInit {
     this.modalService.open(content, { size: 'lg', animation: false, keyboard: false, backdrop: "static" });
   }
   setRecords(r) {
-    console.log("settiting recordsss")
-    console.log(r)
     this.localRecords = r
+  }
+  localRefresh(remove) {
+    //refresh the local database
+    if (remove) {
+      if (this.localRecordIndex > -1) {
+        if (this.localRecords && this.localRecords.length > this.localRecordIndex) {
+          this.localRecords.splice(this.localRecordIndex, 1)
+          localStorage.setItem("records", JSON.stringify(this.localRecords))
+        }
+      }
+      this.localRecordIndex = -1
+    }
   }
 
   applyGeometry(e: any) {
@@ -913,12 +968,12 @@ export class IndexComponent implements OnInit {
         })
       this.record_uuid = null
     }
-
   }
-  openRecord(content, data: any) {
-    this.record = data
+  openRecord(content, e: any) {
+    this.record = e.data
+    this.localRecordIndex = e.index
     this.modalService.open(content, { size: 'lg', animation: false, keyboard: false, backdrop: "static" });
-    if(this.canWrite) this.editRecord()
+    if (this.canWrite) this.editRecord()
   }
   setMap(e: L.Map) {
     this.map = e
@@ -1096,6 +1151,13 @@ export class IndexComponent implements OnInit {
     this.removeIrapLayer()
   }
   reloadRecords(e: any) {
+    if (this.localRecordIndex > -1) {
+      if (this.localRecords && this.localRecords.length > this.localRecordIndex) {
+        this.localRecords.splice(this.localRecordIndex, 1)
+        localStorage.setItem("records", JSON.stringify(this.localRecords))
+      }
+      this.localRecordIndex = -1
+    }
     switch (this.state) {
       case 'List':
         this.refreshList()
@@ -1179,7 +1241,7 @@ export class IndexComponent implements OnInit {
     location.reload()
   }
   startLanguageSelector(element: any) {
-    this.modalService.open(element, { size: 's' });
+    this.modalService.open(element, { size: 's', backdrop: 'static' });
   }
   startFilters() {
     this.navbar.triggerStartFiltgers()

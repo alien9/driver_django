@@ -274,19 +274,19 @@
             <select class="custom-select" [(ngModel)]=reportHeaders[tab.key] (change)=setReportHeaders($event)
                 id="{{tab.key}}_header">
                 <optgroup label="{{ 'Geography'|translate}}" *ngIf=boundaries.length>
-                    <option [value]="'boundary_id,'+item.uuid" *ngFor="let item of boundaries">{{item.label|translate}}
+                    <option [ngStyle]="{'font-family':fontFamily}" [value]="'boundary_id,'+item.uuid" *ngFor="let item of boundaries">{{item.label|translate}}
                     </option>
                 </optgroup>
                 <optgroup label="{{ 'Time'|translate}}" *ngIf=wantsTime(tab.key)>
-                    <option value="period_type,day">{{'day'|translate}}</option>
-                    <option value="period_type,day_of_week">{{'day_of_week'|translate}}</option>
-                    <option value="period_type,hour_of_day">{{'hour_of_day'|translate}}</option>
-                    <option value="period_type,month">{{'month'|translate}}</option>
-                    <option value="period_type,week">{{'week'|translate}}</option>
-                    <option value="period_type,year">{{'year'|translate}}</option>
+                    <option [ngStyle]="{'font-family':fontFamily}" value="period_type,day">{{'day'|translate}}</option>
+                    <option [ngStyle]="{'font-family':fontFamily}" value="period_type,day_of_week">{{'day_of_week'|translate}}</option>
+                    <option [ngStyle]="{'font-family':fontFamily}" value="period_type,hour_of_day">{{'hour_of_day'|translate}}</option>
+                    <option [ngStyle]="{'font-family':fontFamily}" value="period_type,month">{{'month'|translate}}</option>
+                    <option [ngStyle]="{'font-family':fontFamily}" value="period_type,week">{{'week'|translate}}</option>
+                    <option [ngStyle]="{'font-family':fontFamily}" value="period_type,year">{{'year'|translate}}</option>
                 </optgroup>
                 <optgroup label="{{ 'Filter'|translate}}">
-                    <option [value]=" 'choices_path,'+field[ 'table']+ ',properties,'+field[ 'title']"
+                    <option [ngStyle]="{'font-family':fontFamily}" [value]=" 'choices_path,'+field[ 'table']+ ',properties,'+field[ 'title']"
                         *ngFor="let field of reportFilters">
                         {{field['title']|translate}}</option>
                 </optgroup>
@@ -298,7 +298,7 @@
             </div>
             <select class="custom-select" [(ngModel)]="reportHeaders[ 'boundary']" (change)="setReportHeaders($event)">
                 <option></option>
-                <option [value]="item.uuid" *ngFor="let item of boundaries">{{item.label}}</option>
+                <option [ngStyle]="{'font-family':fontFamily}" [value]="item.uuid" *ngFor="let item of boundaries">{{item.label}}</option>
             </select>
         </div>
     </div>

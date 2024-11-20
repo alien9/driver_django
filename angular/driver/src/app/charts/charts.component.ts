@@ -17,6 +17,7 @@ export class ChartsComponent implements OnInit, OnChanges {
   @Input() recordSchema: object
   @Input() reportFilters: object[]
   @Input() boundaries: object[]
+  public fontFamily = document.body.style.fontFamily
   active = 1
   toddow: any
   locale: string
@@ -71,8 +72,8 @@ export class ChartsComponent implements OnInit, OnChanges {
     this.filter = JSON.parse(localStorage.getItem("current_filter") || '{}')
     //}
     this.filter['record_type'] = this.recordSchema['record_type']
-    if(this.boundary_polygon_uuid){
-      this.filter["polygon_id"]=this.boundary_polygon_uuid
+    if (this.boundary_polygon_uuid) {
+      this.filter["polygon_id"] = this.boundary_polygon_uuid
     }
     let ts = this.translateService
     switch (activeTab) {
@@ -182,11 +183,11 @@ export class ChartsComponent implements OnInit, OnChanges {
                   totals[l[0]] = ((totals[l[0]]) ? totals[l[0]] : 0) + l[1]
                 })
               })
-              let domain:any=100
-              let t=Object.entries(data['tables'][0]['row_totals']).filter(rt=>rt[0]!="None").map(rt=>rt[1]).sort()
-              if(t.length){
-                domain=t.pop()
-              }              
+              let domain: any = 100
+              let t = Object.entries(data['tables'][0]['row_totals']).filter(rt => rt[0] != "None").map(rt => rt[1]).sort()
+              if (t.length) {
+                domain = t.pop()
+              }
               let subgroups = data['col_labels'].map(k => k.key).sort((a, b) => totals[b] - totals[a]) // field value
               let groups = data['row_labels'].map(k => k.key) //interval
 
@@ -282,7 +283,7 @@ export class ChartsComponent implements OnInit, OnChanges {
         break
       case 3: //pieChart        
         const p_margin_bar = { top: 10, right: 30, bottom: 20, left: 50 },
-          p_width_bar = 600,
+          p_width_bar = 900,
           p_height_bar = p_width_bar
 
         let parameters_pizza = this.filter
@@ -299,7 +300,8 @@ export class ChartsComponent implements OnInit, OnChanges {
             this.spinner.hide()
             let h = []
             let m = 0
-            var p_data: SimpleDataModel[] = Object.entries(data['tables'][0].data["0"]).map(k => { return { "name": ts.instant(k[0]), "value": k[1].toString() } })
+            var p_data: SimpleDataModel[] = Object.entries(data['tables'][0].data["0"]).filter((k=>k[1]!='0'))
+            .map(k => { return { "name": ts.instant(k[0]), "value": k[1].toString() } }).sort((a,b)=>{return (parseInt(a.value)>parseInt(b.value))?1:-1})
             let enablePolylines = false
             let isPercentage = false
             var radius = Math.min(p_width_bar, p_height_bar) / 2 - p_margin_bar.top
@@ -314,6 +316,21 @@ export class ChartsComponent implements OnInit, OnChanges {
               );
             const pie = d3.pie<any>().value((d: any) => Number(d.value));
             const data_ready = pie(p_data);
+
+            let hue = 0
+            let s = 0.65
+            let l = 0.5
+            let colorRange = []
+            while (colorRange.length < p_data.length) {
+
+              colorRange.push(this.rgbToHex(this.hslToRgb(hue, s, l)))
+              hue += 0.375
+              hue = hue % 1
+              s *= 0.95
+              l += ((1 - l) * .05)
+            }
+            colorRange.reverse()
+            this.palette=colorRange
             let outerArc = d3
               .arc()
               .innerRadius(radius * 0.9)
@@ -523,6 +540,37 @@ export class ChartsComponent implements OnInit, OnChanges {
   }
   activeIdChange(e: any) {
     this.loadChart(e.nextId)
+  }
+  hslToRgb(h, s, l) {
+    let r, g, b;
+
+    if (s === 0) {
+      r = g = b = l; // achromatic
+    } else {
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = this.hueToRgb(p, q, h + 1 / 3);
+      g = this.hueToRgb(p, q, h);
+      b = this.hueToRgb(p, q, h - 1 / 3);
+    }
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  }
+  hueToRgb(p, q, t) {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  }
+  componentToHex(c) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+  }
+
+  rgbToHex(rgb) {
+    return this.componentToHex(rgb[0]) + this.componentToHex(rgb[1]) + this.componentToHex(rgb[2]);
   }
 
 }

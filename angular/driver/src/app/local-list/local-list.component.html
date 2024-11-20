@@ -1,14 +1,15 @@
 <div class=scrollable-container>
     <ngx-spinner></ngx-spinner>
-    <table class="table">
+<div class="" *ngIf="!records || !records.length">{{'There aren\'t local records on the device.'|translate}}</div>
+    <table class="table" *ngIf="records && records.length>0">
         <thead class="thead-dark">
             <tr>
                 <th scope="col">{{'Date and time'|translate}}</th>
             </tr>
         </thead>
         <tbody>
-            <tr *ngFor=" let r of records ">
-                <th scope="row "><a href="#" (click)="edit(r)">{{r.occurred_from|date:"medium"}}</a></th>
+            <tr *ngFor=" let r of records; index as i ">
+                <th scope="row "><a href="#" (click)="edit(r,i)">{{r.occurred_from|date:"medium"}}</a></th>
                 <td>{{r.location_text|firstpart}}</td>
             </tr>
         </tbody>

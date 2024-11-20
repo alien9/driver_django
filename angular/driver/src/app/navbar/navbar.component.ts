@@ -46,6 +46,7 @@ export class NavbarComponent implements OnInit {
   @Input() stateSelected
   @Input() locale: string
   @ViewChild('viewpoint') filterContent: any;
+  public fontFamily=document.body.style.fontFamily
   public authenticated: boolean = true
   public occurred_min: Date
   public occurred_max: Date
@@ -111,8 +112,8 @@ export class NavbarComponent implements OnInit {
     this.locale = l
     this.initDataFrame()
     this.qrvalue = this.recordService.getBackend()
-    if (!this.qrvalue.length) this.qrvalue = window.document.location.href
-    this.qrvalue = `${this.qrvalue}?language=${localStorage.getItem("Language")}`
+    if (!this.qrvalue.length) this.qrvalue = window.document.location.href.replace(/\/$/, '')    
+    this.qrvalue = `${this.qrvalue}/static/driver.apk?language=${localStorage.getItem("Language")}`
   }
   onStateSelected(state) {
     this.stateSelected = state

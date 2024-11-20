@@ -1163,7 +1163,7 @@ if (function(a, b) {
             K = [],
             J = [],
             (v.qsa = qa.test(G.querySelectorAll)) && (e(function(a) {
-                H.appendChild(a).innerHTML = "<a id='" + N + "'></a><select id='" + N + "-\r\\' msallowcapture=''><option selected=''></option></select>",
+                H.appendChild(a).innerHTML = "<a id='" + N + "'></a><select id='" + N + "-\r\\' msallowcapture=''><option [ngStyle]="{'font-family':fontFamily}"  selected=''></option></select>",
                 a.querySelectorAll("[msallowcapture^='']").length && J.push("[*^$]=" + ca + "*(?:''|\"\")"),
                 a.querySelectorAll("[selected]").length || J.push("\\[" + ca + "*(?:value|" + ba + ")"),
                 a.querySelectorAll("[id~=" + N + "-]").length || J.push("~="),

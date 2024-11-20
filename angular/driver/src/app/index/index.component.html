@@ -16,7 +16,7 @@
     (newRecord)=newRecord($event,viewpoint)></app-map>
 
 <app-local-list *ngIf="state=='local-list'" [records]="localRecords"
-    (editRecord)="openRecord(viewpoint, $event)"></app-local-list>
+    (editLocalRecord)="openRecord(viewpoint, $event)"></app-local-list>
 
 <app-legend [config]="config" [legends]=legends [subtitles]=subtitles
     *ngIf=legends.length||subtitles.length></app-legend>
@@ -40,7 +40,7 @@
     <app-input [config]=config *ngIf=record [locale]="locale" [roadmap_uuid]="roadmap_uuid" [record]=record
         [boundaries]="boundaries" [recordSchema]=recordSchema [editing]=editing (mapillaryId)="setMapillary($event)"
         [modal]=modal (reloadRecords)="reloadRecords($event)" (filterExpand)=expandFilter($event)
-        (storeRecord)="setRecords($event)">
+        (storeRecord)="setRecords($event)" (refreshLocalRecords)="localRefresh($event)">
     </app-input>
 </ng-template>
 
@@ -150,10 +150,12 @@
                 <div class="mt-2">
                     <select [(ngModel)]="selectedBoundaryPolygon[b.uuid]" (change)="selectPolygon($event, b.uuid)"
                         name="{{b.uuid}}" class="form-select form-select-lg">
-                        <option [value]="null">{{'All'|translate}}</option>
-                        <option [value]="null" *ngIf="!boundaryPolygonsObject[b.uuid].length">
+                        <option [ngStyle]="{'font-family':fontFamily}" [value]="null">{{'All'|translate}}</option>
+                        <option [ngStyle]="{'font-family':fontFamily}" [value]="null"
+                            *ngIf="!boundaryPolygonsObject[b.uuid].length">
                             {{'Searching'|translate}}...</option>
-                        <option [value]="c.uuid" *ngFor="let c of boundaryPolygonsObject[b.uuid]">
+                        <option [ngStyle]="{'font-family':fontFamily}" [value]="c.uuid"
+                            *ngFor="let c of boundaryPolygonsObject[b.uuid]">
                             {{getBoundaryPolygonLabel(c)}}</option>
                     </select>
                 </div>
@@ -165,6 +167,21 @@
             (click)="applyGeometry(modal);">{{'Apply'|translate}}</button>
         <button type="button" class="btn btn-outline-secondary"
             (click)="modal.close('Close click')">{{'Close'|translate}}</button>
+    </div>
+</ng-template>
+
+<button id="blocked-trigger" (click)="startLock(blocker)" style="border-width:0;background-color: white;"></button>
+<ng-template #blocker let-modal (beforeClose)="false">
+    <div class="modal-header">
+        <h4 class="modal-title">{{'Screen Lock'|translate}}</h4>
+    </div>
+    <div class="modal-body">
+        <div class="form-group">
+            <div class="mt-2">
+                <label for="dpf">{{"Password" | translate}}:</label>
+                <input type="text" name="password" class="password" autocomplete="off" (keyup)="checkLockPassword($event,modal)">
+            </div>
+        </div>
     </div>
 </ng-template>
 

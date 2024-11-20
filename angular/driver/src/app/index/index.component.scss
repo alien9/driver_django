@@ -86,3 +86,16 @@ html {
     z-index: 5000;
     bottom: 0;
 }
+@media only screen and (max-width: 960px) {
+    .navbar-fixed {
+        display:none;
+    }
+}
+@font-face{
+    font-family: text-security-disc;
+    src: url("https://raw.githubusercontent.com/noppa/text-security/master/dist/text-security-disc.woff");
+  }
+  .password{
+    -webkit-text-security: disc;
+    font-family: text-security-disc;
+}

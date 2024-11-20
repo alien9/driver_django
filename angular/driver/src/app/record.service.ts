@@ -26,7 +26,7 @@ export class RecordService {
   }
 
   getBackend(): string {
-    return localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
+    return (localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')).replace(/\/\?.*$/, '')
   }
   getRecordType(): Observable<any[]> {
     return this.http.get<any[]>(this.getBackend() + '/api/recordtypes/?active=True', { headers: this.getHeaders() })

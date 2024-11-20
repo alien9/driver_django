@@ -49,7 +49,7 @@
                             <!--possible values: 
                                 {{'clear-day'|translate}},{{'clear-night'|translate}},{{'cloudy'|translate}},{{'fog'|translate}},{{'hail'|translate}},{{'partly-cloudy-day'|translate}},{{'partly-cloudy-night'|translate}},{{'rain'|translate}},{{'sleet'|translate}},{{'snow'|translate}},{{'thunderstorm'|translate}},{{'tornado'|translate}},{{'wind'|translate}}
                             -->
-                            <option [ngValue]="v" *ngFor="let v of weatherValues">{{v|translate}}</option>
+                            <option [ngStyle]="{'font-family':fontFamily}" [ngValue]="v" *ngFor="let v of weatherValues">{{v|translate}}</option>
                         </select>
                     </li>
                     <li class="list-group-item" *ngFor="let b of selectedBoundaries">
@@ -62,7 +62,7 @@
                             <!--possible values: 
                                 {{'clear-day'|translate}},{{'clear-night'|translate}},{{'cloudy'|translate}},{{'fog'|translate}},{{'hail'|translate}},{{'partly-cloudy-day'|translate}},{{'partly-cloudy-night'|translate}},{{'rain'|translate}},{{'sleet'|translate}},{{'snow'|translate}},{{'thunderstorm'|translate}},{{'tornado'|translate}},{{'wind'|translate}}
                             -->
-                            <option [ngValue]="v" *ngFor="let v of lightValues">{{v|translate}}</option>
+                            <option [ngStyle]="{'font-family':fontFamily}" [ngValue]="v" *ngFor="let v of lightValues">{{v|translate}}</option>
                         </select>
                     </li>
                 </ul>

@@ -38,6 +38,7 @@ export class InputComponent implements OnInit {
   @Output() reloadRecords = new EventEmitter<object>()
   @Output() filterExpand = new EventEmitter<Date>()
   @Output() storeRecord = new EventEmitter<object>()
+  @Output() refreshLocalRecords = new EventEmitter<boolean>()
   @Input() boundaries: any
   public schema: object
   public options: any
@@ -49,6 +50,7 @@ export class InputComponent implements OnInit {
   public selectedBoundaries: any = []
   public autocomplete_terms: any[] = []
   public isDrawing = false
+  public fontFamily = document.body.style.fontFamily
   backend: string
   latitude: number
   longitude: number
@@ -288,7 +290,12 @@ export class InputComponent implements OnInit {
           alert(message["detail"])
         }
         else if ("data" in message) {
-          alert(message["data"])
+          let m = message["data"]
+          let mess = m.match(/Schema validation failed for (.+): '(.+)' is a required property/)
+          if (mess && mess.length == 3) {
+            alert(`${this.translateService.instant("Schema validation failed for")} ${this.translateService.instant(mess[1])}: ${this.translateService.instant(mess[2])} ${this.translateService.instant("is a required property")}`)
+          } else
+            alert(message["data"])
         }
         else if ("occurred_from" in message) {
           alert(message["occurred_from"])
@@ -301,7 +308,7 @@ export class InputComponent implements OnInit {
           records.push(this.record)
           localStorage.setItem("records", JSON.stringify(records))
           this.storeRecord.emit(records)
-          alert("Record was stored in the device.")
+          alert(this.translateService.instant("Record was stored in the device."))
           modal.dismiss()
           this.spinner.hide()
         }
@@ -311,23 +318,29 @@ export class InputComponent implements OnInit {
   }
   deleteRecord(modal: any) {
     this.setDate(null)
-    this.spinner.show()
     this.cleanup()
+    this.spinner.show()
     this.record['archived'] = true
-    this.recordService.upload(this.record).pipe(first()).subscribe({
-      next: data => {
-        this.reloadRecords.emit(this.record)
-        modal.dismiss()
-        this.spinner.hide()
+    if (this.record['uuid']) {
+      this.recordService.upload(this.record).pipe(first()).subscribe({
+        next: data => {
+          this.reloadRecords.emit(this.record)
+          modal.dismiss()
+          this.spinner.hide()
 
-      }, error: err => {
-        console.log(err)
-        this.spinner.hide()
-      }
-    })
+        }, error: err => {
+          console.log(err)
+          this.spinner.hide()
+        }
+      })
+    } else {
+      this.refreshLocalRecords.emit(true)
+      modal.dismiss()
+      this.spinner.hide()
+    }
   }
   setMap(e: L.Map) {
-    this.map=e
+    this.map = e
     L.control.locate({ drawMarker: false }).addTo(this.map)
   }
 
@@ -499,15 +512,18 @@ export class InputComponent implements OnInit {
     }
   }
   loadFieldFile(eve) {
-    this.loadFile(eve.event, eve.table, eve.field)
+    this.loadFile(eve.event, eve.table, eve.field, eve.index)
   }
-  loadFile(e: any, table: any, field: string) {
+  loadFile(e: any, table: any, field: string, index = null) {
     if (e.srcElement['files'] && e.srcElement['files'].length) {
       let file = e.srcElement['files'][0]
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = event => {
-        table[field] = reader.result
+        if (index !== null && index > -1)
+          table[index][field] = reader.result
+        else
+          table[field] = reader.result
       }
     }
   }

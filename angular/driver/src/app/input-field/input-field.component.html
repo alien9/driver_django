@@ -26,14 +26,12 @@
             {{data|dict_dump:tableName:index:fieldName|arrayjoin}}
         </span>
 
-
-
-        <img [src]="value" class="pic" (click)="startDraw({table:tableName, field:fieldName, index:index})"
-            *ngIf="['canvas','map'].indexOf(prop.imageSource)>-1 && prop.media && data[tableName] && value">
-
         <textarea readonly=true rows="5" class="form-control invis" [value]="getValue()"
             (change)="setFieldValue($event)"
             *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format=='textarea'"></textarea>
+
+        <img crossorigin="anonymous" [src]="getValue()" class="pic" *ngIf="prop.value.imageSource">
+
     </span>
     <span *ngIf="editing">
         <span *ngIf="prop.value.fieldType=='image' &&  ['canvas','map'].indexOf(prop.value.imageSource)>-1">
@@ -63,10 +61,11 @@
                 *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format!='suggest'">
         </span>
 
-        <span *ngIf="prop.value['fieldType']=='image' && ['canvas','map'].indexOf(prop.value.imageSource )>-1">
-            <input class="form-control" type="file" (change)="loadFile($event, data[tableName],fieldName)"
-                accept="image/*" capture="environment">
-            <input type="hidden" [value]="getValue()">
+        <span *ngIf="prop.value['fieldType']=='image' && ['canvas','map'].indexOf(prop.value.imageSource )==-1">
+            <input class="form-control" type="file" (change)="loadFile($event, data[tableName],fieldName, index)"
+                accept="image/*" capture="environment" (focus)="rememberImageField()">
+            <input type="text" [id]="getImageFieldId()" [value]="getValue()" style="display:block; width:1px;height:1px; border-style: none;" (change)="setFieldValue($event)">
+        
         </span>
 
         <div *ngIf="prop.value.displayType=='checkbox' || prop.value.format=='checkbox'">
@@ -83,12 +82,12 @@
         <select class="form-select" *ngIf="prop.value.fieldType!='reference' && prop.value.displayType=='select'"
             [value]="value" (change)="setFieldValue($event)">
             <option></option>
-            <option *ngFor="let o of prop.value.enum" [value]="o" [selected]="o==value">{{o|translate}}</option>
+            <option [ngStyle]="{'font-family':fontFamily}" *ngFor="let o of prop.value.enum" [value]="o" [selected]="o==value">{{o|translate}}</option>
         </select>
 
         <select class="form-select" *ngIf="prop.value.fieldType=='reference'" (change)="setFieldValue($event)">
             <option></option>
-            <option *ngFor="let related of data[prop.value.watch.target]" [ngValue]="related['_localId']"
+            <option [ngStyle]="{'font-family':fontFamily}" *ngFor="let related of data[prop.value.watch.target]" [ngValue]="related['_localId']"
                 [value]="related['_localId']" [selected]="related['_localId']==getValue()">
                 {{related[schema['definitions'][prop.value.watch.target].properties|keyvalue|arrayfirst]|translate}}
             </option>
@@ -117,10 +116,12 @@
         <input class="form-control" type="number" [value]="getValue()" (change)="setFieldValue($event)"
             *ngIf="prop.value.fieldType=='number'">
 
+        <img [src]="getValue()" class="pic" [id]="'img_'+getImageFieldId()"
+            (click)="startDraw({table:tableName, field:fieldName, index:index})"
+            *ngIf="prop.value.imageSource">
+
     </span>
 
-    <span *ngIf="prop.value.format=='datetime' && value">
+    <span *ngIf="prop.value.format=='datetime' && getValue()">
         {{data|dict_dump:tableName:null:fieldName|localizedDate:'dd/MM/yyyy':locale}}</span>
-    <img crossorigin="anonymous" [src]="getValue()" class="pic"
-        (click)="startDraw({table:tableName, field:fieldName, index:index})" *ngIf="prop.value.imageSource">
 </div>

@@ -13,7 +13,7 @@ export class CounterComponent implements OnInit {
   @Input() irapLayer: any
   @Output() iRapChange = new EventEmitter<string>()
   @Output() iRapCenterChange = new EventEmitter<object>()
-
+  public fontFamily=document.body.style.fontFamily
   subtotals: boolean = false
   language: string = "en"
   constructor() { }

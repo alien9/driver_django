@@ -8,7 +8,7 @@ import { environment } from '../environments/environment'
 export class AuthService {
 
   getBackend(): string {
-    return localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
+  return (localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')).replace(/\/\?.*$/, '')
   }
   logout() {
     document.cookie.split(/;\s?/).map(k => k.split(/=/)).forEach(k => {
