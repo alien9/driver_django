@@ -20,6 +20,7 @@ export class ReportComponent implements OnInit {
   @Output() goBack = new EventEmitter<string>()
   @Output() reloadReport = new EventEmitter<string>()
   @Input() locale:string
+  public fontFamily=document.body.style.fontFamily
   path: object = {}
   timezone: any
   weekdays: object

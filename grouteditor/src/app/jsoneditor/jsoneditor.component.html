@@ -51,14 +51,14 @@
                     </div>
                     <div>Type:{{pair.value.options}}
                         <select [(ngModel)]="dict.definitions[item.key].properties[pair.key].fieldType" [compareWith]="compareByOptionId" (focus)="setActive(null)" (ngModelChange)="setTarget(dict.definitions[item.key].properties[pair.key], $event)" (change)=save()>
-                        <option *ngFor="let item of fieldtypes" [ngValue]="item.id" [selected]="item.id===pair.value.fieldType">
+                        <option [ngStyle]="{'font-family':fontFamily}"  *ngFor="let item of fieldtypes" [ngValue]="item.id" [selected]="item.id===pair.value.fieldType">
                             {{item.name}}
                         </option>
                         </select>
                         <span *ngIf="hasFormat(pair.value.fieldType)">
                             Format:
-                            <select [(ngModel)]="dict.definitions[item.key].properties[pair.key].format" [compareWith]="compareByOptionId" (focus)="setActive(null)" (ngModelChange)="setTarget(dict.definitions[item.key].properties[pair.key], $event)" (change)=save()>
-                                <option *ngFor="let item of formats" [ngValue]="item.id" [selected]="item.id===pair.value.format">
+                            <select [(ngModel)]="dict.definitions[item.key].properties[pair.key].format" [compareWith]="compareByOptionId" (focus)="setActive(null)" (ngModelChange)="setTarget(dict.definitions[item.key].properties[pair.key], $event, true)" (change)=save()>
+                                <option [ngStyle]="{'font-family':fontFamily}"  *ngFor="let item of formats" [ngValue]="item.id" [selected]="item.id===pair.value.format">
                                 {{item.name}}
                                 </option>
                             </select>
@@ -66,14 +66,21 @@
                         <span *ngIf="pair.value.fieldType=='image'">
                             Source:
                             <select [(ngModel)]="pair.value.imageSource" (change)=save()>
-                                <option value="photo">photo</option>
-                                <option value="canvas">canvas</option>
+                                <option [ngStyle]="{'font-family':fontFamily}"  value="photo">photo</option>
+                                <option [ngStyle]="{'font-family':fontFamily}"  value="canvas">canvas</option>
+                                <option [ngStyle]="{'font-family':fontFamily}"  value="map">map</option>
                             </select>
+                            Extra: <input type="text" [(ngModel)]="pair.value.extra" (focus)="setActive(null)" (change)="setExtra(pair.value, $event)">
                         </span>
                         <select *ngIf="pair.value.fieldType==='reference'" [(ngModel)]="pair.value.watch.target" (change)=save()>
-              <option *ngFor="let item of referables" [ngValue]="item.key" [selected]="item.key==pair.value.watch.target">{{item.value.title}}</option>
+              <option [ngStyle]="{'font-family':fontFamily}"  *ngFor="let item of referables" [ngValue]="item.key" [selected]="item.key==pair.value.watch.target">{{item.value.title}}</option>
             </select>
                     </div>
+                    <div  *ngIf="pair.value.format==='suggest'">
+                        Extra:
+                        <input type="text" [(ngModel)]="pair.value.extra" (focus)="setActive(null)" (change)="setExtra(pair.value, $event)">
+                    </div>
+
                     <div *ngIf="pair.value.fieldType==='selectlist'">
                         <div *ngIf="(pair.value.displayType==='select') || (pair.value.displayType==='autocomplete')">
                             <div class="tag"><a href="javascript:void(0)" (click)="newOption(pair.value,item.key,pair.key)"> + </a></div>
@@ -91,16 +98,19 @@
                         </div>
                         <div *ngIf="(pair.value.displayType==='select')||(pair.value.displayType==='autocomplete')">
                             Display: <select [(ngModel)]="pair.value.displayType" (focus)="setActive(null)" (change)="setDisplayType(pair.value, $event)">
-              <option value="checkbox">checkbox</option>
-              <option value="select">select</option>
-              <option value="autocomplete">autocomplete </option>
-              </select>
+              <option [ngStyle]="{'font-family':fontFamily}"  value="checkbox">checkbox</option>
+              <option [ngStyle]="{'font-family':fontFamily}"  value="select">select</option>
+              <option [ngStyle]="{'font-family':fontFamily}"  value="autocomplete">autocomplete </option>
+              </select><span *ngIf="pair.value.displayType==='autocomplete'"> Extra:
+<input type="text" [(ngModel)]="pair.value.extra" (focus)="setActive(null)" (change)="setExtra(pair.value, $event)">
+
+              </span>
                         </div>
                         <div *ngIf="pair.value.format==='checkbox'">
                             Display: <select [(ngModel)]="pair.value.format" (focus)="setActive(null)" (change)="setDisplayType(pair.value, $event)">
-              <option value="checkbox">checkbox</option>
-              <option value="select">select</option>
-              <option value="autocomplete">autocomplete </option>
+              <option [ngStyle]="{'font-family':fontFamily}"  value="checkbox">checkbox</option>
+              <option [ngStyle]="{'font-family':fontFamily}"  value="select">select</option>
+              <option [ngStyle]="{'font-family':fontFamily}"  value="autocomplete">autocomplete </option>
               </select>
                         </div>
                     </div>

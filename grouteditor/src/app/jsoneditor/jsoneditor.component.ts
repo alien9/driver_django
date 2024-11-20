@@ -36,7 +36,9 @@ export class JSONEditorComponent implements OnInit {
     { id: "color", name: "HTML Color" },
     { id: "tel", name: "Telephone number" },
     { id: "datetime", name: "Date / Time" },
-    { id: "url", name: "Website URL" }
+    { id: "time", name: "Time" },
+    { id: "url", name: "Website URL" },
+    { id: "suggest", name: "Auto Complete" },
   ]
 
   constructor(private elementRef: ElementRef, private zone: NgZone,) {
@@ -236,8 +238,20 @@ export class JSONEditorComponent implements OnInit {
   deactivate(): void {
     this.setActive(null);
   }
+  setExtra(o, event) {
+    let f = ""
+    f = event?.srcElement?.value
+    if (f) {
+      o.extra = f
+    }
+    else {
+      delete o.extra
+    }
+    this.save()
+  }
   setDisplayType(o, event) {
     if (event.srcElement.value == 'checkbox') {
+      delete o.extra;
       o.format = 'checkbox';
       o.type = "array";
       delete o.displayType;
@@ -248,6 +262,7 @@ export class JSONEditorComponent implements OnInit {
       delete o.enum;
     } else {
       delete o.format;
+      if (event.srcElement.value == 'select') delete o.extra
       o.displayType = event.srcElement.value; // select or autocomplete
       o.type = "string";
       if (!o.enum)
@@ -257,7 +272,15 @@ export class JSONEditorComponent implements OnInit {
     }
     this.save()
   }
-  setTarget(o, event) {
+  setTarget(o, event, format = false) {
+    if (format) {
+      if (event != "suggest")
+        delete o.extra
+    } else {
+      if (event != "text") {
+        delete o.format
+      }
+    }
     if (event == "image") {
       o["media"] = {
         binaryEncoding: "base64",
@@ -286,6 +309,7 @@ export class JSONEditorComponent implements OnInit {
     } else {
       delete o["enum"];
       delete o["items"];
+      delete o.extra;
     }
     if (event == "number") {
       o["type"] = "number";

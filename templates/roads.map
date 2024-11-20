@@ -1,0 +1,51 @@
+MAP
+    DEBUG 5
+    IMAGECOLOR 255 255 0
+    OUTPUTFORMAT
+        NAME "PNG24"
+        DRIVER 'GD/PNG'
+        MIMETYPE 'image/png'
+        IMAGEMODE RGBA
+        EXTENSION 'png'
+    END
+
+    IMAGETYPE      "PNG24"
+    EXTENT -20037508.3427892480 -20037508.3427892480 20037508.3427892480 20037508.3427892480
+    SIZE           256 256
+
+    PROJECTION
+        "init=epsg:3857"
+    END
+    WEB
+        METADATA 
+            WMS_ENABLE_REQUEST "*" 
+            "wms_srs" "EPSG:3857 EPSG:4326"
+            "wms_title" "DRIVER"
+            "wms_name" "Driver Maps"
+            "wms_server_version" "1.1.1"
+            "wms_format" "image/png"
+            "tile_map_edge_buffer" "20"
+            "tile_metatile_level" "0"
+        END
+    END 
+    LAYER
+        NAME        "roads"
+        DATA        "geom from (select geom, uuid from black_spots_road where st_intersects(geom, !BOX!) AND roadmap_id='{{roadmap_id}}') c using unique uuid using srid=4326"
+        CONNECTIONTYPE  POSTGIS 
+        CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
+        
+        TYPE LINE
+        PROJECTION
+            "init=epsg:4326"
+        END
+        CLASS
+            STYLE
+                WIDTH 20
+                OUTLINECOLOR 230 230 200
+                COLOR 200 200 180
+                OPACITY 100
+                LINECAP SQUARE
+            END
+        END
+    END
+END

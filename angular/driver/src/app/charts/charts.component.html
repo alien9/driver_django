@@ -13,18 +13,18 @@
             <h5 class="m-3">
                 <label>{{'Interval'|translate}}:
                     <select [(ngModel)]="barChart['interval']" (change)=loadChart(active)>
-                        <option value="day">{{'day'|translate}}</option>
-                        <option value="day_of_week">{{'day_of_week'|translate}}</option>
-                        <option value="hour_of_day">{{'hour_of_day'|translate}}</option>
-                        <option value="month">{{'month'|translate}}</option>
-                        <option value="week">{{'week'|translate}}</option>
-                        <option value="year">{{'year'|translate}}</option>
+                        <option [ngStyle]="{'font-family':fontFamily}" value="day">{{'day'|translate}}</option>
+                        <option [ngStyle]="{'font-family':fontFamily}" value="day_of_week">{{'day_of_week'|translate}}</option>
+                        <option [ngStyle]="{'font-family':fontFamily}" value="hour_of_day">{{'hour_of_day'|translate}}</option>
+                        <option [ngStyle]="{'font-family':fontFamily}" value="month">{{'month'|translate}}</option>
+                        <option [ngStyle]="{'font-family':fontFamily}" value="week">{{'week'|translate}}</option>
+                        <option [ngStyle]="{'font-family':fontFamily}" value="year">{{'year'|translate}}</option>
                     </select>
                 </label>
             </h5>
             <h5 class="m-3">{{'Field'|translate}}:
                 <select class="custom-select" [(ngModel)]="barChart['field']" (change)=loadChart(active)>
-                    <option [value]="field['table']+',properties,'+field['title']"
+                    <option [ngStyle]="{'font-family':fontFamily}" [value]="field['table']+',properties,'+field['title']"
                         *ngFor="let field of reportFilters">
                         {{field['title']|translate}}</option>
                 </select>
@@ -39,7 +39,7 @@
         <ng-template ngbNavContent>
             <h5 class="m-3">{{'Field'|translate}}:
                 <select class="custom-select" [(ngModel)]="barChart['field']" (change)=loadChart(active)>
-                    <option [value]="field['table']+',properties,'+field['title']"
+                    <option [ngStyle]="{'font-family':fontFamily}" [value]="field['table']+',properties,'+field['title']"
                         *ngFor="let field of reportFilters">
                         {{field['title']|translate}}</option>
                 </select>
@@ -55,15 +55,15 @@
             <h5 class="m-3">{{'Field'|translate}}:
                 <select class="custom-select" [(ngModel)]="barChart['field']" (change)=loadChart(active)>
                     <option></option>
-                    <option [value]="field['table']+',properties,'+field['title']"
+                    <option [ngStyle]="{'font-family':fontFamily}" [value]="field['table']+',properties,'+field['title']"
                         *ngFor="let field of reportFilters">
                         {{field['title']|translate}}</option>
-                    <option [value]="'boundary_id'" *ngFor="let bound of boundaries">{{bound.label|translate}}</option>
+                    <option [ngStyle]="{'font-family':fontFamily}" [value]="'boundary_id'" *ngFor="let bound of boundaries">{{bound.label|translate}}</option>
                     
                 </select>
                 <select class="custom-select" [(ngModel)]="barChart['parent_field']" (change)=loadChart(active) style="display:none">
                     <option></option>
-                    <option [value]="field['table']+',properties,'+field['title']"
+                    <option [ngStyle]="{'font-family':fontFamily}" [ngStyle]="{'font-family':fontFamily}"[value]="field['table']+',properties,'+field['title']"
                         *ngFor="let field of reportFilters">
                         {{field['title']|translate}}</option>
                 </select>

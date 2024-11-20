@@ -5,6 +5,7 @@ import { first } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
 import { RecordService } from '../record.service';
 import { TranslateService } from '@ngx-translate/core';
+import sha256 from 'crypto-js/sha256';
 
 @Component({
     selector: 'app-login',
@@ -100,6 +101,7 @@ export class LoginComponent implements OnInit {
                         this.entering.emit(null)
                         this.loading = false;
                         this.router.navigateByUrl('/')
+                        localStorage.setItem("password", sha256(this.f.password.value))
                     }
 
                 }, error: err => {

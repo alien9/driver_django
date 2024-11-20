@@ -66,12 +66,36 @@ body {
 .btn-outline-secondary {
     background-color: white;
 }
+
 .btn-outline-secondary:hover {
     background-color: darkgray;
 }
-button.clean,label.clean{
+
+button.clean,
+label.clean {
     font-family: sans-serif;
 }
-html{
+
+html {
     touch-action: pan-down
+}
+
+#floating-commands {
+    position: absolute;
+    right: 0;
+    z-index: 5000;
+    bottom: 0;
+}
+@media only screen and (max-width: 960px) {
+    .navbar-fixed {
+        display:none;
+    }
+}
+@font-face{
+    font-family: text-security-disc;
+    src: url("https://raw.githubusercontent.com/noppa/text-security/master/dist/text-security-disc.woff");
+  }
+  .password{
+    -webkit-text-security: disc;
+    font-family: text-security-disc;
 }

@@ -9,6 +9,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { MapComponent } from './map/map.component';
 import { InputComponent } from './input/input.component';
+
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { LeafletModule } from '@asymmetrik/ngx-leaflet';
 import { LeafletDrawModule } from '@asymmetrik/ngx-leaflet-draw';
@@ -19,6 +20,7 @@ import { GoogleLoginProvider } from 'angularx-social-login';
 import { LoginComponent } from './login/login.component';
 
 import { NavbarComponent } from './navbar/navbar.component';
+import { FormatTimePipe } from './format-time.pipe';
 import { OrderedFieldsPipe } from './ordered-fields.pipe';
 import { SearchableFilterPipe } from './navbar/search-field.pipe'
 import { OrderPipe } from './navbar/order-field.pipe'
@@ -36,7 +38,7 @@ import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
 import { ModalModule } from 'ngx-bootstrap/modal';
 import { NgbModule, NgbTypeaheadModule } from '@ng-bootstrap/ng-bootstrap';
-import { gearFill, filter, funnel, threeDots, threeDotsVertical, calendar, x, textParagraph, pencilSquare, pinMapFill, arrowRepeat, questionLg, map as mapinski, filePlusFill, geoFill, globe, plusSquareFill } from 'ngx-bootstrap-icons';
+import { gearFill, filter, funnel, threeDots, threeDotsVertical, calendar, x, textParagraph, pencilSquare, pinMapFill, arrowRepeat, questionLg, map as mapinski, filePlusFill, geoFill, globe, plusSquareFill, arrowClockwise, listCheck } from 'ngx-bootstrap-icons';
 
 import { NgxBootstrapIconsModule } from 'ngx-bootstrap-icons';
 import { ListComponent } from './list/list.component';
@@ -59,6 +61,7 @@ import localeEs from '@angular/common/locales/es';
 import localeFr from '@angular/common/locales/fr';
 import localeEn from '@angular/common/locales/en';
 import localeLo from '@angular/common/locales/lo';
+import localeAr from '@angular/common/locales/ar';
 import { NgxSpinnerModule } from "ngx-spinner";
 import { ChartsComponent } from './charts/charts.component';
 import { IrapPopupComponent } from './irap-popup/irap-popup.component';
@@ -68,6 +71,8 @@ import { DuplicateComponent } from './duplicate/duplicate.component';
 import { LegendComponent } from './legend/legend.component';
 import { CounterComponent } from './counter/counter.component';
 import { geoBounds } from 'd3';
+import { InputFieldComponent } from './input-field/input-field.component';
+import { LocalListComponent } from './local-list/local-list.component';
 
 const socialConfigFactory = (restService: AuthService) => {
   return restService.getGoogleClientId().pipe(map(config => {
@@ -93,6 +98,7 @@ registerLocaleData(localeEs);
 registerLocaleData(localeFr);
 registerLocaleData(localeEn);
 registerLocaleData(localeLo);
+registerLocaleData(localeAr);
 export function HttpLoaderFactory(httpClient: HttpClient) {
   let b = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
   return new MultiTranslateHttpLoader(httpClient, [
@@ -103,7 +109,7 @@ export function HttpLoaderFactory(httpClient: HttpClient) {
 
 const icons = {
   filePlusFill,
-  geoFill, plusSquareFill,
+  geoFill, plusSquareFill,arrowClockwise, listCheck,
   globe,
   mapinski,
   filter,
@@ -130,6 +136,7 @@ const icons = {
     ByPassSecurityPipe,
     LocalCurrencyPipe,
     OrderedFieldsPipe,
+    FormatTimePipe,
     SearchableFilterPipe,
     OrderPipe,
     RelatedPipe,
@@ -151,6 +158,8 @@ const icons = {
     DuplicateComponent,
     LegendComponent,
     CounterComponent,
+    InputFieldComponent,
+    LocalListComponent,
   ],
   imports: [
     BrowserModule,

@@ -1,4 +1,5 @@
 {
+	"About DRIVER": "",
 	"Active filter": "ຕົວກອງທີ່ໃຊ້ໄດ້",
 	"Aggregate by boundary": "ລວມກັນຕາມເຂດແດນ",
 	"All": "ທັງຫມົດ",
@@ -20,7 +21,7 @@
 	"Day / Time": "ວັນ / ເວລາ",
 	"Delete": "ລຶບ",
 	"Download": "ດາວໂຫຼດ",
-	"Draw": "Draw",
+	"Draw": "ກົດເພື່ອເຊັນ",
 	"Duplicates": "ສຳເນົາ",
 	"Field": "ຫ້ອງຂໍ້ມູນ",
 	"Filter": "ການກັ່ນຕອງ",

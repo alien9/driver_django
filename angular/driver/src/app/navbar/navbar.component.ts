@@ -41,11 +41,12 @@ export class NavbarComponent implements OnInit {
   @Output() newRecord = new EventEmitter<boolean>()
   @Output() startDownload = new EventEmitter<object>()
   @Output() startGeography = new EventEmitter<object>()
-  @Output() aboutCaller=new EventEmitter()
+  @Output() aboutCaller = new EventEmitter()
   @Input() recordSchema: object
   @Input() stateSelected
   @Input() locale: string
   @ViewChild('viewpoint') filterContent: any;
+  public fontFamily=document.body.style.fontFamily
   public authenticated: boolean = true
   public occurred_min: Date
   public occurred_max: Date
@@ -111,8 +112,8 @@ export class NavbarComponent implements OnInit {
     this.locale = l
     this.initDataFrame()
     this.qrvalue = this.recordService.getBackend()
-    if (!this.qrvalue.length) this.qrvalue = window.document.location.href
-    this.qrvalue = `${this.qrvalue}?language=${localStorage.getItem("Language")}`
+    if (!this.qrvalue.length) this.qrvalue = window.document.location.href.replace(/\/$/, '')    
+    this.qrvalue = `${this.qrvalue}/static/driver.apk?language=${localStorage.getItem("Language")}`
   }
   onStateSelected(state) {
     this.stateSelected = state
@@ -131,7 +132,7 @@ export class NavbarComponent implements OnInit {
   startHelp(content: any) {
     this.modalService.open(content, { size: 'xl', scrollable: true });
   }
-  triggerStartFiltgers(){
+  triggerStartFiltgers() {
     this.startFilters(this.filterContent)
   }
 
@@ -603,7 +604,12 @@ export class NavbarComponent implements OnInit {
   qrCode(mod) {
     this.modalService.open(mod, { size: 'lg' });
   }
-  about(event:any){
+  about(event: any) {
     this.aboutCaller.emit()
+  }
+  getLangPosition() {
+    if (['ar'].indexOf(localStorage.getItem("Language")) > -1)
+      return "dropdown-menu dropdown-menu-start"
+    else return "dropdown-menu dropdown-menu-end"
   }
 }

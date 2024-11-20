@@ -1270,7 +1270,7 @@
             K = [],
             J = [],
             (v.qsa = qa.test(G.querySelectorAll)) && (e(function(a) {
-                H.appendChild(a).innerHTML = "<a id='" + N + "'></a><select id='" + N + "-\r\\' msallowcapture=''><option selected=''></option></select>",
+                H.appendChild(a).innerHTML = "<a id='" + N + "'></a><select id='" + N + "-\r\\' msallowcapture=''><option [ngStyle]="{'font-family':fontFamily}"  selected=''></option></select>",
                 a.querySelectorAll("[msallowcapture^='']").length && J.push("[*^$]=" + ca + "*(?:''|\"\")"),
                 a.querySelectorAll("[selected]").length || J.push("\\[" + ca + "*(?:value|" + ba + ")"),
                 a.querySelectorAll("[id~=" + N + "-]").length || J.push("~="),
@@ -59856,12 +59856,12 @@ function(a) {
                     localNumbers: a.options.localNumbers
                 });
             for (var h = g.local["monthNames" + (f.match(/mm/i) ? "" : "Short")], i = f.replace(/m+/i, "\\x2E").replace(/y+/i, "\\x2F"), j = '<select class="' + this._monthYearClass + '" title="' + a.options.monthStatus + '">', k = g.monthsInYear(b) + g.minMonth, l = g.minMonth; k > l; l++)
-                d && -1 === g.newDate(b, l, g.daysInMonth(b, l) - 1 + g.minDay).compareTo(d) || e && 1 === g.newDate(b, l, g.minDay).compareTo(e) || (j += '<option value="' + l + "/" + b + '"' + (c === l ? ' selected="selected"' : "") + ">" + h[l - g.minMonth] + "</option>");
+                d && -1 === g.newDate(b, l, g.daysInMonth(b, l) - 1 + g.minDay).compareTo(d) || e && 1 === g.newDate(b, l, g.minDay).compareTo(e) || (j += '<option [ngStyle]="{'font-family':fontFamily}"  value="' + l + "/" + b + '"' + (c === l ? ' selected="selected"' : "") + ">" + h[l - g.minMonth] + "</option>");
             j += "</select>",
             i = i.replace(/\\x2E/, j);
             var m = a.options.yearRange;
             if ("any" === m)
-                j = '<select class="' + this._monthYearClass + " " + this._anyYearClass + '" title="' + a.options.yearStatus + '"><option>' + b + '</option></select><input class="' + this._monthYearClass + " " + this._curMonthClass + c + '" value="' + b + '">';
+                j = '<select class="' + this._monthYearClass + " " + this._anyYearClass + '" title="' + a.options.yearStatus + '"><option [ngStyle]="{'font-family':fontFamily}" >' + b + '</option></select><input class="' + this._monthYearClass + " " + this._curMonthClass + c + '" value="' + b + '">';
             else {
                 m = m.split(":");
                 var n = g.today().year()
@@ -59871,7 +59871,7 @@ function(a) {
                 o = g.newDate(o + 1, g.firstMonth, g.minDay).add(-1, "d"),
                 p = g.newDate(p, g.firstMonth, g.minDay);
                 var q = function(a, d) {
-                    (0 !== a || g.hasYearZero) && (j += '<option value="' + Math.min(c, g.monthsInYear(a) - 1 + g.minMonth) + "/" + a + '"' + (b === a ? ' selected="selected"' : "") + ">" + (d || a) + "</option>")
+                    (0 !== a || g.hasYearZero) && (j += '<option [ngStyle]="{'font-family':fontFamily}"  value="' + Math.min(c, g.monthsInYear(a) - 1 + g.minMonth) + "/" + a + '"' + (b === a ? ' selected="selected"' : "") + ">" + (d || a) + "</option>")
                 };
                 if (o.toJD() < p.toJD()) {
                     o = (d && 1 === d.compareTo(o) ? d : o).year(),

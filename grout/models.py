@@ -13,6 +13,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from ordered_model.models import OrderedModel
+from django.core.cache import cache
 
 from rest_framework import serializers
 
@@ -226,9 +227,9 @@ class Record(GroutModel):
         try:
             return self.schema.validate_json(self.data)
         except jsonschema.exceptions.ValidationError as e:
+            print(e)
             return {
-                'data': SCHEMA_MISMATCH_ERROR.format(uuid=self.schema.uuid,
-                                                     message=e.message)
+                "data":_("Schema validation failed for ")+_(self.schema.record_type.label)+": " +f"{e.message}"
             }
 
     def clean(self):
@@ -356,6 +357,12 @@ class Boundary(Imported, OrderedModel):
             self.save()
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
+            
+    def save(self, *args, **kwargs):
+        from data.models import Dictionary
+        for d in Dictionary.objects.all():
+            cache.delete(f"boundary_names_{d.language_code}")
+        super(Boundary, self).save(*args, **kwargs)
 
     def write_mapfile(self):
         color = [0, 0, 0]

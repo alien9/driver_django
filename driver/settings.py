@@ -77,6 +77,7 @@ if os.getenv('LANGUAGES', None):
         'es': 'Spanish',
         'fr': 'French',
         'zh-hans': 'Simplified Chinese',
+        'ar': 'Arabic',
     }
     LANGUAGES = list(
         map(lambda l: (l, _(names[l])), os.getenv('LANGUAGES').split(",")))
@@ -596,6 +597,7 @@ CONSTANCE_CONFIG = {
     'OPENWEATHER_RAPID_KEY': ((os.getenv('OPENWEATHER_RAPID_KEY', '')), _("Open Weather API")),
     'CURRENCY': ((os.getenv('CURRENCY', '')), _("Currency")),
     'IDLE_TIMEOUT': ((os.getenv('IDLE_TIMEOUT', '')), _("Idle Timeout")),
+    'DEFAULT_LANGUAGE': ((os.getenv('DEFAULT_LANGUAGE', '')), _("Default Language")),
 }
 CAPTCHA_OUTPUT_FORMAT = u'%(image)s %(hidden_field)s %(text_field)s'
 

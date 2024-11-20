@@ -1,0 +1,127 @@
+<div>
+
+    <span *ngIf="!editing">
+        <span
+            *ngIf="(prop.value.fieldType=='reference') && data[tableName][index] && data[tableName][index][fieldName]">
+            {{(data[prop.value.watch.target]|related:data[tableName][index][fieldName])[schema['definitions'][prop.value.watch.target].properties|keyvalue|arrayfirst]|translate}}
+        </span>
+
+        <span *ngIf="prop.format=='datetime' && value">
+            {{data|dict_dump:tableName:index:fieldName|localizedDate:'dd/MM/yyyy':locale}}
+        </span>
+        <span
+            *ngIf="prop.format!='checkbox' && prop.displayType=='checkbox' && prop.type!='array'">{{data|dict_dump:tableName:index:fieldName|format:prop|translate}}
+        </span>
+
+        <span *ngIf="prop.type=='array'">
+            {{data|dict_dump:tableName:index:fieldName|format:prop.value|arrayjoin}}
+        </span>
+
+        <span
+            *ngIf="prop.value.format!='textarea' && prop.value.fieldType!='reference' && !(prop.value.format=='checkbox' || prop.value.displayType=='checkbox')  && prop.type!='array' && prop.value.fieldType!='image'">
+            {{data|dict_dump:tableName:index:fieldName|format:prop|translate}}
+        </span>
+
+        <span *ngIf="prop.value.format=='checkbox'">
+            {{data|dict_dump:tableName:index:fieldName|arrayjoin}}
+        </span>
+
+        <textarea readonly=true rows="5" class="form-control invis" [value]="getValue()"
+            (change)="setFieldValue($event)"
+            *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format=='textarea'"></textarea>
+
+        <img crossorigin="anonymous" [src]="getValue()" class="pic" *ngIf="prop.value.imageSource">
+
+    </span>
+    <span *ngIf="editing">
+        <span *ngIf="prop.value.fieldType=='image' &&  ['canvas','map'].indexOf(prop.value.imageSource)>-1">
+            <button class="btn btn-light"
+                (click)="startDraw({table:tableName, field:fieldName, index:index})">{{'Draw'|translate}}</button>
+        </span>
+
+        <span *ngIf="prop.value.format=='time'">
+            <input size="4" class="form-control timed" type=number max="23" min="0" [value]="getValue()|format_time:'h'"
+                (change)="setTimeField($event, tableName, fieldName, index, 'hour')">:
+            <input size="4" class="form-control timed" type=number max="59" min="0" [value]="getValue()|format_time:'m'"
+                (change)="setTimeField($event, tableName, fieldName, index, 'minute')">
+        </span>
+
+        <span *ngIf="prop.value.format=='datetime'">
+            <input class="form-control" type=hidden placeholder="yyyy-mm-dd" value="value|localizedDate:'yyyy-MM-dd'"
+                ngbDatepicker #df="ngbDatepicker" (dateSelect)="setDateField($event, tableName, fieldName, index)">
+
+            <a href="#" (click)=df.toggle()>
+                {{getValue()|localizedDate:'dd/MM/yyyy':locale}}
+            </a>
+            &nbsp;
+            <a href="#" (click)="setDateField(null, tableName, fieldName,index)">
+                x
+            </a>
+            <input class="form-control" type="hidden" [value]="getValue()" (change)="setFieldValue($event)"
+                *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format!='suggest'">
+        </span>
+
+        <span *ngIf="prop.value['fieldType']=='image' && ['canvas','map'].indexOf(prop.value.imageSource )==-1">
+            <input class="form-control" type="file" (change)="loadFile($event, data[tableName],fieldName, index)"
+                accept="image/*" capture="environment" (focus)="rememberImageField()">
+            <input type="text" [id]="getImageFieldId()" [value]="getValue()" style="display:block; width:1px;height:1px; border-style: none;" (change)="setFieldValue($event)">
+        
+        </span>
+
+        <div *ngIf="prop.value.displayType=='checkbox' || prop.value.format=='checkbox'">
+            <div *ngFor="let o of prop.value.items.enum">
+                <label class="form-check-label">
+                    <input class="form-check-input" type="checkbox" [value]="o"
+                        checked="{{getValue()?.includes(o) ? 'checked' : null}}"
+                        (change)="setCheckField($event, tableName, fieldName, index)">
+                    {{o|translate}}
+                </label>&nbsp;
+            </div>
+        </div>
+
+        <select class="form-select" *ngIf="prop.value.fieldType!='reference' && prop.value.displayType=='select'"
+            [value]="value" (change)="setFieldValue($event)">
+            <option></option>
+            <option [ngStyle]="{'font-family':fontFamily}" *ngFor="let o of prop.value.enum" [value]="o" [selected]="o==value">{{o|translate}}</option>
+        </select>
+
+        <select class="form-select" *ngIf="prop.value.fieldType=='reference'" (change)="setFieldValue($event)">
+            <option></option>
+            <option [ngStyle]="{'font-family':fontFamily}" *ngFor="let related of data[prop.value.watch.target]" [ngValue]="related['_localId']"
+                [value]="related['_localId']" [selected]="related['_localId']==getValue()">
+                {{related[schema['definitions'][prop.value.watch.target].properties|keyvalue|arrayfirst]|translate}}
+            </option>
+        </select>
+
+        <input class="form-control" type="text" [value]="getValue()" (change)="setFieldValue($event)"
+            *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format=='suggest'"
+            [ngbTypeahead]="search" autocomplete="off" aria-autocomplete="both" aria-haspopup="false"
+            autocomplete="nope" autocorrect="off"
+            (focus)="setFieldAutoCompleteTerms($event, prop.value.enum, prop.value.extra)">
+
+        <input class="form-control" type="text" [value]="getValue()" (change)="setFieldValue($event)"
+            *ngIf="prop.value.fieldType=='selectlist' && prop.value.displayType=='autocomplete'" [ngbTypeahead]="search"
+            aria-autocomplete="both" aria-haspopup="false" autocomplete="nope" autocorrect="off" autocomplete="off"
+            (focus)="setFieldAutoCompleteTerms($event, prop.value.enum, prop.value.extra)">
+
+        <input class="form-control" type="text" [value]="getValue()" (change)="setFieldValue($event)"
+            *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format!='datetime' && prop.value.format!='time' && prop.value.format!='suggest' && prop.value.format!='textarea'">
+
+        <textarea rows="5" class="form-control" [value]="getValue()" (change)="setFieldValue($event)"
+            *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format=='textarea'"></textarea>
+
+        <input class="form-control" type="number" [value]="getValue()" (change)="setFieldValue($event)"
+            *ngIf="prop.value.fieldType=='integer'">
+
+        <input class="form-control" type="number" [value]="getValue()" (change)="setFieldValue($event)"
+            *ngIf="prop.value.fieldType=='number'">
+
+        <img [src]="getValue()" class="pic" [id]="'img_'+getImageFieldId()"
+            (click)="startDraw({table:tableName, field:fieldName, index:index})"
+            *ngIf="prop.value.imageSource">
+
+    </span>
+
+    <span *ngIf="prop.value.format=='datetime' && getValue()">
+        {{data|dict_dump:tableName:null:fieldName|localizedDate:'dd/MM/yyyy':locale}}</span>
+</div>

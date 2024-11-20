@@ -5,13 +5,19 @@ from django_redis import get_redis_connection
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
+from proxy.views import proxy_view
+from constance import config
+from rest_framework.decorators import authentication_classes, permission_classes
+from rest_framework import permissions
 
 from data.models import DriverRecord
-from black_spots.models import (BlackSpot, BlackSpotSet, BlackSpotConfig, RoadMap)
+from black_spots.models import (
+    BlackSpot, BlackSpotSet, BlackSpotConfig, RoadMap, Road)
 from black_spots.serializers import (BlackSpotSerializer, BlackSpotSetSerializer,
                                      BlackSpotConfigSerializer, EnforcerAssignmentInputSerializer,
                                      EnforcerAssignmentSerializer, RoadMapSerializer)
-from black_spots.filters import (BlackSpotFilter, BlackSpotSetFilter, EnforcerAssignmentFilter)
+from black_spots.filters import (
+    BlackSpotFilter, BlackSpotSetFilter, EnforcerAssignmentFilter)
 from data.views import build_toddow
 from rest_framework.decorators import action
 from rest_framework import status
@@ -19,6 +25,7 @@ from driver_auth.permissions import (is_admin_or_writer,)
 from driver_auth.permissions import IsAdminOrReadOnly
 from driver import mixins
 import datetime
+import os, re
 import random
 import uuid
 from dateutil import rrule
@@ -26,9 +33,13 @@ from data.tasks import generate_blackspots
 from celery import states
 from rest_framework.decorators import api_view
 from whoosh.index import open_dir
-from whoosh.qparser import QueryParser,FuzzyTermPlugin
+from whoosh.qparser import QueryParser, FuzzyTermPlugin
 from urllib.parse import urlparse, parse_qs
 
+def valid_uuid(uuid):
+    regex = re.compile('^[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}\Z', re.I)
+    match = regex.match(uuid)
+    return bool(match)
 
 class BlackSpotViewSet(viewsets.ModelViewSet, mixins.GenerateViewsetQuery):
     """ViewSet for black spots"""
@@ -46,11 +57,14 @@ class BlackSpotViewSet(viewsets.ModelViewSet, mixins.GenerateViewsetQuery):
             sql = redis_conn.get(tile_token)
             if sql:
                 tilekey_queryset = BlackSpot.objects.raw(sql)
-                tilekey_serializer = BlackSpotSerializer(tilekey_queryset, many=True)
-                tilekey_serializer.data.insert(0, {'count': len(tilekey_serializer.data)})
+                tilekey_serializer = BlackSpotSerializer(
+                    tilekey_queryset, many=True)
+                tilekey_serializer.data.insert(
+                    0, {'count': len(tilekey_serializer.data)})
                 response = Response(tilekey_serializer.data)
         else:
-            response = super(BlackSpotViewSet, self).list(self, request, *args, **kwargs)
+            response = super(BlackSpotViewSet, self).list(
+                self, request, *args, **kwargs)
         return response
 
 
@@ -62,7 +76,8 @@ class BlackSpotSetViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly, )
 
     def list(self, request, *args, **kwargs):
-        response = super(BlackSpotSetViewSet, self).list(self, request, *args, **kwargs)
+        response = super(BlackSpotSetViewSet, self).list(
+            self, request, *args, **kwargs)
         # If a polygon is passed as an argument, return a tilekey instead of a BlackSpotSet
         # Store the required SQL to filter Blackspots on that polygon
         if 'polygon' in request.query_params and len(response.data['results']) > 0:
@@ -72,26 +87,27 @@ class BlackSpotSetViewSet(viewsets.ModelViewSet):
             redis_conn = get_redis_connection('default')
             redis_conn.set(tile_token, query_sql.encode('utf-8'))
             # return tile_token instead of the BlackspotSet uuid
-            response = Response({'count': 1, 'results': [{'tilekey': tile_token}]})
+            response = Response(
+                {'count': 1, 'results': [{'tilekey': tile_token}]})
         return response
-    
+
     @action(detail=False, methods=['POST'])
     def calculate(self, request, *args, **kwargs):
         if not is_admin_or_writer(request.user):
-            return Response({'success': False, 'taskid': null}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'success': False, 'taskid': None}, status=status.HTTP_401_UNAUTHORIZED)
         if 'uuid' not in request.POST:
-            return Response({'success': False, 'taskid': null}, status=status.HTTP_404_NOT_FOUND)
-        uuid=request.POST.get('uuid')
+            return Response({'success': False, 'taskid': None}, status=status.HTTP_404_NOT_FOUND)
+        uuid = request.POST.get('uuid')
         task = generate_blackspots.delay(uuid, request.user.pk)
         return Response({'success': True, 'taskid': task.id}, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['POST'])
     def task(self, request):
         if not is_admin_or_writer(request.user):
-            return Response({'success': False, 'taskid': null}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'success': False, 'taskid': None}, status=status.HTTP_401_UNAUTHORIZED)
         if 'task' not in request.POST:
-            return Response({'success': False, 'taskid': null}, status=status.HTTP_404_NOT_FOUND)
-        task=request.POST.get('task')
+            return Response({'success': False, 'taskid': None}, status=status.HTTP_404_NOT_FOUND)
+        task = request.POST.get('task')
         job_result = generate_blackspots.AsyncResult(task)
         if job_result.state in states.READY_STATES:
             if job_result.state in states.EXCEPTION_STATES:
@@ -99,7 +115,8 @@ class BlackSpotSetViewSet(viewsets.ModelViewSet):
                 return Response({'status': job_result.state, 'error': str(e)})
             return Response({'status': job_result.state, 'result': "OK"})
         return Response({'status': job_result.state, 'info': job_result.info})
-    
+
+
 class BlackSpotConfigViewSet(drf_mixins.ListModelMixin, drf_mixins.RetrieveModelMixin,
                              drf_mixins.UpdateModelMixin, viewsets.GenericViewSet):
     """ViewSet for BlackSpot configuration
@@ -144,7 +161,8 @@ class EnforcerAssignmentViewSet(drf_mixins.ListModelMixin, viewsets.GenericViewS
         fuzz_factor = 4
 
         # Create a set of assignments with the highest forecasted severity score to sample from.
-        assignments = assignments.order_by('-severity_score')[:num_personnel * fuzz_factor]
+        assignments = assignments.order_by(
+            '-severity_score')[:num_personnel * fuzz_factor]
 
         # Specify a random seed based on the shift, so assignments are deterministic during the same
         # shift, yet vary from shift to shift.
@@ -187,7 +205,8 @@ class EnforcerAssignmentViewSet(drf_mixins.ListModelMixin, viewsets.GenericViewS
         # If the shift_end falls exactly on on hour mark, don't include that bucket
         if shift_end.second == 0 and shift_end.minute == 0:
             shift_end = shift_end - datetime.timedelta(microseconds=1)
-        hour_generator = rrule.rrule(rrule.HOURLY, dtstart=shift_start, until=shift_end)
+        hour_generator = rrule.rrule(
+            rrule.HOURLY, dtstart=shift_start, until=shift_end)
 
         # Iterate over the ToDDoW items and determine which ones are relevant to this shift
         total_count, in_shift_count = 0, 0
@@ -241,20 +260,49 @@ class EnforcerAssignmentViewSet(drf_mixins.ListModelMixin, viewsets.GenericViewS
 
         # Filter the assignments by supplied parameters, sample them, and scale by ToDDoW
         assignments = self.filter_queryset(self.get_queryset())
-        assignments = self.choose_assignments(assignments, num_personnel, shift_start, shift_end)
-        assignments = self.scale_by_toddow(assignments, shift_start, shift_end, record_type, geom)
+        assignments = self.choose_assignments(
+            assignments, num_personnel, shift_start, shift_end)
+        assignments = self.scale_by_toddow(
+            assignments, shift_start, shift_end, record_type, geom)
 
         output_serializer = self.get_serializer(assignments, many=True)
         return Response(output_serializer.data)
 
-class RoadMapViewSet(viewsets.GenericViewSet):
+
+class RoadMapViewSet(drf_mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = RoadMapSerializer
-    queryset=RoadMap.objects.all()
-    def list(self,request):
-        queryset=RoadMap.objects.all()
+    queryset = RoadMap.objects.all()
+    def get_permissions(self):
+        """Returns the permission based on the type of action"""
+        if self.action == "map":
+            return []
+
+        return [permissions.IsAuthenticated()]
+
+    def list(self, request):
+        queryset = RoadMap.objects.all()
         serializer = RoadMapSerializer(queryset, many=True)
         return Response(serializer.data)
     
+    @action(methods=['get'], detail=True)
+    def map(self, request, pk=None):
+        if not os.path.exists("./mapserver/roadmap_%s.map" % (pk)):
+            queryset = RoadMap.objects.all()
+            p = get_object_or_404(queryset, pk=pk)
+            p.write_mapfile()
+        from pyproj import Transformer
+        transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857")
+        x, y = transformer.transform(
+            *request.query_params.get("latlong").split(","))
+        x0 = x-50
+        x1 = x+50
+        y0 = y-50
+        y1 = y+50
+        path = f"?map=/etc/mapserver/roadmap_{pk}.map&SERVICE=WMS&\
+VERSION=1.1.1&REQUEST=GetMap&LAYERS=roads&STYLES=&SRS=EPSG:3857&\
+BBOX={x0},{y0},{x1},{y1}&WIDTH=1000&HEIGHT=1000&format=image/png"
+        return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
+
     def retrieve(self, request, pk=None):
         queryset = RoadMap.objects.all()
         map = get_object_or_404(queryset, pk=pk)
@@ -267,11 +315,29 @@ class RoadMapViewSet(viewsets.GenericViewSet):
         searcher = ix.searcher()
         parser = QueryParser("name", schema=ix.schema)
         parser.add_plugin(FuzzyTermPlugin())
-        qs=parse_qs(request.META['QUERY_STRING'])
+        qs = parse_qs(request.META['QUERY_STRING'])
         res = []
         if 'q' in qs:
             term = str(qs['q'][0])+'~'
             question = parser.parse(term)
             res = searcher.search(question)
-        return JsonResponse([{'lat':r['lat'],'lon':r['lon'],'address':{'road':r['name'],'fullname':r['fullname'], 'id': r['id']}} for r in res], safe=False)
+        return JsonResponse([{'lat': r['lat'], 'lon': r['lon'], 'address': {'road': r['name'], 'fullname': r['fullname'], 'id': r['id']}} for r in res], safe=False)
 
+
+    def valid_uuid(uuid):
+        regex = re.compile('^[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}\Z', re.I)
+        match = regex.match(uuid)
+        return bool(match)
+    @action(methods=['get'], detail=True)
+    def reverse(self, request, pk=None):
+        if not valid_uuid(pk):
+            return JsonResponse({"status":"Not Valid Road", "result":[]})
+        if not 'lat' in request.query_params or not 'lon' in request.query_params:
+            return JsonResponse({"status":"Not Valid LatLng", "result":[]})
+        query=f"SELECT r.uuid,r.created ,r.modified, r.roadmap_id,r.data, r.name, r.geom \
+  FROM black_spots_road r where r.roadmap_id='{pk}' \
+    ORDER BY r.geom <-> ST_SetSRID(ST_MakePoint({str(float(request.query_params['lon']))},{str(float(request.query_params['lat']))}),4326) limit 1"
+        print( query)
+        knn = Road.objects.raw(query)[0]
+        return JsonResponse({"status":"OK", "result":[]})
+        

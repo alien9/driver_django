@@ -25,11 +25,14 @@ services:
       - DRIVER_ADMIN_PASSWORD=${DRIVER_ADMIN_PASSWORD}
       - CONTAINER_NAME=${CONTAINER_NAME}
       - IDLE_TIMEOUT=${IDLE_TIMEOUT}
+      - PYTHONUNBUFFERED=1
     container_name: driver-django-${CONTAINER_NAME}
     image: alien9/driver-django
     command: ["./manage.py", "runserver", '0.0.0.0:4000', '--settings', 'driver.settings_dev']
     volumes:
+      - ./templates:/opt/app/templates
       - ./data:/opt/app/data
+      - ./black_spots:/opt/app/black_spots
       - ./driver:/opt/app/driver
       - ./driver_auth:/opt/app/driver_auth
       - ./grout:/opt/app/grout

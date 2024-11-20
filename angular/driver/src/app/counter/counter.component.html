@@ -17,10 +17,10 @@
             <div>
                 <label>{{'Road user'|translate}}: </label>
                 <select [(ngModel)]="irapLayer['what']" (change)=drawIrap($event)>
-                    <option value="pedestrian">{{'Pedestrian'|translate}}</option>
-                    <option value="bicycle">{{'Bicycle'|translate}}</option>
-                    <option value="motorcycle">{{'Motorcycle'|translate}}</option>
-                    <option value="car">{{'Car'|translate}}</option>
+                    <option [ngStyle]="{'font-family':fontFamily}" value="pedestrian">{{'Pedestrian'|translate}}</option>
+                    <option [ngStyle]="{'font-family':fontFamily}" value="bicycle">{{'Bicycle'|translate}}</option>
+                    <option [ngStyle]="{'font-family':fontFamily}" value="motorcycle">{{'Motorcycle'|translate}}</option>
+                    <option [ngStyle]="{'font-family':fontFamily}" value="car">{{'Car'|translate}}</option>
                 </select>
             </div>
         </div>
