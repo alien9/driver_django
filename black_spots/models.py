@@ -73,6 +73,8 @@ class RoadMap(Imported):
                             j=0
                         j+=1
                         k+=1
+                    if len(sql):
+                        cursor.execute(sql)
                 cursor.execute("INSERT INTO public.black_spots_road(\
 	uuid, created, modified, data, geom, roadmap_id) \
 	select uuid_generate_v1(), now(), now(), row_to_json(temp_table), st_geometryn(temp_table.geom,1), %s from temp_table",(self.uuid,))
