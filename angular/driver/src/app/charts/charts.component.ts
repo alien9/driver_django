@@ -169,6 +169,40 @@ export class ChartsComponent implements OnInit, OnChanges {
           parameters['relate'] = this.barChart['field'] // the total count of related
           this.recordService.getCrossTabs(this.recordSchema['record_type'], parameters).pipe(first()).subscribe({
             next: data => {
+              console.log(data)
+              let obliterate = {}
+              let intervals = []
+              Object.entries(data["tables"][0].data).forEach((interval) => {
+                intervals.push(interval[0])
+                Object.entries(interval[1]).forEach((k) => {
+                  if (!obliterate[k[0]]) obliterate[k[0]] = k[1]
+                  else obliterate[k[0]] += k[1]
+                })
+              })
+              Object.entries(obliterate).forEach((o) => {
+                if (o[1] == 0) {
+                  intervals.forEach((t) => {
+                    delete data["tables"][0].data[t][o[0]]
+                  })
+                }
+              });
+              data["col_labels"]=data["col_labels"].filter((q)=>{
+                return obliterate[q.key]>0
+              })
+
+              let hue = 0
+              let s = 0.65
+              let l = 0.5
+              let colorRange = []
+              while (colorRange.length < data["col_labels"].length) {
+                colorRange.push(this.rgbToHex(this.hslToRgb(hue, s, l)))
+                hue += 0.375
+                hue = hue % 1
+                s *= 0.95
+                l += ((1 - l) * .05)
+              }
+              this.palette = colorRange
+
               this.spinner.hide()
               let h = []
               let m = 0
@@ -190,7 +224,8 @@ export class ChartsComponent implements OnInit, OnChanges {
               }
               let subgroups = data['col_labels'].map(k => k.key).sort((a, b) => totals[b] - totals[a]) // field value
               let groups = data['row_labels'].map(k => k.key) //interval
-
+              console.log(groups)
+              console.log(subgroups)
               const margin_bar = { top: 10, right: 30, bottom: 20, left: 50 },
                 width_bar = (h.length * 100) - margin_bar.left - margin_bar.right,
                 height_bar = 400 - margin_bar.top - margin_bar.bottom;
@@ -300,8 +335,8 @@ export class ChartsComponent implements OnInit, OnChanges {
             this.spinner.hide()
             let h = []
             let m = 0
-            var p_data: SimpleDataModel[] = Object.entries(data['tables'][0].data["0"]).filter((k=>k[1]!='0'))
-            .map(k => { return { "name": ts.instant(k[0]), "value": k[1].toString() } }).sort((a,b)=>{return (parseInt(a.value)>parseInt(b.value))?1:-1})
+            var p_data: SimpleDataModel[] = Object.entries(data['tables'][0].data["0"]).filter((k => k[1] != '0'))
+              .map(k => { return { "name": ts.instant(k[0]), "value": k[1].toString() } }).sort((a, b) => { return (parseInt(a.value) > parseInt(b.value)) ? 1 : -1 })
             let enablePolylines = false
             let isPercentage = false
             var radius = Math.min(p_width_bar, p_height_bar) / 2 - p_margin_bar.top
@@ -322,7 +357,6 @@ export class ChartsComponent implements OnInit, OnChanges {
             let l = 0.5
             let colorRange = []
             while (colorRange.length < p_data.length) {
-
               colorRange.push(this.rgbToHex(this.hslToRgb(hue, s, l)))
               hue += 0.375
               hue = hue % 1
@@ -330,7 +364,7 @@ export class ChartsComponent implements OnInit, OnChanges {
               l += ((1 - l) * .05)
             }
             colorRange.reverse()
-            this.palette=colorRange
+            this.palette = colorRange
             let outerArc = d3
               .arc()
               .innerRadius(radius * 0.9)
