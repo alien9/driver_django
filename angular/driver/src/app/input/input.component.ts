@@ -562,10 +562,6 @@ export class InputComponent implements OnInit {
         }
       }
     }
-    console.log(this.record['data'][e.table])
-
-    console.log("setting scheckfield")
-    console.log(e)
   }
   onMultipleCheckChange(e: any, t: string, idx: number, f: any) {
     if (!this.record['data'][t][idx][f])
@@ -769,7 +765,6 @@ export class InputComponent implements OnInit {
 
 
   endDrawing(event) {
-    console.log("ending drawing")
     event.close()
     $(".modal-header").show()
     $(".modal-body").show()

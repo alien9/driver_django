@@ -189,7 +189,12 @@ export class ChartsComponent implements OnInit, OnChanges {
               data["col_labels"]=data["col_labels"].filter((q)=>{
                 return obliterate[q.key]>0
               })
-
+              while(data["row_labels"].length>0 && !data["tables"][0].data[data["row_labels"][0].key]){
+                data["row_labels"].shift()
+              }
+              while(data["row_labels"].length>0 && !data["tables"][0].data[data["row_labels"][data["row_labels"].length-1].key]){
+                data["row_labels"].pop()
+              }
               let hue = 0
               let s = 0.65
               let l = 0.5
@@ -224,8 +229,6 @@ export class ChartsComponent implements OnInit, OnChanges {
               }
               let subgroups = data['col_labels'].map(k => k.key).sort((a, b) => totals[b] - totals[a]) // field value
               let groups = data['row_labels'].map(k => k.key) //interval
-              console.log(groups)
-              console.log(subgroups)
               const margin_bar = { top: 10, right: 30, bottom: 20, left: 50 },
                 width_bar = (h.length * 100) - margin_bar.left - margin_bar.right,
                 height_bar = 400 - margin_bar.top - margin_bar.bottom;
