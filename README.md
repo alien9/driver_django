@@ -99,7 +99,9 @@ DATABASE_HOST=<database_host>
 run
 
 `docker-compose up -d`
+
 `./configure.sh`
+
 `sudo certbot`
 
 and follow the instructions for generating an SSL certifdicate for the domain name.
