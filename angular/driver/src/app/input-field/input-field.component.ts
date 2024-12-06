@@ -27,13 +27,29 @@ export class InputFieldComponent implements OnInit {
   @Output() setFileChanged = new EventEmitter<any>()
   @Output() fieldChanged = new EventEmitter<any>()
   @Output() turnOnAutoComplete = new EventEmitter<any>()
-  public fontFamily=document.body.style.fontFamily
+  public fontFamily = document.body.style.fontFamily
   public value: any = ""
   fileFieldId: any;
   constructor(private translateService: TranslateService
   ) { }
 
   ngOnInit(): void {
+    if (!this.value && this.prop.value.def) {
+      switch (this.prop.value.fieldType) {
+        case "integer":
+          this.value = parseInt(this.prop.value.def)
+          break
+        default:
+          this.value = this.prop.value.def
+
+      }
+      if (this.index >= 0) {
+        this.data[this.tableName][this.index][this.fieldName] = this.value
+      }else{
+        this.data[this.tableName][this.fieldName] = this.value
+      }
+      this.data=JSON.parse(JSON.stringify(this.data))
+    }
   }
   getValue(): any {
     if (this.index >= 0) {
@@ -56,7 +72,7 @@ export class InputFieldComponent implements OnInit {
       }
       this.value = this.data[this.tableName][this.fieldName]
     }
-    if (!this.value) return ""
+    if (this.value===undefined || this.value===null || this.value==="") return ""
     if ((typeof this.value) != 'string') return this.value
     return this.translateService.instant(this.value)
   }
@@ -70,7 +86,6 @@ export class InputFieldComponent implements OnInit {
     this.startDrawing.emit(what)
   }
   setFieldValue(e: any) {
-    console.log("will set field value")
     this.fieldChanged.emit({ "event": e, "table": this.tableName, "field": this.fieldName, "index": this.index })
   }
   setDateField(e: any, table: string, field: string, index: number = -1) {
@@ -123,7 +138,10 @@ export class InputFieldComponent implements OnInit {
   rememberImageField() {
     localStorage.setItem("image-field", this.getImageFieldId())
   }
-  getImageFieldId(){
-    return `${this.tableName}_${this.fieldName}_${(this.index && (this.index>=0))?this.index:""}`
+  getImageFieldId() {
+    return `${this.tableName}_${this.fieldName}_${(this.index && (this.index >= 0)) ? this.index : ""}`
+  }
+  getFieldId() {
+    return `${this.tableName}_${this.fieldName}_${this.index}`.replace(/[^\w]/g, "_")
   }
 }

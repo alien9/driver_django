@@ -295,6 +295,7 @@ class Dictionary(models.Model):
     name=models.TextField(max_length=100)
     content=HStoreField(null=True, blank=True)
     about = CKEditor5Field('Text', config_name='extends')
+    header = CKEditor5Field('Text', config_name='extends')
     def save(self, *args, **kwargs):
         terms=[]
         rt=RecordType.objects.all()

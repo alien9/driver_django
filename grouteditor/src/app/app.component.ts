@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { SortedhashPipe } from './sortedhash.pipe';
 
 @Component({
   selector: 'app-root',

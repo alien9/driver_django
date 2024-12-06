@@ -69,8 +69,8 @@
                 <div *ngIf="!k.value.multiple">
 
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item" *ngFor="let f of k.value.properties|keyvalue|display|orderBy">
-                            {{f.key|translate}}:
+                        <li class="list-group-item" *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key|display|orderBy">
+                            {{f.key|translate}}: <span *ngIf="isRequired(k.key,f.key)">*</span>
                             <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="-1" [editing]="editing"
                                 [prop]="f" (setFieldCheckFieldChanged)="setCheckField($event)" [data]="record['data']"
                                 [locale]="locale" [canvasmode]="canvasmode"
@@ -96,7 +96,7 @@
                             <h6 class="card-subtitle mb-2 text-muted">{{k.value.description|translate}}</h6>
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item"
-                                    *ngFor="let f of k.value.properties|keyvalue|display|orderBy">{{f.key|translate}}:
+                                    *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key:i|display|orderBy">{{f.key|translate}}:<span *ngIf="isRequired(k.key,f.key)">*</span>
                                     <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="i"
                                         [editing]="editing" [prop]="f"
                                         (setFieldCheckFieldChanged)="setCheckField($event)" [data]="record['data']"

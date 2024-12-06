@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, NgZone, Output, EventEmitter, ApplicationRef, TemplateRef } from '@angular/core'
+import { Component, OnInit, Input, NgZone, Output, EventEmitter, ApplicationRef, TemplateRef, ViewChild } from '@angular/core'
 import * as L from 'leaflet'
 import { environment } from '../../environments/environment'
 import { WebService } from '../web.service'
@@ -17,7 +17,6 @@ import { catchError, debounceTime, distinctUntilChanged, map, tap, switchMap } f
 import { TranslateService } from '@ngx-translate/core';
 import "leaflet.vectorgrid";
 import { DYNAMIC_TYPE } from '@angular/compiler';
-import { textChangeRangeIsUnchanged } from 'typescript';
 import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 
@@ -40,6 +39,7 @@ export class InputComponent implements OnInit {
   @Output() storeRecord = new EventEmitter<object>()
   @Output() refreshLocalRecords = new EventEmitter<boolean>()
   @Input() boundaries: any
+  @ViewChild("nav") nav;
   public schema: object
   public options: any
   public layersControl: any
@@ -274,10 +274,75 @@ export class InputComponent implements OnInit {
       }
     })
   }
+  validateRecord(): boolean {
+    let v = true
+    Object.keys(this.recordSchema["schema"].definitions).forEach((kk) => {
+      if (this.recordSchema["schema"].definitions[kk].required) {
+        let requiredFields = Object.keys(this.recordSchema["schema"].definitions[kk].properties).filter((pk) => {
+          return this.recordSchema["schema"].definitions[kk].properties[pk].isRequired || this.recordSchema["schema"].definitions[kk].required.includes(pk)
+        })
+        console.log(requiredFields)
+        //this.recordSchema["schema"].definitions[kk].required.forEach((reqs) => {
+        requiredFields.forEach((reqs) => {
+          if (reqs == "_localId") return
+          let condition=this.recordSchema["schema"].definitions[kk].properties[reqs].condition
+          if (v) {
+            if (!this.recordSchema["schema"].definitions[kk].multiple) {
+              if(condition){
+                if(this.record["data"][kk][condition]!=this.recordSchema["schema"].definitions[kk].properties[reqs].conditionValue) return
+              }
+              if (this.record["data"][kk][reqs] === undefined || this.record["data"][kk][reqs] === null || this.record["data"][kk][reqs] === '') {
+                this.nav.select(kk)
+                const fieldId = `${kk}_${reqs}_-1`.replace(/[^\w]/g, "_")
+                alert(`${this.translateService.instant(reqs)} ${this.translateService.instant(" is required.")}`)
+                setTimeout(() => {
+                  $(`#${fieldId}`).focus()
+                }, 500)
+                v = false
+              }
+            } else { //multiple
+              console.log("will be multiple")
+              if (kk in this.record["data"]) {
+                console.log(this.record["data"][kk])
+                this.record["data"][kk].forEach((vei, j) => {
+                  console.log(vei)
+                  if(condition){
+                    if(vei[condition]!=this.recordSchema["schema"].definitions[kk].properties[reqs].conditionValue) return
+                  }
+                  if (vei[reqs] === undefined || vei === null || vei[reqs] === '') {
+                    this.nav.select(kk)
+                    const fieldId = `${kk}_${reqs}_${j}`.replace(/[^\w]/g, "_")
+                    alert(`${this.translateService.instant(reqs)} ${this.translateService.instant(" is required.")}`)
+                    setTimeout(() => {
+                      $(`#${fieldId}`).focus()
+                    }, 500)
+                    v = false
+                  }
+                })
+              }
+            }
+          }
+          //console.log(this.record[data])
+        })
+      }
+      Object.keys(this.recordSchema["schema"].definitions[kk].properties).forEach((kkk) => {
+        console.log(kkk)
+        console.log(this.recordSchema["schema"].definitions[kk].properties[kkk])
+      })
+    })
+    return v
+  }
+  isRequired(table, field) {
+    return this.recordSchema["schema"].definitions[table].properties[field].isRequired || (this.recordSchema["schema"].definitions[table].required.indexOf(field) >= 0)
+  }
   saveRecord(modal: any) {
     this.setDate(null)
     this.spinner.show()
     this.cleanup()
+    if (!this.validateRecord()) {
+      this.spinner.hide()
+      return
+    }
     this.recordService.upload(this.record).pipe(first()).subscribe({
       next: data => {
         this.filterExpand.emit(this.record['occurred_from'])
@@ -444,8 +509,6 @@ export class InputComponent implements OnInit {
     }
   }
   setInputDateField(e: any) {
-    console.log("other sited")
-    console.log(e)
     if (e.index < 0) {
       this.record['data'][e.table][e.field] = e.value
     } else {
@@ -503,13 +566,24 @@ export class InputComponent implements OnInit {
   }
   setFieldValue(e) {
     console.log("SETTING THE F|IELD VALUEEEEEE")
-    let xterm = e.event.srcElement.value
+    let xterm;
+    const type = this.schema['definitions'][e.table].properties[e.field]
+
+    switch (type.fieldType) {
+      case "integer":
+        xterm = parseInt(e.event.srcElement.value)
+        break
+      default:
+        xterm = e.event.srcElement.value
+    }
     if (this.reverse_trans && xterm in this.reverse_trans) xterm = this.reverse_trans[xterm]
+
     if (e.index >= 0) {
       this.record['data'][e.table][e.index][e.field] = xterm
     } else {
       this.record['data'][e.table][e.field] = xterm
     }
+    this.record['data'] = JSON.parse(JSON.stringify(this.record['data']))
   }
   loadFieldFile(eve) {
     this.loadFile(eve.event, eve.table, eve.field, eve.index)

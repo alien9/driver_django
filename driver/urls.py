@@ -78,7 +78,8 @@ urlpatterns = [
     url('api/irap-getlat_lon/', getlat_lon),
     url('api/irap-fatalitydata/', fatalitydata),
     url(r'^get_config/', auth_views.get_config),
-    url(r'^signup/', auth_views.signup),
+    url(r'^signup/', auth_views.signup),    
+    url(r'^photologue/', include('photologue.urls', namespace='photologue')),
 ]
 
 # i18n for django-admin

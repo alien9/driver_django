@@ -1,11 +1,13 @@
 import { TestBed, async } from '@angular/core/testing';
 import { AppComponent } from './app.component';
+import { FieldfilterPipe } from './fieldfilter.pipe';
+import { SortedhashPipe } from './sortedhash.pipe';
 
 describe('AppComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [
-        AppComponent
+        AppComponent, FieldfilterPipe, SortedhashPipe
       ],
     }).compileComponents();
   }));
@@ -26,6 +28,6 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement;
-    expect(compiled.querySelector('.content span').textContent).toContain('jsoneditor app is running!');
+    expect(compiled.querySelector('.content span').textContent).toContain('grouteditor app is running!');
   });
 });
