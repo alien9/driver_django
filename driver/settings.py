@@ -50,7 +50,7 @@ TESTING = 'test' in sys.argv
 
 ALLOWED_HOSTS = ['*']
 # TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
-# CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_ALLOW_ALL = DEBUG
 # CORS_ALLOW_CREDENTIALS = True
 # CORS_ALLOW_METHODS = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
 
@@ -141,7 +141,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
 )
 
-SITE_ID=1
+SITE_ID = 1
 
 MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
@@ -185,8 +185,8 @@ TEMPLATE_LOADERS = (
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates'),PHOTOLOGUE_APP_DIR],
-        'APP_DIRS': True,
+        'DIRS': [os.path.join(BASE_DIR, 'templates'), PHOTOLOGUE_APP_DIR],
+        'APP_DIRS': False,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -194,6 +194,11 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'loaders': [
+                'django.template.loaders.app_directories.Loader',
+                'django.template.loaders.filesystem.Loader',
+            ],
+
         },
     },
 ]
@@ -610,6 +615,7 @@ CONSTANCE_CONFIG = {
     'CURRENCY': ((os.getenv('CURRENCY', '')), _("Currency")),
     'IDLE_TIMEOUT': ((os.getenv('IDLE_TIMEOUT', '')), _("Idle Timeout")),
     'DEFAULT_LANGUAGE': ((os.getenv('DEFAULT_LANGUAGE', '')), _("Default Language")),
+    'APP_NAME': ((os.getenv('APP_NAME', 'DRIVER')), _("App Name")),
 }
 CAPTCHA_OUTPUT_FORMAT = u'%(image)s %(hidden_field)s %(text_field)s'
 

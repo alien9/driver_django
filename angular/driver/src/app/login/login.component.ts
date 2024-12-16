@@ -21,7 +21,7 @@ export class LoginComponent implements OnInit {
     errorMessage: string;
     @Output() entering = new EventEmitter<any>()
     backend: string = ""
-    hasGoogle:boolean=false
+    hasGoogle: boolean = false
 
     constructor(
         private formBuilder: FormBuilder,
@@ -53,11 +53,24 @@ export class LoginComponent implements OnInit {
     }
 
     ngOnInit() {
-        let c=this.getCookie('AuthService.token')
-        if(c){ 
+        let c = this.getCookie('AuthService.token')
+        if (c) {
             this.setCookie('AuthService.token', '', -1)
             this.authenticationService.logout()
         }
+        const backend=this.recordService.getBackend()
+        const lang=localStorage.getItem("Language")
+        this.recordService.getSiteHeader(lang).pipe(first()).subscribe(data => {
+            let d=data["result"]
+            if(backend.length>1){
+                d=d.replace(/src="/g, `src="${backend}/`)
+            }
+            document.getElementById("site-header-div").innerHTML=d
+        })
+        this.recordService.getSiteFooter(lang).pipe(first()).subscribe(data => {
+            document.getElementById("site-footer-div").innerHTML=data["result"]
+        })
+
         this.loginForm = this.formBuilder.group({
             username: ['', Validators.required],
             password: ['', Validators.required]
@@ -69,14 +82,14 @@ export class LoginComponent implements OnInit {
         }
         this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
         this.backend = this.recordService.getBackend()
-        this.translate.get("GOOGLE_OAUTH_CLIENT_ID").subscribe((k)=>{
-            this.hasGoogle=(k.length>0) && (k!='GOOGLE_OAUTH_CLIENT_ID')
-        })        
-    }  
+        this.translate.get("GOOGLE_OAUTH_CLIENT_ID").subscribe((k) => {
+            this.hasGoogle = (k.length > 0) && (k != 'GOOGLE_OAUTH_CLIENT_ID')
+        })
+    }
 
     loginWithGoogle(): void {
-        window.location.href=`${this.authenticationService.getBackend()}/oidc/authenticate/`
-      }
+        window.location.href = `${this.authenticationService.getBackend()}/oidc/authenticate/`
+    }
 
     get f() { return this.loginForm.controls; }
 

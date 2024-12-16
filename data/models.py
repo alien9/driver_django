@@ -345,3 +345,7 @@ class Irap(models.Model):
     keys=HStoreField()
     settings=JSONField()
 
+class Attachment(models.Model):
+    title = models.CharField(max_length=500)
+    file = models.FileField()
+    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

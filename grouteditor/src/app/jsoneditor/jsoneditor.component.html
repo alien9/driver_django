@@ -63,6 +63,10 @@
                         <a href="javascript:void(0);"
                             (click)="moveFieldDowner(dict.definitions[item.key], pair.key)">&#10515;</a>
                     </div>
+                    <div class="positioncontrols">
+                        <a href="javascript:void(0);"
+                            (click)="moveFieldToIndex(dict.definitions[item.key], pair.key)">#</a>
+                    </div>
                     <div>
                         <label>Searchable <input type="checkbox" [(ngModel)]="pair.value.isSearchable"
                                 (focus)="setActive(null)" (change)=save()></label>
@@ -70,6 +74,10 @@
                     <div>
                         <label>Required <input type="checkbox" [checked]="isRequired(item.key, pair.key)"
                             (focus)="setActive(null)" (change)="setRequired(pair.key, item.key, $event)"></label>
+                    </div>
+                    <div>
+                        <label>Illustrated <input type="checkbox" [checked]="isIllustrated(item.key, pair.key)"
+                            (focus)="setActive(null)" (change)="setIllustrated(pair.key, item.key, $event)"></label>
                     </div>
                     <div>Type:{{pair.value.options}}
                         <select [compareWith]="compareByOptionId" (focus)="setActive(null)"
@@ -176,7 +184,11 @@
                                 [value]="fld.key" [selected]="fld.key==pair.value.condition">{{fld.key}}</option>
                         </select>
 
-                        ==
+                        <select (focus)="setActive(null)" (change)="setConditionComparison(pair.value, item.key, pair.key, $event)">
+                            <option value="==" [selected]="pair.value.conditionComparison=='=='">==</option>
+                            <option value="!=" [selected]="pair.value.conditionComparison=='!='">!=</option>
+                            
+                        </select>
 
                         <select *ngIf="pair.value.condition"
                             (change)="setPropertyValue(pair.value, 'conditionValue', $event)">

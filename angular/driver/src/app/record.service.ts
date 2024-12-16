@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable} from 'rxjs'; import { HttpClientModule } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
 
 import { environment } from '../environments/environment';
 import Utils from '../assets/utils';
@@ -9,10 +10,28 @@ import Utils from '../assets/utils';
 })
 export class RecordService {
   constructor(private http: HttpClient) { }
+
+  getTokenFromCookie() {
+    let g = document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")
+    if ((g.length > 0) && (g[0].length > 1)) return g[0][1]
+    return null
+  }
+
   getHeaders(): HttpHeaders {
+    let h = {
+      'Content-Type': 'application/json'
+    }
+    let t = this.getTokenFromCookie()
+    if (t) h['Authorization'] = `Token ${this.getTokenFromCookie()}`
+    return new HttpHeaders(h)
+  }
+
+  getSpecialHeaders(): HttpHeaders {
     return new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': 'Token ' + (document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")[0][1])
+
+      'Accept': 'application/json, text/plain, */*',
+      "Content-Type": "application/json",
+
     })
   }
   getBlobHeaders(): HttpHeaders {
@@ -27,6 +46,12 @@ export class RecordService {
 
   getBackend(): string {
     return (localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')).replace(/\/\?.*$/, '')
+  }
+  getSiteHeader(lang: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.getBackend()}/dictionary/header/${lang}/`, { headers: this.getSpecialHeaders() })
+  }
+  getSiteFooter(lang: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.getBackend()}/dictionary/footer/${lang}/`, { headers: this.getSpecialHeaders() })
   }
   getRecordType(): Observable<any[]> {
     return this.http.get<any[]>(this.getBackend() + '/api/recordtypes/?active=True', { headers: this.getHeaders() })
@@ -46,6 +71,24 @@ export class RecordService {
     } else {
       return this.http.post<any[]>(this.getBackend() + '/api/records/', obj, { headers: this.getHeaders() })
     }
+  }
+  uploadAttachment(obj: Object, uuid: string): Observable<any[]> {
+    //head.append('Content-Type', 'application/x-www-form-urlencoded');
+    //head.append('Content-Type', 'multipart/form-data; charset=utf-8')
+    let h = {
+      'Content-Type':  'multipart/form-data; charset=utf-8'
+    }
+    let t = this.getTokenFromCookie()
+    if (t) h['Authorization'] = `Token ${this.getTokenFromCookie()}`
+    h['Content-Disposition'] = obj["srcElement"].files[0].name
+    const head = new HttpHeaders(h)
+    const formData = new FormData()
+    console.log("WILLLL UPLOAD")
+    console.log(obj["srcElement"].files[0])
+    formData.append("file", obj["srcElement"].files[0], obj["srcElement"].files[0].name)
+    formData.append("uuid", uuid)
+
+    return this.http.post<any[]>(this.getBackend() + '/api/files/', formData, { headers: head })
   }
   getRecords(o: Object, q: any): Observable<any[]> {
     let params = new HttpParams()
@@ -199,7 +242,7 @@ export class RecordService {
     return this.http.delete(`${this.getBackend()}/api/userfilters/${fud}/`, { headers: this.getHeaders() })
   }
   getConfig(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.getBackend()}/get_config/`, { headers: this.getHeaders() })
+    return this.http.get<any[]>(`${this.getBackend()}/get_config/`, { headers: this.getSpecialHeaders() })
   }
   getDuplicates(r, page): Observable<any[]> {
     let q = {
@@ -238,18 +281,18 @@ export class RecordService {
         }
       }
     }
-    return this.http.get<any[]>(this.getBackend() + '/api/records/costs/', { headers: this.getHeaders(), params: params})
+    return this.http.get<any[]>(this.getBackend() + '/api/records/costs/', { headers: this.getHeaders(), params: params })
   }
   getRoadMap() {
     return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/`, { headers: this.getHeaders() })
   }
-  getRoadMapByCords(params:any) {
-    return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/ab06162a-8ccd-4cc6-a3b4-ec097bfbc8dc/map/?latlong=${params.latlng[1]},${params.latlng[0]}`, {headers: this.getBlobHeaders() }, )
+  getRoadMapByCords(params: any) {
+    return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/ab06162a-8ccd-4cc6-a3b4-ec097bfbc8dc/map/?latlong=${params.latlng[1]},${params.latlng[0]}`, { headers: this.getBlobHeaders() },)
   }
   getForward(roadmap: string, params: object) {
     return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/${roadmap}/forward/?limit=15&q=${params['term']}&viewBox=${params['bbox']}`, { headers: this.getHeaders() })
   }
-  getReverse(roadmap:string, lat: string, lng: string): Observable<any[]> {
+  getReverse(roadmap: string, lat: string, lng: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/${roadmap}/reverse/?lat=${lat}&lon=${lng}&format=json`, { headers: this.getHeaders() })
   }
   getPosition(): Promise<any> {

@@ -3,6 +3,9 @@ import { Input, NgZone, Output, EventEmitter, ApplicationRef, TemplateRef } from
 import { Observable, OperatorFunction } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, tap, switchMap } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
+import { RecordService } from './../record.service'
+import { first } from 'rxjs/operators';
+
 import * as uuid from 'uuid';
 
 @Component({
@@ -30,7 +33,7 @@ export class InputFieldComponent implements OnInit {
   public fontFamily = document.body.style.fontFamily
   public value: any = ""
   fileFieldId: any;
-  constructor(private translateService: TranslateService
+  constructor(private translateService: TranslateService, private recordService: RecordService
   ) { }
 
   ngOnInit(): void {
@@ -45,10 +48,10 @@ export class InputFieldComponent implements OnInit {
       }
       if (this.index >= 0) {
         this.data[this.tableName][this.index][this.fieldName] = this.value
-      }else{
+      } else {
         this.data[this.tableName][this.fieldName] = this.value
       }
-      this.data=JSON.parse(JSON.stringify(this.data))
+      this.data = JSON.parse(JSON.stringify(this.data))
     }
   }
   getValue(): any {
@@ -72,7 +75,7 @@ export class InputFieldComponent implements OnInit {
       }
       this.value = this.data[this.tableName][this.fieldName]
     }
-    if (this.value===undefined || this.value===null || this.value==="") return ""
+    if (this.value === undefined || this.value === null || this.value === "") return ""
     if ((typeof this.value) != 'string') return this.value
     return this.translateService.instant(this.value)
   }
@@ -135,6 +138,14 @@ export class InputFieldComponent implements OnInit {
   loadFile(e: any, table: any, field: string, index: number) {
     this.setFileChanged.emit({ "event": e, "table": table, "field": field, "index": index })
   }
+  uploadAttachment(e: any, table: any, field: string, index: number) {
+    console.log("uploading a file:")
+    this.recordService.uploadAttachment(e, uuid.v4()).pipe(first()).subscribe(data => {
+      console.log(data)
+    })
+  }
+
+
   rememberImageField() {
     localStorage.setItem("image-field", this.getImageFieldId())
   }

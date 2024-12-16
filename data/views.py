@@ -20,6 +20,7 @@ from django.http import JsonResponse
 from django.db.models.sql.datastructures import Join
 from django.http import HttpResponse, Http404
 from django.core.cache import cache
+from rest_framework.parsers import MultiPartParser, FileUploadParser
 
 from django.conf import settings
 from django.db import transaction
@@ -70,7 +71,7 @@ from driver_auth.permissions import (IsAdminOrReadOnly,
                                      IsAdminAndReadOnly,
                                      is_admin_or_writer)
 from data.tasks import export_csv, generate_blackspots
-from data.models import DriverRecord, SegmentSet, Picture, Dictionary
+from data.models import DriverRecord, SegmentSet, Picture, Dictionary, Attachment
 from black_spots.models import BlackSpotSet
 from data.localization.date_utils import (
     hijri_day_range,
@@ -84,7 +85,7 @@ from .models import RecordAuditLogEntry, RecordDuplicate, RecordCostConfig
 from .serializers import (DriverRecordSerializer, DetailsReadOnlyRecordSerializer,
                           DetailsReadOnlyRecordSchemaSerializer, RecordAuditLogEntrySerializer,
                           RecordDuplicateSerializer, RecordCostConfigSerializer,
-                          DetailsReadOnlyRecordNonPublicSerializer, PictureSerializer,
+                          DetailsReadOnlyRecordNonPublicSerializer, AttachmentSerializer,
                           DictionarySerializer)
 # import transformers
 from driver import mixins
@@ -126,6 +127,22 @@ def about(request, code):
     r = {}
     if len(d):
         r = d[0].about
+    return JsonResponse({"result": r})
+
+
+def header(request, code):
+    d = Dictionary.objects.filter(language_code=code)
+    r = {}
+    if len(d):
+        r = d[0].header
+    return JsonResponse({"result": r})
+
+
+def footer(request, code):
+    d = Dictionary.objects.filter(language_code=code)
+    r = {}
+    if len(d):
+        r = d[0].footer
     return JsonResponse({"result": r})
 
 
@@ -1749,29 +1766,30 @@ class DriverBoundaryViewSet(BoundaryViewSet):
 
     @action(detail=False, methods=['GET'], name='Get Geographics')
     def list_names(self, request):
-        lang=self.request.query_params.get('lang',  'en')
-        res=cache.get(f"boundary_names_{lang}")
+        lang = self.request.query_params.get('lang',  'en')
+        res = cache.get(f"boundary_names_{lang}")
         if not res:
-            la=Boundary.objects.all().order_by('order').last() 
-            res=[]
+            la = Boundary.objects.all().order_by('order').last()
+            res = []
             for p in la.polygons.all():
                 if lang in p.data:
-                    name=[p.data.get(lang)]
+                    name = [p.data.get(lang)]
                 else:
-                    name=[p.data.get(la.get_display_field())]
-                order=la.order
-                while order>0:
-                    order-=1
-                    pai=BoundaryPolygon.objects.filter(boundary__order=order, geom__contains=p.geom.centroid).first()
+                    name = [p.data.get(la.get_display_field())]
+                order = la.order
+                while order > 0:
+                    order -= 1
+                    pai = BoundaryPolygon.objects.filter(
+                        boundary__order=order, geom__contains=p.geom.centroid).first()
                     if pai:
                         if lang in p.data:
                             name.append(pai.data.get(lang))
                         else:
-                            name=[p.data.get(la.get_display_field())]
+                            name = [p.data.get(la.get_display_field())]
                 res.append(", ".join(name))
             cache.set(f"boundary_names_{lang}", res)
-        return JsonResponse({"result":res}) 
-    
+        return JsonResponse({"result": res})
+
 
 def retrieve_geometry_names(request, lang):
     print("retiurbejb geometrics")
@@ -1941,15 +1959,26 @@ def get_config(request):
         status=status.HTTP_200_OK)
 
 
-class PictureViewSet(viewsets.ViewSet):
+class AttachmentViewSet(viewsets.ViewSet):
+    parser_classes = (MultiPartParser,)
+    permissions_classes = (IsAuthenticated,)
+    serializer_class = AttachmentSerializer
+    queryset = Attachment.objects.all()
+
     def list(self, request):
-        queryset = Picture.objects.all()
-        serializer = PictureSerializer(queryset, many=True)
+        queryset = Attachment.objects.all()
+        serializer = AttachmentSerializer(queryset, many=True)
         return Response(serializer.data)
 
-    def create(self, request):
-
-        pass
+    def create(self, request, *args, **kwargs):
+        print("this is a creat")
+        print(request.data)
+        uuid=request.data.get("uuid")
+        print("ok")
+        print(request.data.get("file"))
+        a=Attachment(uuid=request.data.get("uuid"), file=request.data.get("file"))
+        a.save()
+        return JsonResponse({"uuid":a.uuid},status=200)
 
 
 class DictionaryViewSet(viewsets.ViewSet):

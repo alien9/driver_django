@@ -4,7 +4,7 @@
 <div class="container h-100">
     <div class="h-100">
         <div class="card my-auto mt-5">
-            <div class="card-body">
+            <div class="card-body" id="site-header-div" style="min-height:280px">
                 <h5 class="modal-title">DRIVER</h5>
             </div>
             <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" action="/">
@@ -45,6 +45,8 @@
                     </div>
                 </div>
             </form>
+            <div class="card-body" id="site-footer-div">
+            </div>
         </div>
     </div>
 </div>

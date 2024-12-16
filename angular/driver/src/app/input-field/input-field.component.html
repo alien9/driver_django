@@ -69,6 +69,17 @@
 
         </span>
 
+        <span *ngIf="prop.value['fieldType']=='file'">
+            <input class="form-control" type="file" (change)="uploadAttachment($event, data[tableName],fieldName, index)"
+                capture="environment">
+            <input type="text" [id]="getImageFieldId()" [value]="getValue()"
+                style="display:block; width:1px;height:1px; border-style: none;" (change)="setFieldValue($event)">
+
+        </span>
+
+
+
+
         <div *ngIf="prop.value.displayType=='checkbox' || prop.value.format=='checkbox'">
             <div *ngFor="let o of prop.value.items.enum">
                 <label class="form-check-label">
