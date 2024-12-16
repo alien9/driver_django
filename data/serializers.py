@@ -12,7 +12,7 @@ from rest_framework.serializers import (
 from grout import serializers
 from grout import serializer_fields
 
-from data.models import DriverRecord, RecordAuditLogEntry, RecordDuplicate, RecordCostConfig, Dictionary
+from data.models import DriverRecord, RecordAuditLogEntry, RecordDuplicate, RecordCostConfig, Dictionary, Attachment
 
 from django.conf import settings
 from constance import config
@@ -146,8 +146,17 @@ class RecordCostConfigSerializer(ModelSerializer):
         model = RecordCostConfig
         fields = '__all__'
 
-class PictureSerializer(ModelSerializer):
-    record = DriverRecordSerializer(required=False, allow_null=True)
+class AttachmentSerializer(ModelSerializer):
+    class Meta:
+        model = Attachment
+        fields = '__all__'
+
+
+    def create(self, validated_data):
+        print("willlll validated")
+        
+        print(validated_data)
+        return super().create(validated_data)
 
 class DictionarySerializer(ModelSerializer):
     class Meta:

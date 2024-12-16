@@ -20,6 +20,7 @@ from django.utils.translation import ugettext_lazy as _
 import os
 import sys
 import dotenv
+from photologue import PHOTOLOGUE_APP_DIR
 dotenv.load_dotenv(override=True)
 
 
@@ -49,7 +50,7 @@ TESTING = 'test' in sys.argv
 
 ALLOWED_HOSTS = ['*']
 # TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
-# CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_ALLOW_ALL = DEBUG
 # CORS_ALLOW_CREDENTIALS = True
 # CORS_ALLOW_METHODS = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
 
@@ -133,8 +134,14 @@ INSTALLED_APPS = (
     'django_admin_hstore_widget',
     'constance',
     'proxy',
-    'ordered_model', 'django_ckeditor_5',
+    'ordered_model',
+    'django_ckeditor_5',
+    'photologue',
+    'sortedm2m',
+    'django.contrib.sites',
 )
+
+SITE_ID = 1
 
 MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
@@ -170,11 +177,16 @@ if DEBUG:
 
 ROOT_URLCONF = 'driver.urls'
 
+TEMPLATE_LOADERS = (
+    'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader',
+)
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
-        'APP_DIRS': True,
+        'DIRS': [os.path.join(BASE_DIR, 'templates'), PHOTOLOGUE_APP_DIR],
+        'APP_DIRS': False,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -182,6 +194,11 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'loaders': [
+                'django.template.loaders.app_directories.Loader',
+                'django.template.loaders.filesystem.Loader',
+            ],
+
         },
     },
 ]
@@ -598,6 +615,7 @@ CONSTANCE_CONFIG = {
     'CURRENCY': ((os.getenv('CURRENCY', '')), _("Currency")),
     'IDLE_TIMEOUT': ((os.getenv('IDLE_TIMEOUT', '')), _("Idle Timeout")),
     'DEFAULT_LANGUAGE': ((os.getenv('DEFAULT_LANGUAGE', '')), _("Default Language")),
+    'APP_NAME': ((os.getenv('APP_NAME', 'DRIVER')), _("App Name")),
 }
 CAPTCHA_OUTPUT_FORMAT = u'%(image)s %(hidden_field)s %(text_field)s'
 
@@ -647,8 +665,8 @@ customColorPalette = [
     },
 ]
 
-#CKEDITOR_5_CUSTOM_CSS = 'path_to.css'  # optional
-#CKEDITOR_5_FILE_STORAGE = "path_to_storage.CustomStorage"  # optional
+# CKEDITOR_5_CUSTOM_CSS = 'path_to.css'  # optional
+# CKEDITOR_5_FILE_STORAGE = "path_to_storage.CustomStorage"  # optional
 CKEDITOR_5_CONFIGS = {
     'default': {
         'toolbar': ['heading', '|', 'bold', 'italic', 'link',
@@ -664,8 +682,8 @@ CKEDITOR_5_CONFIGS = {
             'blockQuote',
         ],
         'toolbar': ['heading', '|', 'outdent', 'indent', '|', 'bold', 'italic', 'link', 'underline', 'strikethrough',
-        'code','subscript', 'superscript', 'highlight', '|', 'codeBlock', 'sourceEditing', 'insertImage', 
-         '|', 'alignment:left', 'alignment:right', 'alignment:center', 'alignment:justify',
+                    'code', 'subscript', 'superscript', 'highlight', '|', 'codeBlock', 'sourceEditing', 'insertImage',
+                    '|', 'alignment:left', 'alignment:right', 'alignment:center', 'alignment:justify',
                     'bulletedList', 'numberedList', 'todoList', '|',  'blockQuote', 'imageUpload', '|',
                     'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', 'mediaEmbed', 'removeFormat',
                     'insertTable',],
@@ -682,8 +700,8 @@ CKEDITOR_5_CONFIGS = {
 
         },
         'table': {
-            'contentToolbar': [ 'tableColumn', 'tableRow', 'mergeTableCells',
-            'tableProperties', 'tableCellProperties' ],
+            'contentToolbar': ['tableColumn', 'tableRow', 'mergeTableCells',
+                               'tableProperties', 'tableCellProperties'],
             'tableProperties': {
                 'borderColors': customColorPalette,
                 'backgroundColors': customColorPalette
@@ -693,12 +711,16 @@ CKEDITOR_5_CONFIGS = {
                 'backgroundColors': customColorPalette
             }
         },
-        'heading' : {
+        'heading': {
             'options': [
-                { 'model': 'paragraph', 'title': 'Paragraph', 'class': 'ck-heading_paragraph' },
-                { 'model': 'heading1', 'view': 'h1', 'title': 'Heading 1', 'class': 'ck-heading_heading1' },
-                { 'model': 'heading2', 'view': 'h2', 'title': 'Heading 2', 'class': 'ck-heading_heading2' },
-                { 'model': 'heading3', 'view': 'h3', 'title': 'Heading 3', 'class': 'ck-heading_heading3' }
+                {'model': 'paragraph', 'title': 'Paragraph',
+                    'class': 'ck-heading_paragraph'},
+                {'model': 'heading1', 'view': 'h1', 'title': 'Heading 1',
+                    'class': 'ck-heading_heading1'},
+                {'model': 'heading2', 'view': 'h2', 'title': 'Heading 2',
+                    'class': 'ck-heading_heading2'},
+                {'model': 'heading3', 'view': 'h3',
+                    'title': 'Heading 3', 'class': 'ck-heading_heading3'}
             ]
         }
     },

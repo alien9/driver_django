@@ -2,6 +2,8 @@ import { Component, OnInit, NgZone, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import isEqual from 'lodash.isequal';
 import { ObjectUnsubscribedError } from 'rxjs';
+import { FieldfilterPipe } from '../fieldfilter.pipe';
+
 
 @Component({
   selector: 'app-jsoneditor',
@@ -12,7 +14,7 @@ import { ObjectUnsubscribedError } from 'rxjs';
 export class JSONEditorComponent implements OnInit {
   textarea: string;
   field_name: string = "json-content";
-  dict: any;
+  dict: any = null;
   referables: any;
   teste: string;
   mode = 'tree';
@@ -27,7 +29,8 @@ export class JSONEditorComponent implements OnInit {
     { id: 'selectlist', name: 'selectlist' },
     { id: 'reference', name: 'reference' },
     { id: 'number', name: 'number' },
-    { id: 'image', name: 'image' }
+    { id: 'image', name: 'image' },
+    { id: 'file', name: 'file' }
   ]
   formats = [
     { id: "text", name: "Single line text" },
@@ -213,16 +216,18 @@ export class JSONEditorComponent implements OnInit {
     let i = 0
     if (f.enum) {
       i = f.enum.length
-      f.enum.push("");
+      if (i == 0 || f.enum[i - 1] != "")
+        f.enum.push("");
     }
     if (f.items && f.items.enum) {
       i = f.items.enum.length
-      f.items.enum.push("");
+      if (i == 0 || f.items.enum[i - 1] != "")
+        f.items.enum.push("");
     }
     this.save()
-    this.zone.runOutsideAngular(() => setTimeout(() => {
-      document.getElementById(`${elem}_${fld}_${i}`).focus();
-    }, 0));
+    //this.zone.runOutsideAngular(() => setTimeout(() => {
+    //   document.getElementById(`${elem}_${fld}_${i}`).focus();
+    //}, 200));
   }
   removeOption(f, o): void {
     if (f.enum)
@@ -233,6 +238,30 @@ export class JSONEditorComponent implements OnInit {
   }
   setPropertyValue(a, i, event): void {
     a[i] = event.srcElement.value;
+    this.dict = JSON.parse(JSON.stringify(this.dict))
+    this.save()
+  }
+  setPropertyByKey(f, t, p, event) {
+    this.dict.definitions[t].properties[f][p] = event.srcElement.value
+    this.dict = JSON.parse(JSON.stringify(this.dict))
+    this.save()
+  }
+
+  setConditionComparison(a, table, f, event): void {
+    a.conditionComparison = event.srcElement.value
+    this.dict = JSON.parse(JSON.stringify(this.dict))
+    this.save()
+  }
+
+  setCondition(a, table, f, event): void {
+    a.condition = event.srcElement.value
+    this.dict = JSON.parse(JSON.stringify(this.dict))
+    this.save()
+  }
+  setFieldType(a, b, event): void {
+    let t = event.srcElement.value
+    this.dict.definitions[a].properties[b].fieldType = t
+    let c = this.setTarget(this.dict.definitions[a].properties[b], t, true)
     this.save()
   }
   deactivate(): void {
@@ -262,7 +291,7 @@ export class JSONEditorComponent implements OnInit {
       delete o.enum;
     } else {
       delete o.format;
-      if (event.srcElement.value == 'select') delete o.extra
+      if ((event.srcElement.value == 'select') || (event.srcElement.value == 'radio')) delete o.extra
       o.displayType = event.srcElement.value; // select or autocomplete
       o.type = "string";
       if (!o.enum)
@@ -273,6 +302,12 @@ export class JSONEditorComponent implements OnInit {
     this.save()
   }
   setTarget(o, event, format = false) {
+    if (event != "integer") {
+      delete o.min
+      delete o.max
+      delete o.def
+    }
+
     if (format) {
       if (event != "suggest")
         delete o.extra
@@ -319,20 +354,49 @@ export class JSONEditorComponent implements OnInit {
       o["type"] = "string";
     }
     this.save()
+    return o;
   }
   contains(array, o) {
     return array.includes(o);
   }
-  setRequired(o, t, event) {
-    if (event.srcElement.checked) {
-      if (!this.dict.definitions[t].required.includes(o))
-        this.dict.definitions[t].required.push(o);
+  isIllustrated(t, o) {
+    return this.dict.definitions[t].properties[o].isIllustrated
+
+  }
+  setIllustrated(o, t, event) {
+    console.log("set illustrated", event)
+    this.dict.definitions[t].properties[o].isIllustrated = event.srcElement.checked
+    this.dict = JSON.parse(JSON.stringify(this.dict))
+    this.save()
+  }
+  isRequired(t, o) {
+    if (this.dict.definitions[t].properties[o].condition) {
+      return this.dict.definitions[t].properties[o].isRequired
     } else {
+      return this.dict.definitions[t].required.indexOf(o) >= 0
+    }
+  }
+  setRequired(o, t, event) {
+    if (this.dict.definitions[t].properties[o].condition) {
       for (var i = 0; i < this.dict.definitions[t].required.length; i++) {
         if (this.dict.definitions[t].required[i] == o)
           this.dict.definitions[t].required.splice(i, 1);
       }
+      this.dict.definitions[t].properties[o].isRequired = event.srcElement.checked
+    } else {
+      delete this.dict.definitions[t].properties[o].isRequired
+      if (event.srcElement.checked) {
+        if (!this.dict.definitions[t].required.includes(o))
+          this.dict.definitions[t].required.push(o);
+      } else {
+        for (var i = 0; i < this.dict.definitions[t].required.length; i++) {
+          if (this.dict.definitions[t].required[i] == o)
+            this.dict.definitions[t].required.splice(i, 1);
+        }
+      }
     }
+
+    this.dict = JSON.parse(JSON.stringify(this.dict))
     this.save()
   }
   newField(definition): void {
@@ -344,7 +408,15 @@ export class JSONEditorComponent implements OnInit {
       }
       h[i] = definition.properties[i];
     }
-    h["New property"] = {
+    let key = "New property"
+    if (h[key]) {
+      let i = 1
+      while (h[`${key} (${i})`]) {
+        i++
+      }
+      key = `${key} (${i})`
+    }
+    h[key] = {
       "type": "string",
       "fieldType": "text",
       "isSearchable": false,
@@ -352,6 +424,7 @@ export class JSONEditorComponent implements OnInit {
     };
     definition.properties = h;
     this.save()
+    this.dict = JSON.parse(JSON.stringify(this.dict))
   }
   deleteField(definition, fieldname) {
     if (confirm("Delete " + fieldname + "?")) {
@@ -368,6 +441,47 @@ export class JSONEditorComponent implements OnInit {
     }
     this.save()
   }
+  moveFieldUpper(definition, fieldname) {
+    let h = {};
+    let current_position = definition.properties[fieldname].propertyOrder - 1
+    Object.entries(definition.properties).forEach(([key, value]) => {
+      if (key == fieldname) {
+        value["propertyOrder"] = 0
+      } else {
+        if (value["propertyOrder"] <= current_position) {
+          value["propertyOrder"]++
+        }
+      }
+      h[key] = value
+    })
+    let i = 0
+    Object.keys(definition.properties).sort((a, b) => { return h[a]['propertyOrder'] - h[b]['propertyOrder'] }).forEach((k) => {
+      console.log(k)
+      h[k].propertyOrder = i
+      i++
+    })
+    definition.properties = h;
+    this.save()
+  }
+  moveFieldToIndex(definition, fieldname) {
+    let h = {};
+    let current_position = definition.properties[fieldname].propertyOrder - 1
+    const intended = window.prompt("Index:")
+    Object.entries(definition.properties).forEach(([key, value]) => {
+      if (key == fieldname) {
+        value["propertyOrder"] = parseInt(intended)
+      }
+      h[key] = value
+    })
+    let i = 0
+    Object.keys(definition.properties).sort((a, b) => { return h[a]['propertyOrder'] - h[b]['propertyOrder'] }).forEach((k) => {
+      console.log(k)
+      h[k].propertyOrder = i
+      i++
+    })
+    definition.properties = h;
+    this.save()
+  }
   moveFieldUp(definition, fieldname) {
     let h = {};
     let current_position = definition.properties[fieldname].propertyOrder - 1
@@ -380,6 +494,12 @@ export class JSONEditorComponent implements OnInit {
         }
       }
       h[key] = value
+    })
+    let i = 0
+    Object.keys(definition.properties).sort((a, b) => { return h[a]['propertyOrder'] - h[b]['propertyOrder'] }).forEach((k) => {
+      console.log(k)
+      h[k].propertyOrder = i
+      i++
     })
     definition.properties = h;
     this.save()
@@ -396,6 +516,34 @@ export class JSONEditorComponent implements OnInit {
         }
       }
       h[key] = value
+    })
+    let i = 0
+    Object.keys(definition.properties).sort((a, b) => { return h[a]['propertyOrder'] - h[b]['propertyOrder'] }).forEach((k) => {
+      console.log(k)
+      h[k].propertyOrder = i
+      i++
+    })
+    definition.properties = h;
+    this.save()
+  }
+  moveFieldDowner(definition, fieldname) {
+    let h = {};
+    let current_position = definition.properties[fieldname].propertyOrder + 1
+    Object.entries(definition.properties).forEach(([key, value]) => {
+      if (key == fieldname) {
+        value["propertyOrder"] = definition.properties.length
+      } else {
+        if (value["propertyOrder"] >= current_position) {
+          value["propertyOrder"]--
+        }
+      }
+      h[key] = value
+    })
+    let i = 0
+    Object.keys(definition.properties).sort((a, b) => { return h[a]['propertyOrder'] - h[b]['propertyOrder'] }).forEach((k) => {
+      console.log(k)
+      h[k].propertyOrder = i
+      i++
     })
     definition.properties = h;
     this.save()
@@ -440,7 +588,7 @@ export class JSONEditorComponent implements OnInit {
   hasFormat(name: string) {
     return (name == "text");
   }
-  moveup(item) {
+  moveup(item, caller = null) {
     var d = this.dict['definitions']
     let o = 0
     Object.keys(this.dict['definitions']).sort((a, b) => { return d[a]['propertyOrder'] - d[b]['propertyOrder'] }).forEach(k => {
@@ -461,7 +609,12 @@ export class JSONEditorComponent implements OnInit {
       res.definitions[key] = this.dict.definitions[key]
     }
     this.set(res);
+
+    if (caller) {
+      caller.focus();
+    }
   }
+
   movedown(item) {
     var d = this.dict['definitions']
     let o = 0;

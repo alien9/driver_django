@@ -6,71 +6,79 @@
             <ng-template ngbNavContent>
                 <input [(ngModel)]="record['occurred_from']" type="hidden">
                 <div class="small-map" *ngIf="k.value.details">
-                    <div class="input-map" leaflet [leafletLayers]=layers [leafletLayersControl]="layersControl" (map)=setMap($event)
-                        [leafletOptions]="options" (leafletMapReady)=mapReady($event)></div>
+                    <div class="input-map" leaflet [leafletLayers]=layers [leafletLayersControl]="layersControl"
+                        (map)=setMap($event) [leafletOptions]="options" (leafletMapReady)=mapReady($event)></div>
                 </div>
-                <ul class="list-group list-group-flush" *ngIf="k.value.details">
-                    <li class="list-group-item">
-                        <span>{{'Latitude'|translate}}</span>: <span
-                            *ngIf="!editing">{{record['geom'].coordinates[1]}}</span>
-                        <input class="form-control" *ngIf="editing" [(ngModel)]="record['geom'].coordinates[1]">
-                    </li>
-                    <li class="list-group-item">
-                        <span>{{'Longitude'|translate}}</span>: <span
-                            *ngIf="!editing">{{record['geom'].coordinates[0]}}</span>
-                        <input class="form-control" *ngIf="editing" [(ngModel)]="record['geom'].coordinates[0]">
-                    </li>
-                    <li class="list-group-item">
-                        <span>{{'Location'|translate}}</span>: <span *ngIf="!editing">{{record["location_text"]}}</span>
-                        <input class="form-control" *ngIf="editing" [(ngModel)]="record['location_text']"
-                            [ngbTypeahead]="geocode" [inputFormatter]="geoInputFormatter"
-                            (selectItem)="selectGeocodedOption($event)" [resultFormatter]="geoResultFormatter">
-                        <small *ngIf="geocoding" class="form-text text-muted">{{'searching'|translate}}...</small>
-                    </li>
-                    <li class="list-group-item">
-                        <input class="form-control" type=hidden placeholder="yyyy-mm-dd" name="occurred_date"
-                            [(ngModel)]="occurred_date_ngb" ngbDatepicker #df="ngbDatepicker"
-                            (dateSelect)="setDate($event)">
-                        <span>{{'Date and time'|translate}}</span>:
-                        <span *ngIf=!editing>{{record["occurred_from"]|localizedDate:'dd/MM/yyyy':locale }}
-                            {{record["occurred_from"]|localizedDate:'shortTime':locale }}</span>
-                        <span *ngIf=editing>
-                            <a href="#" (click)=df.toggle()>{{record["occurred_from"]|localizedDate:'dd/MM/yyyy':locale
-                                }}</a>
-                            <ngb-timepicker [(ngModel)]="occurred_time" [spinners]=false [meridian]=false *ngIf=editing
-                                (change)=setDate($event)></ngb-timepicker>
-                        </span>
-                    </li>
-                    <li class="list-group-item" *ngIf="config['OPENWEATHER_RAPID_KEY']">
-                        {{config['OPENWEATHER_RAPID_KEY']}}
-                        <span>{{'Weather'|translate}}</span>: <span
-                            *ngIf="!editing">{{record["weather"]|translate}}</span>
-                        <select *ngIf="editing" class="form-select" [(ngModel)]="record['weather']">
-                            <!--possible values: 
+                <ul class="list-group list-group-flush" *ngIf="k.value.multiple">
+                    <span *ngIf="k.value.details">
+                        <li class="list-group-item">
+                            <span>{{'Latitude'|translate}}</span>: <span
+                                *ngIf="!editing">{{record['geom'].coordinates[1]}}</span>
+                            <input class="form-control" *ngIf="editing" [(ngModel)]="record['geom'].coordinates[1]">
+                        </li>
+                        <li class="list-group-item">
+                            <span>{{'Longitude'|translate}}</span>: <span
+                                *ngIf="!editing">{{record['geom'].coordinates[0]}}</span>
+                            <input class="form-control" *ngIf="editing" [(ngModel)]="record['geom'].coordinates[0]">
+                        </li>
+                        <li class="list-group-item">
+                            <span>{{'Location'|translate}}</span>: <span
+                                *ngIf="!editing">{{record["location_text"]}}</span>
+                            <input class="form-control" *ngIf="editing" [(ngModel)]="record['location_text']"
+                                [ngbTypeahead]="geocode" [inputFormatter]="geoInputFormatter"
+                                (selectItem)="selectGeocodedOption($event)" [resultFormatter]="geoResultFormatter">
+                            <small *ngIf="geocoding" class="form-text text-muted">{{'searching'|translate}}...</small>
+                        </li>
+                        <li class="list-group-item">
+                            <input class="form-control" type=hidden placeholder="yyyy-mm-dd" name="occurred_date"
+                                [(ngModel)]="occurred_date_ngb" ngbDatepicker #df="ngbDatepicker"
+                                (dateSelect)="setDate($event)">
+                            <span>{{'Date and time'|translate}}</span>:
+                            <span *ngIf=!editing>{{record["occurred_from"]|localizedDate:'dd/MM/yyyy':locale }}
+                                {{record["occurred_from"]|localizedDate:'shortTime':locale }}</span>
+                            <span *ngIf=editing>
+                                <a href="#"
+                                    (click)=df.toggle()>{{record["occurred_from"]|localizedDate:'dd/MM/yyyy':locale
+                                    }}</a>
+                                <ngb-timepicker [(ngModel)]="occurred_time" [spinners]=false [meridian]=false
+                                    *ngIf=editing (change)=setDate($event)></ngb-timepicker>
+                            </span>
+                        </li>
+                        <li class="list-group-item" *ngIf="config['OPENWEATHER_RAPID_KEY']">
+                            {{config['OPENWEATHER_RAPID_KEY']}}
+                            <span>{{'Weather'|translate}}</span>: <span
+                                *ngIf="!editing">{{record["weather"]|translate}}</span>
+                            <select *ngIf="editing" class="form-select" [(ngModel)]="record['weather']">
+                                <!--possible values: 
                                 {{'clear-day'|translate}},{{'clear-night'|translate}},{{'cloudy'|translate}},{{'fog'|translate}},{{'hail'|translate}},{{'partly-cloudy-day'|translate}},{{'partly-cloudy-night'|translate}},{{'rain'|translate}},{{'sleet'|translate}},{{'snow'|translate}},{{'thunderstorm'|translate}},{{'tornado'|translate}},{{'wind'|translate}}
                             -->
-                            <option [ngStyle]="{'font-family':fontFamily}" [ngValue]="v" *ngFor="let v of weatherValues">{{v|translate}}</option>
-                        </select>
-                    </li>
-                    <li class="list-group-item" *ngFor="let b of selectedBoundaries">
-                        <span>{{b.label}}</span>: <span>{{b.value}}</span>
-                    </li>
-                    <li class="list-group-item">
-                        <!--possible values are {{'night'|translate}}{{'dawn'|translate}}{{'day'|translate}}{{'dusk'|translate}}-->
-                        <span>{{'Light'|translate}}</span>: <span *ngIf="!editing">{{record["light"]|translate}}</span>
-                        <select *ngIf="editing" class="form-select" [(ngModel)]="record['light']">
-                            <!--possible values: 
+                                <option [ngStyle]="{'font-family':fontFamily}" [ngValue]="v"
+                                    *ngFor="let v of weatherValues">{{v|translate}}</option>
+                            </select>
+                        </li>
+                        <li class="list-group-item" *ngFor="let b of selectedBoundaries">
+                            <span>{{b.label}}</span>: <span>{{b.value}}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <!--possible values are {{'night'|translate}}{{'dawn'|translate}}{{'day'|translate}}{{'dusk'|translate}}-->
+                            <span>{{'Light'|translate}}</span>: <span
+                                *ngIf="!editing">{{record["light"]|translate}}</span>
+                            <select *ngIf="editing" class="form-select" [(ngModel)]="record['light']">
+                                <!--possible values: 
                                 {{'clear-day'|translate}},{{'clear-night'|translate}},{{'cloudy'|translate}},{{'fog'|translate}},{{'hail'|translate}},{{'partly-cloudy-day'|translate}},{{'partly-cloudy-night'|translate}},{{'rain'|translate}},{{'sleet'|translate}},{{'snow'|translate}},{{'thunderstorm'|translate}},{{'tornado'|translate}},{{'wind'|translate}}
                             -->
-                            <option [ngStyle]="{'font-family':fontFamily}" [ngValue]="v" *ngFor="let v of lightValues">{{v|translate}}</option>
-                        </select>
-                    </li>
+                                <option [ngStyle]="{'font-family':fontFamily}" [ngValue]="v"
+                                    *ngFor="let v of lightValues">{{v|translate}}</option>
+                            </select>
+                        </li>
+                    </span>
                 </ul>
                 <div *ngIf="!k.value.multiple">
 
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item" *ngFor="let f of k.value.properties|keyvalue|display|orderBy">
-                            {{f.key|translate}}:
+                        <li class="list-group-item"
+                            *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key|display|orderBy">
+                            {{f.key|translate}}: <span *ngIf="isRequired(k.key,f.key)">*</span>
                             <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="-1" [editing]="editing"
                                 [prop]="f" (setFieldCheckFieldChanged)="setCheckField($event)" [data]="record['data']"
                                 [locale]="locale" [canvasmode]="canvasmode"
@@ -96,7 +104,8 @@
                             <h6 class="card-subtitle mb-2 text-muted">{{k.value.description|translate}}</h6>
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item"
-                                    *ngFor="let f of k.value.properties|keyvalue|display|orderBy">{{f.key|translate}}:
+                                    *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key:i|display|orderBy">
+                                    {{f.key|translate}}:<span *ngIf="isRequired(k.key,f.key)">*</span>
                                     <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="i"
                                         [editing]="editing" [prop]="f"
                                         (setFieldCheckFieldChanged)="setCheckField($event)" [data]="record['data']"

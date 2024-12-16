@@ -65,7 +65,7 @@ paramiko==2.7.1
 parso==0.7.1
 pexpect==4.8.0
 pickleshare==0.7.5
-Pillow==8.1.0
+Pillow
 prompt-toolkit==3.0.5
 psycopg2==2.8.5
 psycopg2-binary==2.8.5
@@ -113,7 +113,8 @@ zope.event==4.5.0
 zope.interface==5.1.2
 mock==4.0.3
 py3rijndael==0.3.3
-dotenv
+django-dotenv
 django-ordered-model==3.7.4
 django-richtextfield==1.6.2
 django-ckeditor-5==0.2.13
+django-photologue==3.17

@@ -125,8 +125,8 @@ class RecordSchema(GroutModel):
             self.schema["record_type"] = str(self.record_type.uuid)
 
         super(RecordSchema, self).save(*args, **kwargs)
-        from data.tasks import create_indexes
-        create_indexes.delay()
+        #from data.tasks import create_indexes
+        #create_indexes.delay()
 
 
 class Record(GroutModel):

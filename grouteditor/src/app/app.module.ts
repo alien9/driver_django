@@ -5,17 +5,24 @@ import { HttpClientModule } from '@angular/common/http';
 import { AppComponent } from './app.component';
 import { JSONEditorComponent } from './jsoneditor/jsoneditor.component';
 import { SortedhashPipe } from './sortedhash.pipe';
+import { FieldfilterPipe } from './fieldfilter.pipe';
+import { ConditionvaluesPipe } from './conditionvalues.pipe';
+import { NgbModule, NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
 
 @NgModule({
   declarations: [
     AppComponent,
     JSONEditorComponent,
-    SortedhashPipe
+    SortedhashPipe,
+    FieldfilterPipe,
+    ConditionvaluesPipe
   ],
   imports: [
     BrowserModule,
     FormsModule,
-    HttpClientModule,
+    HttpClientModule, 
+    NgbModule,
+    NgbAccordionModule
   ],
   providers: [],
   bootstrap: [JSONEditorComponent],

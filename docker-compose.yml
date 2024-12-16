@@ -112,4 +112,5 @@ services:
       - ./grouteditor:/opt/driver
     ports:
       - 4222:4200
+      - 9876:9876
 

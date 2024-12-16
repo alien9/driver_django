@@ -73,6 +73,7 @@ import { CounterComponent } from './counter/counter.component';
 import { geoBounds } from 'd3';
 import { InputFieldComponent } from './input-field/input-field.component';
 import { LocalListComponent } from './local-list/local-list.component';
+import { ConditionPipe } from './condition.pipe';
 
 const socialConfigFactory = (restService: AuthService) => {
   return restService.getGoogleClientId().pipe(map(config => {
@@ -109,7 +110,7 @@ export function HttpLoaderFactory(httpClient: HttpClient) {
 
 const icons = {
   filePlusFill,
-  geoFill, plusSquareFill,arrowClockwise, listCheck,
+  geoFill, plusSquareFill, arrowClockwise, listCheck,
   globe,
   mapinski,
   filter,
@@ -125,6 +126,35 @@ const icons = {
   arrowRepeat,
   questionLg
 };
+let lang=localStorage.getItem("Language")||"en"
+
+let providers: any[] = [
+  {
+    provide: 'SocialAuthServiceConfig',
+    useFactory: socialConfigFactory,
+    deps: [AuthService]
+  }
+]
+switch (lang) {
+  case 'pt-BR':
+    providers.push({ provide: LOCALE_ID, useValue: 'pt-BR' })
+    break
+  case 'ar':
+    providers.push({ provide: LOCALE_ID, useValue: 'ar' })
+    break
+  case 'fr':
+    providers.push({ provide: LOCALE_ID, useValue: 'fr' })
+    break
+  case 'es':
+    providers.push({ provide: LOCALE_ID, useValue: 'es' })
+    break
+  case 'lo':
+    providers.push({ provide: LOCALE_ID, useValue: 'lo' })
+    break
+  default:
+    providers.push({ provide: LOCALE_ID, useValue: 'en' })
+
+}
 
 @NgModule({
   declarations: [
@@ -160,6 +190,7 @@ const icons = {
     CounterComponent,
     InputFieldComponent,
     LocalListComponent,
+    ConditionPipe,
   ],
   imports: [
     BrowserModule,
@@ -189,18 +220,7 @@ const icons = {
     RouterModule,
     SocialLoginModule,
   ],
-  providers: [
-    { provide: LOCALE_ID, useValue: 'pt-BR' },
-    { provide: LOCALE_ID, useValue: 'fr' },
-    { provide: LOCALE_ID, useValue: 'es' },
-    { provide: LOCALE_ID, useValue: 'en' },
-    { provide: LOCALE_ID, useValue: 'lo' },
-    {
-      provide: 'SocialAuthServiceConfig',
-      useFactory: socialConfigFactory,
-      deps: [AuthService]
-    }
-  ],
+  providers: providers,
   bootstrap: [AppComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })

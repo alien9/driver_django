@@ -64,9 +64,21 @@
         <span *ngIf="prop.value['fieldType']=='image' && ['canvas','map'].indexOf(prop.value.imageSource )==-1">
             <input class="form-control" type="file" (change)="loadFile($event, data[tableName],fieldName, index)"
                 accept="image/*" capture="environment" (focus)="rememberImageField()">
-            <input type="text" [id]="getImageFieldId()" [value]="getValue()" style="display:block; width:1px;height:1px; border-style: none;" (change)="setFieldValue($event)">
-        
+            <input type="text" [id]="getImageFieldId()" [value]="getValue()"
+                style="display:block; width:1px;height:1px; border-style: none;" (change)="setFieldValue($event)">
+
         </span>
+
+        <span *ngIf="prop.value['fieldType']=='file'">
+            <input class="form-control" type="file" (change)="uploadAttachment($event, data[tableName],fieldName, index)"
+                capture="environment">
+            <input type="text" [id]="getImageFieldId()" [value]="getValue()"
+                style="display:block; width:1px;height:1px; border-style: none;" (change)="setFieldValue($event)">
+
+        </span>
+
+
+
 
         <div *ngIf="prop.value.displayType=='checkbox' || prop.value.format=='checkbox'">
             <div *ngFor="let o of prop.value.items.enum">
@@ -79,46 +91,63 @@
             </div>
         </div>
 
-        <select class="form-select" *ngIf="prop.value.fieldType!='reference' && prop.value.displayType=='select'"
-            [value]="value" (change)="setFieldValue($event)">
+        <select class="form-select" *ngIf="prop.value.fieldType=='selectlist' && prop.value.displayType=='select'"
+            [id]="getFieldId()" (change)="setFieldValue($event)">
             <option></option>
-            <option [ngStyle]="{'font-family':fontFamily}" *ngFor="let o of prop.value.enum" [value]="o" [selected]="o==value">{{o|translate}}</option>
+            <option [ngStyle]="{'font-family':fontFamily}" *ngFor="let o of prop.value.enum" [value]="o"
+                [selected]="o==getValue()">{{o|translate}}</option>
         </select>
 
-        <select class="form-select" *ngIf="prop.value.fieldType=='reference'" (change)="setFieldValue($event)">
+        <select class="form-select" *ngIf="prop.value.fieldType=='reference'" (change)="setFieldValue($event)"
+            [id]="getFieldId()">
             <option></option>
-            <option [ngStyle]="{'font-family':fontFamily}" *ngFor="let related of data[prop.value.watch.target]" [ngValue]="related['_localId']"
-                [value]="related['_localId']" [selected]="related['_localId']==getValue()">
+            <option [ngStyle]="{'font-family':fontFamily}" *ngFor="let related of data[prop.value.watch.target]"
+                [ngValue]="related['_localId']" [value]="related['_localId']"
+                [selected]="related['_localId']==getValue()">
                 {{related[schema['definitions'][prop.value.watch.target].properties|keyvalue|arrayfirst]|translate}}
             </option>
         </select>
 
+        <div *ngIf="prop.value.fieldType=='selectlist' && prop.value.displayType=='radio'"> 
+            <div *ngFor="let v of prop.value.enum; let i=index">
+                <input [value]="v" class="form-check-input" type="radio" 
+                [name]="'radinh_'+prop.key" 
+                [checked]="getValue()==v"
+                [id]="'radinh_'+prop.key+'_'+i" (change)="setFieldValue($event)"> 
+                <label class="form-check-label px-2" [for]="'radinh_'+prop.key+'_'+i">
+                    {{v}}
+                </label>
+            </div>
+        </div>
+
         <input class="form-control" type="text" [value]="getValue()" (change)="setFieldValue($event)"
+            [id]="getFieldId()"
             *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format=='suggest'"
             [ngbTypeahead]="search" autocomplete="off" aria-autocomplete="both" aria-haspopup="false"
             autocomplete="nope" autocorrect="off"
             (focus)="setFieldAutoCompleteTerms($event, prop.value.enum, prop.value.extra)">
 
         <input class="form-control" type="text" [value]="getValue()" (change)="setFieldValue($event)"
-            *ngIf="prop.value.fieldType=='selectlist' && prop.value.displayType=='autocomplete'" [ngbTypeahead]="search"
-            aria-autocomplete="both" aria-haspopup="false" autocomplete="nope" autocorrect="off" autocomplete="off"
-            (focus)="setFieldAutoCompleteTerms($event, prop.value.enum, prop.value.extra)">
+            [id]="getFieldId()" *ngIf="prop.value.fieldType=='selectlist' && prop.value.displayType=='autocomplete'"
+            [ngbTypeahead]="search" aria-autocomplete="both" aria-haspopup="false" autocomplete="nope" autocorrect="off"
+            autocomplete="off" (focus)="setFieldAutoCompleteTerms($event, prop.value.enum, prop.value.extra)">
 
         <input class="form-control" type="text" [value]="getValue()" (change)="setFieldValue($event)"
+            [id]="getFieldId()"
             *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format!='datetime' && prop.value.format!='time' && prop.value.format!='suggest' && prop.value.format!='textarea'">
 
         <textarea rows="5" class="form-control" [value]="getValue()" (change)="setFieldValue($event)"
+            [id]="getFieldId()"
             *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format=='textarea'"></textarea>
 
         <input class="form-control" type="number" [value]="getValue()" (change)="setFieldValue($event)"
-            *ngIf="prop.value.fieldType=='integer'">
+            [id]="getFieldId()" *ngIf="prop.value.fieldType=='integer'" [max]="prop.value.max" [min]="prop.value.min">
 
         <input class="form-control" type="number" [value]="getValue()" (change)="setFieldValue($event)"
-            *ngIf="prop.value.fieldType=='number'">
+            [id]="getFieldId()" *ngIf="prop.value.fieldType=='number'">
 
         <img [src]="getValue()" class="pic" [id]="'img_'+getImageFieldId()"
-            (click)="startDraw({table:tableName, field:fieldName, index:index})"
-            *ngIf="prop.value.imageSource">
+            (click)="startDraw({table:tableName, field:fieldName, index:index})" *ngIf="prop.value.imageSource">
 
     </span>
 
