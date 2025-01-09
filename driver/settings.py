@@ -208,21 +208,31 @@ TEMPLATES = [
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': os.environ.get('DRIVER_DB_NAME', 'driver'),
-        'HOST': os.environ.get('DRIVER_DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DRIVER_DB_PORT', 5432),
-        'USER': os.environ.get('DRIVER_DB_USER', 'driver'),
-        'PASSWORD': os.environ.get('DRIVER_DB_PASSWORD', 'driver'),
-        'CONN_MAX_AGE': 0,  # in seconds
-        'OPTIONS': {
-            #    'sslmode': 'require'
+if TESTING:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.contrib.gis.db.backends.spatialite",
+            "NAME": "driver",
         }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
+            'NAME': os.environ.get('DRIVER_DB_NAME', 'driver'),
+            'HOST': os.environ.get('DRIVER_DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DRIVER_DB_PORT', 5432),
+            'USER': os.environ.get('DRIVER_DB_USER', 'driver'),
+            'PASSWORD': os.environ.get('DRIVER_DB_PASSWORD', 'driver'),
+            'CONN_MAX_AGE': 0,  # in seconds
+            'OPTIONS': {
+                #    'sslmode': 'require'
+            }
+        }
+    }
+
+
+
 POSTGIS_VERSION = tuple(
     map(int, os.environ.get('DJANGO_POSTGIS_VERSION', '2.1.3').split("."))
 )
