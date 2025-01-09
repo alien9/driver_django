@@ -22,6 +22,8 @@ export class LoginComponent implements OnInit {
     @Output() entering = new EventEmitter<any>()
     backend: string = ""
     hasGoogle: boolean = false
+    headerHTML: any;
+    footerHTML: any;
 
     constructor(
         private formBuilder: FormBuilder,
@@ -53,6 +55,7 @@ export class LoginComponent implements OnInit {
     }
 
     ngOnInit() {
+        document.cookie = 'csrftoken=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
         let c = this.getCookie('AuthService.token')
         if (c) {
             this.setCookie('AuthService.token', '', -1)
@@ -65,10 +68,12 @@ export class LoginComponent implements OnInit {
             if(backend.length>1){
                 d=d.replace(/src="/g, `src="${backend}/`)
             }
-            document.getElementById("site-header-div").innerHTML=d
+            this.headerHTML=d
+            //document.getElementById("site-header-div").innerHTML=d
         })
         this.recordService.getSiteFooter(lang).pipe(first()).subscribe(data => {
-            document.getElementById("site-footer-div").innerHTML=data["result"]
+            //document.getElementById("site-footer-div").innerHTML=data["result"]
+            this.footerHTML=data["result"]
         })
 
         this.loginForm = this.formBuilder.group({

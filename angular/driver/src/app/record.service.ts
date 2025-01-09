@@ -75,20 +75,20 @@ export class RecordService {
   uploadAttachment(obj: Object, uuid: string): Observable<any[]> {
     //head.append('Content-Type', 'application/x-www-form-urlencoded');
     //head.append('Content-Type', 'multipart/form-data; charset=utf-8')
-    let h = {
-      'Content-Type':  'multipart/form-data; charset=utf-8'
-    }
+    const head = {}
+
+    head['Content-Type'] = undefined //'multipart/form-data; charset=utf-8'
+    head["Accept"] = 'application/json, text/plain, */*'
     let t = this.getTokenFromCookie()
-    if (t) h['Authorization'] = `Token ${this.getTokenFromCookie()}`
-    h['Content-Disposition'] = obj["srcElement"].files[0].name
-    const head = new HttpHeaders(h)
+    if (t) head['Authorization'] = `Token ${this.getTokenFromCookie()}`
+    head['Content-Disposition'] = obj["srcElement"].files[0].name
     const formData = new FormData()
     console.log("WILLLL UPLOAD")
     console.log(obj["srcElement"].files[0])
     formData.append("file", obj["srcElement"].files[0], obj["srcElement"].files[0].name)
     formData.append("uuid", uuid)
 
-    return this.http.post<any[]>(this.getBackend() + '/api/files/', formData, { headers: head })
+    return this.http.post<any[]>(this.getBackend() + '/api/files/', formData, { headers: new HttpHeaders(head) })
   }
   getRecords(o: Object, q: any): Observable<any[]> {
     let params = new HttpParams()

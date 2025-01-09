@@ -9,4 +9,16 @@
 }
 .pic{
     width: 100%;
+    max-width: 80px;
+}
+
+.radiopic{
+    max-width: 80px; 
+}
+.radiopicselected{
+    border:1px solid gray;
+
+}
+.radinho{
+    vertical-align: middle;
 }

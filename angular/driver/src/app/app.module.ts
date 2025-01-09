@@ -62,6 +62,7 @@ import localeFr from '@angular/common/locales/fr';
 import localeEn from '@angular/common/locales/en';
 import localeLo from '@angular/common/locales/lo';
 import localeAr from '@angular/common/locales/ar';
+import localeFa from '@angular/common/locales/fa';
 import { NgxSpinnerModule } from "ngx-spinner";
 import { ChartsComponent } from './charts/charts.component';
 import { IrapPopupComponent } from './irap-popup/irap-popup.component';
@@ -74,6 +75,9 @@ import { geoBounds } from 'd3';
 import { InputFieldComponent } from './input-field/input-field.component';
 import { LocalListComponent } from './local-list/local-list.component';
 import { ConditionPipe } from './condition.pipe';
+import { SplitlinesPipe } from './splitlines.pipe';
+import { AccordionModule } from 'ngx-bootstrap/accordion';
+import { ReferenceNamePipe } from './reference-name.pipe'
 
 const socialConfigFactory = (restService: AuthService) => {
   return restService.getGoogleClientId().pipe(map(config => {
@@ -95,6 +99,7 @@ const socialConfigFactory = (restService: AuthService) => {
   })).toPromise();
 };
 registerLocaleData(localePt);
+registerLocaleData(localeFa);
 registerLocaleData(localeEs);
 registerLocaleData(localeFr);
 registerLocaleData(localeEn);
@@ -126,7 +131,7 @@ const icons = {
   arrowRepeat,
   questionLg
 };
-let lang=localStorage.getItem("Language")||"en"
+let lang = localStorage.getItem("Language") || "en"
 
 let providers: any[] = [
   {
@@ -150,6 +155,9 @@ switch (lang) {
     break
   case 'lo':
     providers.push({ provide: LOCALE_ID, useValue: 'lo' })
+    break;
+  case 'fa':
+    providers.push({ provide: LOCALE_ID, useValue: 'fa' })
     break
   default:
     providers.push({ provide: LOCALE_ID, useValue: 'en' })
@@ -191,6 +199,8 @@ switch (lang) {
     InputFieldComponent,
     LocalListComponent,
     ConditionPipe,
+    SplitlinesPipe,
+    ReferenceNamePipe
   ],
   imports: [
     BrowserModule,
@@ -219,6 +229,7 @@ switch (lang) {
     QRCodeModule,
     RouterModule,
     SocialLoginModule,
+    AccordionModule.forRoot()
   ],
   providers: providers,
   bootstrap: [AppComponent],

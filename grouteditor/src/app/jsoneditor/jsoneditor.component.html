@@ -21,6 +21,16 @@
                 <label class="block">Multiple <input type="checkbox" [(ngModel)]="dict.definitions[item.key].multiple"
                         (focus)="setActive(null)" (change)="setReferables()"></label>
             </div>
+            <div>
+                <label class="block">Illustrated <input type="checkbox"
+                        [checked]="dict.definitions[item.key].illustrated" (focus)="setActive(null)"
+                        (change)="setIllustratedTable(item.key,$event)"></label>
+            </div>
+            <div *ngIf="dict.definitions[item.key].illustrated">
+                <label class="block">Illustration</label><input type="text"
+                    [value]="dict.definitions[item.key].illustration" (focus)="setActive(null)"
+                    (change)="setIllustrationTable(item.key, $event)">
+            </div>
             <div (click)="setActive(dict.definitions[item.key], 'plural_title')"
                 *ngIf=dict.definitions[item.key].multiple>
                 Plural Title: <input [(ngModel)]="dict.definitions[item.key].plural_title"
@@ -35,6 +45,18 @@
             <div (click)="setActive(dict.definitions[item.key],'description')">
                 Description: <br>
                 <textarea class="note" [(ngModel)]="dict.definitions[item.key].description" (change)=save()></textarea>
+            </div>
+
+            <div class="denomination">Denomination:<br>
+                <div class="field" *ngIf="dict.definitions[item.key].denominations">{{
+                    dict.definitions[item.key].denominations.join(' / ')}}</div>
+                <select class="field_name" (change)="addDenomination(item.key, $event)">
+                    <option value="">Choose Field</option>
+                    <option *ngFor="let defi of dict.definitions[item.key].properties | sortedhash" [value]="defi.key">
+                        {{defi.key}}
+                    </option>
+                </select>
+                &nbsp;<a href="javascript:void(0)" (click)="resetDenominations(item.key)">Reset</a>
             </div>
             <div class="props">
                 <div *ngFor="let pair of dict.definitions[item.key].properties | sortedhash; let j=index"
@@ -73,12 +95,13 @@
                     </div>
                     <div>
                         <label>Required <input type="checkbox" [checked]="isRequired(item.key, pair.key)"
-                            (focus)="setActive(null)" (change)="setRequired(pair.key, item.key, $event)"></label>
+                                (focus)="setActive(null)" (change)="setRequired(pair.key, item.key, $event)"></label>
                     </div>
                     <div>
                         <label>Illustrated <input type="checkbox" [checked]="isIllustrated(item.key, pair.key)"
-                            (focus)="setActive(null)" (change)="setIllustrated(pair.key, item.key, $event)"></label>
+                                (focus)="setActive(null)" (change)="setIllustrated(pair.key, item.key, $event)"></label>
                     </div>
+
                     <div>Type:{{pair.value.options}}
                         <select [compareWith]="compareByOptionId" (focus)="setActive(null)"
                             (change)="setFieldType(item.key,pair.key, $event)">
@@ -133,10 +156,11 @@
                         </div>
                     </div>
                     <div *ngIf="pair.value.fieldType==='selectlist'">
-                        <div *ngIf="(pair.value.displayType==='select') || (pair.value.displayType==='autocomplete')|| (pair.value.displayType==='radio')">
+                        <div
+                            *ngIf="(pair.value.displayType==='select') || (pair.value.displayType==='autocomplete')|| (pair.value.displayType==='radio')">
                             <div class="tag" *ngFor="let a of pair.value.enum; let kk = index">
                                 <input id="{{item.key}}_{{pair.key}}_{{i}}" [value]="a"
-                                    (change)="setPropertyValue(pair.value.enum, kk, $event)">
+                                    (change)="setEnumValue(item.key,pair.key, kk, $event)">
                                 <a (click)="removeOption(pair.value, kk)"> - </a>
                             </div>
                             <div class="tag"><a href="javascript:void(0)"
@@ -151,7 +175,8 @@
                             <div class="tag"><a href="javascript:void(0)"
                                     (click)="newOption(pair.value,item.key,pair.key)"> + </a></div>
                         </div>
-                        <div *ngIf="(pair.value.displayType==='select')||(pair.value.displayType==='autocomplete')||(pair.value.displayType==='radio')">
+                        <div
+                            *ngIf="(pair.value.displayType==='select')||(pair.value.displayType==='autocomplete')||(pair.value.displayType==='radio')">
                             Display: <select [(ngModel)]="pair.value.displayType" (focus)="setActive(null)"
                                 (change)="setDisplayType(pair.value, $event)">
                                 <option [ngStyle]="{'font-family':fontFamily}" value="checkbox">checkbox</option>
@@ -175,6 +200,13 @@
                             </select>
                         </div>
                     </div>
+                    <div *ngIf="isIllustrated(item.key, pair.key)">Illustrations: <span
+                            *ngFor="let a of pair.value.illustrations; let kks = index">
+                            <input type="text" [value]="a" (change)="setIllustration(item.key,pair.key,kks,$event)">
+                        </span></div>
+                    <div *ngIf="isIllustrated(item.key, pair.key)">Illustration: 
+                            <input type="text" [value]="dict.definitions[item.key].properties[pair.key].illustration || ''" (change)="setIllustrationField(item.key,pair.key,$event)">
+                        </div>
                     <div>
                         Condition: <select (focus)="setActive(null)"
                             (change)="setCondition(pair.value, item.key, pair.key, $event)">
@@ -184,10 +216,9 @@
                                 [value]="fld.key" [selected]="fld.key==pair.value.condition">{{fld.key}}</option>
                         </select>
 
-                        <select (focus)="setActive(null)" (change)="setConditionComparison(pair.value, item.key, pair.key, $event)">
+                        <select (focus)="setActive(null)"
+                            (change)="setConditionComparison(pair.value, item.key, pair.key, $event)">
                             <option value="==" [selected]="pair.value.conditionComparison=='=='">==</option>
-                            <option value="!=" [selected]="pair.value.conditionComparison=='!='">!=</option>
-                            
                         </select>
 
                         <select *ngIf="pair.value.condition"
@@ -196,6 +227,9 @@
                             <option *ngFor="let vlw of dict.definitions[item.key].properties[pair.value.condition].enum"
                                 [selected]="vlw==pair.value.conditionValue">{{vlw}}</option>
                         </select>
+
+                        <input *ngIf="pair.value.condition" [value]="pair.value.conditionRegex || ''" type="text"
+                            (change)="setConditionRegex(item.key,pair.key,$event)">
                     </div>
                 </div>
                 <div class="properties"><a class="new" (click)="newField(dict.definitions[item.key])"
