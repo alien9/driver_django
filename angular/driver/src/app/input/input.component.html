@@ -9,7 +9,9 @@
                     <div class="input-map" leaflet [leafletLayers]=layers [leafletLayersControl]="layersControl"
                         (map)=setMap($event) [leafletOptions]="options" (leafletMapReady)=mapReady($event)></div>
                 </div>
-                <ul class="list-group list-group-flush" *ngIf="k.value.multiple">
+                <h6 class="card-subtitle mb-2 p-2 text-muted" [innerHTML]="k.value.description|splitlines"
+                    *ngIf="editing"></h6>
+                <ul class="list-group list-group-flush" *ngIf="!k.value.multiple">
                     <span *ngIf="k.value.details">
                         <li class="list-group-item">
                             <span>{{'Latitude'|translate}}</span>: <span
@@ -91,36 +93,43 @@
                     </ul>
                 </div>
                 <div *ngIf="k.value.multiple">
+
                     <button *ngIf=editing type="button" class="btn btn-light float-right" (click)="addElement(k.key)"> +
                     </button>
-                    <div class="card" *ngFor="let kk of record['data'][k.key]; let i = index">
-                        <div class="card-body">
-                            <div>
-                                <button *ngIf=editing type="button" class="btn btn-light top-float-right"
-                                    (click)="removeElement(k.key, i)"> -
-                                </button>
-                                <h5 class="card-title">{{k.value.title|translate}}</h5>
-                            </div>
-                            <h6 class="card-subtitle mb-2 text-muted">{{k.value.description|translate}}</h6>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item"
-                                    *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key:i|display|orderBy">
-                                    {{f.key|translate}}:<span *ngIf="isRequired(k.key,f.key)">*</span>
-                                    <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="i"
-                                        [editing]="editing" [prop]="f"
-                                        (setFieldCheckFieldChanged)="setCheckField($event)" [data]="record['data']"
-                                        [locale]="locale" [canvasmode]="canvasmode"
-                                        (setDateFieldValueChanged)="setInputDateField($event)"
-                                        (setFileChanged)="loadFieldFile($event)" (fieldChanged)="setFieldValue($event)"
-                                        [autocomplete_terms]="autocomplete_terms"
-                                        (startDrawing)="startDrawingCanvas($event, canvasmode)"
-                                        (turnOnAutoComplete)="setAutocompleteTerms($event)"
-                                        [schema]="schema"></app-input-field>
-                                </li>
+                    <accordion>
+                        <div class="card" *ngFor="let kk of record['data'][k.key]; let i = index">
+                            <div class="card-body">
+                                <accordion-group [isOpen]="accordionOpenedItem==i" (isOpenChange)="setAccordionOpen(i)">
+                                    <div  accordion-heading>
+                                        <button *ngIf=editing type="button" class="btn btn-light top-float-right"
+                                            (click)="removeElement(k.key, i)"> -
+                                        </button>
+                                        <h5 class="card-title">{{k.value.title|translate}}: {{record['data'][k.key][i]|referenceName:k.key:schema}}</h5>
+                                    </div>
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item"
+                                            *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key:i|display|orderBy">
+                                            {{f.key|translate}}:<span *ngIf="isRequired(k.key,f.key)">*</span>
+                                            <img  [src]="f.value.illustration" *ngIf="f.value.isIllustrated">
+                                            <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="i"
+                                                [editing]="editing" [prop]="f"
+                                                (setFieldCheckFieldChanged)="setCheckField($event)"
+                                                [data]="record['data']" [locale]="locale" [canvasmode]="canvasmode"
+                                                (setDateFieldValueChanged)="setInputDateField($event)"
+                                                (setFileChanged)="loadFieldFile($event)"
+                                                (fieldChanged)="setFieldValue($event)"
+                                                [autocomplete_terms]="autocomplete_terms"
+                                                (startDrawing)="startDrawingCanvas($event, canvasmode)"
+                                                (turnOnAutoComplete)="setAutocompleteTerms($event)"
+                                                [schema]="schema"></app-input-field>
+                                        </li>
 
-                            </ul>
+                                    </ul>
+                                </accordion-group>
+                            </div>
                         </div>
-                    </div>
+                    </accordion>
+
                 </div>
             </ng-template>
         </li>

@@ -89,7 +89,13 @@ export class InputFieldComponent implements OnInit {
     this.startDrawing.emit(what)
   }
   setFieldValue(e: any) {
-    this.fieldChanged.emit({ "event": e, "table": this.tableName, "field": this.fieldName, "index": this.index })
+    let v=e.srcElement.value
+    if(this.prop.value.fieldType=='integer'){
+      v=parseInt(v)
+      if(this.prop.value.min && (v<this.prop.value.min)) v=this.prop.value.min
+      if(this.prop.value.max && (v>this.prop.value.max)) v=this.prop.value.max
+    }
+    this.fieldChanged.emit({ "event": {srcElement:{value:v}}, "table": this.tableName, "field": this.fieldName, "index": this.index })
   }
   setDateField(e: any, table: string, field: string, index: number = -1) {
     let d = null
@@ -144,7 +150,10 @@ export class InputFieldComponent implements OnInit {
       console.log(data)
     })
   }
-
+getIllustra(i){
+  if(this.prop.value["illustrations"] &&(this.prop.value["illustrations"].length>i))
+  return this.prop.value["illustrations"][i]
+}
 
   rememberImageField() {
     localStorage.setItem("image-field", this.getImageFieldId())

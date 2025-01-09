@@ -21,7 +21,7 @@ services:
       - STATIC_ROOT=/var/www/static/
       - STATIC_URL=${PROTOCOL}://${HOST_NAME}/static/ 
       - OAUTH_CLIENT_ID=${CLIENTID}
-      - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}
+      - OAUTH_CLIENT_SECRET=${CLIENT_SECRET}st 
       - DRIVER_ADMIN_PASSWORD=${DRIVER_ADMIN_PASSWORD}
       - CONTAINER_NAME=${CONTAINER_NAME}
       - IDLE_TIMEOUT=${IDLE_TIMEOUT}
@@ -89,7 +89,7 @@ services:
     container_name: mapserver-${CONTAINER_NAME}
     volumes:
       - ./mapserver/:/etc/mapserver
-    image: geodata/mapserver
+    image: camptocamp/mapserver
     ports:
       - 8999:80
 

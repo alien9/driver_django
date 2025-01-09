@@ -18,6 +18,7 @@ import * as uuid from 'uuid';
 import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 import sha256 from 'crypto-js/sha256';
+import { Title } from "@angular/platform-browser";
 
 @Component({
   selector: 'app-index',
@@ -118,8 +119,11 @@ export class IndexComponent implements OnInit {
     private zone: NgZone,
     private injector: Injector,
     private resolver: ComponentFactoryResolver,
-    private translateService: TranslateService
-  ) { }
+    private translateService: TranslateService,
+    private titleService: Title
+  ) {
+
+  }
 
   ngOnInit(): void {
     if (this.route.snapshot.queryParamMap.get('language')) {
@@ -139,12 +143,14 @@ export class IndexComponent implements OnInit {
     this.locale = localStorage.getItem("Language") || navigator.language
     localStorage.setItem("Language", this.locale)
     let du = (new Date()).toLocaleDateString(this.locale)
-    if (this.locale == 'ar') {
+    if (this.locale in ['ar', 'fa']) {
       document.getElementsByTagName('html')[0].setAttribute("dir", "rtl")
     }
     this.supportsLocalDate = !du.match(/^Invalid/)
     this.recordService.getConfig().pipe(first()).subscribe(data => {
       this.config = data
+      console.log("aaaa")
+      this.titleService.setTitle(this.config["APP_NAME"]);
       if (data['DEFAULT_LANGUAGE']?.length) {
         let current = localStorage.getItem("Language") || navigator.language
         let langs = data['LANGUAGES'] || []

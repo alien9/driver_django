@@ -84,6 +84,7 @@ export class InputComponent implements OnInit {
   hasRoadMap: boolean = false
   reverse_trans: {};
   canvas_extra: any = null;
+  accordionOpenedItem: any;
 
   constructor(
     private webService: WebService,
@@ -276,20 +277,21 @@ export class InputComponent implements OnInit {
   }
   validateRecord(): boolean {
     let v = true
-    Object.keys(this.recordSchema["schema"].definitions).forEach((kk) => {
+    Object.keys(this.recordSchema["schema"].definitions).sort((a, b) => this.recordSchema["schema"].definitions[a]["propertyOrder"] - this.recordSchema["schema"].definitions[b]["propertyOrder"]).forEach((kk) => {
       if (this.recordSchema["schema"].definitions[kk].required) {
         let requiredFields = Object.keys(this.recordSchema["schema"].definitions[kk].properties).filter((pk) => {
           return this.recordSchema["schema"].definitions[kk].properties[pk].isRequired || this.recordSchema["schema"].definitions[kk].required.includes(pk)
+        }).sort((a, b) => {
+          return this.recordSchema["schema"].definitions[kk].properties[a]["propertyOrder"] - this.recordSchema["schema"].definitions[kk].properties[b]["propertyOrder"]
         })
-        console.log(requiredFields)
         //this.recordSchema["schema"].definitions[kk].required.forEach((reqs) => {
         requiredFields.forEach((reqs) => {
           if (reqs == "_localId") return
-          let condition=this.recordSchema["schema"].definitions[kk].properties[reqs].condition
+          let condition = this.recordSchema["schema"].definitions[kk].properties[reqs].condition
           if (v) {
             if (!this.recordSchema["schema"].definitions[kk].multiple) {
-              if(condition){
-                if(this.record["data"][kk][condition]!=this.recordSchema["schema"].definitions[kk].properties[reqs].conditionValue) return
+              if (condition) {
+                if (this.record["data"][kk][condition] != this.recordSchema["schema"].definitions[kk].properties[reqs].conditionValue) return
               }
               if (this.record["data"][kk][reqs] === undefined || this.record["data"][kk][reqs] === null || this.record["data"][kk][reqs] === '') {
                 this.nav.select(kk)
@@ -306,8 +308,8 @@ export class InputComponent implements OnInit {
                 console.log(this.record["data"][kk])
                 this.record["data"][kk].forEach((vei, j) => {
                   console.log(vei)
-                  if(condition){
-                    if(vei[condition]!=this.recordSchema["schema"].definitions[kk].properties[reqs].conditionValue) return
+                  if (condition) {
+                    if (vei[condition] != this.recordSchema["schema"].definitions[kk].properties[reqs].conditionValue) return
                   }
                   if (vei[reqs] === undefined || vei === null || vei[reqs] === '') {
                     this.nav.select(kk)
@@ -334,6 +336,28 @@ export class InputComponent implements OnInit {
   }
   isRequired(table, field) {
     return this.recordSchema["schema"].definitions[table].properties[field].isRequired || (this.recordSchema["schema"].definitions[table].required.indexOf(field) >= 0)
+  }
+  getDenominations(t, idx) {
+    const names = []
+    if (!t.value.denominations) {
+      return this.translateService.instant(t.value.title)
+    }
+    let i = 0
+    while (i < t.value.denominations.length && names.length < 2) {
+      if (t.value.denominations.length > i && t.value.denominations[i].length)
+        if (idx >= 0) {
+          if (this.record["data"][t.key][idx][t.value.denominations[i]])
+            names.push(this.translateService.instant(this.record["data"][t.key][idx][t.value.denominations[i]]))
+        } else {
+          if (this.record["data"][t.key][t.value.denominations[i]])
+            names.push(this.translateService.instant(this.record["data"][t.key][t.value.denominations[i]]))
+
+        }
+      i++
+    }
+    if (names.length) return names.join(" ")
+    return this.translateService.instant(t.value.title)
+
   }
   saveRecord(modal: any) {
     this.setDate(null)
@@ -636,6 +660,7 @@ export class InputComponent implements OnInit {
         }
       }
     }
+    this.record['data'] = JSON.parse(JSON.stringify(this.record['data']))
   }
   onMultipleCheckChange(e: any, t: string, idx: number, f: any) {
     if (!this.record['data'][t][idx][f])
@@ -670,6 +695,9 @@ export class InputComponent implements OnInit {
       this.marker.addTo(this.map)
       this.map.panTo(latlng)
     }
+  }
+  setAccordionOpen(idx: any) {
+    this.accordionOpenedItem = idx
   }
   setAutocompleteTerms(e: any) {
     let terms = e.words

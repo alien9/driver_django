@@ -1,12 +1,11 @@
 <script src="https://apis.google.com/js/platform.js" async defer></script>
 <meta name="google-signin-client_id" content="418431456233-ba16pgbb21ao70dh98thsobjrud0vjpl.apps.googleusercontent.com">
 
-<div class="container h-100">
+<div class="container h-100" data-bs-theme="dark">
     <div class="h-100">
         <div class="card my-auto mt-5">
-            <div class="card-body" id="site-header-div" style="min-height:280px">
-                <h5 class="modal-title">DRIVER</h5>
-            </div>
+            <div class="card-body" id="site-header-div" style="min-height:280px" [innerHTML]="headerHTML">
+\           </div>
             <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" action="/">
                 <div class="card-body">
                     <div class="login-form">
@@ -45,7 +44,8 @@
                     </div>
                 </div>
             </form>
-            <div class="card-body" id="site-footer-div">
+            <div class="card-body" id="site-footer-div" [innerHTML]="footerHTML">
+                
             </div>
         </div>
     </div>

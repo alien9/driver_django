@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import isEqual from 'lodash.isequal';
 import { ObjectUnsubscribedError } from 'rxjs';
 import { FieldfilterPipe } from '../fieldfilter.pipe';
+import { HostListener } from '@angular/core';
 
 
 @Component({
@@ -23,6 +24,17 @@ export class JSONEditorComponent implements OnInit {
   activeKey: any;
   code: boolean = false;
   public dict_json: string = ""
+  @HostListener('document:keypress', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent) {
+    if (event.ctrlKey) {
+      if (event.key == 'y') {
+        localStorage.setItem("content", JSON.stringify(this.dict))
+      }
+      if (event.key == 'i') {
+        this.dict = JSON.parse(localStorage.getItem("content"))
+      }
+    }
+  }
   fieldtypes = [
     { id: 'text', name: 'text' },
     { id: 'integer', name: 'integer' },
@@ -106,10 +118,17 @@ export class JSONEditorComponent implements OnInit {
         h[k] = o.properties[k];
       }
     }
+    Object.keys(h).forEach((k) => {
+      if (h[k].condition && (h[k].condition == oldkey)) {
+        h[k].condition = event.srcElement.value
+      }
+    })
+
     if (o.required && (o.required.indexOf(oldkey) >= 0)) {
       o.required.splice(o.required.indexOf(oldkey), 1);
       o.required.push(event.srcElement.value);
     }
+
     o.properties = h;
     this.save()
   }
@@ -224,6 +243,8 @@ export class JSONEditorComponent implements OnInit {
       if (i == 0 || f.items.enum[i - 1] != "")
         f.items.enum.push("");
     }
+    console.log(elem, fld)
+    this.resetIllustrations(elem, fld)
     this.save()
     //this.zone.runOutsideAngular(() => setTimeout(() => {
     //   document.getElementById(`${elem}_${fld}_${i}`).focus();
@@ -241,14 +262,48 @@ export class JSONEditorComponent implements OnInit {
     this.dict = JSON.parse(JSON.stringify(this.dict))
     this.save()
   }
+  setEnumValue(t, f, i, event): void {
+    this.dict.definitions[t].properties[f].enum[i] = event.srcElement.value
+    this.resetIllustrations(t, f)
+    this.dict = JSON.parse(JSON.stringify(this.dict))
+    this.save()
+  }
   setPropertyByKey(f, t, p, event) {
     this.dict.definitions[t].properties[f][p] = event.srcElement.value
     this.dict = JSON.parse(JSON.stringify(this.dict))
     this.save()
   }
-
+  refresh() {
+    this.dict = JSON.parse(JSON.stringify(this.dict))
+    this.save()
+  }
+  setIllustratedTable(t, event) {
+    this.dict.definitions[t].illustrated = event.srcElement.checked
+    this.refresh()
+  }
+  setIllustrationTable(t, event) {
+    console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+    const ilu = event.srcElement.value
+    if (ilu != '') {
+      this.dict.definitions[t].illustration = ilu
+    } else {
+      //delete this.dict.definitions[t].illustration
+    }
+    this.refresh()
+  }
   setConditionComparison(a, table, f, event): void {
     a.conditionComparison = event.srcElement.value
+    this.dict = JSON.parse(JSON.stringify(this.dict))
+    this.save()
+  }
+  setConditionRegex(table, f, event): void {
+    const v = event.srcElement.value
+    if (v == '') {
+      delete this.dict.definitions[table].properties[f].conditionRegex
+    } else {
+      this.dict.definitions[table].properties[f].conditionRegex = v
+
+    }
     this.dict = JSON.parse(JSON.stringify(this.dict))
     this.save()
   }
@@ -359,13 +414,55 @@ export class JSONEditorComponent implements OnInit {
   contains(array, o) {
     return array.includes(o);
   }
+  setIllustration(tb, f, ixd, event) {
+    if (!this.dict.definitions[tb].properties[f].illustrations) this.dict.definitions[tb].properties[f].illustrations = []
+    while (this.dict.definitions[tb].properties[f].illustrations.length <= ixd)
+      this.dict.definitions[tb].properties[f].illustrations.push(null)
+    if (this.dict.definitions[tb].properties[f].enum) {
+      while (this.dict.definitions[tb].properties[f].illustrations.length > this.dict.definitions[tb].properties[f].enum.length)
+        this.dict.definitions[tb].properties[f].illustrations.pop()
+    }
+    this.dict.definitions[tb].properties[f].illustrations[ixd] = event.srcElement.value
+    this.dict = JSON.parse(JSON.stringify(this.dict))
+    this.save()
+  }
+  setIllustrationField(tb, f, event) {
+    this.dict.definitions[tb].properties[f].illustration = event.srcElement.value
+    this.dict = JSON.parse(JSON.stringify(this.dict))
+    this.save()
+  }
+  resetIllustrations(t, o) {
+    if ((this.dict.definitions[t].properties[o].enum) && (this.dict.definitions[t].properties[o].isIllustrated)) {
+      this.dict.definitions[t].properties[o].illustrations = this.dict.definitions[t].properties[o].enum.map((fm, indx) => {
+        if (this.dict.definitions[t].properties[o].illustrations && (this.dict.definitions[t].properties[o].illustrations.length > indx)) {
+          return this.dict.definitions[t].properties[o].illustrations[indx]
+        }
+        if (fm && fm != '')
+          return `/media/photologue/photos/cache/${fm}_${indx}.png`
+        return null
+      })
+    } else {
+      delete this.dict.definitions[t].properties[o].illustrations
+    }
+  }
   isIllustrated(t, o) {
     return this.dict.definitions[t].properties[o].isIllustrated
-
   }
   setIllustrated(o, t, event) {
-    console.log("set illustrated", event)
-    this.dict.definitions[t].properties[o].isIllustrated = event.srcElement.checked
+    const isIllustrious = event.srcElement.checked
+    this.dict.definitions[t].properties[o].isIllustrated = isIllustrious
+    const options = this.dict.definitions[t].properties[o].enum
+    if (isIllustrious) {
+      if (this.dict.definitions[t].properties[o].enum) {
+        this.dict.definitions[t].properties[o].illustrations = this.dict.definitions[t].properties[o].enum.map((fm) => {
+          return `/media/photologue/photos/cache/${fm}.png`
+        })
+      } else {
+        this.dict.definitions[t].properties[o].illustrations = [`/media/photologue/photos/cache/image.png`]
+      }
+    } else {
+      delete this.dict.definitions[t].properties[o].illustrations
+    }
     this.dict = JSON.parse(JSON.stringify(this.dict))
     this.save()
   }
@@ -395,8 +492,33 @@ export class JSONEditorComponent implements OnInit {
         }
       }
     }
-
-    this.dict = JSON.parse(JSON.stringify(this.dict))
+    this.save()
+  }
+  fixRequired() {
+    if(!this.dict || !this.dict.definitions) return
+    Object.keys(this.dict.definitions).forEach((k) => {
+      if (this.dict.definitions[k].required) {
+        let i = 0
+        while (i < this.dict.definitions[k].required.length) {
+          if (!this.dict.definitions[k].properties[this.dict.definitions[k].required[i]]) {
+            this.dict.definitions[k].required.splice(i, 1)
+          } else
+            i++
+        }
+      }
+    })
+  }
+  resetDenominations(t) {
+    this.dict.definitions[t].denominations = []
+    this.save()
+  }
+  addDenomination(t, e) {
+    if (!this.dict.definitions[t].denominations) this.dict.definitions[t].denominations = []
+    if (e.srcElement.value && (e.srcElement.value.length)) {
+      console.log(this.dict.definitions[t].denominations)
+      if (this.dict.definitions[t].denominations.indexOf(e.srcElement.value) < 0)
+        this.dict.definitions[t].denominations.push(e.srcElement.value)
+    }
     this.save()
   }
   newField(definition): void {
@@ -642,6 +764,7 @@ export class JSONEditorComponent implements OnInit {
     return i < Object.values(this.dict.properties).length - 1
   }
   save() {
+    this.fixRequired()
     this.dict_json = JSON.stringify(this.dict)
   }
   setDetails(eve, element, key) {

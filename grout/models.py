@@ -94,6 +94,7 @@ class RecordSchema(GroutModel):
 
     class Meta(object):
         unique_together = (('record_type', 'version'),)
+        ordering = ('record_type', '-version',)
     # def __unicode__(self):
     #    return "%s %s" % (self.record_type.label, self.version)
 
@@ -125,8 +126,8 @@ class RecordSchema(GroutModel):
             self.schema["record_type"] = str(self.record_type.uuid)
 
         super(RecordSchema, self).save(*args, **kwargs)
-        #from data.tasks import create_indexes
-        #create_indexes.delay()
+        # from data.tasks import create_indexes
+        # create_indexes.delay()
 
 
 class Record(GroutModel):
@@ -229,7 +230,7 @@ class Record(GroutModel):
         except jsonschema.exceptions.ValidationError as e:
             print(e)
             return {
-                "data":_("Schema validation failed for ")+_(self.schema.record_type.label)+": " +f"{e.message}"
+                "data": _("Schema validation failed for ")+_(self.schema.record_type.label)+": " + f"{e.message}"
             }
 
     def clean(self):
@@ -315,7 +316,8 @@ class Boundary(Imported, OrderedModel):
     class Meta(OrderedModel.Meta):
         verbose_name_plural = _("Boundaries")
         verbose_name = _('Boundary')
-    plural_label=models.CharField(max_length=128)
+    plural_label = models.CharField(max_length=128)
+
     def load_shapefile(self):
         """ Validate the shapefile saved on disk and load into db """
         self.status = self.StatusTypes.PROCESSING
@@ -357,7 +359,7 @@ class Boundary(Imported, OrderedModel):
             self.save()
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
-            
+
     def save(self, *args, **kwargs):
         from data.models import Dictionary
         for d in Dictionary.objects.all():
