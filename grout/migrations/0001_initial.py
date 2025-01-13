@@ -5,7 +5,14 @@ import django.core.validators
 from django.db import migrations, models
 import django.db.models.deletion
 import uuid
-sql_statement = open("find_segments.sql").read()
+from django.conf import settings
+
+if settings.TESTING:
+    sql_statement="select 1;"
+else:
+    sql_statement = open("find_segments.sql").read()
+print(sql_statement)
+print("*******************************************************")
 
 class Migration(migrations.Migration):
 
