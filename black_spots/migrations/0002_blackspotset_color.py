@@ -8,8 +8,6 @@ if settings.TESTING:
 else:
     sql_statement = open("find_segments.sql").read()
 
-print(sql_statement)
-print("*******************************************************")
 class Migration(migrations.Migration):
 
     dependencies = [

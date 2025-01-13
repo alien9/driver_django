@@ -131,7 +131,9 @@ INSTALLED_APPS = (
     'django_json_widget',
     'django_verbatim',
     'mozilla_django_oidc',  # Load after auth
-    'django_admin_hstore_widget',
+    #'django_admin_hstore_widget',   
+    'django_hstore_widget',
+
     'constance',
     'proxy',
     'ordered_model',
