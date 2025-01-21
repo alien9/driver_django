@@ -8,7 +8,7 @@ from grout.widgets import GroutEditorWidget
 from data.models import RecordCostConfig, Dictionary, Picture, DriverRecord
 from grout.models import RecordSchema, RecordType, Boundary, BoundaryPolygon
 from black_spots.models import RoadMap, BlackSpotSet
-#from django_admin_hstore_widget.forms import HStoreFormField
+from django_admin_hstore_widget.forms import HStoreFormField
 from constance import config
 from django.forms import ModelForm
 from django.forms.widgets import TextInput
@@ -17,7 +17,7 @@ from data.models import Irap
 from django.contrib.auth.admin import UserAdmin
 from ordered_model.admin import OrderedModelAdmin
 from django_ckeditor_5.widgets import CKEditor5Widget
-from django_hstore_widget.forms import HStoreFormField
+#from django_hstore_widget.forms import HStoreFormField
 
 admin.site.index_title = _('DRIVER Database')
 

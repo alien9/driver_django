@@ -134,7 +134,6 @@ export class IndexComponent implements OnInit {
         this.setLanguage(this.locale)
       })
     }
-    console.log("ack")
     let cu = document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")
     if (!cu?.length) {
       this.router.navigateByUrl('/login')
@@ -149,7 +148,6 @@ export class IndexComponent implements OnInit {
     this.supportsLocalDate = !du.match(/^Invalid/)
     this.recordService.getConfig().pipe(first()).subscribe(data => {
       this.config = data
-      console.log("aaaa")
       this.titleService.setTitle(this.config["APP_NAME"]);
       if (data['DEFAULT_LANGUAGE']?.length) {
         let current = localStorage.getItem("Language") || navigator.language
@@ -1181,7 +1179,6 @@ export class IndexComponent implements OnInit {
   async download(e: any) {
     switch (this.state) {
       case 'Reports':
-        console.log(this.report)
         let filename = this.translateService.instant(this.config['PRIMARY_LABEL'])
         if (this.report['parameters']['relate'])
           filename = this.translateService.instant(this.report['parameters']['relate'].split(/,/).pop())

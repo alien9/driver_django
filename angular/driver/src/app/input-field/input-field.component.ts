@@ -54,6 +54,7 @@ export class InputFieldComponent implements OnInit {
       this.data = JSON.parse(JSON.stringify(this.data))
     }
   }
+
   getValue(): any {
     if (this.index >= 0) {
       if (!(this.tableName in this.data)) {
@@ -77,7 +78,7 @@ export class InputFieldComponent implements OnInit {
     }
     if (this.value === undefined || this.value === null || this.value === "") return ""
     if ((typeof this.value) != 'string') return this.value
-    return this.translateService.instant(this.value)
+    return this.value
   }
 
   startDraw(what: any) {
@@ -163,5 +164,8 @@ getIllustra(i){
   }
   getFieldId() {
     return `${this.tableName}_${this.fieldName}_${this.index}`.replace(/[^\w]/g, "_")
+  }
+  submit(e){
+    console.log(e)
   }
 }

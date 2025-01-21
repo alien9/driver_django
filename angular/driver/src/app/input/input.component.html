@@ -1,4 +1,4 @@
-<div class="modal-body" id="modal-body input">
+<div class="modal-body" id="modal-body input" (keypress)="submit($event,modal)">
     <ul ngbNav #nav="ngbNav" class="nav-tabs" (navChange)=tabChange($event)>
         <li [ngbNavItem]="k.key" *ngFor="let k of schema['definitions']|keyvalue|orderBy">
             <a ngbNavLink *ngIf="!k.value.multiple">{{k.value.title|translate}}</a>
@@ -9,7 +9,7 @@
                     <div class="input-map" leaflet [leafletLayers]=layers [leafletLayersControl]="layersControl"
                         (map)=setMap($event) [leafletOptions]="options" (leafletMapReady)=mapReady($event)></div>
                 </div>
-                <h6 class="card-subtitle mb-2 p-2 text-muted" [innerHTML]="k.value.description|splitlines"
+                <h6 class="card-subtitle mb-2 p-2 text-muted" [innerHTML]="k.value.description|unbreak|translate"
                     *ngIf="editing"></h6>
                 <ul class="list-group list-group-flush" *ngIf="!k.value.multiple">
                     <span *ngIf="k.value.details">
@@ -80,7 +80,7 @@
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item"
                             *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key|display|orderBy">
-                            {{f.key|translate}}: <span *ngIf="isRequired(k.key,f.key)">*</span>
+                            {{f.key|translate}}: <span *ngIf="editing && isRequired(k.key,f.key)">*</span>
                             <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="-1" [editing]="editing"
                                 [prop]="f" (setFieldCheckFieldChanged)="setCheckField($event)" [data]="record['data']"
                                 [locale]="locale" [canvasmode]="canvasmode"
@@ -109,7 +109,7 @@
                                     <ul class="list-group list-group-flush">
                                         <li class="list-group-item"
                                             *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key:i|display|orderBy">
-                                            {{f.key|translate}}:<span *ngIf="isRequired(k.key,f.key)">*</span>
+                                            {{f.key|translate}}:<span *ngIf="editing && isRequired(k.key,f.key)">*</span>
                                             <img  [src]="f.value.illustration" *ngIf="f.value.isIllustrated">
                                             <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="i"
                                                 [editing]="editing" [prop]="f"

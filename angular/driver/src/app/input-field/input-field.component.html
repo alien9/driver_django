@@ -34,7 +34,7 @@
     </span>
     <span *ngIf="editing">
         <span *ngIf="prop.value.fieldType=='image' &&  ['canvas','map'].indexOf(prop.value.imageSource)>-1">
-            <button class="btn btn-light"
+            <button class="btn btn-light" [id]="getFieldId()"
                 (click)="startDraw({table:tableName, field:fieldName, index:index})">{{'Draw'|translate}}</button>
         </span>
 
@@ -92,7 +92,7 @@
         </div>
 
         <select class="form-select" *ngIf="prop.value.fieldType=='selectlist' && prop.value.displayType=='select'"
-            [id]="getFieldId()" (change)="setFieldValue($event)">
+            [id]="getFieldId()" (change)="setFieldValue($event)" [value]="getValue()">
             <option></option>
             <option [ngStyle]="{'font-family':fontFamily}" *ngFor="let o of prop.value.enum" [value]="o"
                 [selected]="o==getValue()">{{o|translate}}</option>

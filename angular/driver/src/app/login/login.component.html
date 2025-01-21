@@ -1,7 +1,7 @@
 <script src="https://apis.google.com/js/platform.js" async defer></script>
 <meta name="google-signin-client_id" content="418431456233-ba16pgbb21ao70dh98thsobjrud0vjpl.apps.googleusercontent.com">
 
-<div class="container h-100" data-bs-theme="dark">
+<div class="container h-100" [attr.data-bs-theme]="'dark'">
     <div class="h-100">
         <div class="card my-auto mt-5">
             <div class="card-body" id="site-header-div" style="min-height:280px" [innerHTML]="headerHTML">

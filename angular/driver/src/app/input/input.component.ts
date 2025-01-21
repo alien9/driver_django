@@ -303,11 +303,8 @@ export class InputComponent implements OnInit {
                 v = false
               }
             } else { //multiple
-              console.log("will be multiple")
               if (kk in this.record["data"]) {
-                console.log(this.record["data"][kk])
                 this.record["data"][kk].forEach((vei, j) => {
-                  console.log(vei)
                   if (condition) {
                     if (vei[condition] != this.recordSchema["schema"].definitions[kk].properties[reqs].conditionValue) return
                   }
@@ -324,13 +321,8 @@ export class InputComponent implements OnInit {
               }
             }
           }
-          //console.log(this.record[data])
         })
       }
-      Object.keys(this.recordSchema["schema"].definitions[kk].properties).forEach((kkk) => {
-        console.log(kkk)
-        console.log(this.recordSchema["schema"].definitions[kk].properties[kkk])
-      })
     })
     return v
   }
@@ -390,9 +382,6 @@ export class InputComponent implements OnInit {
           alert(message["occurred_from"])
         }
         else {
-          Object.keys(message).forEach((k) => {
-            console.log(`${k}: ${message[k]}`)
-          })
           let records = JSON.parse(localStorage.getItem("records") || "[]")
           records.push(this.record)
           localStorage.setItem("records", JSON.stringify(records))
@@ -589,7 +578,6 @@ export class InputComponent implements OnInit {
     return x
   }
   setFieldValue(e) {
-    console.log("SETTING THE F|IELD VALUEEEEEE")
     let xterm;
     const type = this.schema['definitions'][e.table].properties[e.field]
 
@@ -858,10 +846,6 @@ export class InputComponent implements OnInit {
       commentCanvasContext.drawImage(bg, sx, sy, canvas.width, canvas.height, dx, dy, canvas.width, canvas.height);
       bg.setAttribute('crossorigin', 'anonymous');
     };
-    //this.recordService.getRoadMapByCords({ latlng: yx }).pipe(first()).subscribe((d: any) => {
-    //bg.src=URL.createObjectURL(d);
-    //  console.log(d.blob())
-    //})
     bg.src = `${this.recordService.getBackend()}/api/roadmaps/${this.roadmap_uuid}/map/?latlong=${yx[1]},${yx[0]}`
   }
 
@@ -922,6 +906,9 @@ export class InputComponent implements OnInit {
     if (mousePositions.length) commentCanvasContext.lineTo(mousePositions[0]["x"], mousePositions[0]["y"])
     commentCanvasContext.closePath();
     commentCanvasContext.stroke();
-  };
+  }
+  submit(eve:any, modal){
+    if(eve.charCode==13) this.saveRecord(modal)
+  }
 }
 var mousePositions: Array<object> = []

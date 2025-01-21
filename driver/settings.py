@@ -131,8 +131,7 @@ INSTALLED_APPS = (
     'django_json_widget',
     'django_verbatim',
     'mozilla_django_oidc',  # Load after auth
-    #'django_admin_hstore_widget',   
-    'django_hstore_widget',
+    'django_admin_hstore_widget',   
 
     'constance',
     'proxy',
@@ -158,7 +157,6 @@ MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
 )
-
 if DEBUG:
     # Perform set up for Django Debug Toolbar
     INSTALLED_APPS += (
@@ -477,13 +475,13 @@ HOST_URL = os.environ.get('HOST_URL', '')
 
 # TODO: conditionally set for GLUU in production
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get(
-    'OAUTH_CLIENT_ID', '418431456233-i69dc0paqp9ujj40gha8ru5a1tflbjl2.apps.googleusercontent.com')
+    'OAUTH_CLIENT_ID', None)
 GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get(
-    'OAUTH_CLIENT_SECRET', 'E_8AybgrjZ5LdegXBENy0u83')
+    'OAUTH_CLIENT_SECRET', None)
 OIDC_RP_CLIENT_ID = os.environ.get(
-    'OAUTH_CLIENT_ID', '418431456233-i69dc0paqp9ujj40gha8ru5a1tflbjl2.apps.googleusercontent.com')
+    'OAUTH_CLIENT_ID', None)
 OIDC_RP_CLIENT_SECRET = os.environ.get(
-    'OAUTH_CLIENT_SECRET', 'fqN1UoPadvcoTLSSH98WzIRF')
+    'OAUTH_CLIENT_SECRET', None)
 
 # Forecast.io settings
 FORECAST_IO_API_KEY = os.environ.get('FORECAST_IO_API_KEY', '')

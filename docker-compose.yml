@@ -26,6 +26,7 @@ services:
       - CONTAINER_NAME=${CONTAINER_NAME}
       - IDLE_TIMEOUT=${IDLE_TIMEOUT}
       - PYTHONUNBUFFERED=1
+      - DJANGO_ENV=development
     container_name: driver-django-${CONTAINER_NAME}
     image: alien9/driver-django
     command: ["./manage.py", "runserver", '0.0.0.0:4000', '--settings', 'driver.settings_dev']

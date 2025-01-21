@@ -64,6 +64,7 @@ if [ "${EXISTE_DJANGO}" != "" ]; then
 #          esac
 #     done
      docker-compose up -d
+     docker cp "driver-django-${CONTAINER_NAME}":/opt/web/dist static/
 fi
 
 [ -e "./mapserver/*" ] && sudo rm ./mapserver/*

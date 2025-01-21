@@ -305,11 +305,14 @@ class RecordCostConfig(GroutModel):
     enum_costs = HStoreField()
 
 
-def add_term(l, t):
+def add_term(l, t, ot):
+    import re
+    t=re.sub("\n","",t)
     try:
         a = l.index(t)
     except ValueError:
         l.append(t)
+        ot[t]=len(ot.keys())
     return l
 
 
@@ -324,43 +327,46 @@ class Dictionary(models.Model):
     language_code = models.TextField(max_length=8)
     name = models.TextField(max_length=100)
     content = HStoreField(null=True, blank=True)
+    ordered_keys=JSONField(null=True, blank=True, default=dict)
     about = CKEditor5Field('Text', config_name='extends')
     header = CKEditor5Field('Header', config_name='extends')
     footer = CKEditor5Field('Footer', config_name='extends')
 
     def save(self, *args, **kwargs):
         terms = []
+        ordered_terms=dict()
         rt = RecordType.objects.all()
         for b in Boundary.objects.all():
-            add_term(terms, b.label)
+            add_term(terms, b.label, ordered_terms)
         for r in rt:
-            add_term(terms, r.label)
-            add_term(terms, r.plural_label)
+            add_term(terms, r.label, ordered_terms)
+            add_term(terms, r.plural_label, ordered_terms)
         for sd in Dictionary.objects.all():
-            add_term(terms, sd.name)
-        rs = RecordSchema.objects.all()
-        for r in rs:
-            if 'definitions' in r.schema:
-                for k, value in r.schema['definitions'].items():
-                    add_term(terms, value['title'])
-                    add_term(terms, value['plural_title'])
-                    add_term(terms, value['description'])
-                    for u, t in value['properties'].items():
-                        add_term(terms, u)
-                        if 'enum' in t:
-                            for e in t['enum']:
-                                add_term(terms, e)
-                        if 'items' in t:
-                            if 'enum' in t['items']:
-                                for e in t['items']['enum']:
-                                    add_term(terms, e)
-            if 'properties' in r.schema:
-                for k, value in r.schema['definitions'].items():
-                    add_term(terms, value['title'])
-                    add_term(terms, value['plural_title'])
-            for t in terms:
-                if t not in self.content:
-                    self.content[t] = t
+            add_term(terms, sd.name, ordered_terms)
+        r = RecordSchema.objects.filter(record_type__label=config.PRIMARY_LABEL).order_by('-version').first()
+        print("ofound the schema")
+
+        if 'definitions' in r.schema:
+            for k, value in r.schema['definitions'].items():
+                add_term(terms, value['title'], ordered_terms)
+                add_term(terms, value['plural_title'], ordered_terms)
+                add_term(terms, value['description'], ordered_terms)
+                for u, t in value['properties'].items():
+                    add_term(terms, u, ordered_terms)
+                    if 'enum' in t:
+                        for e in t['enum']:
+                            add_term(terms, e, ordered_terms)
+                    if 'items' in t:
+                        if 'enum' in t['items']:
+                            for e in t['items']['enum']:
+                                add_term(terms, e, ordered_terms)
+        if 'properties' in r.schema:
+            for k, value in r.schema['definitions'].items():
+                add_term(terms, value['title'], ordered_terms)
+                add_term(terms, value['plural_title'], ordered_terms)
+        for t in terms:
+            if t not in self.content:
+                self.content[t] = t
         for b in BlackSpotSet.objects.all():
             if not b.title in self.content:
                 self.content[b.title] = b.title
@@ -368,6 +374,7 @@ class Dictionary(models.Model):
         for k in sorted(self.content):
             h[k] = self.content[k]
         self.content = h
+        self.ordered_keys=ordered_terms
         super(Dictionary, self).save(*args, **kwargs)
 
 
