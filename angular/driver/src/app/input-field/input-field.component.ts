@@ -8,7 +8,6 @@ import { first } from 'rxjs/operators';
 import * as L from 'leaflet';
 
 import * as uuid from 'uuid';
-import { componentFactoryResolverProviderDef } from 'node_modules_backup/@angular/compiler/src/view_compiler/provider_compiler';
 
 @Component({
   selector: 'app-input-field',
