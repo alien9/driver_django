@@ -16,6 +16,6 @@ export class ReferenceNamePipe implements PipeTransform {
       i++
     }
     if(names.length) return names.join(" ")
-    return value["_localId"];
+    return "" //value["_localId"];
   }
 }

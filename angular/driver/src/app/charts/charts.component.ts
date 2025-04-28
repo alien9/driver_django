@@ -555,7 +555,7 @@ export class ChartsComponent implements OnInit, OnChanges {
 
 
             // and to add the text labels
-            svg
+            /* svg
               .selectAll("text")
               .data(root.leaves())
               .join("text")
@@ -577,26 +577,27 @@ export class ChartsComponent implements OnInit, OnChanges {
                 .text(function (d) { return d.data['name'] })
                 .attr("font-size", "19px")
                 .attr("fill", d => `${color(d.data['name'])}`)
-            }
+            }*/
             const swg = d3.select(this.swatchContainer.nativeElement);
-            swg.attr("width", 1000)
             const swatchWidth = 20
             const swatchHeight = 20
-            //const textWidth = 30
             swg.selectAll('*').remove();
 
             const keys = root.descendants().map((e) => e.data['name']).filter((e) => e != 'all');
             if (keys.length) {
-              const textWidth = Math.max(...keys.map((w: string) => w.length)) * 10
+              const textWidth = Math.max(...keys.map((w: string) => w.length)) * 12
+              const items_per_line = Math.floor(1000 / (textWidth + swatchWidth + 2))
               swg.attr('width', keys.length * (swatchWidth + textWidth))
-                .attr('height', swatchHeight);
-
               swg.selectAll('rect')
                 .data(keys)
                 .enter()
                 .append('rect')
-                .attr('x', (d, i) => 20 + i * (swatchWidth + textWidth))
-                .attr('y', 0)
+                .attr('x', (d, i) => {
+                  return (20 + (i % items_per_line) * (swatchWidth + textWidth))
+                })
+                .attr('y', (d, i) => {
+                  return Math.floor(i / items_per_line) * swatchHeight * 1.5
+                })
                 .attr('width', swatchWidth)
                 .attr('height', swatchHeight)
                 .style('fill', d => `${color(d)}`)
@@ -605,8 +606,10 @@ export class ChartsComponent implements OnInit, OnChanges {
                 .data(keys)
                 .enter()
                 .append('text')
-                .attr("x", (d, i) => 22 + swatchWidth + i * (swatchWidth + textWidth))
-                .attr('y', swatchHeight / 2)
+                .attr("x", (d, i) => (22 + swatchWidth + (i % items_per_line) * (swatchWidth + textWidth)))
+                .attr('y', (d, i) => {
+                  return swatchHeight / 2 + Math.floor(i / items_per_line) * swatchHeight * 1.5
+                })
                 .style('fill', (d) => "#111111")
                 .text(d => d)
                 .attr("text-anchor", "left")

@@ -1,12 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
-
 import { environment } from '../environments/environment';
 import Utils from '../assets/utils';
-import { isJsonObject } from 'node_modules_backup/@angular-devkit/core/src';
-import { JsonCompiler } from 'ngx-translate-extract';
+
 @Injectable({
   providedIn: 'root'
 })
