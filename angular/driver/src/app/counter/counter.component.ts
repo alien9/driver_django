@@ -14,15 +14,13 @@ export class CounterComponent implements OnInit {
   @Output() iRapChange = new EventEmitter<string>()
   @Output() iRapCenterChange = new EventEmitter<object>()
   public fontFamily=document.body.style.fontFamily
+
   subtotals: boolean = false
-  language: string = "en"
+  language: string = "en-gb"
   constructor() { }
 
   ngOnInit(): void {
-    this.language = localStorage.getItem("Language") || "en"
-    if (!this.language.match(/\w+-\w+/)) {
-      this.language = `${this.language}-${this.config['COUNTRY_CODE']}`
-    }
+    this.language = localStorage.getItem("Language") || "en-gb"
   }
   flipTotals() {
     this.subtotals = !this.subtotals

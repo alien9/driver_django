@@ -8,6 +8,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { utfGrid } from '../UtfGrid';
 import { } from 'jquery'
 import { ActivatedRoute } from '@angular/router';
+import { getLocaleDirection } from '@angular/common';
 import { NgxSpinnerService } from "ngx-spinner";
 import { NavbarComponent } from '../navbar/navbar.component'
 import { ChartsComponent } from '../charts/charts.component';
@@ -19,6 +20,7 @@ import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 import sha256 from 'crypto-js/sha256';
 import { Title } from "@angular/platform-browser";
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-index',
@@ -32,6 +34,9 @@ export class IndexComponent implements OnInit {
   screenTimeout: any;
   lockTimeout: any;
   locked: boolean = false;
+  geoloading: boolean;
+  roadmapsLayer: any;
+  gettingRoadMap: boolean;
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
     if (event.key && event.key == 'Escape') {
@@ -66,6 +71,8 @@ export class IndexComponent implements OnInit {
   public record: object
   public recordList: object
   public map: L.Map
+  public showCounter = true
+  public showLegend = true
   record_uuid: string
   recordtype_uuid: string
   public critical: object = {}
@@ -142,10 +149,12 @@ export class IndexComponent implements OnInit {
     this.locale = localStorage.getItem("Language") || navigator.language
     localStorage.setItem("Language", this.locale)
     let du = (new Date()).toLocaleDateString(this.locale)
-    if (['ar', 'fa'].indexOf(this.locale)>=0) {
-      document.getElementsByTagName('html')[0].setAttribute("dir", "rtl")
-    }
+    document.getElementsByTagName('html')[0].setAttribute("dir",getLocaleDirection(this.locale))
     this.supportsLocalDate = !du.match(/^Invalid/)
+    if (window['android']) {
+      this.showLegend = false
+      this.showCounter = false
+    }
     this.recordService.getConfig().pipe(first()).subscribe(data => {
       this.config = data
       this.titleService.setTitle(this.config["APP_NAME"]);
@@ -305,6 +314,13 @@ export class IndexComponent implements OnInit {
       overlays: {
       }
     }
+    if (!!window['android']) {
+      this.roadmapsLayer = new L.geoJSON()
+      this.layersControl.baseLayers["Local Road Map"] = new L.LayerGroup([this.roadmapsLayer])
+    }
+
+
+
     let bl = localStorage.getItem("baselayer") || 'CartoDB'
 
     if (this.layersControl.baseLayers[bl])
@@ -314,6 +330,7 @@ export class IndexComponent implements OnInit {
     this.options = {
       layers: this.layers
     }
+
     this.recordService.getCritical().pipe(first()).subscribe({
       next: critical_data => {
         if (critical_data['results']) {
@@ -351,72 +368,13 @@ export class IndexComponent implements OnInit {
             ])
           })
         }
-        this.recordService.getBoundaries().pipe(first()).subscribe({
-          next: data => {
-            if (!data["results"]) {
-              alert("Geometries not found")
-              return
-            }
-            this.boundaries = data["results"]
-            let current_boundary = localStorage.getItem("boundary")
-            if (current_boundary) {
-              this.boundary = (this.boundaries.filter(bu => bu.uuid == current_boundary).pop())
-            }
-            if (!this.boundary) {
-              this.boundary = this.boundaries[0]
-            }
-            this.setBoundary(this.boundary)
-            this.boundaries.forEach(b => {
-              let gl = utfGrid(`${this.backend}/grid/boundary/${b['uuid']}/boundary/{z}/{x}/{y}.json/`, {
-                resolution: 4,
-                pointerCursor: true,
-                mouseInterval: 66
-              })
-              gl.on('mouseover', (e) => {
-                if (e.data) {
-                  $('.leaflet-grab').css('cursor', 'pointer')
-                  this.zone.run(() => {
-                    let t = e.data['name'].replace(/^"|"$/g, "")
-                    if (this.theme && this.theme[b['uuid']] && this.theme[b['uuid']]['data'][e.data['uuid']] && this.theme[b['uuid']]['data'][e.data['uuid']]['data']) {
-                      t = `${t} (${this.theme[b['uuid']]['data'][e.data['uuid']]['data']})`
-                    }
-                    let m = this.map
-                    this.map.eachLayer(function (layer) {
-                      if (layer.options.pane === "tooltipPane") layer.removeFrom(m);
-                    });
-                    e.sourceTarget.bindTooltip(t, { sticky: true, permanent: false });
-                  })
-                }
-                else {
-                  this.zone.run(() => {
-                    $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
-                  })
-                }
-              });
-              gl.on('mouseout', (e) => {
-                this.zone.run(() => {
-                  $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
-                })
-              });
-              gl.on('click', (e) => {
-              })
-              gl.on('add', lo => {
-                this.zone.run(() => {
-                  $('.leaflet-grab').css('cursor', 'progress')
-                  this.addThematic(b.uuid, b.label)
-                })
-              })
-              gl.on('remove', lo => {
-                this.zone.run(() => {
-                  delete this.theme[b.uuid]
-                  this.setLegends()
-                })
-              })
-              let g = new L.LayerGroup([gl])
-              this.layersControl.overlays[this.translateService.instant(b.label)] = g
-            })
-          }
-        })
+        if (window['android']) {
+          this.afterBoundaries(JSON.parse(window['android'].getBoundaries()))
+        } else {
+          this.recordService.getBoundaries().pipe(first()).subscribe({
+            next: this.afterBoundaries
+          })
+        }
       },
       error: err => {
         console.log("Error: " + err.status)
@@ -425,10 +383,74 @@ export class IndexComponent implements OnInit {
       }
     })
   }
+
+  afterBoundaries = (data) => {
+    if (!data["results"]) {
+      alert("Geometries not found")
+      return
+    }
+    this.boundaries = data["results"]
+    let current_boundary = localStorage.getItem("boundary")
+    if (current_boundary) {
+      this.boundary = (this.boundaries.filter(bu => bu.uuid == current_boundary).pop())
+    }
+    if (!this.boundary) {
+      this.boundary = this.boundaries[0]
+    }
+    this.setBoundary(this.boundary)
+    this.boundaries.forEach(b => {
+      let gl = utfGrid(`${this.backend}/grid/boundary/${b['uuid']}/boundary/{z}/{x}/{y}.json/`, {
+        resolution: 4,
+        pointerCursor: true,
+        mouseInterval: 66
+      })
+      gl.on('mouseover', (e) => {
+        if (e.data) {
+          $('.leaflet-grab').css('cursor', 'pointer')
+          this.zone.run(() => {
+            let t = e.data['name'].replace(/^"|"$/g, "")
+            if (this.theme && this.theme[b['uuid']] && this.theme[b['uuid']]['data'][e.data['uuid']] && this.theme[b['uuid']]['data'][e.data['uuid']]['data']) {
+              t = `${t} (${this.theme[b['uuid']]['data'][e.data['uuid']]['data']})`
+            }
+            let m = this.map
+            this.map.eachLayer(function (layer) {
+              if (layer.options.pane === "tooltipPane") layer.removeFrom(m);
+            });
+            e.sourceTarget.bindTooltip(t, { sticky: true, permanent: false });
+          })
+        }
+        else {
+          this.zone.run(() => {
+            $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
+          })
+        }
+      });
+      gl.on('mouseout', (e) => {
+        this.zone.run(() => {
+          $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
+        })
+      });
+      gl.on('click', (e) => {
+      })
+      gl.on('add', lo => {
+        this.zone.run(() => {
+          $('.leaflet-grab').css('cursor', 'progress')
+          this.addThematic(b.uuid, b.label)
+        })
+      })
+      gl.on('remove', lo => {
+        this.zone.run(() => {
+          delete this.theme[b.uuid]
+          this.setLegends()
+        })
+      })
+      let g = new L.LayerGroup([gl])
+      this.layersControl.overlays[this.translateService.instant(b.label)] = g
+    })
+  }
+
   addSegment(uuid, l) {
     let label = this.translateService.instant(l)
-    console.log("adding segments layer")
-    console.log(label)
     let f = JSON.parse(JSON.stringify(this.filter || {}))
     f['critical'] = uuid
     let d = (new Date()).getTime()
@@ -551,28 +573,43 @@ export class IndexComponent implements OnInit {
     this.boundary = event
     if (event) {
       localStorage.setItem("boundary", this.boundary.uuid)
-      this.recordService.getBoundaryPolygons(this.boundary).pipe(first()).subscribe(
-        data => {
-          if (data["results"]) {
-            this.boundaryPolygons = data["results"]
-            this.setBoundaryPolygon(null)
-          }
-        })
+      this.geoloading = true
+      const afterGetBoundaryPolygons = (data) => {
+        if (data["results"]) {
+          this.boundaryPolygons = data["results"]
+          this.setBoundaryPolygon(null)
+        }
+        this.geoloading = false
+      }
+      if (window['android']) {
+        afterGetBoundaryPolygons(JSON.parse(window['android'].getBoundaryPolygons(this.boundary.uuid)))
+      } else {
+        this.recordService.getBoundaryPolygons(this.boundary).pipe(first()).subscribe(
+          afterGetBoundaryPolygons)
+      }
     }
   }
-  setBoundaryPolygon(b: any) {
+  setBoundaryPolygon(b: any, boundary_uuid = null) {
     this.boundaryGeometries.forEach((p) => {
       p.remove()
     })
     if (b) {
-      this.recordService.getBoundaryPolygon(b.uuid).subscribe((k) => {
-        for (let sub in k["geometry"].coordinates) {
-          var polygon = L.polygon(k["geometry"].coordinates[0][0].map((c) => [c[1], c[0]]), { color: 'gray', fillOpacity: 0, dashArray: '5,10', interactive: false });
+      this.geoloading = true
+      const afterGetBoundaryPolygon = (k) => {
+        var drawnItems = new L.FeatureGroup();
+        for (let o = 0; o < k["geometry"].coordinates.length; o++) {
+          const co = (k["geometry"].coordinates[o].length == 1) ? k["geometry"].coordinates[o][0] : k["geometry"].coordinates[o];
+          var polygon = L.polygon(co.map((c) => [c[1], c[0]]), { color: 'gray', fillOpacity: 0, dashArray: '5,10', interactive: false });
           polygon.addTo(this.map);
           this.boundaryGeometries.push(polygon)
         }
-
-      })
+        this.geoloading = false
+      }
+      if (window['android']) {
+        afterGetBoundaryPolygon(JSON.parse(window['android'].getBoundaryPolygon(b.uuid, boundary_uuid)))
+      } else {
+        this.recordService.getBoundaryPolygon(b.uuid).subscribe(afterGetBoundaryPolygon)
+      }
     }
 
     this.ready = false
@@ -694,7 +731,7 @@ export class IndexComponent implements OnInit {
             if (this.isDrawing) return
             let du = new Date(Date.parse(e.data['occurred_from']))
             let t = $("#record-popup-content").html()
-              .replace(/-date-/, `${this.toLocaleDateString(du)}, ${this.toLocaleTimeString(du).replace(/:00$/, '')}`)
+              .replace(/-date-/, `${this.toLocaleDateString(du)} ${this.toLocaleTimeString(du).replace(/:00$/, '')}`)
               .replace(/-location-/, e.data['location_text'])
               .replace(/-uuid-/, e.data['uuid'])
             new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
@@ -737,20 +774,19 @@ export class IndexComponent implements OnInit {
             })
           })
         }
-
+        this.getRoadMap()
         this.recordService.getRecordCosts({ 'uuid': this.recordSchema["record_type"] }, {
           filter: this.filter
         }).pipe(first()).subscribe({
           next: data => {
             this.counts = data
-            this.getRoadMap()
+            
           }, error: err => {
             this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"], 'limit': 1 }, { filter: this.filter }).pipe(first()).subscribe(
               data => {
                 this.counts = {
                   "total_crashes": data["count"]
                 }
-                this.getRoadMap()
               }
             )
             console.log(err)
@@ -766,10 +802,13 @@ export class IndexComponent implements OnInit {
     return (this.supportsLocalDate) ? d.toLocaleTimeString(this.locale) : d.toLocaleTimeString()
   }
   getRoadMap() {
+    if(this.gettingRoadMap) return
+    this.gettingRoadMap=true
     this.recordService.getRoadMap().pipe(first()).subscribe({
       next: data => {
-        if (data.length)
-          this.roadmap_uuid = data[0]['uuid']
+        this.gettingRoadMap=false
+        if (data['result'])
+          this.roadmap_uuid = data['result'][0]['uuid']
       }
     })
   }
@@ -831,9 +870,7 @@ export class IndexComponent implements OnInit {
     this.listening = l
   }
   createRecord(content: any) {
-    console.log("create a record")
     this.recordService.getPosition().then((p) => {
-      console.log(p)
       this.newRecord({ "latlng": p }, content)
     })
   }
@@ -888,7 +925,7 @@ export class IndexComponent implements OnInit {
         if (p) {
           let q = this.boundaryPolygonsObject[this.boundaries[i].uuid].filter((k) => k.uuid == p).pop()
           if (q) {
-            this.setBoundaryPolygon(q)
+            this.setBoundaryPolygon(q, this.boundaries[i].uuid)
             return
           }
         }
@@ -904,26 +941,31 @@ export class IndexComponent implements OnInit {
     })
     this.modalService.open(content, { size: 'lg' });
     if (this.boundaries.length) {
-      this.downloadGeometries(this.boundaries[0])
+      this.downloadGeometries(this.boundaries.sort((a, b) => a['order'] - b['order'])[0])
     }
     let i = 1
     while (i < this.boundaries.length) {
       if (this.selectedBoundaryPolygon[this.boundaries[i - 1].uuid]) {
-        this.downloadGeometries(this.boundaries[i], this.selectedBoundaryPolygon[this.boundaries[i - 1].uuid])
+        this.downloadGeometries(this.boundaries[i], this.selectedBoundaryPolygon[this.boundaries[i - 1].uuid], i - 1)
       }
       i++
     }
   }
-  selectPolygon(event: Event, cid: string) {
+  selectPolygon(event: Event, cid: string, level = 0) {
     let reset = false
+    //this.setBoundaryPolygon(null)
+    let j = 0
     this.boundaries.forEach((bp) => {
-      if (reset) {
-        this.selectedBoundaryPolygon[bp.uuid] = null
-        this.boundaryPolygonsObject[bp.uuid] = []
-        reset = true
-      }
-      if (!this.selectedBoundaryPolygon[bp.uuid] || (this.selectedBoundaryPolygon[bp.uuid] == "null") || cid == bp.uuid) {
-        reset = true
+      j++
+      if (j > level) {
+        if (reset) {
+          this.selectedBoundaryPolygon[bp.uuid] = null
+          this.boundaryPolygonsObject[bp.uuid] = []
+          reset = true
+        }
+        if (!this.selectedBoundaryPolygon[bp.uuid] || (this.selectedBoundaryPolygon[bp.uuid] == "null") || cid == bp.uuid) {
+          reset = true
+        }
       }
     })
     //download the last missing 
@@ -933,30 +975,53 @@ export class IndexComponent implements OnInit {
       i--
       filter = this.selectedBoundaryPolygon[this.boundaries[i].uuid]
     }
-    if (i < this.boundaries.length - 1) { // vou baixar o próximo nivel de boundary
+    if (i < this.boundaries.length - 1) { // vou baixar o próximo nivel de boundary se existe
       if (filter && filter != "null")
-        this.downloadGeometries(this.boundaries[i + 1], filter)
+        this.downloadGeometries(this.boundaries[i + 1], filter, i + 1)
     }
   }
 
 
-  downloadGeometries(boundary: any, filter: string = null) {
+  downloadGeometries(boundary: any, filter: string = null, order: number = 0) {
     if (!filter) {
-      this.recordService.getBoundaryPolygons(boundary).subscribe((res) => {
-        this.boundaryPolygonsObject[boundary.uuid] = res["results"]
-      })
+      this.geoloading = true
+      const aft = (res) => {
+        this.boundaryPolygonsObject[boundary.uuid] = res["results"].sort((u, v) => (this.getBoundaryPolygonLabel(u, order, true) > this.getBoundaryPolygonLabel(v, order, true)) ? 1 : -1)
+        this.geoloading = false
+      }
+      if (window['android']) {
+        aft(JSON.parse(window['android'].getBoundaryPolygons(this.boundary.uuid)))
+      } else {
+        this.recordService.getBoundaryPolygons(boundary).subscribe(aft)
+      }
     } else {
-      this.recordService.getFilteredBoundaryPolygons(boundary, filter).subscribe((res) => {
-        this.boundaryPolygonsObject[boundary.uuid] = res["results"]
-      })
-
+      if (boundary) {
+        this.geoloading = true
+        this.recordService.getFilteredBoundaryPolygons(boundary, filter).subscribe((res) => {
+          this.boundaryPolygonsObject[boundary.uuid] = res["results"].sort((u, v) => (this.getBoundaryPolygonLabel(u, order, true) > this.getBoundaryPolygonLabel(v, order, true)) ? 1 : -1)
+          if (res["results"].length > 0) {
+            this.geoloading = false
+          } else {
+            this.geoloading = true
+            this.downloadGeometries(this.boundaries[order + 1], filter, order + 1)
+          }
+        })
+      } else
+        this.geoloading = false
     }
   }
   resetGeometry() {
     console.log("reset geometry")
   }
-  getBoundaryPolygonLabel(b: any) {
-    return b.data[localStorage.getItem("Language")] || b.data[this.boundary.display_field]
+  getBoundaryPolygonLabel(b: any, i: number, padded: boolean) {
+    let l = b.data[localStorage.getItem("Language")] || b.data[this.boundaries[i].display_field]
+    if(!l){
+      return ""
+    }
+    if (!padded) return l;
+    const prefix = l.match(/^\d+/)
+    if (!prefix) return l
+    return l.replace(/^\d+/, prefix.pop().padStart(11, '0'))
   }
   selectBoundaryPolygon(e: any) {
     console.log(e)
@@ -1072,13 +1137,6 @@ export class IndexComponent implements OnInit {
   removeIrapLayer() {
     if (this.layersControl.overlays['iRap']) {
       this.map.removeLayer(this.layersControl.overlays['iRap'])
-      /* let j = 0;
-      for (let i = 0; i < this.layers.length; i++) {
-        if (this.layers[i] == this.layersControl.overlays['iRap']) {
-          j = i
-        }
-      }
-      this.layers.splice(j) */
       delete this.layersControl.overlays['iRap']
     }
   }
@@ -1259,5 +1317,11 @@ export class IndexComponent implements OnInit {
     })
 
   }
+  showLocalRoads(e: any) {
+    this.roadmapsLayer = e
+    this.layersControl.baseLayers["Local Road Map"].clearLayers()
+    this.layersControl.baseLayers["Local Road Map"].addLayer(this.roadmapsLayer)
+  }
+
 }
 

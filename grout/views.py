@@ -1,9 +1,13 @@
 from collections import OrderedDict
-import logging, json
+import logging, fiona, uuid, os, shapely
 from django.db import IntegrityError
 from dateutil.parser import parse
+from fiona.crs import from_epsg
+from django.http import HttpResponse, Http404
+from shapely.geometry import mapping,MultiPolygon
+from shapely import wkt
 
-from rest_framework import viewsets, mixins, status, serializers
+from rest_framework import viewsets, mixins, status, serializers, renderers
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
@@ -11,6 +15,7 @@ from rest_framework.exceptions import ParseError
 from rest_framework_gis.filters import InBBoxFilter
 from django.http import JsonResponse
 from django.db import connection
+logger = logging.getLogger(__name__)
 
 from grout import exceptions
 from grout.models import (Boundary,
@@ -35,7 +40,47 @@ from grout.filters import (BoundaryFilter,
 from grout.pagination import OptionalLimitOffsetPagination
 
 
+class GPKGRenderer(renderers.BaseRenderer):
+    media_type = 'application/force-download'
+    format = 'gpkg'
+    charset = None
+    render_style = 'binary'
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        print(data)
+        fn=f"/tmp/boundary_{uuid.uuid4()}.gpkg"
+        if os.path.isfile(fn):
+            os.remove(fn)
+        sc={}
+        for d in data['data_fields']:
+            sc[d]='str'
+        sc['uuid']='str'
+        print(sc)
+        with fiona.open(fn, 'w',
+            driver='GPKG',
+            crs=from_epsg(4326),
+            schema= {'geometry': 'MultiPolygon', 'properties': sc},
+            layer_name='multipolygons'
+            ) as c:
+                for r in BoundaryPolygon.objects.filter(boundary_id=data['uuid']):
+                    props={}            
+                    for d in data['data_fields']:
+                        props[d]=str(r.data[d])
+                    
+                    props['uuid']=str(r.uuid) 
+                    multipolygon = wkt.loads(r.geom.wkt)
+                    c.write({'properties':props, 'geometry': mapping(multipolygon)})
+                c.close()
+        with open(fn, 'rb') as fh:
+            response = HttpResponse(fh.read(), content_type="application/force-download")
+            response['Content-Disposition'] = f"inline; filename=boundary_{data['uuid']}.gpkg"
+            return response
+        return data
+
+
 class BoundaryPolygonViewSet(viewsets.ModelViewSet):
+    def get_queryset(self):
+        return BoundaryPolygon.objects.all()        
 
     queryset = BoundaryPolygon.objects.all()
     serializer_class = BoundaryPolygonSerializer
@@ -50,7 +95,11 @@ class BoundaryPolygonViewSet(viewsets.ModelViewSet):
         if 'nogeom' in self.request.query_params and self.request.query_params['nogeom']:
             return BoundaryPolygonNoGeomSerializer
         return BoundaryPolygonSerializer
-
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer_class()(instance=instance)
+        return JsonResponse(serializer.data, safe=False)
 
 class RecordViewSet(viewsets.ModelViewSet):
     queryset = Record.objects.all()
@@ -133,6 +182,7 @@ class BoundaryViewSet(viewsets.ModelViewSet):
     serializer_class = BoundarySerializer
     filter_class = BoundaryFilter
     pagination_class = OptionalLimitOffsetPagination
+    renderer_classes = [renderers.JSONRenderer, GPKGRenderer, renderers.BrowsableAPIRenderer]
 
     def create(self, request, *args, **kwargs):
         """Overwritten to allow use of semantically important/appropriate status codes for

@@ -137,6 +137,7 @@ INSTALLED_APPS = (
     'proxy',
     'ordered_model',
     'django_ckeditor_5',
+    'ckeditor',
     'photologue',
     'sortedm2m',
     'django.contrib.sites',
@@ -443,8 +444,10 @@ CELERY_ROUTES = {
     'black_spots.tasks.load_blackspot_geoms.load_blackspot_geoms': {'queue': 'taskworker'},
     'black_spots.tasks.generate_training_input.get_training_noprecip': {'queue': 'taskworker'},
     'black_spots.tasks.generate_training_input.get_training_precip': {'queue': 'taskworker'},
+    'black_spots.tasks.generate_roadmap.generate_roadmap': {'queue': 'taskworker'},
     'data.tasks.remove_duplicates.remove_duplicates': {'queue': 'taskworker'},
     'data.tasks.export_csv.export_csv': {'queue': 'taskworker'},
+    'data.tasks.update_dictionaries.update_dictionaries': {'queue': 'taskworker'},
     'data.tasks.fetch_record_csv.export_records': {'queue': 'taskworker'},
     'data.tasks.geocode_records.geocode_records': {'queue': 'taskworker'},
     'data.tasks.geocode_records.generate_blackspots': {'queue': 'taskworker'},
@@ -626,6 +629,8 @@ CONSTANCE_CONFIG = {
     'IDLE_TIMEOUT': ((os.getenv('IDLE_TIMEOUT', '')), _("Idle Timeout")),
     'DEFAULT_LANGUAGE': ((os.getenv('DEFAULT_LANGUAGE', '')), _("Default Language")),
     'APP_NAME': ((os.getenv('APP_NAME', 'DRIVER')), _("App Name")),
+    'SHOW_LIGHT_CONDITIONS': ((os.getenv('SHOW_LIGHT_CONDITIONS', True)), _("Show lighting conditions")),
+    'SHOW_RECORD_CREATOR': ((False), _("Show Record creator")),
 }
 CAPTCHA_OUTPUT_FORMAT = u'%(image)s %(hidden_field)s %(text_field)s'
 
@@ -677,6 +682,7 @@ customColorPalette = [
 
 # CKEDITOR_5_CUSTOM_CSS = 'path_to.css'  # optional
 # CKEDITOR_5_FILE_STORAGE = "path_to_storage.CustomStorage"  # optional
+CKEDITOR_UPLOAD_PATH = "uploads/"
 CKEDITOR_5_CONFIGS = {
     'default': {
         'toolbar': ['heading', '|', 'bold', 'italic', 'link',

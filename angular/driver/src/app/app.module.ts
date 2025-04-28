@@ -148,6 +148,9 @@ switch (lang) {
   case 'ar':
     providers.push({ provide: LOCALE_ID, useValue: 'ar' })
     break
+  case 'ar-lb':
+    providers.push({ provide: LOCALE_ID, useValue: 'ar-b' })
+    break
   case 'fr':
     providers.push({ provide: LOCALE_ID, useValue: 'fr' })
     break

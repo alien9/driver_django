@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from django_json_widget.widgets import JSONEditorWidget
 from grout.widgets import GroutEditorWidget
-from data.models import RecordCostConfig, Dictionary, Picture, DriverRecord
+from data.models import RecordCostConfig, Dictionary, DriverRecord
 from grout.models import RecordSchema, RecordType, Boundary, BoundaryPolygon
 from black_spots.models import RoadMap, BlackSpotSet
 from django_admin_hstore_widget.forms import HStoreFormField
@@ -18,6 +18,7 @@ from django.contrib.auth.admin import UserAdmin
 from ordered_model.admin import OrderedModelAdmin
 from django_ckeditor_5.widgets import CKEditor5Widget
 #from django_hstore_widget.forms import HStoreFormField
+from ckeditor.widgets import CKEditorWidget
 
 admin.site.index_title = _('DRIVER Database')
 
@@ -39,10 +40,6 @@ class DriverRecordAdmin(admin.ModelAdmin):
             config, 'MAPILLARY_CLIENT_ID')
         extra_context['mapillary_secret'] = getattr(config, 'MAPILLARY_SECRET')
         return super().change_view(request, object_id, form_url, extra_context=extra_context,)
-
-
-class PictureAdmin(admin.ModelAdmin):
-    pass
 
 
 class RecordSchemaAdmin(admin.ModelAdmin):
@@ -103,17 +100,15 @@ class BoundaryAdmin(OrderedModelAdmin):
 
 class DictionaryAdminForm(forms.ModelForm):
     content = HStoreFormField()
-    about = forms.CharField(widget=CKEditor5Widget(config_name="extends"))
+    about = forms.CharField(widget=CKEditorWidget())
+    header = forms.CharField(widget=CKEditorWidget())
+    footer = forms.CharField(widget=CKEditorWidget())
+    logo = forms.CharField(widget=CKEditorWidget())
 
     class Meta:
         model = Dictionary
         exclude = ()
-        widgets = {
-            "text": CKEditor5Widget(
-                attrs={"class": "django_ckeditor_5"}, config_name="extends"
-            )
-        }
-
+        
 
 class DictionaryAdmin(admin.ModelAdmin):
     form = DictionaryAdminForm
@@ -198,6 +193,5 @@ admin.site.register(Boundary, BoundaryAdmin)
 admin.site.register(RecordCostConfig, RecordCostConfigAdmin)
 admin.site.register(Dictionary, DictionaryAdmin)
 admin.site.register(RoadMap, RoadMapAdmin)
-admin.site.register(Picture, PictureAdmin)
 admin.site.register(BlackSpotSet, BlackSpotSetAdmin)
 admin.site.register(DriverRecord, DriverRecordAdmin)

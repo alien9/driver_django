@@ -18,6 +18,7 @@ from django_redis import get_redis_connection
 from data.models import DriverRecord
 
 from driver_auth.permissions import is_admin_or_writer
+from constance import config
 
 logger = get_task_logger(__name__)
 local_tz = pytz.timezone(settings.TIME_ZONE)
@@ -198,13 +199,15 @@ class DriverRecordExporter(object):
         """Generate a Record Writer capable of writing out the non-json fields of a Record"""
         def render_date(d):
             return d.astimezone(local_tz).strftime('%Y-%m-%d %H:%M:%S')
-
         # TODO: Currently this is hard-coded; it may be worthwhile to make this introspect Record
         # to figure out which fields to use, but that will be somewhat involved.
         csv_columns = ['record_id', 'timezone', 'created', 'modified', 'occurred_from',
                        'occurred_to', 'lat', 'lon', 'location_text',
                        'city', 'city_district', 'county', 'neighborhood', 'road',
                        'state', 'weather', 'light']
+        if config.SHOW_RECORD_CREATOR:
+            csv_columns.append("created_by")
+        
         # Model field from which to get data for each csv column
         source_fields = {
             'record_id': 'uuid',
@@ -328,6 +331,8 @@ class RecordModelWriter(BaseRecordWriter):
                                  E.g. {'latitude': lambda geom: geom.y}
                                  If a field is not included here, it will be used directly
         """
+        logger.warning("************************************************************************************************")
+        logger.warning(csv_columns)
         self.csv_columns = csv_columns
         self.source_fields = source_fields
         self.value_transforms = value_transforms

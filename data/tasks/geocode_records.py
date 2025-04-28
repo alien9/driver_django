@@ -96,11 +96,11 @@ def generate_roads_index(roadmap_id):
     if not os.path.exists("indexdir"):
         os.mkdir("indexdir")
     ixname="indexdir/{road}".format(road=roadmap_id)
-    if not os.path.exists(ixname):
-        os.mkdir(ixname)
-    else:
-        for f in glob.glob("{ixname}/*".format(ixname=ixname)):
-            os.remove(f)
+    if os.path.exists(ixname):
+        import shutil
+        shutil.rmtree(ixname)
+    os.mkdir(ixname)
+            
     logger.debug("creating %s"% (ixname))
     # Creating a index writer to add document as per schema
     ix = create_in(ixname,schema)

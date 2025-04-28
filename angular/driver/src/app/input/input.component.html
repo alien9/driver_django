@@ -7,7 +7,8 @@
                 <input [(ngModel)]="record['occurred_from']" type="hidden">
                 <div class="small-map" *ngIf="k.value.details">
                     <div class="input-map" leaflet [leafletLayers]=layers [leafletLayersControl]="layersControl"
-                        (map)=setMap($event) [leafletOptions]="options" (leafletMapReady)=mapReady($event)></div>
+                    (leafletViewReset)="viewReset($event)"
+                        (map)=setMap($event) [leafletOptions]="options" (leafletMapReady)=mapReady($event) (leafletLeftClick)="scrollTop($event)"></div>
                 </div>
                 <h6 class="card-subtitle mb-2 p-2 text-muted" [innerHTML]="k.value.description|unbreak|translate"
                     *ngIf="editing"></h6>
@@ -42,12 +43,11 @@
                                 <a href="#"
                                     (click)=df.toggle()>{{record["occurred_from"]|localizedDate:'dd/MM/yyyy':locale
                                     }}</a>
-                                <ngb-timepicker [(ngModel)]="occurred_time" [spinners]=false [meridian]=false
-                                    *ngIf=editing (change)=setDate($event)></ngb-timepicker>
+                                <span dir="ltr"><ngb-timepicker [(ngModel)]="occurred_time" [spinners]=false [meridian]=false
+                                    *ngIf=editing (change)=setDate($event)></ngb-timepicker></span>
                             </span>
                         </li>
                         <li class="list-group-item" *ngIf="config['OPENWEATHER_RAPID_KEY']">
-                            {{config['OPENWEATHER_RAPID_KEY']}}
                             <span>{{'Weather'|translate}}</span>: <span
                                 *ngIf="!editing">{{record["weather"]|translate}}</span>
                             <select *ngIf="editing" class="form-select" [(ngModel)]="record['weather']">
@@ -61,7 +61,7 @@
                         <li class="list-group-item" *ngFor="let b of selectedBoundaries">
                             <span>{{b.label}}</span>: <span>{{b.value}}</span>
                         </li>
-                        <li class="list-group-item">
+                        <li class="list-group-item"  *ngIf="config['SHOW_LIGHT_CONDITIONS']">
                             <!--possible values are {{'night'|translate}}{{'dawn'|translate}}{{'day'|translate}}{{'dusk'|translate}}-->
                             <span>{{'Light'|translate}}</span>: <span
                                 *ngIf="!editing">{{record["light"]|translate}}</span>
@@ -80,7 +80,7 @@
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item"
                             *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key|display|orderBy">
-                            {{f.key|translate}}: <span *ngIf="editing && isRequired(k.key,f.key)">*</span>
+                            <div>{{f.key|translate}}: <span *ngIf="editing && isRequired(k.key,f.key)">*</span></div>
                             <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="-1" [editing]="editing"
                                 [prop]="f" (setFieldCheckFieldChanged)="setCheckField($event)" [data]="record['data']"
                                 [locale]="locale" [canvasmode]="canvasmode"
@@ -88,7 +88,8 @@
                                 (setFileChanged)="loadFieldFile($event)" (fieldChanged)="setFieldValue($event)"
                                 [autocomplete_terms]="autocomplete_terms"
                                 (startDrawing)="startDrawingCanvas($event, canvasmode)"
-                                (turnOnAutoComplete)="setAutocompleteTerms($event)"></app-input-field>
+                                (turnOnAutoComplete)="setAutocompleteTerms($event)"
+                                [record_uuid]="record['uuid']"></app-input-field>
                         </li>
                     </ul>
                 </div>
@@ -96,7 +97,7 @@
 
                     <button *ngIf=editing type="button" class="btn btn-light float-right" (click)="addElement(k.key)"> +
                     </button>
-                    <accordion>
+                    <accordion [closeOthers]="true">
                         <div class="card" *ngFor="let kk of record['data'][k.key]; let i = index">
                             <div class="card-body">
                                 <accordion-group [isOpen]="accordionOpenedItem==i" (isOpenChange)="setAccordionOpen(i)">
@@ -104,13 +105,13 @@
                                         <button *ngIf=editing type="button" class="btn btn-light top-float-right"
                                             (click)="removeElement(k.key, i)"> -
                                         </button>
-                                        <h5 class="card-title">{{k.value.title|translate}}: {{record['data'][k.key][i]|referenceName:k.key:schema}}</h5>
+                                        <h5 class="card-title" (click)="setAccordionOpen(null)">{{k.value.title|translate}}: {{i+1}} <!--{{record['data'][k.key][i]|referenceName:k.key:schema}}--></h5>
                                     </div>
                                     <ul class="list-group list-group-flush">
                                         <li class="list-group-item"
                                             *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key:i|display|orderBy">
-                                            {{f.key|translate}}:<span *ngIf="editing && isRequired(k.key,f.key)">*</span>
-                                            <img  [src]="f.value.illustration" *ngIf="f.value.isIllustrated">
+                                            <div><span *ngIf="!isUntitled(k.key,f.key)">{{f.key|translate}}:</span><span *ngIf="editing && isRequired(k.key,f.key)">*</span></div>
+                                            <img  [src]="f.value.illustration" *ngIf="f.value.isIllustrated" class="pic">
                                             <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="i"
                                                 [editing]="editing" [prop]="f"
                                                 (setFieldCheckFieldChanged)="setCheckField($event)"
@@ -121,7 +122,7 @@
                                                 [autocomplete_terms]="autocomplete_terms"
                                                 (startDrawing)="startDrawingCanvas($event, canvasmode)"
                                                 (turnOnAutoComplete)="setAutocompleteTerms($event)"
-                                                [schema]="schema"></app-input-field>
+                                                [schema]="schema" [record_uuid]="record['uuid']"></app-input-field>
                                         </li>
 
                                     </ul>
@@ -137,10 +138,15 @@
     <div [ngbNavOutlet]="nav" class="mt-2"></div>
 </div>
 <div class="modal-footer input">
-    <button type="button" class="btn btn-dark" (click)="deleteRecord(modal)"
+    <button type="button" class="btn btn-dark" (click)="previousNavItem()"
+        *ngIf="!isFirstNavItem">{{'Previous'|translate}}</button>
+        <button type="button" class="btn btn-dark" (click)="deleteRecord(modal)"
         *ngIf="editing">{{'Delete'|translate}}</button>
     <button type="button" class="btn btn-dark" (click)="saveRecord(modal)" *ngIf="editing">{{'Save'|translate}}</button>
     <button type="button" class="btn btn-light" (click)="closeModal(modal)">{{'Close'|translate}}</button>
+    <button type="button" class="btn btn-dark" (click)="nextNavItem()"
+    *ngIf="!isLastNavItem">{{'Next'|translate}}</button>
+
 </div>
 
 <ng-template #canvasmode let-canvasmodal>

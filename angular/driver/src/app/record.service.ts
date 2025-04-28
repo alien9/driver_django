@@ -5,6 +5,8 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../environments/environment';
 import Utils from '../assets/utils';
+import { isJsonObject } from 'node_modules_backup/@angular-devkit/core/src';
+import { JsonCompiler } from 'ngx-translate-extract';
 @Injectable({
   providedIn: 'root'
 })
@@ -47,11 +49,20 @@ export class RecordService {
   getBackend(): string {
     return (localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')).replace(/\/\?.*$/, '')
   }
+  getUniqueId(record_uuid, table: string, field: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.getBackend()}/api/escwa_unique_id/${record_uuid}/?table_name=${table}&field_name=${field}`, { headers: this.getHeaders() })
+  }
+  getUniqueIdBoundary(record_uuid, table: string, field: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.getBackend()}/api/escwa_unique_id/${record_uuid}/?table_name=${table}&field_name=${field}&boundary=1`, { headers: this.getHeaders() })
+  }
   getSiteHeader(lang: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.getBackend()}/dictionary/header/${lang}/`, { headers: this.getSpecialHeaders() })
   }
   getSiteFooter(lang: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.getBackend()}/dictionary/footer/${lang}/`, { headers: this.getSpecialHeaders() })
+  }
+  getSiteLogo(lang: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.getBackend()}/dictionary/logo/${lang}/`, { headers: this.getHeaders() })
   }
   getRecordType(): Observable<any[]> {
     return this.http.get<any[]>(this.getBackend() + '/api/recordtypes/?active=True', { headers: this.getHeaders() })
@@ -77,16 +88,17 @@ export class RecordService {
     //head.append('Content-Type', 'multipart/form-data; charset=utf-8')
     const head = {}
 
-    head['Content-Type'] = undefined //'multipart/form-data; charset=utf-8'
-    head["Accept"] = 'application/json, text/plain, */*'
+    head['Content-Type'] = 'multipart/form-data; boundary=----WebKitFormBoundarysHGu3457qgfNxNdQ' //'multipart/form-data; charset=utf-8'
+    head["Accept"] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7'
     let t = this.getTokenFromCookie()
-    if (t) head['Authorization'] = `Token ${this.getTokenFromCookie()}`
-    head['Content-Disposition'] = obj["srcElement"].files[0].name
+    if (t) head['Authorization'] = `Token ${t}`
+    //head['Content-Disposition'] = obj["srcElement"].files[0].name
     const formData = new FormData()
     console.log("WILLLL UPLOAD")
     console.log(obj["srcElement"].files[0])
     formData.append("file", obj["srcElement"].files[0], obj["srcElement"].files[0].name)
     formData.append("uuid", uuid)
+    formData.append("csrfmiddlewaretoken", t)
 
     return this.http.post<any[]>(this.getBackend() + '/api/files/', formData, { headers: new HttpHeaders(head) })
   }
@@ -190,7 +202,7 @@ export class RecordService {
       .set('archived', 'False')
       .set('record_type', o)
       .set('calendar', 'gregorian')
-      .set('language', localStorage.getItem("Language") || 'en')
+      .set('language', localStorage.getItem("Language") || 'en-gb')
     Object.keys(q).forEach(k => {
       params = params.set(k, q[k])
     })
@@ -289,8 +301,16 @@ export class RecordService {
   getRoadMapByCords(params: any) {
     return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/ab06162a-8ccd-4cc6-a3b4-ec097bfbc8dc/map/?latlong=${params.latlng[1]},${params.latlng[0]}`, { headers: this.getBlobHeaders() },)
   }
-  getForward(roadmap: string, params: object) {
-    return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/${roadmap}/forward/?limit=15&q=${params['term']}&viewBox=${params['bbox']}`, { headers: this.getHeaders() })
+  getForward(roadmap: string, params: object): Observable<any> {
+    if (window['android']) { 
+      return new Observable((subscriber)=>{
+        const roads=window['android'].getRoadsByName(params['term'],params['bbox'])
+        subscriber.next(JSON.parse(roads))
+      })
+    }
+    else {
+      return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/${roadmap}/forward/?limit=15&q=${params['term']}&viewBox=${params['bbox']}`, { headers: this.getHeaders() })
+    }
   }
   getReverse(roadmap: string, lat: string, lng: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/${roadmap}/reverse/?lat=${lat}&lon=${lng}&format=json`, { headers: this.getHeaders() })

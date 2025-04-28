@@ -12,7 +12,8 @@ import { ViewChild } from '@angular/core';
 import { NgbTypeahead } from '@ng-bootstrap/ng-bootstrap';
 import { Observable, Subject, merge, OperatorFunction } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map } from 'rxjs/operators';
-import { connectableObservableDescriptor } from 'rxjs/internal/observable/ConnectableObservable';
+import { getLocaleDirection } from '@angular/common';
+
 
 @Component({
   selector: 'app-navbar',
@@ -46,7 +47,7 @@ export class NavbarComponent implements OnInit {
   @Input() stateSelected
   @Input() locale: string
   @ViewChild('viewpoint') filterContent: any;
-  public fontFamily=document.body.style.fontFamily
+  public fontFamily = document.body.style.fontFamily
   public authenticated: boolean = true
   public occurred_min: Date
   public occurred_max: Date
@@ -89,6 +90,7 @@ export class NavbarComponent implements OnInit {
       map(term => term.length < 2 ? []
         : t.filter(v => v.toLowerCase().indexOf(term.toLowerCase()) > -1).slice(0, 10)))
   }
+  logoHTML: string;
   constructor(
     private authService: AuthService,
     private recordService: RecordService,
@@ -112,8 +114,14 @@ export class NavbarComponent implements OnInit {
     this.locale = l
     this.initDataFrame()
     this.qrvalue = this.recordService.getBackend()
-    if (!this.qrvalue.length) this.qrvalue = window.document.location.href.replace(/\/$/, '')    
+    if (!this.qrvalue.length) this.qrvalue = window.document.location.href.replace(/\/$/, '')
     this.qrvalue = `${this.qrvalue}/static/driver.apk?language=${localStorage.getItem("Language")}`
+    this.logoHTML = this.config["APP_NAME"]
+    this.recordService.getSiteLogo(localStorage.getItem("Language")).pipe(first()).subscribe((g) => {
+      if (g['result'] && (g['result'].length > 3)) {
+        this.logoHTML = g['result'].replace(/<\/?p>/g, "")
+      }
+    })
   }
   onStateSelected(state) {
     this.stateSelected = state
@@ -608,8 +616,13 @@ export class NavbarComponent implements OnInit {
     this.aboutCaller.emit()
   }
   getLangPosition() {
-    if (['ar'].indexOf(localStorage.getItem("Language")) > -1)
+    if(getLocaleDirection(localStorage.getItem("Language"))=='rtl')
       return "dropdown-menu dropdown-menu-start"
     else return "dropdown-menu dropdown-menu-end"
+  }
+  getCheckBoxClass(){
+    if(getLocaleDirection(localStorage.getItem("Language"))=='rtl')
+      return "ordinary"
+    else return "form-check"    
   }
 }

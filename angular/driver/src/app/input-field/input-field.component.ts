@@ -5,8 +5,10 @@ import { catchError, debounceTime, distinctUntilChanged, map, tap, switchMap } f
 import { TranslateService } from '@ngx-translate/core';
 import { RecordService } from './../record.service'
 import { first } from 'rxjs/operators';
+import * as L from 'leaflet';
 
 import * as uuid from 'uuid';
+import { componentFactoryResolverProviderDef } from 'node_modules_backup/@angular/compiler/src/view_compiler/provider_compiler';
 
 @Component({
   selector: 'app-input-field',
@@ -24,6 +26,7 @@ export class InputFieldComponent implements OnInit {
   @Input() canvasmode: any
   @Input() autocomplete_terms: any[] = []
   @Input() schema: any
+  @Input() record_uuid: any
   @Output() startDrawing = new EventEmitter<any>()
   @Output() setDateFieldValueChanged = new EventEmitter<any>()
   @Output() setFieldCheckFieldChanged = new EventEmitter<any>()
@@ -33,14 +36,25 @@ export class InputFieldComponent implements OnInit {
   public fontFamily = document.body.style.fontFamily
   public value: any = ""
   fileFieldId: any;
+  previousBounds: string;
   constructor(private translateService: TranslateService, private recordService: RecordService
   ) { }
 
   ngOnInit(): void {
+    if ((!this.value) && (this.prop.value.fieldType == "unique"))
+      this.getUniqueId()
+    if ((!this.value) && (this.prop.value.fieldType == "boundary"))
+      this.getUniqueIdBoundary()
     if (!this.value && this.prop.value.def) {
       switch (this.prop.value.fieldType) {
         case "integer":
           this.value = parseInt(this.prop.value.def)
+          break
+        case "unique":
+          this.getUniqueId()
+          break
+        case "boundary":
+          this.getUniqueIdBoundary()
           break
         default:
           this.value = this.prop.value.def
@@ -90,13 +104,13 @@ export class InputFieldComponent implements OnInit {
     this.startDrawing.emit(what)
   }
   setFieldValue(e: any) {
-    let v=e.srcElement.value
-    if(this.prop.value.fieldType=='integer'){
-      v=parseInt(v)
-      if(this.prop.value.min && (v<this.prop.value.min)) v=this.prop.value.min
-      if(this.prop.value.max && (v>this.prop.value.max)) v=this.prop.value.max
+    let v = e.srcElement.value
+    if (this.prop.value.fieldType == 'integer') {
+      v = parseInt(v)
+      if (this.prop.value.min && (v < this.prop.value.min)) v = this.prop.value.min
+      if (this.prop.value.max && (v > this.prop.value.max)) v = this.prop.value.max
     }
-    this.fieldChanged.emit({ "event": {srcElement:{value:v}}, "table": this.tableName, "field": this.fieldName, "index": this.index })
+    this.fieldChanged.emit({ "event": { srcElement: { value: v, id: e.srcElement.id } }, "table": this.tableName, "field": this.fieldName, "index": this.index })
   }
   setDateField(e: any, table: string, field: string, index: number = -1) {
     let d = null
@@ -139,8 +153,7 @@ export class InputFieldComponent implements OnInit {
     );
 
   setCheckField(e: any, t: string, f: string, i: number = null) {
-    console.log("setting check field")
-    this.setFieldCheckFieldChanged.emit({ "event": e, "table": t, "field": f, "index": i })
+    this.setFieldCheckFieldChanged.emit({ "event": e, "table": t, "field": f, "index": i, id: e.srcElement.id })
   }
   loadFile(e: any, table: any, field: string, index: number) {
     this.setFileChanged.emit({ "event": e, "table": table, "field": field, "index": index })
@@ -151,10 +164,10 @@ export class InputFieldComponent implements OnInit {
       console.log(data)
     })
   }
-getIllustra(i){
-  if(this.prop.value["illustrations"] &&(this.prop.value["illustrations"].length>i))
-  return this.prop.value["illustrations"][i]
-}
+  getIllustra(i) {
+    if (this.prop.value["illustrations"] && (this.prop.value["illustrations"].length > i))
+      return this.prop.value["illustrations"][i]
+  }
 
   rememberImageField() {
     localStorage.setItem("image-field", this.getImageFieldId())
@@ -165,7 +178,23 @@ getIllustra(i){
   getFieldId() {
     return `${this.tableName}_${this.fieldName}_${this.index}`.replace(/[^\w]/g, "_")
   }
-  submit(e){
+  submit(e) {
     console.log(e)
   }
+  getUniqueId() {
+    if (!this.record_uuid) return
+    this.recordService.getUniqueId(this.record_uuid, this.tableName, this.fieldName).pipe(first()).subscribe((d) => {
+      this.value = d['result']
+      this.data[this.tableName][this.fieldName] = this.value
+    })
+  } 
+  getUniqueIdBoundary() {
+    if (!this.record_uuid) return
+    this.recordService.getUniqueIdBoundary(this.record_uuid, this.tableName, this.fieldName).pipe(first()).subscribe((d) => {
+      this.value = d['result']
+      this.data[this.tableName][this.fieldName] = this.value
+    })
+  }
+
+
 }

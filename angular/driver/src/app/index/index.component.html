@@ -10,7 +10,7 @@
 <app-list *ngIf="state=='List'" [filter]=filter [listPage]=listPage (setListPage)=setListPage($event)
     [boundary_polygon_uuid]=boundary_polygon_uuid [recordSchema]=recordSchema [recordList]=recordList
     (viewRecord)="viewRecord(viewpoint, $event)"></app-list>
-<app-map *ngIf="state=='Map'" (setDrawing)=setDrawing($event) [fitBounds]=fitBounds [options]=options [layers]=layers
+<app-map *ngIf="state=='Map'" (setDrawing)=setDrawing($event) (setLocalRoads)=showLocalRoads($event) [fitBounds]=fitBounds [options]=options [layers]=layers
     [layersControl]=layersControl [boundary_polygon_uuid]=boundary_polygon_uuid (map)=setMap($event)
     (onSetPolygon)=setPolygon($event) [polygon]=polygon [mapListening]=listening
     (newRecord)=newRecord($event,viewpoint)></app-map>
@@ -19,10 +19,10 @@
     (editLocalRecord)="openRecord(viewpoint, $event)"></app-local-list>
 
 <app-legend [config]="config" [legends]=legends [subtitles]=subtitles
-    *ngIf=legends.length||subtitles.length></app-legend>
+    *ngIf="showLegend && (legends.length||subtitles.length)"></app-legend>
 <app-counter (iRapCenterChange)="iRapCenter($event)" (iRapChange)="drawIrap($event)" [irapLayer]=iraplayer
     [config]="config" [counts]=counts [filter]="filter" [fields]="filterAsText"
-    *ngIf="counts && state=='Map'"></app-counter>
+    *ngIf="showCounter && counts && state=='Map'"></app-counter>
 
 <button (click)=mapClick(viewpoint) [hidden]="true" id="map-popup-button"></button>
 <ng-template #viewpoint let-modal>
@@ -57,7 +57,7 @@
 </div>
 <div id="floating-commands">
     <form class="form-inline my-2 my-lg-0 p-4 d-sm-block d-lg-none">
-        <button *ngIf="state=='Map'" (click)="selectState('local-list')" class="btn btn-outline-secondary mx-2 clean"
+        <button *ngIf="(state=='Map')  && (localRecords  && localRecords.length)" (click)="selectState('local-list')" class="btn btn-outline-secondary mx-2 clean"
             type="submit" ngbTooltip="{{'List'|translate}}">
             <i-bs name="list-check"></i-bs>
         </button>
@@ -121,7 +121,7 @@
 
 <ng-template #aboutview let-modal>
     <div class="modal-header">
-        <h4 class="modal-title">{{'About DRIVER'|translate}}</h4>
+        <h4 class="modal-title">{{'About'|translate}} {{config['APP_NAME']}}</h4>
         <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
         </button>
@@ -145,25 +145,30 @@
     </div>
     <div class="modal-body">
         <div class="form-group">
-            <div *ngFor="let b of boundaries" class="mt-2">
-                <label for="dpf">{{b.label | translate}}</label>
-                <div class="mt-2">
-                    <select [(ngModel)]="selectedBoundaryPolygon[b.uuid]" (change)="selectPolygon($event, b.uuid)"
-                        name="{{b.uuid}}" class="form-select form-select-lg">
-                        <option [ngStyle]="{'font-family':fontFamily}" [value]="null">{{'All'|translate}}</option>
-                        <option [ngStyle]="{'font-family':fontFamily}" [value]="null"
-                            *ngIf="!boundaryPolygonsObject[b.uuid].length">
-                            {{'Searching'|translate}}...</option>
-                        <option [ngStyle]="{'font-family':fontFamily}" [value]="c.uuid"
-                            *ngFor="let c of boundaryPolygonsObject[b.uuid]">
-                            {{getBoundaryPolygonLabel(c)}}</option>
-                    </select>
+            <div *ngFor="let b of boundaries; let i = index">
+                <div class="mt-2" *ngIf="boundaryPolygonsObject[b.uuid].length>0">
+                    <label for="dpf">{{b.label | translate}}</label>
+                    <div class="mt-2">
+                        <select [(ngModel)]="selectedBoundaryPolygon[b.uuid]"
+                            (change)="selectPolygon($event, b.uuid, i)"
+                            [disabled]="(boundaryPolygonsObject[b.uuid].length==0) || (geoloading)" name="{{b.uuid}}"
+                            class="form-select form-select-lg">
+                            <option [ngStyle]="{'font-family':fontFamily}" [value]="null">{{'All'|translate}}</option>
+                            <option [ngStyle]="{'font-family':fontFamily}" [value]="null"
+                                *ngIf="!boundaryPolygonsObject[b.uuid].length">
+                                {{'Searching'|translate}}...</option>
+                            <option [ngStyle]="{'font-family':fontFamily}" [value]="c.uuid"
+                                *ngFor="let c of boundaryPolygonsObject[b.uuid]">
+                                {{getBoundaryPolygonLabel(c, i, false)}}</option>
+                        </select>
+                    </div>
                 </div>
             </div>
+            <div style="padding:1em" *ngIf="geoloading"><span class="spinner-border spinner-border-sm m-auto pr-3"></span></div>
         </div>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary"
+        <button type="button" class="btn btn-outline-secondary" [disabled]="geoloading" 
             (click)="applyGeometry(modal);">{{'Apply'|translate}}</button>
         <button type="button" class="btn btn-outline-secondary"
             (click)="modal.close('Close click')">{{'Close'|translate}}</button>
@@ -179,7 +184,8 @@
         <div class="form-group">
             <div class="mt-2">
                 <label for="dpf">{{"Password" | translate}}:</label>
-                <input type="text" name="password" class="password" autocomplete="off" (keyup)="checkLockPassword($event,modal)">
+                <input type="text" name="password" class="password" autocomplete="off"
+                    (keyup)="checkLockPassword($event,modal)">
             </div>
         </div>
     </div>

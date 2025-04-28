@@ -81,19 +81,15 @@ describe('JSONEditorComponent', () => {
   it('load data and populate', () => {
 
     const compiled = fixture.nativeElement;
-    console.log("buuuuu")
-    console.log(component.dict)
     expect(component.dict).toEqual({
       "properties": {}
     })
 
-    console.log(JSON.stringify(basic_object)) 
-
-  fixture.detectChanges();
-  compiled.querySelector('a.code').click()
+    fixture.detectChanges();
+    compiled.querySelector('a.code').click()
     compiled.querySelector('textarea.raw').value = JSON.stringify(basic_object);
     fixture.detectChanges();
-    component.dict_json=JSON.stringify(basic_object);
+    component.dict_json = JSON.stringify(basic_object);
     compiled.querySelector('a.tree').click()
     fixture.detectChanges();
     expect(component.dict).toEqual(basic_object)

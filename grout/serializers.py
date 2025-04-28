@@ -9,7 +9,7 @@ import requests
 
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
-from rest_framework_gis.serializers import GeoFeatureModelSerializer, GeoModelSerializer
+from rest_framework_gis.serializers import GeoFeatureModelSerializer, GeoModelSerializer,GeometrySerializerMethodField
 
 from grout.models import Boundary, BoundaryPolygon, Record, RecordType, RecordSchema
 from grout.serializer_fields import JsonBField, JsonSchemaField, GeomBBoxField
@@ -59,7 +59,8 @@ class RecordSchemaSerializer(ModelSerializer):
         elif validated_data['version'] == 1:  # New record_type
             new = RecordSchema.objects.create(**validated_data)
         else:
-            raise serializers.ValidationError('Schema version could not be determined')
+            raise serializers.ValidationError(
+                'Schema version could not be determined')
         return new
 
     class Meta:
@@ -69,8 +70,19 @@ class RecordSchemaSerializer(ModelSerializer):
 
 
 class BoundaryPolygonSerializer(GeoFeatureModelSerializer):
-
     data = JsonBField()
+    geom = GeometrySerializerMethodField()
+
+    def get_geom(self, obj):
+        e=obj.geom.extent
+        s=1
+        if len(e)==4:
+            s=abs(e[1]-e[3])+abs(e[2]-e[0])
+        
+        logger.warning("This is the tolrerance")
+        logger.warning(s)
+        
+        return obj.geom.simplify(tolerance=0.001*s, preserve_topology=True)
 
     class Meta:
         model = BoundaryPolygon
@@ -93,7 +105,8 @@ class BoundarySerializer(GeoModelSerializer):
 
     label = serializers.CharField(max_length=128, allow_blank=False)
     color = serializers.CharField(max_length=64, required=False)
-    display_field = serializers.CharField(max_length=10, allow_blank=True, required=False)
+    display_field = serializers.CharField(
+        max_length=10, allow_blank=True, required=False)
     data_fields = JsonBField(read_only=True, allow_null=True)
     errors = JsonBField(read_only=True, allow_null=True)
 

@@ -6,7 +6,7 @@ import { environment } from '../../environments/environment';
 import { RecordService } from '../record.service'
 import { first } from 'rxjs/operators';
 import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
-import { DrawEvents, featureGroup, FeatureGroup, icon, latLng, tileLayer } from 'leaflet';
+import { DrawEvents, featureGroup, FeatureGroup, icon, latLng, tileLayer, polyline, multipolyline, geojson } from 'leaflet';
 import { utfGrid } from '../UtfGrid';
 import { } from 'jquery'
 
@@ -28,6 +28,7 @@ export class MapComponent implements OnInit {
   @Input() polygon: any
   @Output() setDrawing = new EventEmitter<boolean>()
   @Output() newRecord = new EventEmitter<object>()
+  @Output() setLocalRoads = new EventEmitter<object>()
   public drawnItems: FeatureGroup = featureGroup();
   public drawOptions: any
 
@@ -37,11 +38,14 @@ export class MapComponent implements OnInit {
   popup: L.Popup
 
   private recordsLayer: L.LayerGroup
+  previousBounds: any;
+  public localRoads: any = []
   constructor(
     private router: Router,
     private recordService: RecordService,
     private modalService: NgbModal,
     private zone: NgZone
+
   ) { }
 
   ngOnInit(): void {
@@ -67,6 +71,7 @@ export class MapComponent implements OnInit {
         featureGroup: this.drawnItems
       }
     };
+
   }
   logout() {
     document.cookie.split(/;\s?/).map(k => k.split(/=/)).forEach(k => {
@@ -88,12 +93,17 @@ export class MapComponent implements OnInit {
     this.setDrawing.emit(false)
   }
   onMapReady(e: any) {
+    console.log("this is the map ready, should happend once!!!")
     this.map.emit(e)
     e.on('overlayadd', e => {
     })
     e.on('baselayerchange', l => {
       localStorage.setItem("baselayer", l.name)
     })
+    window['emitter'] = this.setLocalRoads
+    e.on("viewreset", this.viewReset)
+    e.on("moveend", this.viewReset)
+    e.on("zoomend", this.viewReset)
   }
   startDraw(e: any) {
     this.setDrawing.emit(true)
@@ -113,4 +123,27 @@ export class MapComponent implements OnInit {
       })
     }
   }
+
+  viewReset(eve) {
+    const b = eve.target.getBounds()
+    const z = eve.target.getZoom()
+    const currentBounds = Object.values(b.getSouthWest()).concat(Object.values(b.getNorthEast()))
+    if (this.previousBounds === JSON.stringify(currentBounds) || z < 14) {
+      return
+    }
+    this.previousBounds = JSON.stringify(currentBounds)
+    const params = {
+      "lang": localStorage.getItem("Language"),
+      "bounds": currentBounds
+    }
+    if (!!window['android']) {
+      const lines = android.getLocalRoads(JSON.stringify(params))
+      const gsjs = L.geoJson(JSON.parse(lines), {style:{weight:"8", "opacity":0.5, color:"#ff3400" }})
+      window['emitter'].emit(gsjs)
+    }
+  }
 }
+interface WebAppInterface {
+  getLocalRoads(params: string): string
+}
+declare var android: WebAppInterface

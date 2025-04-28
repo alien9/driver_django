@@ -41,12 +41,14 @@ services:
       - ./mapserver:/opt/app/mapserver
       - ./user_filters:/opt/app/user_filters
       - ./static:/var/www/static
+      - ./media:/opt/app/media
       - ./indexdir:/opt/app/indexdir
       - ./requirements.txt:/opt/app/requirements.txt
       - ./.env:/opt/app/.env
       - ./zip:/opt/app/zip
     ports:
       - 8009:4000
+      - 4000:4000
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -55,6 +57,7 @@ services:
       - ./zip:/opt/app/zip
       - ./indexdir:/opt/app/indexdir
       - ./data:/opt/app/data
+      - ./black_spots:/opt/app/black_spots
       - ./driver:/opt/app/driver
       - ./driver_auth:/opt/app/driver_auth
       - ./grout:/opt/app/grout

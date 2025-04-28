@@ -39,7 +39,7 @@ export class LoginComponent implements OnInit {
         if (days) {
             var date = new Date();
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toUTCString();
+            expires = "; Path=/;expires=" + date.toUTCString();
         }
         document.cookie = name + "=" + (value || "") + expires + "; path=/";
     }
@@ -56,24 +56,21 @@ export class LoginComponent implements OnInit {
 
     ngOnInit() {
         document.cookie = 'csrftoken=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+        document.cookie = 'sessionid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
         let c = this.getCookie('AuthService.token')
         if (c) {
-            this.setCookie('AuthService.token', '', -1)
+            this.setCookie('AuthService.token', '/', -1)
             this.authenticationService.logout()
         }
         const backend=this.recordService.getBackend()
         const lang=localStorage.getItem("Language")
         this.recordService.getSiteHeader(lang).pipe(first()).subscribe(data => {
-            let d=data["result"]
-            if(backend.length>1){
-                d=d.replace(/src="/g, `src="${backend}/`)
-            }
-            this.headerHTML=d
-            //document.getElementById("site-header-div").innerHTML=d
+            this.headerHTML=data["result"]
+            setTimeout(()=>$("#site-header-div img").attr("style", "max-width:100%"), 0)
         })
         this.recordService.getSiteFooter(lang).pipe(first()).subscribe(data => {
-            //document.getElementById("site-footer-div").innerHTML=data["result"]
             this.footerHTML=data["result"]
+            setTimeout(()=>$("#site-footer-div img").attr("style", "max-width:100%"), 0)
         })
 
         this.loginForm = this.formBuilder.group({

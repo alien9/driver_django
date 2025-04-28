@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import uuid
 import logging
@@ -14,8 +15,8 @@ from django.dispatch import receiver
 from django.template.loader import render_to_string
 from ordered_model.models import OrderedModel
 from django.core.cache import cache
-
 from rest_framework import serializers
+import base64
 
 import jsonschema
 import jsonschema.exceptions
@@ -121,9 +122,10 @@ class RecordSchema(GroutModel):
         jsonschema.Draft4Validator.check_schema(schema)
 
     def save(self, *args, **kwargs):
-
         if self.record_type is not None:
             self.schema["record_type"] = str(self.record_type.uuid)
+        from data.tasks.update_dictionaries import update_dictionaries
+        update_dictionaries.delay()
 
         super(RecordSchema, self).save(*args, **kwargs)
         # from data.tasks import create_indexes
@@ -228,7 +230,6 @@ class Record(GroutModel):
         try:
             return self.schema.validate_json(self.data)
         except jsonschema.exceptions.ValidationError as e:
-            print(e)
             return {
                 "data": _("Schema validation failed for ")+_(self.schema.record_type.label)+": " + f"{e.message}"
             }
@@ -262,11 +263,41 @@ class Record(GroutModel):
             # error, since this exception needs to get handled by the serializer.
             raise serializers.ValidationError(errors)
 
+    def save_pictures(self):
+        if not os.path.isdir(os.path.join(settings.MEDIA_ROOT, "record_images")):
+            os.mkdir(os.path.join(settings.MEDIA_ROOT, "record_images"))
+        for table in self.schema.schema['definitions'].keys():
+            for field in self.schema.schema['definitions'][table]['properties']:
+                if 'fieldType' in self.schema.schema['definitions'][table]['properties'][field]:
+                    if self.schema.schema['definitions'][table]['properties'][field]['fieldType'] == 'image':
+                        if not self.schema.schema['definitions'][table]['multiple']:
+                            if field in self.data[table]:
+                                if re.match('^data:image.*', self.data[table][field]):
+                                    filename = os.path.join(
+                                        settings.MEDIA_ROOT, "record_images", f"{uuid.uuid4()}.jpg")
+                                    with open(filename, "wb") as media:
+                                        media.write(base64.decodebytes(str.encode(
+                                            re.sub('data:image.*,', '', self.data[table][field]))))
+                                        media.close()
+                                        self.data[table][field] = f"/{filename}"
+                        else:
+                            for i in range(len(self.data[table])):
+                                if field in self.data[table][i]:
+                                    if re.match('^data:image.*', self.data[table][i][field]):
+                                        filename = os.path.join(
+                                            settings.MEDIA_ROOT, "record_images", f"{uuid.uuid4()}.jpg")
+                                        with open(filename, "wb") as media:
+                                            media.write(base64.decodebytes(str.encode(
+                                                re.sub('data:image.*,', '', self.data[table][i][field]))))
+                                            media.close()
+                                            self.data[table][i][field] = f"/{filename}"
+
     def save(self, *args, **kwargs):
         """
         Extend the model's save method to run custom field validators.
         """
         self.clean()
+        self.save_pictures()
         return super(Record, self).save(*args, **kwargs)
 
 
@@ -291,7 +322,7 @@ class Imported(GroutModel):
     status = models.CharField(max_length=10,
                               choices=StatusTypes.CHOICES,
                               default=StatusTypes.PENDING)
-    label = models.CharField(max_length=128, unique=True, validators=[
+    label = models.CharField(max_length=128, validators=[
                              MinLengthValidator(3)])
     # Store any valid css color string
     color = models.CharField(max_length=64, default='blue')
@@ -324,6 +355,7 @@ class Boundary(Imported, OrderedModel):
         self.save()
         if not self.source_file:
             return
+        temp_dir = None
         try:
             logging.info("extracting the shapefile")
             temp_dir = extract_zip_to_temp_dir(self.source_file)
@@ -358,12 +390,15 @@ class Boundary(Imported, OrderedModel):
             self.status = self.StatusTypes.ERROR
             self.save()
         finally:
-            shutil.rmtree(temp_dir, ignore_errors=True)
+            if temp_dir:
+                shutil.rmtree(temp_dir, ignore_errors=True)
 
     def save(self, *args, **kwargs):
         from data.models import Dictionary
         for d in Dictionary.objects.all():
             cache.delete(f"boundary_names_{d.language_code}")
+        from data.tasks.update_dictionaries import update_dictionaries
+        update_dictionaries.delay()
         super(Boundary, self).save(*args, **kwargs)
 
     def write_mapfile(self):

@@ -11,11 +11,23 @@ export class LocalizedDatePipe implements PipeTransform {
   constructor(private translateService: TranslateService) {
   }
 
-  transform(value: any, pattern: string = 'mediumDate', locale:string): any {
+  transform(value: any, pattern: string = 'mediumDate', locale: string, timezone:string = null): any {
     const datePipe: DatePipe = new DatePipe(locale);
-    if(!value || value=="")
+    const opt={}
+    if(timezone){
+      //opt['timezone']=timezone
+    }
+    console.log(value)
+    if (!value || value == "")
       return this.translateService.instant("Date")
-    return datePipe.transform(value, pattern);
+    switch (pattern) {
+      case "dd/MM/yyyy":
+        return (new Date(value)).toLocaleDateString(locale, opt);
+      case "shortTime":
+        return (new Date(value)).toLocaleTimeString(locale, opt);
+    }
+    return datePipe.transform(value, pattern, '', locale);
+
   }
 
 }

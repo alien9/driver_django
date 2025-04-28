@@ -1,0 +1,28 @@
+{% extends "admin/change_form.html" %}
+{% block object-tools %}
+<style type="text/css">
+    .hstore-rows { display: flex; flex-direction: column; }
+</style>
+<script>
+    (function () {
+        if (!$) {
+            $ = django.jQuery;
+        }
+        window.setTimeout(()=>{
+            const a=JSON.parse($("textarea[name=ordered_keys]").text())
+            $('div.field-data').toArray().forEach((fu)=>{
+                const b=$(fu).children('div');
+                if(b.length==1){
+                    let c=$(b[0]).children(':first-child');
+                    console.log(c.val())
+                    console.log(a[c.val()])
+                    if(c.val() in a){
+                        fu.setAttribute('style', `order:${a[c.val()]}`)
+                    }
+                }
+            })
+        }, 1000);
+    })();
+</script>
+
+{%endblock%}
