@@ -5,9 +5,9 @@
             *ngIf="(prop.value.fieldType=='reference') && data[tableName][index] && data[tableName][index][fieldName]">
             {{(data[prop.value.watch.target]|related:data[tableName][index][fieldName])|referenceName:prop.value:schema}}
         </span>
-        <span *ngIf="prop.format=='datetime' && value">
+        <!--span *ngIf="prop.format=='datetime' && value">
             {{data|dict_dump:tableName:index:fieldName|localizedDate:'dd/MM/yyyy':locale}}
-        </span>
+        </span-->
         <span
             *ngIf="prop.format!='checkbox' && prop.displayType=='checkbox' && prop.type!='array'">{{data|dict_dump:tableName:index:fieldName|format:prop|translate}}
         </span>
@@ -17,7 +17,7 @@
         </span>
 
         <span
-            *ngIf="prop.value.format!='textarea' && prop.value.fieldType!='reference' && !(prop.value.format=='checkbox' || prop.value.displayType=='checkbox')  && prop.type!='array' && prop.value.fieldType!='image'">
+            *ngIf="prop.value.format!='datetime' && prop.value.format!='textarea' && prop.value.fieldType!='reference' && !(prop.value.format=='checkbox' || prop.value.displayType=='checkbox')  && prop.type!='array' && prop.value.fieldType!='image'">
             {{data|dict_dump:tableName:index:fieldName|format:prop|translate}}
         </span>
 
@@ -30,11 +30,10 @@
             *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format=='textarea'"></textarea>
 
         <img crossorigin="anonymous" [src]="getValue()" class="pic" *ngIf="prop.value.imageSource">
-
     </span>
     <span *ngIf="editing">
         <span *ngIf="prop.value.fieldType=='image' &&  ['canvas','map'].indexOf(prop.value.imageSource)>-1">
-            <button class="btn btn-light"
+            <button class="btn btn-light" [id]="getFieldId()"
                 (click)="startDraw({table:tableName, field:fieldName, index:index})">{{'Draw'|translate}}</button>
         </span>
 
@@ -49,8 +48,11 @@
             <input class="form-control" type=hidden placeholder="yyyy-mm-dd" value="value|localizedDate:'yyyy-MM-dd'"
                 ngbDatepicker #df="ngbDatepicker" (dateSelect)="setDateField($event, tableName, fieldName, index)">
 
-            <a href="#" (click)=df.toggle()>
+            <a href="#" (click)=df.toggle() *ngIf="getValue()" [id]="getFieldId()">
                 {{getValue()|localizedDate:'dd/MM/yyyy':locale}}
+            </a>
+            <a href="#" (click)=df.toggle() *ngIf="!getValue()" [id]="getFieldId()">
+                {{"add"|translate}}
             </a>
             &nbsp;
             <a href="#" (click)="setDateField(null, tableName, fieldName,index)">
@@ -76,23 +78,21 @@
 
         </span>
 
-
-
-
         <div *ngIf="prop.value.displayType=='checkbox' || prop.value.format=='checkbox'">
             <div *ngFor="let o of prop.value.items.enum; let i=index">
                 <label class="form-check-label">
                     <input class="form-check-input" type="checkbox" [value]="o"
-                        checked="{{getValue()?.includes(o) ? 'checked' : null}}"
+                        checked="{{getValue()?.includes(o) ? 'checked' : null}}" [id]="getFieldId()+'_'+i"
                         (change)="setCheckField($event, tableName, fieldName, index)">
                     {{o|translate}}
-                    <img [src]="getIllustra(i)" *ngIf="prop.value.illustrations && prop.value.illustrations.length" class="radiopic mb-2 mt-2">
+                    <img [src]="getIllustra(i)" *ngIf="prop.value.illustrations && prop.value.illustrations.length"
+                        class="pic radiopic mb-2 mt-2">
                 </label>&nbsp;
             </div>
         </div>
 
         <select class="form-select" *ngIf="prop.value.fieldType=='selectlist' && prop.value.displayType=='select'"
-            [id]="getFieldId()" (change)="setFieldValue($event)">
+            [id]="getFieldId()" (change)="setFieldValue($event)" [value]="getValue()">
             <option></option>
             <option [ngStyle]="{'font-family':fontFamily}" *ngFor="let o of prop.value.enum" [value]="o"
                 [selected]="o==getValue()">{{o|translate}}</option>
@@ -101,9 +101,9 @@
         <select class="form-select" *ngIf="prop.value.fieldType=='reference'" (change)="setFieldValue($event)"
             [id]="getFieldId()">
             <option></option>
-            <option [ngStyle]="{'font-family':fontFamily}" *ngFor="let related of data[prop.value.watch.target]; let j=index"
-                [ngValue]="related['_localId']" [value]="related['_localId']"
-                [selected]="related['_localId']==getValue()">
+            <option [ngStyle]="{'font-family':fontFamily}"
+                *ngFor="let related of data[prop.value.watch.target]; let j=index" [ngValue]="related['_localId']"
+                [value]="related['_localId']" [selected]="related['_localId']==getValue()">
                 {{related|referenceName:prop.value:schema}}
             </option>
         </select>
@@ -114,7 +114,8 @@
                     <label class="form-check-label px-2" [for]="'radinh_'+prop.key+'_'+i">
                         <input [value]="v" class="form-check-input radinho" type="radio" [name]="'radinh_'+prop.key"
                             [checked]="getValue()==v" [id]="'radinh_'+prop.key+'_'+i" (change)="setFieldValue($event)">
-                            <img [src]="getIllustra(i)" *ngIf="prop.value.illustrations && prop.value.illustrations.length" class="radiopic mb-2 mt-2">
+                        <img [src]="getIllustra(i)" *ngIf="prop.value.illustrations && prop.value.illustrations.length"
+                            class="pic radiopic mb-2 mt-2">
                         {{v|translate}}
                     </label>
                 </span>
@@ -128,6 +129,7 @@
             autocomplete="nope" autocorrect="off"
             (focus)="setFieldAutoCompleteTerms($event, prop.value.enum, prop.value.extra)">
 
+
         <input class="form-control" type="text" [value]="getValue()" (change)="setFieldValue($event)"
             [id]="getFieldId()" *ngIf="prop.value.fieldType=='selectlist' && prop.value.displayType=='autocomplete'"
             [ngbTypeahead]="search" aria-autocomplete="both" aria-haspopup="false" autocomplete="nope" autocorrect="off"
@@ -137,16 +139,23 @@
             [id]="getFieldId()"
             *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format!='datetime' && prop.value.format!='time' && prop.value.format!='suggest' && prop.value.format!='textarea'">
 
+        <input class="form-control" type="text" [value]="getValue()" [id]="getFieldId()" readonly="readonly"
+            *ngIf="prop.value.fieldType=='unique'">
+
+        <input class="form-control" type="text" [value]="getValue()" [id]="getFieldId()" readonly="readonly"
+            *ngIf="prop.value.fieldType=='boundary'">
+
         <textarea rows="5" class="form-control" [value]="getValue()" (change)="setFieldValue($event)"
             [id]="getFieldId()"
             *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format=='textarea'"></textarea>
 
-        <span *ngIf="prop.value.illustrations && (prop.value.fieldType!='selectlist')"><img [src]="prop.value.illustrations[0]"></span>
+        <span *ngIf="prop.value.illustrations && (prop.value.fieldType!='selectlist')"><img
+                [src]="prop.value.illustrations[0]" class="pic"></span>
 
         <input class="form-control" type="number" [value]="getValue()" (change)="setFieldValue($event)"
             [id]="getFieldId()" *ngIf="prop.value.fieldType=='integer'" [max]="prop.value.max" [min]="prop.value.min">
 
-        <input class="form-control" type="number" [value]="getValue()" (change)="setFieldValue($event)" 
+        <input class="form-control" type="number" [value]="getValue()" (change)="setFieldValue($event)"
             [id]="getFieldId()" *ngIf="prop.value.fieldType=='number'">
 
         <img [src]="getValue()" class="pic" [id]="'img_'+getImageFieldId()"
@@ -154,6 +163,6 @@
 
     </span>
 
-    <span *ngIf="prop.value.format=='datetime' && getValue()">
+    <span *ngIf="!editing && prop.value.format=='datetime' && getValue()">
         {{data|dict_dump:tableName:null:fieldName|localizedDate:'dd/MM/yyyy':locale}}</span>
 </div>

@@ -8,6 +8,7 @@ import { RecordService } from '../record.service'
 import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap'
 import { NgxSpinnerService } from "ngx-spinner";
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { getLocaleDirection } from '@angular/common';
 
 import * as uuid from 'uuid';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
@@ -19,6 +20,7 @@ import "leaflet.vectorgrid";
 import { DYNAMIC_TYPE } from '@angular/compiler';
 import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
+import { $0 } from 'node_modules_backup/@angular/compiler/src/chars';
 
 @Component({
   selector: 'app-input',
@@ -85,7 +87,13 @@ export class InputComponent implements OnInit {
   reverse_trans: {};
   canvas_extra: any = null;
   accordionOpenedItem: any;
-
+  isFirstNavItem: boolean = true;
+  isLastNavItem: boolean = true;
+  firstNavItem: string;
+  lastNavItem: string;
+  roadmapsLayer: any;
+  previousBounds: string;
+  direction: string;
   constructor(
     private webService: WebService,
     private zone: NgZone,
@@ -96,9 +104,27 @@ export class InputComponent implements OnInit {
     private modalService: NgbModal,
 
   ) { }
-
+  formatAddress(address: any) {
+    console.log("formatting address")
+    let lt = []
+    if (address && address['address']) {
+      if (address['address']['road']) lt.push(address['address']['road'])
+      if (address['address']['city']) lt.push(address['address']['city'])
+      if (address['address']['village']) lt.push(address['address']['village'])
+      if (address['address']['county']) lt.push(address['address']['county'])
+      if (address['address']['state']) lt.push(address['address']['state'])
+    }
+    return lt.join(", ")
+  }
   ngOnInit(): void {
     this.schema = this.recordSchema['schema']
+    this.direction = getLocaleDirection(localStorage.getItem("Language"))
+    const defs = Object.keys(this.schema['definitions']).sort((a, b) => this.schema['definitions'][a].propertyOrder - this.schema['definitions'][b].propertyOrder)
+    this.lastNavItem = defs[defs.length - 1]
+    this.firstNavItem = defs[0]
+    this.isLastNavItem = defs.length < 2
+    this.isFirstNavItem = true
+
     let str = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
       {
         attribution: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors, &copy; <a href='https://cartodb.com/attributions'>CartoDB</a>",
@@ -124,6 +150,17 @@ export class InputComponent implements OnInit {
       overlays: {
       }
     }
+
+    if (!!window['android']) {
+      this.roadmapsLayer = new L.geoJSON()
+      this.layersControl.baseLayers["Local Road Map"] = new L.LayerGroup([this.roadmapsLayer])
+      window['showLocalRoads'] = (e: any) => {
+        this.roadmapsLayer = e
+        this.layersControl.baseLayers["Local Road Map"].clearLayers()
+        this.layersControl.baseLayers["Local Road Map"].addLayer(this.roadmapsLayer)
+      }
+    }
+
     let light = this.record['light']
     if (!light && this.record['geom'].coordinates) {
       this.record['light'] = this.getLight(this.record['geom'].coordinates, new Date(this.record['occurred_from']))
@@ -131,23 +168,16 @@ export class InputComponent implements OnInit {
 
     if (this.record['geom'].coordinates && !this.record['location_text']) {
       this.webService.getReverse(this.record['geom'].coordinates[1], this.record['geom'].coordinates[0]).pipe(first()).subscribe(address => {
-        if (address && address['address']) {
-          let lt = []
-          if (address['address']['road']) lt.push(address['address']['road'])
-          if (address['address']['city']) lt.push(address['address']['city'])
-          if (address['address']['village']) lt.push(address['address']['village'])
-          if (address['address']['county']) lt.push(address['address']['county'])
-          if (address['address']['state']) lt.push(address['address']['state'])
-          this.record['location_text'] = lt.join(", ")
-        }
+        this.record['location_text'] = this.formatAddress(address)
       })
     }
 
     let du = new Date(this.record['occurred_from'])
+
     this.occurred_date_ngb = this.asNgbDateStruct(du)
     this.occurred_time = {
-      hour: parseInt(du.toLocaleTimeString(this.locale, { hour: '2-digit', hour12: false })),
-      minute: parseInt(du.toLocaleTimeString(this.locale, { minute: '2-digit' })),
+      hour: parseInt(du.toLocaleTimeString('en', { hour: '2-digit', hour12: false })),
+      minute: parseInt(du.toLocaleTimeString('en', { minute: '2-digit' })),
       second: 0
     }
     let c = this.record['geom'].coordinates
@@ -171,7 +201,7 @@ export class InputComponent implements OnInit {
           "label": this.translateService.instant(b.label),
           "value": t
         }
-      })
+      }).filter((o) => o.value && o.value.length > 0)
     })
 
     let bl = localStorage.getItem("input_baselayer") || 'CartoDB'
@@ -277,6 +307,11 @@ export class InputComponent implements OnInit {
   }
   validateRecord(): boolean {
     let v = true
+    const isRequired = this.translateService.instant('is required');
+    if(typeof this.record['location_text']=='object'){
+      console.log(this.record['location_text'])
+      this.record['location_text']=this.formatAddress(this.record['location_text'])
+    }
     Object.keys(this.recordSchema["schema"].definitions).sort((a, b) => this.recordSchema["schema"].definitions[a]["propertyOrder"] - this.recordSchema["schema"].definitions[b]["propertyOrder"]).forEach((kk) => {
       if (this.recordSchema["schema"].definitions[kk].required) {
         let requiredFields = Object.keys(this.recordSchema["schema"].definitions[kk].properties).filter((pk) => {
@@ -284,58 +319,65 @@ export class InputComponent implements OnInit {
         }).sort((a, b) => {
           return this.recordSchema["schema"].definitions[kk].properties[a]["propertyOrder"] - this.recordSchema["schema"].definitions[kk].properties[b]["propertyOrder"]
         })
-        //this.recordSchema["schema"].definitions[kk].required.forEach((reqs) => {
         requiredFields.forEach((reqs) => {
           if (reqs == "_localId") return
           let condition = this.recordSchema["schema"].definitions[kk].properties[reqs].condition
           if (v) {
             if (!this.recordSchema["schema"].definitions[kk].multiple) {
               if (condition) {
-                if (this.record["data"][kk][condition] != this.recordSchema["schema"].definitions[kk].properties[reqs].conditionValue) return
+                if (!this.record["data"][kk][condition]) return
+                if (!this.record["data"][condition]) return
+                if (this.recordSchema["schema"].definitions[kk].properties[reqs].conditionRegex) {
+                  if (!this.record["data"][condition].match(new RegExp(this.recordSchema["schema"].definitions[kk].properties[reqs].conditionRegex))) return
+                } else {
+                  if (this.record["data"][condition] != this.recordSchema["schema"].definitions[kk].properties[reqs].conditionValue) return
+                }
               }
               if (this.record["data"][kk][reqs] === undefined || this.record["data"][kk][reqs] === null || this.record["data"][kk][reqs] === '') {
                 this.nav.select(kk)
                 const fieldId = `${kk}_${reqs}_-1`.replace(/[^\w]/g, "_")
-                alert(`${this.translateService.instant(reqs)} ${this.translateService.instant(" is required.")}`)
+                alert(`${this.translateService.instant(reqs)} ${isRequired}`)
                 setTimeout(() => {
                   $(`#${fieldId}`).focus()
                 }, 500)
                 v = false
               }
             } else { //multiple
-              console.log("will be multiple")
               if (kk in this.record["data"]) {
-                console.log(this.record["data"][kk])
                 this.record["data"][kk].forEach((vei, j) => {
-                  console.log(vei)
                   if (condition) {
-                    if (vei[condition] != this.recordSchema["schema"].definitions[kk].properties[reqs].conditionValue) return
+                    if (!vei[condition]) return
+                    if (this.recordSchema["schema"].definitions[kk].properties[reqs].conditionRegex) {
+                      if (!vei[condition].match(new RegExp(this.recordSchema["schema"].definitions[kk].properties[reqs].conditionRegex))) return
+                    } else {
+                      if (vei[condition] != this.recordSchema["schema"].definitions[kk].properties[reqs].conditionValue) return
+                    }
                   }
                   if (vei[reqs] === undefined || vei === null || vei[reqs] === '') {
                     this.nav.select(kk)
-                    const fieldId = `${kk}_${reqs}_${j}`.replace(/[^\w]/g, "_")
-                    alert(`${this.translateService.instant(reqs)} ${this.translateService.instant(" is required.")}`)
+                    this.accordionOpenedItem = j
+                    const reqfieldId = `${kk}_${reqs}_${j}`.replace(/[^\w]/g, "_")
+                    alert(`${this.translateService.instant(reqs)} ${isRequired}`)
                     setTimeout(() => {
-                      $(`#${fieldId}`).focus()
+                      $(`#${reqfieldId}`).focus()
                     }, 500)
                     v = false
+                    return
                   }
                 })
               }
             }
           }
-          //console.log(this.record[data])
         })
       }
-      Object.keys(this.recordSchema["schema"].definitions[kk].properties).forEach((kkk) => {
-        console.log(kkk)
-        console.log(this.recordSchema["schema"].definitions[kk].properties[kkk])
-      })
     })
     return v
   }
   isRequired(table, field) {
     return this.recordSchema["schema"].definitions[table].properties[field].isRequired || (this.recordSchema["schema"].definitions[table].required.indexOf(field) >= 0)
+  }
+  isUntitled(table, field) {
+    return this.recordSchema["schema"].definitions[table].properties[field].isUntitled
   }
   getDenominations(t, idx) {
     const names = []
@@ -390,14 +432,12 @@ export class InputComponent implements OnInit {
           alert(message["occurred_from"])
         }
         else {
-          Object.keys(message).forEach((k) => {
-            console.log(`${k}: ${message[k]}`)
-          })
           let records = JSON.parse(localStorage.getItem("records") || "[]")
+          records = records.filter((o) => o['uuid'] != this.record['uuid'])
           records.push(this.record)
           localStorage.setItem("records", JSON.stringify(records))
           this.storeRecord.emit(records)
-          alert(this.translateService.instant("Record was stored in the device."))
+          alert(this.translateService.instant('Record was stored in the device'))
           modal.dismiss()
           this.spinner.hide()
         }
@@ -484,6 +524,9 @@ export class InputComponent implements OnInit {
     e.on('baselayerchange', l => {
       localStorage.setItem("input_baselayer", l.name)
     })
+    e.on("viewreset", this.viewReset)
+    e.on("moveend", this.viewReset)
+    e.on("zoomend", this.viewReset)
     this.setMap(e)
   }
   tabChange(e: any) {
@@ -492,6 +535,8 @@ export class InputComponent implements OnInit {
         window.dispatchEvent(new Event('resize'));
       }, 100);
     }
+    this.isFirstNavItem = e.nextId == this.firstNavItem
+    this.isLastNavItem = e.nextId == this.lastNavItem
   }
   getLight(c, d) {
     let light = 'day'
@@ -516,6 +561,7 @@ export class InputComponent implements OnInit {
     let o = { '_localId': uuid.v4() }
     if (!this.record['data'][what]) this.record['data'][what] = []
     this.record['data'][what].push(o)
+    this.setAccordionOpen(this.record['data'][what].length - 1)
   }
   removeElement(what: string, i: number) {
     this.record['data'][what] = this.record['data'][what].filter((e: string, n: number) => n != i)
@@ -589,10 +635,9 @@ export class InputComponent implements OnInit {
     return x
   }
   setFieldValue(e) {
-    console.log("SETTING THE F|IELD VALUEEEEEE")
     let xterm;
     const type = this.schema['definitions'][e.table].properties[e.field]
-
+    const f = e.event.srcElement.id
     switch (type.fieldType) {
       case "integer":
         xterm = parseInt(e.event.srcElement.value)
@@ -608,6 +653,11 @@ export class InputComponent implements OnInit {
       this.record['data'][e.table][e.field] = xterm
     }
     this.record['data'] = JSON.parse(JSON.stringify(this.record['data']))
+    if (f && document.getElementById(f)) {
+      setTimeout(() => {
+        document.getElementById(f).focus()
+      }, 100)
+    }
   }
   loadFieldFile(eve) {
     this.loadFile(eve.event, eve.table, eve.field, eve.index)
@@ -627,6 +677,7 @@ export class InputComponent implements OnInit {
   }
   setCheckField(e: any) {
     let elem = e.event.srcElement
+    const fieldId = e.id
     if (("index" in e) && (e.index > -1)) {
       if (!this.record['data'][e.table])
         this.record['data'][e.table] = []
@@ -661,6 +712,11 @@ export class InputComponent implements OnInit {
       }
     }
     this.record['data'] = JSON.parse(JSON.stringify(this.record['data']))
+    if (fieldId && document.getElementById(fieldId)) {
+      setTimeout(() => {
+        document.getElementById(fieldId).focus()
+      }, 100)
+    }
   }
   onMultipleCheckChange(e: any, t: string, idx: number, f: any) {
     if (!this.record['data'][t][idx][f])
@@ -685,8 +741,9 @@ export class InputComponent implements OnInit {
   }
   selectGeocodedOption(e: any): any {
     if (!e.item) return
-    if (e.item['address'])
+    if (e.item['address']) {
       this.record['location_text'] = e.item['address']['road']
+    }
     this.record['geom']['coordinates'] = [e.item.lon, e.item.lat]
     let latlng = new L.latLng(e.item.lat, e.item.lon)
     if (latlng) {
@@ -694,10 +751,37 @@ export class InputComponent implements OnInit {
       this.setMarker(latlng)
       this.marker.addTo(this.map)
       this.map.panTo(latlng)
+      if (this.map.getZoom() < 17) this.map.setZoom(17)
     }
+  }
+  isNotLastNavItem() {
+    return this.nav && (this.lastNavItem != this.nav.activeId)
+  }
+  isNotFirstNavItem() {
+    return this.nav && (this.firstNavItem != this.nav.activeId)
   }
   setAccordionOpen(idx: any) {
     this.accordionOpenedItem = idx
+  }
+  nextNavItem() {
+    const defs = Object.keys(this.schema['definitions']).sort((a, b) => this.schema['definitions'][a].propertyOrder - this.schema['definitions'][b].propertyOrder)
+    let i = 0
+    while (i < defs.length && defs[i] != this.nav.activeId) {
+      i++;
+    }
+    this.nav.select(defs[i + 1])
+    this.isFirstNavItem = false
+    this.isLastNavItem = i + 2 >= defs.length
+  }
+  previousNavItem() {
+    const defs = Object.keys(this.schema['definitions']).sort((a, b) => this.schema['definitions'][a].propertyOrder - this.schema['definitions'][b].propertyOrder)
+    let i = defs.length - 1
+    while (i > 0 && defs[i] != this.nav.activeId) {
+      i--;
+    }
+    this.nav.select(defs[i - 1])
+    this.isFirstNavItem = i == 1
+    this.isLastNavItem = false
   }
   setAutocompleteTerms(e: any) {
     let terms = e.words
@@ -764,7 +848,6 @@ export class InputComponent implements OnInit {
       if (this.canvas_extra)
         this.loadImageFromUrl(this.canvas_extra)
     }
-    console.log(definition)
     commentCanvasContext.lineWidth = 3;
     commentCanvasContext.lineJoin = 'round';
     commentCanvasContext.lineCap = 'round';
@@ -858,10 +941,6 @@ export class InputComponent implements OnInit {
       commentCanvasContext.drawImage(bg, sx, sy, canvas.width, canvas.height, dx, dy, canvas.width, canvas.height);
       bg.setAttribute('crossorigin', 'anonymous');
     };
-    //this.recordService.getRoadMapByCords({ latlng: yx }).pipe(first()).subscribe((d: any) => {
-    //bg.src=URL.createObjectURL(d);
-    //  console.log(d.blob())
-    //})
     bg.src = `${this.recordService.getBackend()}/api/roadmaps/${this.roadmap_uuid}/map/?latlong=${yx[1]},${yx[0]}`
   }
 
@@ -873,8 +952,6 @@ export class InputComponent implements OnInit {
     $(".modal-footer").show()
     var canvas = document.querySelector<HTMLCanvasElement>("#scribble");
     var dataURL = canvas.toDataURL("image/png");
-    console.log(this.imageEditing)
-    console.log(dataURL)
     let d = JSON.parse(JSON.stringify(this.record['data']))
 
     if (this.imageEditing) {
@@ -885,7 +962,6 @@ export class InputComponent implements OnInit {
       }
     }
     this.record['data'] = d
-    console.log(this.record["data"])
     this.isDrawing = false
   }
   cancelDrawing(modal: any) {
@@ -922,6 +998,31 @@ export class InputComponent implements OnInit {
     if (mousePositions.length) commentCanvasContext.lineTo(mousePositions[0]["x"], mousePositions[0]["y"])
     commentCanvasContext.closePath();
     commentCanvasContext.stroke();
-  };
+  }
+  submit(eve: any, modal) {
+    if (eve.charCode == 13) this.saveRecord(modal)
+  }
+  scrollTop(event) {
+    console.log("scroll to the top")
+  }
+  viewReset(eve) {
+    const b = eve.target.getBounds()
+    const z = eve.target.getZoom()
+    const currentBounds = Object.values(b.getSouthWest()).concat(Object.values(b.getNorthEast()))
+    if (this.previousBounds === JSON.stringify(currentBounds) || z < 14) {
+      return
+    }
+    this.previousBounds = JSON.stringify(currentBounds)
+    const params = {
+      "lang": localStorage.getItem("Language"),
+      "bounds": currentBounds
+    }
+    if (!!window['android']) {
+      const lines = window['android'].getLocalRoads(JSON.stringify(params))
+      const gsjs = L.geoJson(JSON.parse(lines), { style: { weight: "8", "opacity": 0.5, color: "#ff3400" } })
+      window['showLocalRoads'](gsjs)
+    }
+  }
+
 }
 var mousePositions: Array<object> = []

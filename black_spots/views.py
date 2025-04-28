@@ -1,6 +1,7 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, renderers
 from rest_framework import mixins as drf_mixins
 from rest_framework.response import Response
+from django.conf import settings
 from django_redis import get_redis_connection
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
@@ -9,7 +10,10 @@ from proxy.views import proxy_view
 from constance import config
 from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework import permissions
-
+from django.http import HttpResponse, Http404
+from fiona.crs import from_epsg
+from shapely.geometry import mapping,LineString
+from grout.models import BoundaryPolygon
 from data.models import DriverRecord
 from black_spots.models import (
     BlackSpot, BlackSpotSet, BlackSpotConfig, RoadMap, Road)
@@ -25,9 +29,10 @@ from driver_auth.permissions import (is_admin_or_writer,)
 from driver_auth.permissions import IsAdminOrReadOnly
 from driver import mixins
 import datetime
-import os, re
+import os
+import re
 import random
-import uuid
+import uuid, fiona
 from dateutil import rrule
 from data.tasks import generate_blackspots
 from celery import states
@@ -36,10 +41,13 @@ from whoosh.index import open_dir
 from whoosh.qparser import QueryParser, FuzzyTermPlugin
 from urllib.parse import urlparse, parse_qs
 
+
 def valid_uuid(uuid):
-    regex = re.compile('^[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}\Z', re.I)
+    regex = re.compile(
+        '^[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}\Z', re.I)
     match = regex.match(uuid)
     return bool(match)
+
 
 class BlackSpotViewSet(viewsets.ModelViewSet, mixins.GenerateViewsetQuery):
     """ViewSet for black spots"""
@@ -269,9 +277,29 @@ class EnforcerAssignmentViewSet(drf_mixins.ListModelMixin, viewsets.GenericViewS
         return Response(output_serializer.data)
 
 
+class GPKGRenderer(renderers.BaseRenderer):
+    media_type = 'application/force-download'
+    format = 'gpkg'
+    charset = None
+    render_style = 'binary'
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        fn=f"/tmp/roads_{uuid.uuid4()}.gpkg"
+        fn=os.path.join(settings.CELERY_EXPORTS_FILE_PATH, f"roadmap_{data['uuid']}.gpkg")
+        if not os.path.isfile(fn):
+            pass
+        with open(fn, 'rb') as fh:
+            response = HttpResponse(fh.read(), content_type="application/force-download")
+            response['Content-Disposition'] = 'inline; filename=roads.gpkg'
+            return response
+        return data
+
+
 class RoadMapViewSet(drf_mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = RoadMapSerializer
     queryset = RoadMap.objects.all()
+    renderer_classes = [renderers.JSONRenderer, GPKGRenderer, renderers.BrowsableAPIRenderer]
+
     def get_permissions(self):
         """Returns the permission based on the type of action"""
         if self.action == "map":
@@ -282,8 +310,8 @@ class RoadMapViewSet(drf_mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     def list(self, request):
         queryset = RoadMap.objects.all()
         serializer = RoadMapSerializer(queryset, many=True)
-        return Response(serializer.data)
-    
+        return Response({"result":serializer.data})
+
     @action(methods=['get'], detail=True)
     def map(self, request, pk=None):
         if not os.path.exists("./mapserver/roadmap_%s.map" % (pk)):
@@ -304,6 +332,7 @@ BBOX={x0},{y0},{x1},{y1}&WIDTH=1000&HEIGHT=1000&format=image/png"
         return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
 
     def retrieve(self, request, pk=None):
+        print("retirenving the road map")
         queryset = RoadMap.objects.all()
         map = get_object_or_404(queryset, pk=pk)
         serializer = RoadMapSerializer(map)
@@ -323,21 +352,21 @@ BBOX={x0},{y0},{x1},{y1}&WIDTH=1000&HEIGHT=1000&format=image/png"
             res = searcher.search(question)
         return JsonResponse([{'lat': r['lat'], 'lon': r['lon'], 'address': {'road': r['name'], 'fullname': r['fullname'], 'id': r['id']}} for r in res], safe=False)
 
-
     def valid_uuid(uuid):
-        regex = re.compile('^[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}\Z', re.I)
+        regex = re.compile(
+            '^[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}\Z', re.I)
         match = regex.match(uuid)
         return bool(match)
+
     @action(methods=['get'], detail=True)
     def reverse(self, request, pk=None):
         if not valid_uuid(pk):
-            return JsonResponse({"status":"Not Valid Road", "result":[]})
+            return JsonResponse({"status": "Not Valid Road", "result": []})
         if not 'lat' in request.query_params or not 'lon' in request.query_params:
-            return JsonResponse({"status":"Not Valid LatLng", "result":[]})
-        query=f"SELECT r.uuid,r.created ,r.modified, r.roadmap_id,r.data, r.name, r.geom \
+            return JsonResponse({"status": "Not Valid LatLng", "result": []})
+        query = f"SELECT r.uuid,r.created ,r.modified, r.roadmap_id,r.data, r.name, r.geom \
   FROM black_spots_road r where r.roadmap_id='{pk}' \
     ORDER BY r.geom <-> ST_SetSRID(ST_MakePoint({str(float(request.query_params['lon']))},{str(float(request.query_params['lat']))}),4326) limit 1"
-        print( query)
+        print(query)
         knn = Road.objects.raw(query)[0]
-        return JsonResponse({"status":"OK", "result":[]})
-        
+        return JsonResponse({"status": "OK", "result": []})

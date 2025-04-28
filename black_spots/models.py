@@ -99,7 +99,10 @@ def post_create(sender, instance, created, **kwargs):
 @receiver(post_save, sender=RoadMap, dispatch_uid="save_roadmap")
 def post_save_roadmap(sender, instance, created, **kwargs):
     from data.tasks import generate_roads_index
+    from black_spots.tasks import generate_roadmap
     generate_roads_index.delay(instance.uuid)
+    #generate_roadmap.delay(instance.uuid)
+    
 
 class Road(GroutModel):
     roadmap = models.ForeignKey('RoadMap',

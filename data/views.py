@@ -71,7 +71,7 @@ from driver_auth.permissions import (IsAdminOrReadOnly,
                                      IsAdminAndReadOnly,
                                      is_admin_or_writer)
 from data.tasks import export_csv, generate_blackspots
-from data.models import DriverRecord, SegmentSet, Picture, Dictionary, Attachment
+from data.models import DriverRecord, SegmentSet, Dictionary, Attachment
 from black_spots.models import BlackSpotSet
 from data.localization.date_utils import (
     hijri_day_range,
@@ -111,39 +111,50 @@ def index(request):
 def editor(request):
     return render(request, 'schema_editor/dist/index.html', {"config": config})
 
-
-def dictionary(request, code):
+def get_dictionary(code):
+    if code is None:
+        code = config.DEFAULT_LANGUAGE
     d = Dictionary.objects.filter(language_code=code)
     r = {}
     if len(d):
-        r = d[0].content
+        return d[0]
+    else:
+        d = Dictionary.objects.filter(
+            language_code=config.DEFAULT_LANGUAGE)
+        if len(d):
+            return d[0]
+        else:
+            d=Dictionary.objects.first()
+            if d is not None:
+                return d
+
+
+def dictionary(request, code):
+    r = get_dictionary(code)
+
     if settings.GOOGLE_OAUTH_CLIENT_ID:
         r["GOOGLE_OAUTH_CLIENT_ID"] = settings.GOOGLE_OAUTH_CLIENT_ID
-    return JsonResponse(r)
+    return JsonResponse(r.content)
 
 
 def about(request, code):
-    d = Dictionary.objects.filter(language_code=code)
-    r = {}
-    if len(d):
-        r = d[0].about
-    return JsonResponse({"result": r})
+    r = get_dictionary(code)
+    return JsonResponse({"result": r.about})
 
 
 def header(request, code):
-    d = Dictionary.objects.filter(language_code=code)
-    r = {}
-    if len(d):
-        r = d[0].header
-    return JsonResponse({"result": r})
+    r = get_dictionary(code)
+    return JsonResponse({"result": r.header})
 
 
 def footer(request, code):
-    d = Dictionary.objects.filter(language_code=code)
-    r = {}
-    if len(d):
-        r = d[0].footer
-    return JsonResponse({"result": r})
+    r = get_dictionary(code)
+    return JsonResponse({"result": r.footer})
+
+
+def logo(request, code):
+    r = get_dictionary(code)
+    return JsonResponse({"result": r.logo})
 
 
 def mapillary_callback(request):
@@ -590,13 +601,18 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         schema = RecordType.objects.get(pk=record_type_id).get_current_schema()
         path = cost_config.path
         multiple = self._is_multiple(schema, path)
-        numeric = schema.schema['definitions'][path[0]
-                                               ]['properties'][path[2]]['type'] == "number"
+        table_name = re.sub("\\s*", "", path[0])
+        table_name = f"driver{table_name}"
+        path[0] = table_name
+        numeric=False
+        if table_name in schema.schema['definitions']:
+            if path[2] in schema.schema['definitions'][table_name]['properties']:
+                numeric = schema.schema['definitions'][table_name]['properties'][path[2]]['type'] == "number"
         if numeric:
             counts_queryset = self.get_filtered_queryset(request)
             res['total_crashes'] = counts_queryset.count()
             res = counts_queryset.annotate(
-                val=RawSQL("((data->%s->%s)::numeric)", (path[0], path[2]))
+                val=RawSQL("((data->%s->%s)::numeric)", (table_name, path[2]))
             ).aggregate(total=Sum('val'))
             if res['total'] is None:
                 res['total'] = 0.0
@@ -807,7 +823,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
              LEFT JOIN grout_recordschema ON (grout_record.schema_id = grout_recordschema.uuid) \
              where r.size={size} and {where} group by r.id, r.geom, r.name".format(where=where, display_field=display_field, size=b.size)
         # the complete query is set to the mapfile
-
         # execute the small query
         cursor.execute(query_sql)
 
@@ -907,6 +922,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         fq = self.get_filtered_queryset(request).order_by().values('geom')
         sql, params = fq.query.sql_with_params()
         fq = cursor.mogrify(sql, params).decode('utf-8')
+
         sql, params = qset.query.sql_with_params()
         gq = cursor.mogrify(sql, params).decode('utf-8')
         where = reduce((lambda a, b: "%s AND %s" % (a, b)),
@@ -920,7 +936,14 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             where=where)
 
         # execute the small query
-        cursor.execute('SELECT "grout_boundarypolygon"."uuid", case when c.c is null then 0 else c.c end, "grout_boundarypolygon".data->\'{display_field}\' from "grout_boundarypolygon" left join (SELECT "grout_boundarypolygon"."uuid", count(*) as c, "grout_boundarypolygon".data->\'{display_field}\' as name FROM  "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\'  LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") WHERE {where} GROUP BY "grout_boundarypolygon"."uuid") c on c.uuid="grout_boundarypolygon"."uuid" WHERE "grout_boundarypolygon"."boundary_id" = \'{boundary_id}\''.format(
+        cursor.execute('SELECT "grout_boundarypolygon"."uuid", case when c.c is null then 0 else c.c end, \
+            "grout_boundarypolygon".data->\'{display_field}\' from "grout_boundarypolygon"\
+                left join (SELECT "grout_boundarypolygon"."uuid", count(*) as c, "grout_boundarypolygon".data->\'{display_field}\' as name \
+                    FROM  "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\' \
+                        LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") \
+                            LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") \
+                                WHERE {where} GROUP BY "grout_boundarypolygon"."uuid") c on c.uuid="grout_boundarypolygon"."uuid" \
+                                    WHERE "grout_boundarypolygon"."boundary_id" = \'{boundary_id}\''.format(
             where=where, display_field=b.get_display_field() or language, boundary_id=tables_boundary))
         sample = sorted([r for r in cursor.fetchall()], key=lambda a: a[1])
         chunk = (len(sample)-1)/5.0
@@ -1792,7 +1815,6 @@ class DriverBoundaryViewSet(BoundaryViewSet):
 
 
 def retrieve_geometry_names(request, lang):
-    print("retiurbejb geometrics")
     return JsonResponse({"result": "OK"})
 
 
@@ -1971,14 +1993,11 @@ class AttachmentViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-        print("this is a creat")
-        print(request.data)
-        uuid=request.data.get("uuid")
-        print("ok")
-        print(request.data.get("file"))
-        a=Attachment(uuid=request.data.get("uuid"), file=request.data.get("file"))
+        uuid = request.data.get("uuid")
+        a = Attachment(uuid=request.data.get("uuid"),
+                       file=request.data.get("file"))
         a.save()
-        return JsonResponse({"uuid":a.uuid},status=200)
+        return JsonResponse({"uuid": a.uuid}, status=200)
 
 
 class DictionaryViewSet(viewsets.ViewSet):
@@ -1986,8 +2005,16 @@ class DictionaryViewSet(viewsets.ViewSet):
     queryset = Dictionary.objects.all()
 
     def retrieve(self, request, pk=None):
-        queryset = Dictionary.objects.all()
-        dictionary = get_object_or_404(queryset, language_code=pk)
+        if pk is None:
+            pk = config.DEFAULT_LANGUAGE
+        if pk is None:
+            pk = "en"
+        logger.warn("dictionary")
+        dics = Dictionary.objects.filter(language_code=pk)
+        if len(dics):
+            dictionary = dics.first()
+        else:
+            dictionary = Dictionary.objects.all().first()
         serializer = DictionarySerializer(dictionary)
         return Response(serializer.data)
 
@@ -1995,3 +2022,55 @@ class DictionaryViewSet(viewsets.ViewSet):
         queryset = Dictionary.objects.all()
         serializer = DictionarySerializer(queryset, many=True)
         return Response(serializer.data)
+
+
+def escwa_unique_id(request, code):
+    # an  unique id for escwa
+    fieldname = request.GET.get("field_name")
+    tablename = request.GET.get("table_name")
+    use_boundary = request.GET.get("boundary", False)
+    r = Record.objects.get(pk=code)
+    value = None
+    if tablename in r.data:
+        if fieldname in r.data[tablename]:
+            value = r.data[tablename][fieldname]
+        else:
+            countries = Boundary.objects.order_by('order').first()
+            if countries:
+                country = countries.polygons.filter(
+                    geom__contains=r.geom).first()
+                if country:
+                    records = list(filter(lambda x: fieldname in x.data[tablename], Record.objects.filter(
+                        geom__within=country.geom).order_by(RawSQL(f"data->'{tablename}'->'{fieldname}'",[]))))
+                    if use_boundary:
+                        boundaries="__".join(map(lambda x: str(re.sub("\s","_", x.data[x.boundary.display_field])), BoundaryPolygon.objects.filter(geom__contains=r.geom, boundary__display_field__isnull=False).order_by('boundary__order')))
+                        if len(records)>0:
+                            v=re.search("\\d+$", records[len(records)-1].data[tablename][fieldname])
+                            if v is not None:
+                                num=str(int('0'+v[0])+1)
+                            else:
+                                num="1"
+                            value=f"{boundaries}__{num.zfill(9)}"
+                        else:
+                            value=f"{boundaries}__000000001"
+                        r.data[tablename][fieldname]=value
+                        r.save()
+                    else:
+                        i = 0
+                        if len(records) > 0:
+                            v=re.search("\\d+$", records[len(records)-1].data[tablename][fieldname])
+                            if v is not None:
+                                num=str(int('0'+v[0])+1)
+                            else:
+                                num="1"
+                            r.data[tablename][fieldname] = num
+                        else:
+                            if country.data['en'] == 'Lebanon':
+                                r.data[tablename][fieldname] = "961000001"
+                            if country.data['en'] == 'Tunisia':
+                                r.data[tablename][fieldname] = "216000001"
+                            if country.data['en'] == 'Qatar':
+                                r.data[tablename][fieldname] = "974000001"
+                        value = r.data[tablename][fieldname]
+                        r.save()
+    return JsonResponse({"result": value})

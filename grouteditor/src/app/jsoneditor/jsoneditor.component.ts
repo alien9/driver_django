@@ -42,7 +42,10 @@ export class JSONEditorComponent implements OnInit {
     { id: 'reference', name: 'reference' },
     { id: 'number', name: 'number' },
     { id: 'image', name: 'image' },
-    { id: 'file', name: 'file' }
+    { id: 'file', name: 'file' },
+    { id: 'unique', name: 'unique' },
+    { id: 'boundary', name: 'boundary' },
+    { id: 'illustration', name: 'illustration' },
   ]
   formats = [
     { id: "text", name: "Single line text" },
@@ -107,26 +110,30 @@ export class JSONEditorComponent implements OnInit {
   }
   renamekey(o, oldkey, event): void {
     var h = {};
+    const v=event.srcElement.value.replace(/^\s*|\s*$/g,'')
+    if(v==oldkey) return
     for (var k in o.properties) {
-      if (isEqual(event.srcElement.value, k)) {
+      if (isEqual(v, k)) {
         this.setActive(null);
+        alert(`Duplicate ${k} not allowed!` )
+        this.dict = JSON.parse(JSON.stringify(this.dict))
         return;
       }
       if (k == oldkey) {
-        h[event.srcElement.value] = o.properties[k];
+        h[v] = o.properties[k];
       } else {
         h[k] = o.properties[k];
       }
     }
     Object.keys(h).forEach((k) => {
       if (h[k].condition && (h[k].condition == oldkey)) {
-        h[k].condition = event.srcElement.value
+        h[k].condition = v
       }
     })
 
     if (o.required && (o.required.indexOf(oldkey) >= 0)) {
       o.required.splice(o.required.indexOf(oldkey), 1);
-      o.required.push(event.srcElement.value);
+      o.required.push(v);
     }
 
     o.properties = h;
@@ -243,12 +250,8 @@ export class JSONEditorComponent implements OnInit {
       if (i == 0 || f.items.enum[i - 1] != "")
         f.items.enum.push("");
     }
-    console.log(elem, fld)
     this.resetIllustrations(elem, fld)
     this.save()
-    //this.zone.runOutsideAngular(() => setTimeout(() => {
-    //   document.getElementById(`${elem}_${fld}_${i}`).focus();
-    //}, 200));
   }
   removeOption(f, o): void {
     if (f.enum)
@@ -258,18 +261,18 @@ export class JSONEditorComponent implements OnInit {
     this.save()
   }
   setPropertyValue(a, i, event): void {
-    a[i] = event.srcElement.value;
+    a[i] = event.srcElement.value.replace(/^\s*|\s*$/g, '');
     this.dict = JSON.parse(JSON.stringify(this.dict))
     this.save()
   }
   setEnumValue(t, f, i, event): void {
-    this.dict.definitions[t].properties[f].enum[i] = event.srcElement.value
+    this.dict.definitions[t].properties[f].enum[i] = event.srcElement.value.replace(/^\s*|\s*$/g,'')
     this.resetIllustrations(t, f)
     this.dict = JSON.parse(JSON.stringify(this.dict))
     this.save()
   }
   setPropertyByKey(f, t, p, event) {
-    this.dict.definitions[t].properties[f][p] = event.srcElement.value
+    this.dict.definitions[t].properties[f][p] = event.srcElement.value.replace(/^\s*|\s*$/g,'')
     this.dict = JSON.parse(JSON.stringify(this.dict))
     this.save()
   }
@@ -282,7 +285,6 @@ export class JSONEditorComponent implements OnInit {
     this.refresh()
   }
   setIllustrationTable(t, event) {
-    console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
     const ilu = event.srcElement.value
     if (ilu != '') {
       this.dict.definitions[t].illustration = ilu
@@ -445,6 +447,13 @@ export class JSONEditorComponent implements OnInit {
       delete this.dict.definitions[t].properties[o].illustrations
     }
   }
+  isUntitled(t, o) {
+    return this.dict.definitions[t].properties[o].isUntitled
+  }
+  setUntitled(o,t,event){
+    this.dict.definitions[t].properties[o].isUntitled = event.srcElement.checked
+    this.save();
+  }
   isIllustrated(t, o) {
     return this.dict.definitions[t].properties[o].isIllustrated
   }
@@ -495,7 +504,7 @@ export class JSONEditorComponent implements OnInit {
     this.save()
   }
   fixRequired() {
-    if(!this.dict || !this.dict.definitions) return
+    if (!this.dict || !this.dict.definitions) return
     Object.keys(this.dict.definitions).forEach((k) => {
       if (this.dict.definitions[k].required) {
         let i = 0
@@ -515,7 +524,6 @@ export class JSONEditorComponent implements OnInit {
   addDenomination(t, e) {
     if (!this.dict.definitions[t].denominations) this.dict.definitions[t].denominations = []
     if (e.srcElement.value && (e.srcElement.value.length)) {
-      console.log(this.dict.definitions[t].denominations)
       if (this.dict.definitions[t].denominations.indexOf(e.srcElement.value) < 0)
         this.dict.definitions[t].denominations.push(e.srcElement.value)
     }
@@ -578,7 +586,6 @@ export class JSONEditorComponent implements OnInit {
     })
     let i = 0
     Object.keys(definition.properties).sort((a, b) => { return h[a]['propertyOrder'] - h[b]['propertyOrder'] }).forEach((k) => {
-      console.log(k)
       h[k].propertyOrder = i
       i++
     })
@@ -589,17 +596,29 @@ export class JSONEditorComponent implements OnInit {
     let h = {};
     let current_position = definition.properties[fieldname].propertyOrder - 1
     const intended = window.prompt("Index:")
-    Object.entries(definition.properties).forEach(([key, value]) => {
-      if (key == fieldname) {
-        value["propertyOrder"] = parseInt(intended)
+    let anterior=Object.entries(definition.properties).filter(([k,v])=>k==fieldname).map((v)=>v[1]['propertyOrder']).pop()
+    Object.entries(definition.properties).sort((a, b) => a['propertyOrder'] - b['propertyOrder']).forEach(([key, value]) => {
+      let v = value
+      if (!isNaN(v["propertyOrder"])) {
+        if (key == fieldname) {
+          v["propertyOrder"] = parseInt(intended) - 1
+        } else {
+          if (v["propertyOrder"] > anterior) {
+            v["propertyOrder"]--
+          }
+          if (v["propertyOrder"] >= parseInt(intended)-1){
+            v["propertyOrder"]++  
+          }
+        }
       }
-      h[key] = value
+      h[key] = v
     })
     let i = 0
     Object.keys(definition.properties).sort((a, b) => { return h[a]['propertyOrder'] - h[b]['propertyOrder'] }).forEach((k) => {
-      console.log(k)
-      h[k].propertyOrder = i
-      i++
+      if (!isNaN(h[k].propertyOrder)) {
+        h[k].propertyOrder = i
+        i++
+      }
     })
     definition.properties = h;
     this.save()
@@ -619,7 +638,6 @@ export class JSONEditorComponent implements OnInit {
     })
     let i = 0
     Object.keys(definition.properties).sort((a, b) => { return h[a]['propertyOrder'] - h[b]['propertyOrder'] }).forEach((k) => {
-      console.log(k)
       h[k].propertyOrder = i
       i++
     })
@@ -641,7 +659,6 @@ export class JSONEditorComponent implements OnInit {
     })
     let i = 0
     Object.keys(definition.properties).sort((a, b) => { return h[a]['propertyOrder'] - h[b]['propertyOrder'] }).forEach((k) => {
-      console.log(k)
       h[k].propertyOrder = i
       i++
     })
@@ -657,13 +674,14 @@ export class JSONEditorComponent implements OnInit {
       } else {
         if (value["propertyOrder"] >= current_position) {
           value["propertyOrder"]--
+        } else {
+
         }
       }
       h[key] = value
     })
     let i = 0
     Object.keys(definition.properties).sort((a, b) => { return h[a]['propertyOrder'] - h[b]['propertyOrder'] }).forEach((k) => {
-      console.log(k)
       h[k].propertyOrder = i
       i++
     })

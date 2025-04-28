@@ -1,7 +1,7 @@
 <div class="counter">
-    <div>
-        {{filter['occurred_min']|date:'dd/MM/yyyy':'America/Sao_Paulo':'pt-BR'}} -
-        {{filter['occurred_max']|date:'dd/MM/yyyy':'America/Sao_Paulo':'pt-BR'}}
+    <div *ngIf="filter['occurred_max'] && filter['occurred_min']">
+        {{filter['occurred_min']|localizedDate:'dd/MM/yyyy':language}} -
+        {{filter['occurred_max']|localizedDate:'dd/MM/yyyy':language}}
         <br>
     </div>
     <div class="filter">

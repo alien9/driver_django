@@ -101,6 +101,10 @@
                         <label>Illustrated <input type="checkbox" [checked]="isIllustrated(item.key, pair.key)"
                                 (focus)="setActive(null)" (change)="setIllustrated(pair.key, item.key, $event)"></label>
                     </div>
+                    <div>
+                        <label>Untitled <input type="checkbox" [checked]="isUntitled(item.key, pair.key)"
+                                (focus)="setActive(null)" (change)="setUntitled(pair.key, item.key, $event)"></label>
+                    </div>
 
                     <div>Type:{{pair.value.options}}
                         <select [compareWith]="compareByOptionId" (focus)="setActive(null)"
@@ -221,7 +225,7 @@
                             <option value="==" [selected]="pair.value.conditionComparison=='=='">==</option>
                         </select>
 
-                        <select *ngIf="pair.value.condition"
+                        <select *ngIf="pair.value.condition && dict.definitions[item.key].properties[pair.value.condition]"
                             (change)="setPropertyValue(pair.value, 'conditionValue', $event)">
                             <option></option>
                             <option *ngFor="let vlw of dict.definitions[item.key].properties[pair.value.condition].enum"

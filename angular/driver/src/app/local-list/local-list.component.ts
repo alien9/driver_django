@@ -13,7 +13,6 @@ export class LocalListComponent implements OnInit {
   ngOnInit(): void {
   }
   edit(record, i) {
-    console.log(record)
     this.editLocalRecord.emit({"data":record, "index":i})
   }
 

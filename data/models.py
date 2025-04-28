@@ -1,4 +1,5 @@
 import uuid
+import re
 import hashlib
 import os
 import json
@@ -163,12 +164,6 @@ def get_image_path(instance, filename):
     return os.path.join('photos', str(instance.id), filename)
 
 
-class Picture(models.Model):
-    image = models.ImageField(upload_to=get_image_path, blank=True, null=True)
-    record = models.ForeignKey(
-        DriverRecord, null=True, on_delete=models.SET_NULL)
-
-
 class RecordForm(forms.ModelForm):
     class Meta:
         model = DriverRecord
@@ -305,11 +300,14 @@ class RecordCostConfig(GroutModel):
     enum_costs = HStoreField()
 
 
-def add_term(l, t):
+def add_term(l, t, ot):
+    t = re.sub("\n", "", t)
+    print("will try to add ", t)
     try:
         a = l.index(t)
     except ValueError:
         l.append(t)
+        ot[t] = len(ot.keys())
     return l
 
 
@@ -324,52 +322,62 @@ class Dictionary(models.Model):
     language_code = models.TextField(max_length=8)
     name = models.TextField(max_length=100)
     content = HStoreField(null=True, blank=True)
-    about = CKEditor5Field('Text', config_name='extends')
-    header = CKEditor5Field('Header', config_name='extends')
-    footer = CKEditor5Field('Footer', config_name='extends')
+    ordered_keys = JSONField(null=True, blank=True, default=dict)
+    about = models.TextField('Text', null=True, blank=True)
+    header = models.TextField('Header', null=True, blank=True)
+    footer = models.TextField('Footer', null=True, blank=True)
+    logo = models.TextField('Logo', null=True, blank=True)
 
     def save(self, *args, **kwargs):
+        if not self.pk:
+            self.update_terms()
+        super(Dictionary, self).save(*args, **kwargs)
+
+    def update_terms(self):
         terms = []
+        ordered_terms = dict()
         rt = RecordType.objects.all()
         for b in Boundary.objects.all():
-            add_term(terms, b.label)
+            add_term(terms, b.label, ordered_terms)
         for r in rt:
-            add_term(terms, r.label)
-            add_term(terms, r.plural_label)
+            add_term(terms, r.label, ordered_terms)
+            add_term(terms, r.plural_label, ordered_terms)
         for sd in Dictionary.objects.all():
-            add_term(terms, sd.name)
-        rs = RecordSchema.objects.all()
-        for r in rs:
-            if 'definitions' in r.schema:
-                for k, value in r.schema['definitions'].items():
-                    add_term(terms, value['title'])
-                    add_term(terms, value['plural_title'])
-                    add_term(terms, value['description'])
-                    for u, t in value['properties'].items():
-                        add_term(terms, u)
-                        if 'enum' in t:
-                            for e in t['enum']:
-                                add_term(terms, e)
-                        if 'items' in t:
-                            if 'enum' in t['items']:
-                                for e in t['items']['enum']:
-                                    add_term(terms, e)
-            if 'properties' in r.schema:
-                for k, value in r.schema['definitions'].items():
-                    add_term(terms, value['title'])
-                    add_term(terms, value['plural_title'])
-            for t in terms:
-                if t not in self.content:
-                    self.content[t] = t
+            add_term(terms, sd.name, ordered_terms)
+        r = RecordSchema.objects.filter(
+            record_type__label=config.PRIMARY_LABEL).order_by('-version').first()
+
+        if 'definitions' in r.schema:
+            for k, value in r.schema['definitions'].items():
+                add_term(terms, value['title'], ordered_terms)
+                add_term(terms, value['plural_title'], ordered_terms)
+                add_term(terms, value['description'], ordered_terms)
+                for u, t in value['properties'].items():
+                    add_term(terms, u, ordered_terms)
+                    if 'enum' in t:
+                        for e in t['enum']:
+                            add_term(terms, e, ordered_terms)
+                    if 'items' in t:
+                        if 'enum' in t['items']:
+                            for e in t['items']['enum']:
+                                add_term(terms, e, ordered_terms)
+        if 'properties' in r.schema:
+            for k, value in r.schema['definitions'].items():
+                add_term(terms, value['title'], ordered_terms)
+                add_term(terms, value['plural_title'], ordered_terms)
+        for t in terms:
+            q = re.sub("\n", "", t)
+            if q not in self.content:
+                self.content[q] = q
         for b in BlackSpotSet.objects.all():
             if not b.title in self.content:
                 self.content[b.title] = b.title
-        h = {}
+        # print(self.content)
+        h = dict()
         for k in sorted(self.content):
             h[k] = self.content[k]
         self.content = h
-        super(Dictionary, self).save(*args, **kwargs)
-
+        self.ordered_keys = ordered_terms
 
 class Irap(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

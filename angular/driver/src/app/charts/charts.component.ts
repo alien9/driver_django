@@ -1,7 +1,8 @@
-import { Component, OnInit, Input, OnChanges, ChangeDetectorRef, NgZone, SimpleChanges } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, ChangeDetectorRef, NgZone, SimpleChanges, ViewChild, ElementRef } from '@angular/core';
 import { RecordService } from '../record.service'
 import { first } from 'rxjs/operators';
 import * as d3 from 'd3'
+import { Legend, Swatch } from 'd3-color-legend'
 import { arrowLeftRight } from 'ngx-bootstrap-icons';
 import { TranslateService } from '@ngx-translate/core';
 import { NgxSpinnerService } from "ngx-spinner";
@@ -17,6 +18,8 @@ export class ChartsComponent implements OnInit, OnChanges {
   @Input() recordSchema: object
   @Input() reportFilters: object[]
   @Input() boundaries: object[]
+  @ViewChild('swatchContainer') swatchContainer: ElementRef;
+
   public fontFamily = document.body.style.fontFamily
   active = 1
   toddow: any
@@ -186,13 +189,13 @@ export class ChartsComponent implements OnInit, OnChanges {
                   })
                 }
               });
-              data["col_labels"]=data["col_labels"].filter((q)=>{
-                return obliterate[q.key]>0
+              data["col_labels"] = data["col_labels"].filter((q) => {
+                return obliterate[q.key] > 0
               })
-              while(data["row_labels"].length>0 && !data["tables"][0].data[data["row_labels"][0].key]){
+              while (data["row_labels"].length > 0 && !data["tables"][0].data[data["row_labels"][0].key]) {
                 data["row_labels"].shift()
               }
-              while(data["row_labels"].length>0 && !data["tables"][0].data[data["row_labels"][data["row_labels"].length-1].key]){
+              while (data["row_labels"].length > 0 && !data["tables"][0].data[data["row_labels"][data["row_labels"].length - 1].key]) {
                 data["row_labels"].pop()
               }
               let hue = 0
@@ -320,9 +323,9 @@ export class ChartsComponent implements OnInit, OnChanges {
         }
         break
       case 3: //pieChart        
-        const p_margin_bar = { top: 10, right: 30, bottom: 20, left: 50 },
-          p_width_bar = 900,
-          p_height_bar = p_width_bar
+        const p_margin_bar = { top: 10, right: 10, bottom: 20, left: 10 },
+          p_width_bar = 1200,
+          p_height_bar = 900
 
         let parameters_pizza = this.filter
         if (!this.barChart['field']) {
@@ -438,8 +441,8 @@ export class ChartsComponent implements OnInit, OnChanges {
         break;
       case 4: // treemap
         const t_margin_bar = { top: 0, right: 50, bottom: 0, left: 50 },
-          t_width_bar = 600,
-          t_height_bar = t_width_bar
+          t_width_bar = 1100,
+          t_height_bar = 600
         let parameters_treemap = this.filter
         if (!this.barChart['field']) {
           return
@@ -488,7 +491,7 @@ export class ChartsComponent implements OnInit, OnChanges {
               )
             } else {
               du = Object.entries(data['tables'][0]['data'][0]).filter(k => {
-                return k[1] > 0
+                return k[1] as number > 0
               }).map(k => {
                 return {
                   'name': ts.instant(k[0]),
@@ -502,7 +505,17 @@ export class ChartsComponent implements OnInit, OnChanges {
             // prepare a color scale
             const color = d3.scaleOrdinal()
               .domain(["boss1", "boss2", "boss3"])
-              .range(["#402D54", "#D18975", "#8FD175"])
+              .range(["#FDFBED",
+                "#f6edb1",
+                "#f7da22",
+                "#ecbe1d",
+                "#e77124",
+                "#d54927",
+                "#cf3a27",
+                "#a33936",
+                "#7f182a",
+                "#68101a",
+              ])
 
             // And a opacity scale
             const opacity = d3.scaleLinear()
@@ -536,8 +549,10 @@ export class ChartsComponent implements OnInit, OnChanges {
               .attr('y', function (d) { return d['y0']; })
               .attr('width', function (d) { return d['x1'] - d['x0']; })
               .attr('height', function (d) { return d['y1'] - d['y0']; })
+              .attr("fill", d => `${color(d.data['name'])}`)
               .style("stroke", "black")
-              .style("fill", "#69b3a2");
+              ;
+
 
             // and to add the text labels
             svg
@@ -562,6 +577,40 @@ export class ChartsComponent implements OnInit, OnChanges {
                 .text(function (d) { return d.data['name'] })
                 .attr("font-size", "19px")
                 .attr("fill", d => `${color(d.data['name'])}`)
+            }
+            const swg = d3.select(this.swatchContainer.nativeElement);
+            swg.attr("width", 1000)
+            const swatchWidth = 20
+            const swatchHeight = 20
+            //const textWidth = 30
+            swg.selectAll('*').remove();
+
+            const keys = root.descendants().map((e) => e.data['name']).filter((e) => e != 'all');
+            if (keys.length) {
+              const textWidth = Math.max(...keys.map((w: string) => w.length)) * 10
+              swg.attr('width', keys.length * (swatchWidth + textWidth))
+                .attr('height', swatchHeight);
+
+              swg.selectAll('rect')
+                .data(keys)
+                .enter()
+                .append('rect')
+                .attr('x', (d, i) => 20 + i * (swatchWidth + textWidth))
+                .attr('y', 0)
+                .attr('width', swatchWidth)
+                .attr('height', swatchHeight)
+                .style('fill', d => `${color(d)}`)
+
+              swg.selectAll('mydots')
+                .data(keys)
+                .enter()
+                .append('text')
+                .attr("x", (d, i) => 22 + swatchWidth + i * (swatchWidth + textWidth))
+                .attr('y', swatchHeight / 2)
+                .style('fill', (d) => "#111111")
+                .text(d => d)
+                .attr("text-anchor", "left")
+                .style("alignment-baseline", "middle")
             }
             this.spinner.hide()
           }, error: err => {

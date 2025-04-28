@@ -131,13 +131,13 @@ INSTALLED_APPS = (
     'django_json_widget',
     'django_verbatim',
     'mozilla_django_oidc',  # Load after auth
-    #'django_admin_hstore_widget',   
-    'django_hstore_widget',
+    'django_admin_hstore_widget',   
 
     'constance',
     'proxy',
     'ordered_model',
     'django_ckeditor_5',
+    'ckeditor',
     'photologue',
     'sortedm2m',
     'django.contrib.sites',
@@ -158,7 +158,6 @@ MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
 )
-
 if DEBUG:
     # Perform set up for Django Debug Toolbar
     INSTALLED_APPS += (
@@ -445,8 +444,10 @@ CELERY_ROUTES = {
     'black_spots.tasks.load_blackspot_geoms.load_blackspot_geoms': {'queue': 'taskworker'},
     'black_spots.tasks.generate_training_input.get_training_noprecip': {'queue': 'taskworker'},
     'black_spots.tasks.generate_training_input.get_training_precip': {'queue': 'taskworker'},
+    'black_spots.tasks.generate_roadmap.generate_roadmap': {'queue': 'taskworker'},
     'data.tasks.remove_duplicates.remove_duplicates': {'queue': 'taskworker'},
     'data.tasks.export_csv.export_csv': {'queue': 'taskworker'},
+    'data.tasks.update_dictionaries.update_dictionaries': {'queue': 'taskworker'},
     'data.tasks.fetch_record_csv.export_records': {'queue': 'taskworker'},
     'data.tasks.geocode_records.geocode_records': {'queue': 'taskworker'},
     'data.tasks.geocode_records.generate_blackspots': {'queue': 'taskworker'},
@@ -477,13 +478,13 @@ HOST_URL = os.environ.get('HOST_URL', '')
 
 # TODO: conditionally set for GLUU in production
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get(
-    'OAUTH_CLIENT_ID', '418431456233-i69dc0paqp9ujj40gha8ru5a1tflbjl2.apps.googleusercontent.com')
+    'OAUTH_CLIENT_ID', None)
 GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get(
-    'OAUTH_CLIENT_SECRET', 'E_8AybgrjZ5LdegXBENy0u83')
+    'OAUTH_CLIENT_SECRET', None)
 OIDC_RP_CLIENT_ID = os.environ.get(
-    'OAUTH_CLIENT_ID', '418431456233-i69dc0paqp9ujj40gha8ru5a1tflbjl2.apps.googleusercontent.com')
+    'OAUTH_CLIENT_ID', None)
 OIDC_RP_CLIENT_SECRET = os.environ.get(
-    'OAUTH_CLIENT_SECRET', 'fqN1UoPadvcoTLSSH98WzIRF')
+    'OAUTH_CLIENT_SECRET', None)
 
 # Forecast.io settings
 FORECAST_IO_API_KEY = os.environ.get('FORECAST_IO_API_KEY', '')
@@ -628,6 +629,8 @@ CONSTANCE_CONFIG = {
     'IDLE_TIMEOUT': ((os.getenv('IDLE_TIMEOUT', '')), _("Idle Timeout")),
     'DEFAULT_LANGUAGE': ((os.getenv('DEFAULT_LANGUAGE', '')), _("Default Language")),
     'APP_NAME': ((os.getenv('APP_NAME', 'DRIVER')), _("App Name")),
+    'SHOW_LIGHT_CONDITIONS': ((os.getenv('SHOW_LIGHT_CONDITIONS', True)), _("Show lighting conditions")),
+    'SHOW_RECORD_CREATOR': ((False), _("Show Record creator")),
 }
 CAPTCHA_OUTPUT_FORMAT = u'%(image)s %(hidden_field)s %(text_field)s'
 
@@ -679,6 +682,7 @@ customColorPalette = [
 
 # CKEDITOR_5_CUSTOM_CSS = 'path_to.css'  # optional
 # CKEDITOR_5_FILE_STORAGE = "path_to_storage.CustomStorage"  # optional
+CKEDITOR_UPLOAD_PATH = "uploads/"
 CKEDITOR_5_CONFIGS = {
     'default': {
         'toolbar': ['heading', '|', 'bold', 'italic', 'link',

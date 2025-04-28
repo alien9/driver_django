@@ -16,6 +16,7 @@ from data.models import DriverRecord, RecordAuditLogEntry, RecordDuplicate, Reco
 
 from django.conf import settings
 from constance import config
+import pytz
 
 class BaseDriverRecordSerializer(serializers.RecordSerializer):
     class Meta:
@@ -25,7 +26,8 @@ class BaseDriverRecordSerializer(serializers.RecordSerializer):
 
     def validate_occurred_from(self, value):
         """ Require that record occurred_from be in the past. """
-        if value > datetime.datetime.now(pytz.timezone(settings.TIME_ZONE)):
+        value.replace(tzinfo=pytz.timezone(config.TIMEZONE))
+        if value > datetime.datetime.now(pytz.timezone(config.TIMEZONE)):
             raise ValidationError('Occurred date must not be in the future.')
         return value
 

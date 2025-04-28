@@ -20,7 +20,7 @@ from django.db.models.expressions import RawSQL
 from grout import models
 from grout.models import Boundary, BoundaryPolygon, Record, RecordType
 from grout.exceptions import QueryParameterException, DATETIME_FORMAT_ERROR
-
+from django.contrib.gis.db.models.functions import Centroid
 
 # Map custom fields to CharField so that django-filter knows how to handle them.
 FILTER_OVERRIDES = {
@@ -85,7 +85,7 @@ class RecordFilter(GeoFilterSet):
         if not rrg.match(poly_uuid):
             return queryset
         try:
-            return queryset.extra(where=["st_contains((SELECT geom FROM grout_boundarypolygon WHERE uuid='{q}'),geom)='t'".format(q=poly_uuid)])
+            return queryset.extra(where=["st_contains((SELECT geom as g FROM grout_boundarypolygon WHERE uuid='{q}'),geom)='t'".format(q=poly_uuid)])
         except ValueError as e:
             raise ParseError(e)
         except BoundaryPolygon.DoesNotExist as e:
@@ -204,9 +204,9 @@ class BoundaryPolygonFilter(GeoFilterSet):
             from django.db import connection
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "select st_ashexewkb(st_buffer(gb.geom, 0.001)) from grout_boundarypolygon gb where gb.uuid = %s", [value])
+                    "select st_ashexewkb(ST_SimplifyVW(gb.geom, st_area(gb.geom)/10000)) from grout_boundarypolygon gb where gb.uuid = %s", [value])
                 row = cursor.fetchone()
-            return queryset.filter(geom__within=row[0])
+            return queryset.annotate(c=Centroid("geom")).filter(c__within=row[0])
         except ValueError as e:
             raise ParseError(e)
         except BoundaryPolygon.DoesNotExist as e:

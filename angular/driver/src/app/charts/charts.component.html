@@ -67,10 +67,12 @@
                         *ngFor="let field of reportFilters">
                         {{field['title']|translate}}</option>
                 </select>
+                
             </h5>
 
             <div id=treemap class="m-3"></div>
             <div id="treemap_legend" class="mr-3 ml-3"></div>
+            <svg #swatchContainer></svg>
         </ng-template>
     </li>
 </ul>

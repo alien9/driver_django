@@ -77,7 +77,8 @@ import { LocalListComponent } from './local-list/local-list.component';
 import { ConditionPipe } from './condition.pipe';
 import { SplitlinesPipe } from './splitlines.pipe';
 import { AccordionModule } from 'ngx-bootstrap/accordion';
-import { ReferenceNamePipe } from './reference-name.pipe'
+import { ReferenceNamePipe } from './reference-name.pipe';
+import { UnbreakPipe } from './unbreak.pipe'
 
 const socialConfigFactory = (restService: AuthService) => {
   return restService.getGoogleClientId().pipe(map(config => {
@@ -147,6 +148,9 @@ switch (lang) {
   case 'ar':
     providers.push({ provide: LOCALE_ID, useValue: 'ar' })
     break
+  case 'ar-lb':
+    providers.push({ provide: LOCALE_ID, useValue: 'ar-b' })
+    break
   case 'fr':
     providers.push({ provide: LOCALE_ID, useValue: 'fr' })
     break
@@ -200,7 +204,8 @@ switch (lang) {
     LocalListComponent,
     ConditionPipe,
     SplitlinesPipe,
-    ReferenceNamePipe
+    ReferenceNamePipe,
+    UnbreakPipe
   ],
   imports: [
     BrowserModule,
