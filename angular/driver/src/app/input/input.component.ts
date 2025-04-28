@@ -17,10 +17,8 @@ import { Observable } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, tap, switchMap } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
 import "leaflet.vectorgrid";
-import { DYNAMIC_TYPE } from '@angular/compiler';
 import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
-import { $0 } from 'node_modules_backup/@angular/compiler/src/chars';
 
 @Component({
   selector: 'app-input',
