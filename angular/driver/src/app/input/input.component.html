@@ -105,7 +105,7 @@
                                         <button *ngIf=editing type="button" class="btn btn-light top-float-right"
                                             (click)="removeElement(k.key, i)"> -
                                         </button>
-                                        <h5 class="card-title" (click)="setAccordionOpen(null)">{{k.value.title|translate}}: {{i+1}} <!--{{record['data'][k.key][i]|referenceName:k.key:schema}}--></h5>
+                                        <h5 class="card-title" (click)="setAccordionOpen(null)">{{k.value.title|translate}}: {{i+1}} {{record['data'][k.key][i]|referenceName:k.key:schema}}</h5>
                                     </div>
                                     <ul class="list-group list-group-flush">
                                         <li class="list-group-item"
