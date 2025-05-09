@@ -15,6 +15,14 @@
                 <ul class="list-group list-group-flush" *ngIf="!k.value.multiple">
                     <span *ngIf="k.value.details">
                         <li class="list-group-item">
+                            <span>{{'Location'|translate}}</span>: <span
+                                *ngIf="!editing">{{record["location_text"]}}</span>
+                            <input class="form-control" *ngIf="editing" [(ngModel)]="record['location_text']"
+                                [ngbTypeahead]="geocode" [inputFormatter]="geoInputFormatter"
+                                (selectItem)="selectGeocodedOption($event)" [resultFormatter]="geoResultFormatter">
+                            <small *ngIf="geocoding" class="form-text text-muted">{{'searching'|translate}}...</small>
+                        </li>
+                        <li class="list-group-item">
                             <span>{{'Latitude'|translate}}</span>: <span
                                 *ngIf="!editing">{{record['geom'].coordinates[1]}}</span>
                             <input class="form-control" *ngIf="editing" [(ngModel)]="record['geom'].coordinates[1]">
@@ -23,14 +31,6 @@
                             <span>{{'Longitude'|translate}}</span>: <span
                                 *ngIf="!editing">{{record['geom'].coordinates[0]}}</span>
                             <input class="form-control" *ngIf="editing" [(ngModel)]="record['geom'].coordinates[0]">
-                        </li>
-                        <li class="list-group-item">
-                            <span>{{'Location'|translate}}</span>: <span
-                                *ngIf="!editing">{{record["location_text"]}}</span>
-                            <input class="form-control" *ngIf="editing" [(ngModel)]="record['location_text']"
-                                [ngbTypeahead]="geocode" [inputFormatter]="geoInputFormatter"
-                                (selectItem)="selectGeocodedOption($event)" [resultFormatter]="geoResultFormatter">
-                            <small *ngIf="geocoding" class="form-text text-muted">{{'searching'|translate}}...</small>
                         </li>
                         <li class="list-group-item">
                             <input class="form-control" type=hidden placeholder="yyyy-mm-dd" name="occurred_date"
@@ -85,7 +85,8 @@
                                 [prop]="f" (setFieldCheckFieldChanged)="setCheckField($event)" [data]="record['data']"
                                 [locale]="locale" [canvasmode]="canvasmode"
                                 (setDateFieldValueChanged)="setInputDateField($event)"
-                                (setFileChanged)="loadFieldFile($event)" (fieldChanged)="setFieldValue($event)"
+                                (setFileChanged)="loadFieldFile($event)" 
+                                (fieldChanged)="setFieldValue($event)"
                                 [autocomplete_terms]="autocomplete_terms"
                                 (startDrawing)="startDrawingCanvas($event, canvasmode)"
                                 (turnOnAutoComplete)="setAutocompleteTerms($event)"

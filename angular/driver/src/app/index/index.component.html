@@ -40,7 +40,7 @@
     <app-input [config]=config *ngIf=record [locale]="locale" [roadmap_uuid]="roadmap_uuid" [record]=record
         [boundaries]="boundaries" [recordSchema]=recordSchema [editing]=editing (mapillaryId)="setMapillary($event)"
         [modal]=modal (reloadRecords)="reloadRecords($event)" (filterExpand)=expandFilter($event)
-        (storeRecord)="setRecords($event)" (refreshLocalRecords)="localRefresh($event)">
+        (storeRecord)="setRecords($event)" (refreshLocalRecords)="localRefresh($event)" (stopEditRecord)="endEditRecord($event)">
     </app-input>
 </ng-template>
 

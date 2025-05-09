@@ -116,7 +116,7 @@ def generate_roads_index(roadmap_id):
                         loc=rua.geom.coords[len(rua.geom.coords)//2]
                         streetname=rua.data[display_field]
                         hb=False
-                        for bo in Boundary.objects.all():
+                        for bo in Boundary.objects.all().order_by('-order'):
                             p=rua.geom.coords[len(rua.geom.coords)//2]
                             bp=bo.polygons.filter(geom__contains=Point(p[0], p[1], rua.geom.srid))
                             if len(bp):

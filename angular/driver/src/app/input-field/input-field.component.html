@@ -30,6 +30,11 @@
             *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format=='textarea'"></textarea>
 
         <img crossorigin="anonymous" [src]="getValue()" class="pic" *ngIf="prop.value.imageSource">
+
+        <span *ngIf="prop.value['fieldType']=='file'">
+            <a [href]="getValue()" target="_new">{{getValue()}}</a>
+        </span>
+
     </span>
     <span *ngIf="editing">
         <span *ngIf="prop.value.fieldType=='image' &&  ['canvas','map'].indexOf(prop.value.imageSource)>-1">
@@ -72,10 +77,10 @@
 
         <span *ngIf="prop.value['fieldType']=='file'">
             <input class="form-control" type="file"
-                (change)="uploadAttachment($event, data[tableName],fieldName, index)" capture="environment">
+                (change)="uploadAttachment($event, tableName,fieldName, index)" capture="environment">
             <input type="text" [id]="getImageFieldId()" [value]="getValue()"
                 style="display:block; width:1px;height:1px; border-style: none;" (change)="setFieldValue($event)">
-
+            <a [href]="getValue()" target="_new">{{getValue()}}</a>
         </span>
 
         <div *ngIf="prop.value.displayType=='checkbox' || prop.value.format=='checkbox'">

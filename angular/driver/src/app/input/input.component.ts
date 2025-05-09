@@ -37,6 +37,7 @@ export class InputComponent implements OnInit {
   @Output() reloadRecords = new EventEmitter<object>()
   @Output() filterExpand = new EventEmitter<Date>()
   @Output() storeRecord = new EventEmitter<object>()
+  @Output() stopEditRecord = new EventEmitter<boolean>()
   @Output() refreshLocalRecords = new EventEmitter<boolean>()
   @Input() boundaries: any
   @ViewChild("nav") nav;
@@ -103,7 +104,6 @@ export class InputComponent implements OnInit {
 
   ) { }
   formatAddress(address: any) {
-    console.log("formatting address")
     let lt = []
     if (address && address['address']) {
       if (address['address']['road']) lt.push(address['address']['road'])
@@ -307,7 +307,6 @@ export class InputComponent implements OnInit {
     let v = true
     const isRequired = this.translateService.instant('is required');
     if(typeof this.record['location_text']=='object'){
-      console.log(this.record['location_text'])
       this.record['location_text']=this.formatAddress(this.record['location_text'])
     }
     Object.keys(this.recordSchema["schema"].definitions).sort((a, b) => this.recordSchema["schema"].definitions[a]["propertyOrder"] - this.recordSchema["schema"].definitions[b]["propertyOrder"]).forEach((kk) => {
@@ -409,9 +408,10 @@ export class InputComponent implements OnInit {
     }
     this.recordService.upload(this.record).pipe(first()).subscribe({
       next: data => {
+        this.stopEditRecord.emit(true)
         this.filterExpand.emit(this.record['occurred_from'])
         this.reloadRecords.emit(this.record)
-        modal.dismiss()
+        //modal.dismiss()
         this.spinner.hide()
       }, error: err => {
         let message = err["error"]

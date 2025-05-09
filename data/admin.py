@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.db.models import JSONField
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from django.utils.html import format_html
 
 from django_json_widget.widgets import JSONEditorWidget
 from grout.widgets import GroutEditorWidget
@@ -17,9 +18,8 @@ from data.models import Irap
 from django.contrib.auth.admin import UserAdmin
 from ordered_model.admin import OrderedModelAdmin
 from django_ckeditor_5.widgets import CKEditor5Widget
-#from django_hstore_widget.forms import HStoreFormField
 from ckeditor.widgets import CKEditorWidget
-
+import json
 admin.site.index_title = _('DRIVER Database')
 
 
@@ -91,13 +91,6 @@ class BoundaryAdmin(OrderedModelAdmin):
             del actions['delete_selected']
         return actions
 
-# class BoundaryPolygonAdmin(admin.ModelAdmin):
-#     def render_delete_form(self, request, context):
-#         context['deleted_objects'] = [_('Object listing disabled')]
-#
-#         return super(BoundaryPolygonAdmin, self).render_delete_form(request, context)
-
-
 class DictionaryAdminForm(forms.ModelForm):
     content = HStoreFormField()
     about = forms.CharField(widget=CKEditorWidget())
@@ -114,28 +107,68 @@ class DictionaryAdmin(admin.ModelAdmin):
     form = DictionaryAdminForm
     content = HStoreFormField()
 
-
-def get_recordcors_choices():
+    
+    
+def get_recordlcosts_fields_choices():
     r = RecordType.objects.filter(label=config.PRIMARY_LABEL)
     if not len(r):
         return []
     s = r[0].get_current_schema()
     if s is None:
         return []
-    return map(lambda x: [x, s.schema['properties'][x]['title']], list(filter(lambda x: not s.schema['definitions'][x]['multiple'], list(s.schema['definitions'].keys()))))
+    fus=[]
+    a=get_recordcosts_choices()
+    for table in a:
+        for field in s.schema['definitions'][table[0]]['properties']:
+            f=s.schema['definitions'][table[0]]['properties'][field]
+            if 'enum' in f or f['type']=='integer': 
+                fus.append([field,field])
+    return fus
 
+def get_recordcosts_choices():
+    r = RecordType.objects.filter(label=config.PRIMARY_LABEL)
+    if not len(r):
+        return []
+    s = r[0].get_current_schema()
+    if s is None:
+        return []
+    return list(map(lambda x: [x, s.schema['definitions'][x]['title']], list(filter(lambda x: not s.schema['definitions'][x]['multiple'], list(s.schema['definitions'].keys())))))            
 
 class RecordCostConfigAdminForm(forms.ModelForm):
     enum_costs = HStoreFormField()
+    CHOICES=get_recordcosts_choices
 
     class Meta:
         model = RecordCostConfig
         exclude = ()
-
+    content_type_key=forms.ChoiceField(choices=CHOICES)
+    property_key=forms.ChoiceField(choices=get_recordlcosts_fields_choices)
+    
 
 class RecordCostConfigAdmin(admin.ModelAdmin):
     form = RecordCostConfigAdminForm
+    def options_values(self, obj):
+        r = RecordType.objects.filter(label=config.PRIMARY_LABEL)
+        if not len(r):
+            return {}
+        s = r[0].get_current_schema()
+        if s is None:
+            return {}
+        fus={}
+        a=get_recordcosts_choices()
+        for table in a:
+            fus[table[0]]={}
+            for field in s.schema['definitions'][table[0]]['properties'].keys():
+                f=s.schema['definitions'][table[0]]['properties'][field]
+                if 'enum' in f: #or f['type']=='integer': 
+                    fus[table[0]][field]=f['enum']
+                else:
+                    fus[table[0]][field]=["Unitary cost"]
+        return json.dumps(fus)
+    readonly_fields = ['options_values']
+    options_values.short_description = ""
 
+    
 
 class RoadMapAdmin(admin.ModelAdmin):
     def render_delete_form(self, request, context):

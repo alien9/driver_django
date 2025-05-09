@@ -158,9 +158,8 @@ export class InputFieldComponent implements OnInit {
     this.setFileChanged.emit({ "event": e, "table": table, "field": field, "index": index })
   }
   uploadAttachment(e: any, table: any, field: string, index: number) {
-    console.log("uploading a file:")
     this.recordService.uploadAttachment(e, uuid.v4()).pipe(first()).subscribe(data => {
-      console.log(data)
+      this.fieldChanged.emit({ "event": { "srcElement": { "value": data['url'] } }, "table": table, "field": field, "index": index })
     })
   }
   getIllustra(i) {
@@ -186,7 +185,7 @@ export class InputFieldComponent implements OnInit {
       this.value = d['result']
       this.data[this.tableName][this.fieldName] = this.value
     })
-  } 
+  }
   getUniqueIdBoundary() {
     if (!this.record_uuid) return
     this.recordService.getUniqueIdBoundary(this.record_uuid, this.tableName, this.fieldName).pipe(first()).subscribe((d) => {

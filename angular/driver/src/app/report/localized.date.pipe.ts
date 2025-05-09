@@ -14,10 +14,6 @@ export class LocalizedDatePipe implements PipeTransform {
   transform(value: any, pattern: string = 'mediumDate', locale: string, timezone:string = null): any {
     const datePipe: DatePipe = new DatePipe(locale);
     const opt={}
-    if(timezone){
-      //opt['timezone']=timezone
-    }
-    console.log(value)
     if (!value || value == "")
       return this.translateService.instant("Date")
     switch (pattern) {

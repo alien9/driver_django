@@ -1067,6 +1067,9 @@ export class IndexComponent implements OnInit {
       }
     }
   }
+  endEditRecord(e:any){
+    this.editing=false
+  }
   editRecord() {
     this.editing = true
     return false
