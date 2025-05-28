@@ -260,6 +260,7 @@ def maps(request, geometry, mapfile, layer, z, x, y):
         geometry=geometry,
         layer=layer
     )
+    print( "%s/%s" % (config.MAPSERVER, path,))
     return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
 
 

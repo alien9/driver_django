@@ -179,6 +179,8 @@ class DriverRecordExporter(object):
         """Return all file objects maintained by this exporter along with suggested names"""
         yield (self.rec_outfile, 'records.csv')
         for related_name, out_file in self.outfiles.items():
+            import re
+            related_name=re.sub("^driver", "mahdar", related_name)
             yield (out_file, related_name + '.csv')
 
     def write_record(self, rec):
@@ -312,7 +314,8 @@ class ModelAndDetailsWriter(BaseRecordWriter):
         """Pull data from a record, send to appropriate writers, and then combine output"""
         output = io.StringIO()
         self.model_writer.write_record(record, output)
-        self.details_writer.write_related(record.pk, record.data[self.details_key], output)
+        if self.details_key in record.data:
+            self.details_writer.write_related(record.pk, record.data[self.details_key], output)
         csv_file.write(self.merge_lines(output.getvalue()))
 
 

@@ -29,7 +29,8 @@ services:
       - DJANGO_ENV=development
     container_name: driver-django-${CONTAINER_NAME}
     image: alien9/driver-django
-    command: ["./manage.py", "runserver", '0.0.0.0:4000', '--settings', 'driver.settings_dev']
+    command: ["./manage.py", "runserver", '0.0.0.0:4000'] 
+    #, '--settings', 'driver.settings_dev']
     volumes:
       - ./templates:/opt/app/templates
       - ./data:/opt/app/data
@@ -117,4 +118,5 @@ services:
     ports:
       - 4222:4200
       - 9876:9876
-
+    profiles:
+      - ${GROUTEDITOR}

@@ -213,7 +213,7 @@ export class IndexComponent implements OnInit {
     this.modalService.open(blocker, { size: 's', backdrop: 'static' });
   }
   checkLockPassword(event, blocker) {
-    if (sha256(event.srcElement.value) == localStorage.getItem("password")) {
+    if (sha256(event.srcElement.value).toString() == localStorage.getItem("password")) {
       blocker.close('unlocked')
       this.locked = false
       this.resetTimeout()

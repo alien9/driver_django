@@ -51,6 +51,8 @@ TESTING = 'test' in sys.argv
 ALLOWED_HOSTS = ['*']
 # TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
 CORS_ORIGIN_ALLOW_ALL = DEBUG
+CORS_ALLOW_ALL_ORIGINS=DEBUG
+
 # CORS_ALLOW_CREDENTIALS = True
 # CORS_ALLOW_METHODS = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
 
@@ -72,13 +74,13 @@ LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 if os.getenv('LANGUAGES', None):
     names = {
-        'en': 'English',
+        'en-gb': 'English',
         'lo': 'Laotian',
         'pt-br': 'Brazilian Portuguese',
         'es': 'Spanish',
         'fr': 'French',
         'zh-hans': 'Simplified Chinese',
-        'ar': 'Arabic',
+        'ar-lb': 'Arabic',
     }
     LANGUAGES = list(
         map(lambda l: (l, _(names[l])), os.getenv('LANGUAGES').split(",")))
@@ -153,7 +155,7 @@ MIDDLEWARE = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+    #'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.locale.LocaleMiddleware',

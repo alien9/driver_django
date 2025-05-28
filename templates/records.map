@@ -110,10 +110,10 @@ MAP
             STYLE
                 OUTLINECOLOR 100 0 160
                 WIDTH 2
-                SIZE 6
+                SIZE 9
                 COLOR 200 0 100
                 OPACITY 50
-                OFFSET 3 3
+                OFFSET 4 4
                 SYMBOL "circlef"
             END
         END

@@ -7,6 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = ['http://localhost:4201']
+CORS_ORIGIN_ALLOW_ALL = DEBUG
 
 DEVELOP = True
 STAGING = True if os.environ.get(
@@ -117,5 +118,3 @@ DEBUG_TOOLBAR_CONFIG = {
 }
 
 DEDUPE_DISTANCE_DEGREES = 0.5
-
-CORS_ORIGIN_ALLOW_ALL = True

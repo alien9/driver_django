@@ -2,10 +2,9 @@ import { Component, OnInit, Input, OnChanges, ChangeDetectorRef, NgZone, SimpleC
 import { RecordService } from '../record.service'
 import { first } from 'rxjs/operators';
 import * as d3 from 'd3'
-import { Legend, Swatch } from 'd3-color-legend'
-import { arrowLeftRight } from 'ngx-bootstrap-icons';
 import { TranslateService } from '@ngx-translate/core';
 import { NgxSpinnerService } from "ngx-spinner";
+import { getLocaleDirection } from '@angular/common';
 
 @Component({
   selector: 'app-charts',
@@ -41,6 +40,7 @@ export class ChartsComponent implements OnInit, OnChanges {
     'e52a1d'
   ]
   barChartParent: any;
+  direction: string;
   constructor(
     private recordService: RecordService,
     private cdr: ChangeDetectorRef,
@@ -65,6 +65,7 @@ export class ChartsComponent implements OnInit, OnChanges {
       this.monthnames[i + 1] = d.toLocaleDateString(this.locale, { month: 'short' })
     }
     this.loadChart(1)
+    this.direction = getLocaleDirection(localStorage.getItem("Language"))
   }
   ngOnChanges(changes: SimpleChanges) {
     if (this.weekdays) //already initialized
@@ -172,7 +173,6 @@ export class ChartsComponent implements OnInit, OnChanges {
           parameters['relate'] = this.barChart['field'] // the total count of related
           this.recordService.getCrossTabs(this.recordSchema['record_type'], parameters).pipe(first()).subscribe({
             next: data => {
-              console.log(data)
               let obliterate = {}
               let intervals = []
               Object.entries(data["tables"][0].data).forEach((interval) => {
@@ -304,12 +304,12 @@ export class ChartsComponent implements OnInit, OnChanges {
                 .attr("height", 100 * subgroups.length)
                 .append("g")
               svg_bar_legend.selectAll("mydots").data(subgroups).enter().append("circle")
-                .attr("cx", 100)
+                .attr("cx", (this.direction == 'rtl') ? 450 : 100)
                 .attr("cy", function (d, i) { return 13 + i * 25 })
                 .attr("r", 7)
                 .style("fill", d => `#${Math.round(parseFloat(color(d.toString()).toString())).toString(16)}`)
               svg_bar_legend.selectAll("mydots").data(subgroups).enter().append("text")
-                .attr("x", 120)
+                .attr("x", (this.direction == 'rtl') ? 430 : 120)
                 .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
                 .text(function (d) { return ts.instant(d.toString()) })
                 .attr("text-anchor", "left")
@@ -399,40 +399,59 @@ export class ChartsComponent implements OnInit, OnChanges {
                 "d",
                 ark
               )
-              .attr("fill", (d, i) => (d.data.color ? d.data.color : colors(i.toString())))
+              //.attr("fill", (d, i) => (d.data.color ? d.data.color : colors(i.toString())))
+              .attr("fill", (d, i) => {
+                console.log(d)
+                console.log(i)
+                return colors(d.data.name).toString()
+              })
               .attr("stroke", "#ffffff")
               .style("stroke-width", "1px")
-
-            const labelLocation = d3
-              .arc()
-              .innerRadius(radius / 2)
-              .outerRadius(radius);
-            let dy = 0;
-            let index = 0;
-            svg
-              .selectAll("pieces")
-              .data(pie(p_data))
-              .enter()
-              .append("text")
-              .text(d => {
-                if (
-                  ((d.endAngle - d.startAngle) / (2 * Math.PI)) * 100 > 5 ||
-                  enablePolylines
-                ) {
-                  return (
-                    d.data.name +
-                    " (" +
-                    d.data.value +
-                    (isPercentage ? "%" : "") +
-                    ")"
-                  );
-                }
-              })
-              .attr("transform", d => { let e: any = d; return "translate(" + labelLocation.centroid(e) + ")" })
-              .style("text-anchor", "middle")
-              .style("font-size", 22)
-              .attr("fill", "#333333");
-
+            /*
+                        const labelLocation = d3
+                          .arc()
+                          .innerRadius(radius / 2)
+                          .outerRadius(radius);
+                        svg
+                          .selectAll("pieces")
+                          .data(pie(p_data))
+                          .enter()
+                          .append("text")
+                          .text(d => {
+                            if (
+                              ((d.endAngle - d.startAngle) / (2 * Math.PI)) * 100 > 5 ||
+                              enablePolylines
+                            ) {
+                              return (
+                                d.data.name +
+                                " (" +
+                                d.data.value +
+                                (isPercentage ? "%" : "") +
+                                ")"
+                              );
+                            }
+                          })
+                          .attr("transform", d => { let e: any = d; return "translate(" + labelLocation.centroid(e) + ")" })
+                          .style("text-anchor", "middle")
+                          .style("font-size", 22)
+                          .attr("fill", "#333333");*/
+            d3.select("#pizza_legend").select("svg").remove()
+            const svg_bar_legend = d3.select("#pizza_legend")
+              .append("svg")
+              .attr("width", 500)
+              .attr("height", 100 * p_data.length)
+              .append("g")
+            svg_bar_legend.selectAll("mydots").data(p_data).enter().append("circle")
+              .attr("cx", (this.direction == 'rtl') ? 450 : 100)
+              .attr("cy", function (d, i) { return 13 + i * 25 })
+              .attr("r", 7)
+              .style("fill", d => colors(d.name).toString())
+            svg_bar_legend.selectAll("mydots").data(p_data).enter().append("text")
+              .attr("x", (this.direction == 'rtl') ? 430 : 120)
+              .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
+              .text(function (d) { return ts.instant(d.name.toString()) })
+              .attr("text-anchor", "left")
+              .style("alignment-baseline", "middle")
           }, error: err => {
             console.log(err)
             this.spinner.hide()
@@ -441,8 +460,8 @@ export class ChartsComponent implements OnInit, OnChanges {
         break;
       case 4: // treemap
         const t_margin_bar = { top: 0, right: 50, bottom: 0, left: 50 },
-          t_width_bar = 1100,
-          t_height_bar = 600
+          t_width_bar = 800,
+          t_height_bar = 400
         let parameters_treemap = this.filter
         if (!this.barChart['field']) {
           return
@@ -578,54 +597,43 @@ export class ChartsComponent implements OnInit, OnChanges {
                 .attr("font-size", "19px")
                 .attr("fill", d => `${color(d.data['name'])}`)
             }*/
-            const swg = d3.select(this.swatchContainer.nativeElement);
-            const swatchWidth = 20
-            const swatchHeight = 20
-            swg.selectAll('*').remove();
-
+            d3.select("#treemap_legend").select("svg").remove()
             const keys = root.descendants().map((e) => e.data['name']).filter((e) => e != 'all');
-            if (keys.length) {
-              const textWidth = Math.max(...keys.map((w: string) => w.length)) * 12
-              const items_per_line = Math.floor(1000 / (textWidth + swatchWidth + 2))
-              swg.attr('width', keys.length * (swatchWidth + textWidth))
-              swg.selectAll('rect')
-                .data(keys)
-                .enter()
-                .append('rect')
-                .attr('x', (d, i) => {
-                  return (20 + (i % items_per_line) * (swatchWidth + textWidth))
-                })
-                .attr('y', (d, i) => {
-                  return Math.floor(i / items_per_line) * swatchHeight * 1.5
-                })
-                .attr('width', swatchWidth)
-                .attr('height', swatchHeight)
-                .style('fill', d => `${color(d)}`)
 
-              swg.selectAll('mydots')
-                .data(keys)
-                .enter()
-                .append('text')
-                .attr("x", (d, i) => (22 + swatchWidth + (i % items_per_line) * (swatchWidth + textWidth)))
-                .attr('y', (d, i) => {
-                  return swatchHeight / 2 + Math.floor(i / items_per_line) * swatchHeight * 1.5
-                })
-                .style('fill', (d) => "#111111")
-                .text(d => d)
-                .attr("text-anchor", "left")
-                .style("alignment-baseline", "middle")
-            }
+            console.log(keys)
+            const svg_bar_legend = d3.select("#treemap_legend")
+              .append("svg")
+              .attr("width", 500)
+              .attr("height", 100 * keys.length)
+              .append("g")
+            svg_bar_legend.selectAll("mydots").data(keys).enter().append("circle")
+              .attr("cx", (this.direction == 'rtl') ? 450 : 100)
+              .attr("cy", function (d, i) { return 13 + i * 25 })
+              .attr("r", 7)
+              .style("fill", d => {
+                return color(d).toString()
+              })
+            svg_bar_legend.selectAll("mydots").data(keys).enter().append("text")
+              .attr("x", (this.direction == 'rtl') ? 430 : 120)
+              .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
+              .text(function (d) {
+                return ts.instant(d)
+              })
+              .attr("text-anchor", "left")
+              .style("alignment-baseline", "middle")
             this.spinner.hide()
           }, error: err => {
             console.log(err)
             this.spinner.hide()
           }
-
         })
-
-
-
     }
+
+  }
+  getIntervalStyle(){
+    if(this.direction=='rtl')
+      return "direction: ltr;text-align:right;"
+    return ""
   }
   activeIdChange(e: any) {
     this.loadChart(e.nextId)

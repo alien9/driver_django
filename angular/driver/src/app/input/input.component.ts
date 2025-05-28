@@ -93,6 +93,7 @@ export class InputComponent implements OnInit {
   roadmapsLayer: any;
   previousBounds: string;
   direction: string;
+  saving: boolean=false;
   constructor(
     private webService: WebService,
     private zone: NgZone,
@@ -399,11 +400,14 @@ export class InputComponent implements OnInit {
 
   }
   saveRecord(modal: any) {
+    if(this.saving) return
+    this.saving=true
     this.setDate(null)
     this.spinner.show()
     this.cleanup()
     if (!this.validateRecord()) {
       this.spinner.hide()
+      this.saving=false
       return
     }
     this.recordService.upload(this.record).pipe(first()).subscribe({
@@ -411,7 +415,7 @@ export class InputComponent implements OnInit {
         this.stopEditRecord.emit(true)
         this.filterExpand.emit(this.record['occurred_from'])
         this.reloadRecords.emit(this.record)
-        //modal.dismiss()
+        this.saving=false
         this.spinner.hide()
       }, error: err => {
         let message = err["error"]
@@ -423,8 +427,9 @@ export class InputComponent implements OnInit {
           let mess = m.match(/Schema validation failed for (.+): '(.+)' is a required property/)
           if (mess && mess.length == 3) {
             alert(`${this.translateService.instant("Schema validation failed for")} ${this.translateService.instant(mess[1])}: ${this.translateService.instant(mess[2])} ${this.translateService.instant("is a required property")}`)
-          } else
+          } else{
             alert(message["data"])
+          }
         }
         else if ("occurred_from" in message) {
           alert(message["occurred_from"])
@@ -440,6 +445,7 @@ export class InputComponent implements OnInit {
           this.spinner.hide()
         }
         this.spinner.hide()
+        this.saving=false
       }
     })
   }
