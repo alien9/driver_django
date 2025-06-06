@@ -38,6 +38,7 @@ class RoadMap(Imported):
         self.status = self.StatusTypes.PROCESSING
         self.save()
         logging.info("starting")
+        temp_dir=None
         try:
             logging.info("extracting the shapefile")
             temp_dir = extract_zip_to_temp_dir(self.source_file)
@@ -100,8 +101,9 @@ def post_create(sender, instance, created, **kwargs):
 def post_save_roadmap(sender, instance, created, **kwargs):
     from data.tasks import generate_roads_index
     from black_spots.tasks import generate_roadmap
-    generate_roads_index.delay(instance.uuid)
-    #generate_roadmap.delay(instance.uuid)
+    generate_roadmap.delay(instance.uuid, True)
+    #generate_roads_index.delay(instance.uuid)
+    
     
 
 class Road(GroutModel):

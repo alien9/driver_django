@@ -285,7 +285,7 @@ class GPKGRenderer(renderers.BaseRenderer):
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         fn=f"/tmp/roads_{uuid.uuid4()}.gpkg"
-        fn=os.path.join(settings.CELERY_EXPORTS_FILE_PATH, f"roadmap_{data['uuid']}.gpkg")
+        fn=os.path.join("zip", f"roadmap_{data['uuid']}.gpkg")
         if not os.path.isfile(fn):
             pass
         with open(fn, 'rb') as fh:

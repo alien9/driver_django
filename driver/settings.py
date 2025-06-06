@@ -63,7 +63,7 @@ CORS_ALLOW_ALL_ORIGINS=DEBUG
 # ]
 # CORS_ALLOW_HEADERS = ('content-disposition', 'accept-encoding', 'responsetype',
 #                      'content-type', 'accept', 'origin', 'authorization', 'x-csrftoken')
-LANGUAGE_CODE = os.getenv("LANGUAGE_CODE", "en")
+LANGUAGE_CODE = os.getenv("LANGUAGE_CODE", "en-gb")
 
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
@@ -74,6 +74,7 @@ LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 if os.getenv('LANGUAGES', None):
     names = {
+        'en': 'English',
         'en-gb': 'English',
         'lo': 'Laotian',
         'pt-br': 'Brazilian Portuguese',
@@ -81,6 +82,7 @@ if os.getenv('LANGUAGES', None):
         'fr': 'French',
         'zh-hans': 'Simplified Chinese',
         'ar-lb': 'Arabic',
+        'ar': 'Arabic',
     }
     LANGUAGES = list(
         map(lambda l: (l, _(names[l])), os.getenv('LANGUAGES').split(",")))
@@ -95,7 +97,7 @@ if os.getenv('LANGUAGES', None):
 
 else:
     LANGUAGES = [
-        ('en', _('English')),
+        ('en-gb', _('English')),
         ('lo', _('Laotian')),
         ('pt-br', _('Brazilian Portuguese')),
         ('es', _('Spanish')),
@@ -454,6 +456,7 @@ CELERY_ROUTES = {
     'data.tasks.geocode_records.geocode_records': {'queue': 'taskworker'},
     'data.tasks.geocode_records.generate_blackspots': {'queue': 'taskworker'},
     'data.tasks.geocode_records.generate_roads_index': {'queue': 'taskworker'},
+    'data.tasks.geocode_records.generate_roads_indexes': {'queue': 'taskworker'},
     'data.tasks.create_indexes.create_indexes': {'queue': 'taskworker'},
 }
 # This needs to match the proxy configuration in nginx so that requests for files generated

@@ -85,7 +85,7 @@ class RecordFilter(GeoFilterSet):
         if not rrg.match(poly_uuid):
             return queryset
         try:
-            return queryset.extra(where=["st_contains((SELECT geom as g FROM grout_boundarypolygon WHERE uuid='{q}'),geom)='t'".format(q=poly_uuid)])
+            return queryset.extra(where=["st_contains((SELECT geom as g FROM grout_boundarypolygon WHERE uuid='{q}'),grout_boundarypolygon.geom)='t'".format(q=poly_uuid)])
         except ValueError as e:
             raise ParseError(e)
         except BoundaryPolygon.DoesNotExist as e:

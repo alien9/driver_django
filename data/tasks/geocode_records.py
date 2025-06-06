@@ -92,7 +92,7 @@ def generate_roads_index(roadmap_id):
     roadmap=RoadMap.objects.get(pk=roadmap_id)
     if roadmap.get_display_field() is None:
         return
-    schema = Schema(name=TEXT(stored=True),id=ID(stored=True),lat=NUMERIC(stored=True), lon=NUMERIC(stored=True), fullname=STORED)
+    schema = Schema(name=TEXT(stored=True),id=ID(stored=True),roadmap_id=ID(stored=True),lat=NUMERIC(stored=True), lon=NUMERIC(stored=True), fullname=STORED)
     if not os.path.exists("indexdir"):
         os.mkdir("indexdir")
     ixname="indexdir/{road}".format(road=roadmap_id)
@@ -123,9 +123,54 @@ def generate_roads_index(roadmap_id):
                                 streetname+=" - {local}".format(local=bp[0].data[bo.display_field])
                                 hb=True
                         if hb and (streetname not in names):
-                            writer.add_document(name=rua.data[display_field], fullname=streetname,id=str(rua.uuid),lat=loc[1],lon=loc[0])
+                            writer.add_document(name=rua.data[display_field], fullname=streetname,id=str(rua.uuid),roadmap_id=str(roadmap_id), lat=loc[1],lon=loc[0])
                             logger.debug("%s: added %s"% (n, streetname))
                             names.add(streetname)
                             n+=1
+
+    writer.commit()
+
+@shared_task(track_started=True)
+def generate_roads_indexes():
+    schema = Schema(name=TEXT(stored=True),id=ID(stored=True),roadmap_id=ID(stored=True),lat=NUMERIC(stored=True), lon=NUMERIC(stored=True), fullname=STORED)
+    if not os.path.exists("indexdir"):
+        os.mkdir("indexdir")
+    ixname="indexdir/roads"
+    if os.path.exists(ixname):
+        import shutil
+        shutil.rmtree(ixname)
+    os.mkdir(ixname)
+            
+    logger.debug("creating %s"% (ixname))
+    # Creating a index writer to add document as per schema
+    ix = create_in(ixname,schema)
+    writer = ix.writer()
+
+    for roadmap in RoadMap.objects.all():
+        roadmap_id=roadmap.uuid
+        if roadmap.get_display_field() is None:
+            return
+        display_field=roadmap.display_field
+        names=set()
+        n=0
+        for rua in roadmap.roads.all():
+            if display_field in rua.data:
+                if rua.data[display_field] is not None:
+                    if len(rua.data[display_field])>2:
+                        if len(rua.geom.coords)>0:
+                            loc=rua.geom.coords[len(rua.geom.coords)//2]
+                            streetname=rua.data[display_field]
+                            hb=False
+                            for bo in Boundary.objects.all().order_by('-order'):
+                                p=rua.geom.coords[len(rua.geom.coords)//2]
+                                bp=bo.polygons.filter(geom__contains=Point(p[0], p[1], rua.geom.srid))
+                                if len(bp):
+                                    streetname+=" - {local}".format(local=bp[0].data[bo.display_field])
+                                    hb=True
+                            if hb and (streetname not in names):
+                                writer.add_document(name=rua.data[display_field], fullname=streetname,id=str(rua.uuid),roadmap_id=str(roadmap_id), lat=loc[1],lon=loc[0])
+                                logger.debug("%s: added %s"% (n, streetname))
+                                names.add(streetname)
+                                n+=1
 
     writer.commit()

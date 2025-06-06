@@ -38,9 +38,14 @@ logger = logging.getLogger()
 
 
 @shared_task(track_started=True)
-def generate_roadmap(roadmap_id):
-    roadmap=RoadMap.objects.get(pk=roadmap_id)
+def generate_roadmap(roadmap_id, roads_index=False):
+    try:
+        roadmap=RoadMap.objects.get(pk=roadmap_id)
+    except:
+        return
+        
     fn=os.path.join(settings.CELERY_EXPORTS_FILE_PATH, f"roadmap_{roadmap_id}.gpkg")
+    logger.warning(f"Mahdar roadmap {fn} start")
     with fiona.open(fn, 'w',
         driver='GPKG',
         crs=from_epsg(4326),
@@ -61,4 +66,9 @@ def generate_roadmap(roadmap_id):
                     cache.set(f"roadmap_{roadmap_id}.gpkg", 100*n/total)
                     logger.warning(f"Mahdar road {(100*n/total)} %")
             c.close()
-            
+    logger.warning(f"Mahdar roadmap {fn} end")
+    if roads_index:
+        logger.warning(f"Generating road indexes")
+        from data.tasks import generate_roads_indexes
+        generate_roads_indexes()
+    
