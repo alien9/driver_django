@@ -1,4 +1,4 @@
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication,SessionAuthentication
 from collections import defaultdict
 import json
 import math
@@ -101,10 +101,6 @@ from proxy.views import proxy_view
 
 logger = logging.getLogger(__name__)
 
-# DateTimeField.register_lookup(transformers.ISOYearTransform)
-# DateTimeField.register_lookup(transformers.WeekTransform)
-
-
 def index(request):
     return render(request, 'dist/index.html', {"config": config})
 
@@ -159,6 +155,8 @@ def logo(request, code):
     return JsonResponse({"result": r.logo})
 
 def get_authentication_class():
+    if settings.DEBUG:
+        return[TokenAuthentication, SessionAuthentication]
     return [TokenAuthentication]
 
 def mapillary_callback(request):

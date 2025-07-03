@@ -159,3 +159,5 @@ sudo ln -s "$(pwd)/driver-${CONTAINER_NAME}.conf" "/etc/nginx/sites-enabled/driv
 sudo systemctl restart nginx
 
 #docker-compose restart driver-nginx 
+
+echo "http://$HOST_NAME is ready"

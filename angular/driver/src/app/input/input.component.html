@@ -35,7 +35,7 @@
                         <li class="list-group-item">
                             <input class="form-control" type=hidden placeholder="yyyy-mm-dd" name="occurred_date"
                                 [(ngModel)]="occurred_date_ngb" ngbDatepicker #df="ngbDatepicker"
-                                (dateSelect)="setDate($event)">
+                                (dateSelect)="setDate($event)" [maxDate]="today">
                             <span>{{'Date and time'|translate}}</span>:
                             <span *ngIf=!editing>{{record["occurred_from"]|localizedDate:'dd/MM/yyyy':locale }}
                                 {{record["occurred_from"]|localizedDate:'shortTime':locale }}</span>
@@ -46,6 +46,11 @@
                                 <span dir="ltr"><ngb-timepicker [(ngModel)]="occurred_time" [spinners]=false [meridian]=false
                                     *ngIf=editing (change)=setDate($event)></ngb-timepicker></span>
                             </span>
+                        </li>
+                        <li class="list-group-item">
+                            <input class="form-control" *ngIf="editing" [value]="getTimeZone()"
+                                [ngbTypeahead]="getTimeZones"
+                                (change)="setTimeZone($event)">
                         </li>
                         <li class="list-group-item" *ngIf="config['OPENWEATHER_RAPID_KEY']">
                             <span>{{'Weather'|translate}}</span>: <span

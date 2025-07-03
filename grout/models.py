@@ -142,6 +142,7 @@ class Record(GroutModel):
     archived = models.BooleanField(default=False)
     occurred_from = models.DateTimeField(null=True, blank=True)
     occurred_to = models.DateTimeField(null=True, blank=True)
+    timezone=models.CharField(max_length=20, blank=True, null=True)
     geom = models.GeometryField(
         srid=settings.GROUT['SRID'], null=True, blank=True)
     location_text = models.CharField(max_length=200, null=True, blank=True)

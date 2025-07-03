@@ -20,7 +20,10 @@ from ordered_model.admin import OrderedModelAdmin
 from django_ckeditor_5.widgets import CKEditor5Widget
 from ckeditor.widgets import CKEditorWidget
 import json
-admin.site.index_title = _('DRIVER Database')
+from django.contrib import admin
+
+#admin.site.unregister(Site)
+#admin.site.index_title = _('DRIVER Database')
 
 
 class DriverRecordAdminForm(ModelForm):

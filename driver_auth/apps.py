@@ -3,6 +3,7 @@ Override app config to register signal for setting default user group on user cr
 """
 from django.apps import AppConfig
 from django.conf import settings
+from django.contrib import admin
 
 READ_GROUP = settings.DRIVER_GROUPS['READ_ONLY']
 
@@ -25,3 +26,6 @@ class DriverConfig(AppConfig):
         from django.contrib.auth.models import User
         from django.db.models.signals import post_save
         post_save.connect(add_to_default_group, sender=User)
+        from django.contrib.sites.models import Site
+
+        admin.site.unregister(Site)

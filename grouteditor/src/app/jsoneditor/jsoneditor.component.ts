@@ -50,12 +50,7 @@ export class JSONEditorComponent implements OnInit {
   formats = [
     { id: "text", name: "Single line text" },
     { id: "textarea", name: "Paragraph text" },
-    { id: "number", name: "Number" },
-    { id: "color", name: "HTML Color" },
-    { id: "tel", name: "Telephone number" },
     { id: "datetime", name: "Date / Time" },
-    { id: "time", name: "Time" },
-    { id: "url", name: "Website URL" },
     { id: "suggest", name: "Auto Complete" },
   ]
 
@@ -310,6 +305,12 @@ export class JSONEditorComponent implements OnInit {
     this.save()
   }
 
+  setLength(f, event): void {
+    f['length'] = event.srcElement.value
+    this.dict = JSON.parse(JSON.stringify(this.dict))
+    this.save()
+  }
+
   setCondition(a, table, f, event): void {
     a.condition = event.srcElement.value
     this.dict = JSON.parse(JSON.stringify(this.dict))
@@ -318,6 +319,13 @@ export class JSONEditorComponent implements OnInit {
   setFieldType(a, b, event): void {
     let t = event.srcElement.value
     this.dict.definitions[a].properties[b].fieldType = t
+    if(['text'].indexOf(t)==-1){
+      delete this.dict.definitions[a].properties[b]['length']
+    }
+    if(t!="datetime"){
+      delete this.dict.definitions[a].properties[b]['yearsPast']
+      delete this.dict.definitions[a].properties[b]['yearsFuture']      
+    }
     let c = this.setTarget(this.dict.definitions[a].properties[b], t, true)
     this.save()
   }

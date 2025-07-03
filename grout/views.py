@@ -55,7 +55,6 @@ class GPKGRenderer(renderers.BaseRenderer):
         for d in data['data_fields']:
             sc[d]='str'
         sc['uuid']='str'
-        print(sc)
         with fiona.open(fn, 'w',
             driver='GPKG',
             crs=from_epsg(4326),
@@ -137,7 +136,6 @@ class RecordViewSet(viewsets.ModelViewSet):
                     'occurred_max': exceptions.MAX_DATE_RANGE_FILTER_ERROR
                 }
                 raise serializers.ValidationError(messages)
-
         return self.queryset
 
 

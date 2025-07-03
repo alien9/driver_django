@@ -106,7 +106,7 @@
                                 (focus)="setActive(null)" (change)="setUntitled(pair.key, item.key, $event)"></label>
                     </div>
 
-                    <div>Type:{{pair.value.options}}
+                    <div>Type:
                         <select [compareWith]="compareByOptionId" (focus)="setActive(null)"
                             (change)="setFieldType(item.key,pair.key, $event)">
                             <option [ngStyle]="{'font-family':fontFamily}" *ngFor="let item of fieldtypes"
@@ -143,6 +143,22 @@
                             </option>
                         </select>
                     </div>
+
+                    <div *ngIf="pair.value.format=='datetime'">
+                        Years Before:
+                        <input type="number" (change)="setPropertyValue(pair.value,'yearsPast', $event)"
+                            [value]="pair.value.yearsPast" size="4" maxlength="4">
+                        Years After:
+                        <input type="number" (change)="setPropertyValue(pair.value,'yearsFuture', $event)"
+                            [value]="pair.value.yearsFuture" size="4" maxlength="4">
+                    </div>
+
+                    <div *ngIf="pair.value.fieldType==='text' && pair.value.format!='datetime'">
+                        Length:
+                        <input type="number" (change)="setLength(pair.value, $event)" [value]="pair.value.length"
+                            size="4" maxlength="4">
+                    </div>
+
                     <div *ngIf="pair.value.format==='suggest'">
                         Extra:
                         <input type="text" [(ngModel)]="pair.value.extra" (focus)="setActive(null)"
@@ -208,9 +224,10 @@
                             *ngFor="let a of pair.value.illustrations; let kks = index">
                             <input type="text" [value]="a" (change)="setIllustration(item.key,pair.key,kks,$event)">
                         </span></div>
-                    <div *ngIf="isIllustrated(item.key, pair.key)">Illustration: 
-                            <input type="text" [value]="dict.definitions[item.key].properties[pair.key].illustration || ''" (change)="setIllustrationField(item.key,pair.key,$event)">
-                        </div>
+                    <div *ngIf="isIllustrated(item.key, pair.key)">Illustration:
+                        <input type="text" [value]="dict.definitions[item.key].properties[pair.key].illustration || ''"
+                            (change)="setIllustrationField(item.key,pair.key,$event)">
+                    </div>
                     <div>
                         Condition: <select (focus)="setActive(null)"
                             (change)="setCondition(pair.value, item.key, pair.key, $event)">
@@ -225,7 +242,8 @@
                             <option value="==" [selected]="pair.value.conditionComparison=='=='">==</option>
                         </select>
 
-                        <select *ngIf="pair.value.condition && dict.definitions[item.key].properties[pair.value.condition]"
+                        <select
+                            *ngIf="pair.value.condition && dict.definitions[item.key].properties[pair.value.condition]"
                             (change)="setPropertyValue(pair.value, 'conditionValue', $event)">
                             <option></option>
                             <option *ngFor="let vlw of dict.definitions[item.key].properties[pair.value.condition].enum"

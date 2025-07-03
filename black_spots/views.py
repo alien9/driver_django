@@ -340,7 +340,7 @@ BBOX={x0},{y0},{x1},{y1}&WIDTH=1000&HEIGHT=1000&format=image/png"
 
     @action(methods=['get'], detail=True)
     def forward(self, request, pk=None):
-        ix = open_dir("indexdir/{road}".format(road=pk))
+        ix = open_dir("indexdir/roads")
         searcher = ix.searcher()
         parser = QueryParser("name", schema=ix.schema)
         parser.add_plugin(FuzzyTermPlugin())

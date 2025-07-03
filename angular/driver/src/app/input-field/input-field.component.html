@@ -50,8 +50,8 @@
         </span>
 
         <span *ngIf="prop.value.format=='datetime'">
-            <input class="form-control" type=hidden placeholder="yyyy-mm-dd" value="value|localizedDate:'yyyy-MM-dd'"
-                ngbDatepicker #df="ngbDatepicker" (dateSelect)="setDateField($event, tableName, fieldName, index)">
+            <input class="form-control" placeholder="yyyy-mm-dd" type="hidden" [value]="value|localizedDate:'yyyy-MM-dd':locale"
+                ngbDatepicker #df="ngbDatepicker" (dateSelect)="setDateField($event, tableName, fieldName, index)" [maxDate]="getMaxDate(value)" [minDate]="getMinDate(value)">
 
             <a href="#" (click)=df.toggle() *ngIf="getValue()" [id]="getFieldId()">
                 {{getValue()|localizedDate:'dd/MM/yyyy':locale}}
@@ -141,7 +141,7 @@
             autocomplete="off" (focus)="setFieldAutoCompleteTerms($event, prop.value.enum, prop.value.extra)">
 
         <input class="form-control" type="text" [value]="getValue()" (change)="setFieldValue($event)"
-            [id]="getFieldId()"
+            [id]="getFieldId()" [maxLength]="getMaxLength()"
             *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format!='datetime' && prop.value.format!='time' && prop.value.format!='suggest' && prop.value.format!='textarea'">
 
         <input class="form-control" type="text" [value]="getValue()" [id]="getFieldId()" readonly="readonly"

@@ -35,6 +35,8 @@ export class InputFieldComponent implements OnInit {
   public fontFamily = document.body.style.fontFamily
   public value: any = ""
   fileFieldId: any;
+  minDate = { year: 1900, month: 1, day: 1 };
+  maxDate = { year: 2000, month: 1, day: 1 };
   previousBounds: string;
   constructor(private translateService: TranslateService, private recordService: RecordService
   ) { }
@@ -193,6 +195,24 @@ export class InputFieldComponent implements OnInit {
       this.data[this.tableName][this.fieldName] = this.value
     })
   }
-
-
+  getMaxDate(v) {
+    if (this.prop.value.yearsFuture) {
+      let d = new Date()
+      if (v!="") d = new Date(v)
+      return { day:d.getDate(), month: d.getMonth()+1, year: d.getFullYear() + parseInt(this.prop.value.yearsFuture) }
+    }
+  }
+  getMinDate(v) {
+    if (this.prop.value.yearsPast) {
+      let d = new Date()
+      if (v!="") d = new Date(v)
+      return { day:d.getDate(), month: d.getMonth(), year: d.getFullYear() - parseInt(this.prop.value.yearsPast) }
+    }
+  }
+  getMaxLength(){
+    if(this.prop && this.prop["value"] && this.prop["value"]["length"]){
+      return this.prop["value"]["length"]
+    }
+    return 148
+  }
 }

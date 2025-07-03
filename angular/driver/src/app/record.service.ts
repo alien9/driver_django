@@ -157,7 +157,7 @@ export class RecordService {
     return this.http.get<any[]>(this.getBackend() + '/api/records/?' + Utils.toQueryString(parameters), { headers: this.getHeaders() })
   }
   getBoundaries(): Observable<any[]> {
-    return this.http.get<any[]>(this.getBackend() + '/api/boundaries/', { headers: this.getHeaders() })
+    return this.http.get<any[]>(this.getBackend() + '/api/boundaries/?limit=all', { headers: this.getHeaders() })
   }
   getBoundaryPolygons(boundary: any, location: string = null) {
     if (boundary) {
