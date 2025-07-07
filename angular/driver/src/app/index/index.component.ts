@@ -730,8 +730,9 @@ export class IndexComponent implements OnInit {
           if (e.data) {
             if (this.isDrawing) return
             let du = new Date(Date.parse(e.data['occurred_from']))
+            let timezone=e.data['timezone']||this.config['TIMEZONE']
             let t = $("#record-popup-content").html()
-              .replace(/-date-/, `${this.toLocaleDateString(du)} ${this.toLocaleTimeString(du).replace(/:00$/, '')}`)
+              .replace(/-date-/, `${this.toLocaleDateString(du,timezone)} ${this.toLocaleTimeString(du, timezone).replace(/:00$/, '')}`)
               .replace(/-location-/, e.data['location_text'])
               .replace(/-uuid-/, e.data['uuid'])
             new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
@@ -794,12 +795,12 @@ export class IndexComponent implements OnInit {
         })
       })
   }
-  toLocaleDateString(d: Date) {
-    return (this.supportsLocalDate) ? d.toLocaleDateString(this.locale) : d.toLocaleDateString()
+  toLocaleDateString(d: Date, timezone:string) {
+    return (this.supportsLocalDate) ? d.toLocaleDateString(this.locale, {timeZone:timezone}) : d.toLocaleDateString()
 
   }
-  toLocaleTimeString(d: Date) {
-    return (this.supportsLocalDate) ? d.toLocaleTimeString(this.locale) : d.toLocaleTimeString()
+  toLocaleTimeString(d: Date, timezone:string) {
+    return (this.supportsLocalDate) ? d.toLocaleTimeString(this.locale, {timeZone:timezone}) : d.toLocaleTimeString()
   }
   getRoadMap() {
     if(this.gettingRoadMap) return

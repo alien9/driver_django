@@ -57,7 +57,7 @@ export class InputComponent implements OnInit {
   longitude: number
   occurred_date_ngb: NgbDateStruct
   occurred_time: any
-  timezone = "America/Sao_Paulo"
+  timezone:string = "null"
 
   weatherValues = [
     '',
@@ -539,6 +539,8 @@ export class InputComponent implements OnInit {
   }
   ngOnInit(): void {
     let d = new Date()
+    this.timezone=this.record['timezone']
+    if(!this.timezone || (this.timezone=="")) this.timezone=this.config['TIMEZONE']
     this.today = { day: d.getDate(), month: d.getMonth() + 1, year: d.getFullYear() }
     this.schema = this.recordSchema['schema']
     this.direction = getLocaleDirection(localStorage.getItem("Language"))
@@ -599,8 +601,8 @@ export class InputComponent implements OnInit {
 
     this.occurred_date_ngb = this.asNgbDateStruct(du)
     this.occurred_time = {
-      hour: parseInt(du.toLocaleTimeString('en', { hour: '2-digit', hour12: false })),
-      minute: parseInt(du.toLocaleTimeString('en', { minute: '2-digit' })),
+      hour: parseInt(du.toLocaleTimeString('en', { timeZone:this.timezone, hour: '2-digit', hour12: false })),
+      minute: parseInt(du.toLocaleTimeString('en', { timeZone:this.timezone, minute: '2-digit' })),
       second: 0
     }
     let c = this.record['geom'].coordinates
@@ -1014,13 +1016,15 @@ export class InputComponent implements OnInit {
     }
   }
   setDate(e: any) {
-    let d = new Date()
-    d.setFullYear(this.occurred_date_ngb['year'], this.occurred_date_ngb['month'] - 1, this.occurred_date_ngb['day'])
-    d.setHours(this.occurred_time.hour)
-    d.setMinutes(this.occurred_time.minute)
-    d.setSeconds(0)
+    this.timezone=this.getTimeZone()
+    const datestring=`${this.occurred_date_ngb['year']}-${(this.occurred_date_ngb['month']-1).toString().padStart(2,'0')}-\
+${this.occurred_date_ngb['day'].toString().padStart(2,'0')}\
+T${this.occurred_time.hour.toString().padStart(2,'0')}:${this.occurred_time.minute.toString().padStart(2,'0')}:00\
+${this.getOffset(this.getTimeZone())}:00`
+    let d=new Date(datestring)
     this.record['occurred_from'] = d
     this.record['occurred_to'] = d
+    this.record['timezone']=this.timezone
   }
   search: OperatorFunction<string, readonly string[]> = (text$: Observable<string>) =>
     text$.pipe(
@@ -1452,10 +1456,10 @@ export class InputComponent implements OnInit {
     }
   }
   getTimeZone(){
-    return localStorage.getItem("TIMEZONE")||this.config['TIMEZONE']
+    return this.timezone||this.config['TIMEZONE']
   }
   setTimeZone(event) {
-    localStorage.setItem("TIMEZONE", event.srcElement.value)
+    this.timezone=event.srcElement.value
   }
   getTimeZones = (text$: Observable<string>) =>
     text$.pipe(
@@ -1465,6 +1469,17 @@ export class InputComponent implements OnInit {
     );
 
   formatter = (result: string) => result // Example formatter
-
+  getOffset = (timeZone) => {
+    const timeZoneName = Intl.DateTimeFormat("ia", {
+      timeZoneName: "short",
+      timeZone,
+    })
+      .formatToParts()
+      .find((i) => i.type === "timeZoneName").value;
+    const offset = timeZoneName.slice(3).replace(/([+-])(\d)$/, "$10$2");
+    if (!offset) return '+00';
+    return offset;
+  };
+  
 }
 var mousePositions: Array<object> = []
