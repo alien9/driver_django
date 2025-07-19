@@ -46,6 +46,7 @@ export class JSONEditorComponent implements OnInit {
     { id: 'unique', name: 'unique' },
     { id: 'boundary', name: 'boundary' },
     { id: 'illustration', name: 'illustration' },
+    { id: 'counter', name: 'counter' }
   ]
   formats = [
     { id: "text", name: "Single line text" },
@@ -105,12 +106,12 @@ export class JSONEditorComponent implements OnInit {
   }
   renamekey(o, oldkey, event): void {
     var h = {};
-    const v=event.srcElement.value.replace(/^\s*|\s*$/g,'')
-    if(v==oldkey) return
+    const v = event.srcElement.value.replace(/^\s*|\s*$/g, '')
+    if (v == oldkey) return
     for (var k in o.properties) {
       if (isEqual(v, k)) {
         this.setActive(null);
-        alert(`Duplicate ${k} not allowed!` )
+        alert(`Duplicate ${k} not allowed!`)
         this.dict = JSON.parse(JSON.stringify(this.dict))
         return;
       }
@@ -261,13 +262,13 @@ export class JSONEditorComponent implements OnInit {
     this.save()
   }
   setEnumValue(t, f, i, event): void {
-    this.dict.definitions[t].properties[f].enum[i] = event.srcElement.value.replace(/^\s*|\s*$/g,'')
+    this.dict.definitions[t].properties[f].enum[i] = event.srcElement.value.replace(/^\s*|\s*$/g, '')
     this.resetIllustrations(t, f)
     this.dict = JSON.parse(JSON.stringify(this.dict))
     this.save()
   }
   setPropertyByKey(f, t, p, event) {
-    this.dict.definitions[t].properties[f][p] = event.srcElement.value.replace(/^\s*|\s*$/g,'')
+    this.dict.definitions[t].properties[f][p] = event.srcElement.value.replace(/^\s*|\s*$/g, '')
     this.dict = JSON.parse(JSON.stringify(this.dict))
     this.save()
   }
@@ -317,14 +318,17 @@ export class JSONEditorComponent implements OnInit {
     this.save()
   }
   setFieldType(a, b, event): void {
+    delete this.dict.definitions[a].properties[b].counted 
+    delete this.dict.definitions[a].properties[b].countedFilter 
+    delete this.dict.definitions[a].properties[b].countedFilterRegex
     let t = event.srcElement.value
     this.dict.definitions[a].properties[b].fieldType = t
-    if(['text'].indexOf(t)==-1){
+    if (['text'].indexOf(t) == -1) {
       delete this.dict.definitions[a].properties[b]['length']
     }
-    if(t!="datetime"){
+    if (t != "datetime") {
       delete this.dict.definitions[a].properties[b]['yearsPast']
-      delete this.dict.definitions[a].properties[b]['yearsFuture']      
+      delete this.dict.definitions[a].properties[b]['yearsFuture']
     }
     let c = this.setTarget(this.dict.definitions[a].properties[b], t, true)
     this.save()
@@ -458,7 +462,7 @@ export class JSONEditorComponent implements OnInit {
   isUntitled(t, o) {
     return this.dict.definitions[t].properties[o].isUntitled
   }
-  setUntitled(o,t,event){
+  setUntitled(o, t, event) {
     this.dict.definitions[t].properties[o].isUntitled = event.srcElement.checked
     this.save();
   }
@@ -604,7 +608,7 @@ export class JSONEditorComponent implements OnInit {
     let h = {};
     let current_position = definition.properties[fieldname].propertyOrder - 1
     const intended = window.prompt("Index:")
-    let anterior=Object.entries(definition.properties).filter(([k,v])=>k==fieldname).map((v)=>v[1]['propertyOrder']).pop()
+    let anterior = Object.entries(definition.properties).filter(([k, v]) => k == fieldname).map((v) => v[1]['propertyOrder']).pop()
     Object.entries(definition.properties).sort((a, b) => a['propertyOrder'] - b['propertyOrder']).forEach(([key, value]) => {
       let v = value
       if (!isNaN(v["propertyOrder"])) {
@@ -614,8 +618,8 @@ export class JSONEditorComponent implements OnInit {
           if (v["propertyOrder"] > anterior) {
             v["propertyOrder"]--
           }
-          if (v["propertyOrder"] >= parseInt(intended)-1){
-            v["propertyOrder"]++  
+          if (v["propertyOrder"] >= parseInt(intended) - 1) {
+            v["propertyOrder"]++
           }
         }
       }
@@ -803,5 +807,33 @@ export class JSONEditorComponent implements OnInit {
     this.dict.properties[key].details = true
     element.details = true;
     this.save();
+  }
+  getCountables(p){
+    if(this.dict && this.dict['definitions']){
+      return Object.keys(this.dict['definitions']).filter((k)=>{
+        return (k!=p) && this.dict['definitions'][k].multiple
+      }).map((k)=>{
+        return {key:k, title:this.dict['definitions'][k]['title']}
+      })
+    }
+    return []
+  }
+  setCountable(table, field, eve){
+    this.dict['definitions'][table]['properties'][field].counted=eve.srcElement.value
+    this.save()
+  }
+  getCountedFields(table){
+    if(this.dict['definitions'][table]){
+      return Object.keys(this.dict['definitions'][table].properties).filter((k)=>k!="_localId")
+    }
+    return []
+  }
+  setCountableFilter(table, field, eve){
+    this.dict['definitions'][table]['properties'][field].countedFilter=eve.srcElement.value
+    this.save()
+  } 
+  setCountedFilterRegex(table, field, eve){
+    this.dict['definitions'][table]['properties'][field].countedFilterRegex=eve.srcElement.value
+    this.save()
   }
 }

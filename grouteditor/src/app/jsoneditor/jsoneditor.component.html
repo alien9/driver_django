@@ -46,7 +46,6 @@
                 Description: <br>
                 <textarea class="note" [(ngModel)]="dict.definitions[item.key].description" (change)=save()></textarea>
             </div>
-
             <div class="denomination">Denomination:<br>
                 <div class="field" *ngIf="dict.definitions[item.key].denominations">{{
                     dict.definitions[item.key].denominations.join(' / ')}}</div>
@@ -142,6 +141,29 @@
                                 [ngValue]="item.key" [selected]="item.key==pair.value.watch.target">{{item.value.title}}
                             </option>
                         </select>
+                        <span *ngIf="pair.value.fieldType==='counter'">
+                            Item:
+                            <select (change)="setCountable(item.key, pair.key, $event)">
+                                <option></option>
+                                <option *ngFor="let obj of getCountables(item.key)" [value]="obj.key"
+                                    [ngValue]="obj.key" [selected]="obj.key==pair.value.counted">
+                                    {{obj.title}}
+                                </option>
+                            </select>
+                            <span *ngIf="pair.value.counted">
+                                Filter:
+                                <select (change)="setCountableFilter(item.key, pair.key, $event)">
+                                    <option></option>
+                                    <option [value]="fld" *ngFor="let fld of getCountedFields(pair.value.counted)"
+                                     [selected]="fld==pair.value.countedFilter">
+                                        {{fld}}
+                                    </option>
+                                </select>
+                                <span *ngIf="pair.value.countedFilter">
+                                    <input type="text" [value]="pair.value.countedFilterRegex||''" (change)="setCountedFilterRegex(item.key, pair.key, $event)">
+                                </span>
+                            </span>
+                        </span>
                     </div>
 
                     <div *ngIf="pair.value.format=='datetime'">

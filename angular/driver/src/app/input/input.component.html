@@ -87,8 +87,9 @@
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item"
                             *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key|display|orderBy">
-                            <div>{{f.key|translate}}: <span *ngIf="editing && isRequired(k.key,f.key)">*</span></div>
-                            <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="-1" [editing]="editing"
+                            <div>{{f.key|translate}}: <span *ngIf="editing && isRequired(k.key,f.key)">*</span>
+                                <span *ngIf="f.value.fieldType=='counter'">{{getItemCount(k.key, f.key, f.value)}}</span></div>
+                            bfff<app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="-1" [editing]="editing"
                                 [prop]="f" (setFieldCheckFieldChanged)="setCheckField($event)" [data]="record['data']"
                                 [locale]="locale" [canvasmode]="canvasmode"
                                 (setDateFieldValueChanged)="setInputDateField($event)"
@@ -96,7 +97,7 @@
                                 [autocomplete_terms]="autocomplete_terms"
                                 (startDrawing)="startDrawingCanvas($event, canvasmode)"
                                 (turnOnAutoComplete)="setAutocompleteTerms($event)"
-                                [record_uuid]="record['uuid']"></app-input-field>
+                                [record_uuid]="record['uuid']"></app-input-field>afft
                         </li>
                     </ul>
                 </div>

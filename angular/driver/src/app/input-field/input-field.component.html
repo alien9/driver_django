@@ -17,7 +17,7 @@
         </span>
 
         <span
-            *ngIf="prop.value.format!='datetime' && prop.value.format!='textarea' && prop.value.fieldType!='reference' && !(prop.value.format=='checkbox' || prop.value.displayType=='checkbox')  && prop.type!='array' && prop.value.fieldType!='image'">
+            *ngIf="prop.value.format!='datetime' && prop.value.format!='textarea' && prop.value.fieldType!='reference' && !(prop.value.format=='checkbox' || prop.value.displayType=='checkbox')  && prop.type!='array' && prop.value.fieldType!='image' && prop.value.fieldType!='counter'">
             {{data|dict_dump:tableName:index:fieldName|format:prop|translate}}
         </span>
 
@@ -170,4 +170,5 @@
 
     <span *ngIf="!editing && prop.value.format=='datetime' && getValue()">
         {{data|dict_dump:tableName:null:fieldName|localizedDate:'dd/MM/yyyy':locale}}</span>
+    
 </div>
