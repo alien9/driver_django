@@ -1034,7 +1034,7 @@ export class InputComponent implements OnInit {
   }
   setDate(e: any) {
     this.timezone = this.getTimeZone()
-    const datestring = `${this.occurred_date_ngb['year']}-${(this.occurred_date_ngb['month'] - 1).toString().padStart(2, '0')}-\
+    const datestring = `${this.occurred_date_ngb['year']}-${(this.occurred_date_ngb['month']).toString().padStart(2, '0')}-\
 ${this.occurred_date_ngb['day'].toString().padStart(2, '0')}\
 T${this.occurred_time.hour.toString().padStart(2, '0')}:${this.occurred_time.minute.toString().padStart(2, '0')}:00\
 ${this.getOffset(this.getTimeZone())}:00`
