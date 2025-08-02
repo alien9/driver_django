@@ -92,8 +92,6 @@ from .serializers import (DriverRecordSerializer, DetailsReadOnlyRecordSerialize
 from driver import mixins
 from functools import reduce
 from django.shortcuts import render
-from django.contrib.postgres.fields.jsonb import KeyTextTransform
-from django.db.models.fields import FloatField
 from django.db.models.expressions import RawSQL
 from django.views.decorators.csrf import csrf_exempt
 from proxy.views import proxy_view

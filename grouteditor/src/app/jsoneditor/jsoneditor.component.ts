@@ -318,8 +318,8 @@ export class JSONEditorComponent implements OnInit {
     this.save()
   }
   setFieldType(a, b, event): void {
-    delete this.dict.definitions[a].properties[b].counted 
-    delete this.dict.definitions[a].properties[b].countedFilter 
+    delete this.dict.definitions[a].properties[b].counted
+    delete this.dict.definitions[a].properties[b].countedFilter
     delete this.dict.definitions[a].properties[b].countedFilterRegex
     let t = event.srcElement.value
     this.dict.definitions[a].properties[b].fieldType = t
@@ -808,32 +808,39 @@ export class JSONEditorComponent implements OnInit {
     element.details = true;
     this.save();
   }
-  getCountables(p){
-    if(this.dict && this.dict['definitions']){
-      return Object.keys(this.dict['definitions']).filter((k)=>{
-        return (k!=p) && this.dict['definitions'][k].multiple
-      }).map((k)=>{
-        return {key:k, title:this.dict['definitions'][k]['title']}
+  getCountables(p) {
+    if (this.dict && this.dict['definitions']) {
+      return Object.keys(this.dict['definitions']).filter((k) => {
+        return (k != p) && this.dict['definitions'][k].multiple
+      }).map((k) => {
+        return { key: k, title: this.dict['definitions'][k]['title'] }
       })
     }
     return []
   }
-  setCountable(table, field, eve){
-    this.dict['definitions'][table]['properties'][field].counted=eve.srcElement.value
+  setCountable(table, field, eve) {
+    this.dict['definitions'][table]['properties'][field].counted = eve.srcElement.value
     this.save()
   }
-  getCountedFields(table){
-    if(this.dict['definitions'][table]){
-      return Object.keys(this.dict['definitions'][table].properties).filter((k)=>k!="_localId")
+  getCountedFields(table) {
+    if (this.dict['definitions'][table]) {
+      return Object.keys(this.dict['definitions'][table].properties).filter((k) => k != "_localId")
     }
     return []
   }
-  setCountableFilter(table, field, eve){
-    this.dict['definitions'][table]['properties'][field].countedFilter=eve.srcElement.value
+  setCountableFilter(table, field, eve) {
+    this.dict['definitions'][table]['properties'][field].countedFilter = eve.srcElement.value
     this.save()
-  } 
-  setCountedFilterRegex(table, field, eve){
-    this.dict['definitions'][table]['properties'][field].countedFilterRegex=eve.srcElement.value
+  }
+  setCountedFilterRegex(table, field, eve) {
+    this.dict['definitions'][table]['properties'][field].countedFilterRegex = eve.srcElement.value
     this.save()
+  }
+  expandProp(event) {
+    let e = event.srcElement
+    while (!e.className.match(/properties/)) e = e.parentNode
+    const d = e.className.match(/expanded/)
+    Array.from(document.getElementsByClassName('properties')).forEach((l) => l.className = "properties")
+    if (!d) e.className = "properties expanded"
   }
 }

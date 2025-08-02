@@ -216,12 +216,12 @@ class BlackSpotSetAdmin(admin.ModelAdmin):
         fields = '__all__'
 
 
-class UserAdminDriver(UserAdmin):
-    inlines = UserAdmin.inlines + [IrapInline]
+#class UserAdminDriver(UserAdmin):
+#    inlines = UserAdmin.inlines + [IrapInline]
 
 
 admin.site.unregister(User)
-admin.site.register(User, UserAdminDriver)
+admin.site.register(User, UserAdmin)
 
 admin.site.register(RecordSchema, RecordSchemaAdmin)
 admin.site.register(RecordType, RecordTypeAdmin)

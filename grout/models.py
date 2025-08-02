@@ -4,7 +4,7 @@ import shutil
 import uuid
 import logging
 from django.db import connection
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.contrib.gis.db import models
 from django.contrib.gis.gdal import DataSource as GDALDataSource

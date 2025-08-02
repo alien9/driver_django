@@ -7,10 +7,10 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
-
+import os
 # You won't deploy this app to production alone, so don't worry about the
 # secret key.
-SECRET_KEY = 'super duper secret'
+SECRET_KEY = os.environ.get('GROUT_SECRET_KEY', '')
 
 DEBUG = True
 

@@ -48,6 +48,7 @@ services:
     ports:
       - 8009:4000
       - 4000:4000
+      - 8000:4000
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
