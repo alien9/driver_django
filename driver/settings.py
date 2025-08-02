@@ -16,7 +16,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 from driver.tz_list import TZ_LIST
 from django.conf import locale
 import socket
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 import os
 import sys
 import dotenv
@@ -51,6 +51,8 @@ TESTING = 'test' in sys.argv
 ALLOWED_HOSTS = ['*']
 # TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
 CORS_ORIGIN_ALLOW_ALL = DEBUG
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+
 # CORS_ALLOW_CREDENTIALS = True
 # CORS_ALLOW_METHODS = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
 
@@ -61,7 +63,7 @@ CORS_ORIGIN_ALLOW_ALL = DEBUG
 # ]
 # CORS_ALLOW_HEADERS = ('content-disposition', 'accept-encoding', 'responsetype',
 #                      'content-type', 'accept', 'origin', 'authorization', 'x-csrftoken')
-LANGUAGE_CODE = os.getenv("LANGUAGE_CODE", "en")
+LANGUAGE_CODE = os.getenv("LANGUAGE_CODE", "en-gb")
 
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
@@ -73,11 +75,13 @@ LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 if os.getenv('LANGUAGES', None):
     names = {
         'en': 'English',
+        'en-gb': 'English',
         'lo': 'Laotian',
         'pt-br': 'Brazilian Portuguese',
         'es': 'Spanish',
         'fr': 'French',
         'zh-hans': 'Simplified Chinese',
+        'ar-lb': 'Arabic',
         'ar': 'Arabic',
     }
     LANGUAGES = list(
@@ -93,7 +97,7 @@ if os.getenv('LANGUAGES', None):
 
 else:
     LANGUAGES = [
-        ('en', _('English')),
+        ('en-gb', _('English')),
         ('lo', _('Laotian')),
         ('pt-br', _('Brazilian Portuguese')),
         ('es', _('Spanish')),
@@ -104,6 +108,8 @@ else:
 # Application definition
 
 INSTALLED_APPS = (
+    'admin_two_factor.apps.TwoStepVerificationConfig',
+
     'grout',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -113,6 +119,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.gis',
     'django.contrib.postgres',
+
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
@@ -131,8 +138,7 @@ INSTALLED_APPS = (
     'django_json_widget',
     'django_verbatim',
     'mozilla_django_oidc',  # Load after auth
-    'django_admin_hstore_widget',   
-
+    'django_admin_hstore_widget',
     'constance',
     'proxy',
     'ordered_model',
@@ -157,6 +163,7 @@ MIDDLEWARE = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
+    # 'django_otp.middleware.OTPMiddleware',
 )
 if DEBUG:
     # Perform set up for Django Debug Toolbar
@@ -231,7 +238,6 @@ else:
             }
         }
     }
-
 
 
 POSTGIS_VERSION = tuple(
@@ -452,6 +458,7 @@ CELERY_ROUTES = {
     'data.tasks.geocode_records.geocode_records': {'queue': 'taskworker'},
     'data.tasks.geocode_records.generate_blackspots': {'queue': 'taskworker'},
     'data.tasks.geocode_records.generate_roads_index': {'queue': 'taskworker'},
+    'data.tasks.geocode_records.generate_roads_indexes': {'queue': 'taskworker'},
     'data.tasks.create_indexes.create_indexes': {'queue': 'taskworker'},
 }
 # This needs to match the proxy configuration in nginx so that requests for files generated
@@ -633,6 +640,7 @@ CONSTANCE_CONFIG = {
     'SHOW_RECORD_CREATOR': ((False), _("Show Record creator")),
 }
 CAPTCHA_OUTPUT_FORMAT = u'%(image)s %(hidden_field)s %(text_field)s'
+ADMIN_TWO_FACTOR_NAME = os.getenv('APP_NAME', 'AIRSO-Mahdar')
 
 
 EMAIL_HOST = os.environ.get("EMAIL_HOST", 'localhost')
@@ -649,7 +657,8 @@ DEFAULT_FROM_EMAIL = os.environ.get(
     'DEFAULT_FROM_EMAIL', 'vidasegura@vidasegura.cetsp.com.br')
 
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', None)
-
+# ADMIN_TWO_FACTOR_NAME = os.getenv('APP_NAME', 'AIRSO-Mahdar')
+SESSION_COOKIE_AGE = os.getenv('SESSION_COOKIE_AGE', 1200)
 
 # start rich
 

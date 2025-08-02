@@ -1,3 +1,4 @@
+from rest_framework.authentication import TokenAuthentication,SessionAuthentication
 from collections import defaultdict
 import json
 import math
@@ -91,8 +92,6 @@ from .serializers import (DriverRecordSerializer, DetailsReadOnlyRecordSerialize
 from driver import mixins
 from functools import reduce
 from django.shortcuts import render
-from django.contrib.postgres.fields.jsonb import KeyTextTransform
-from django.db.models.fields import FloatField
 from django.db.models.expressions import RawSQL
 from django.views.decorators.csrf import csrf_exempt
 from proxy.views import proxy_view
@@ -100,16 +99,13 @@ from proxy.views import proxy_view
 
 logger = logging.getLogger(__name__)
 
-# DateTimeField.register_lookup(transformers.ISOYearTransform)
-# DateTimeField.register_lookup(transformers.WeekTransform)
-
-
 def index(request):
     return render(request, 'dist/index.html', {"config": config})
 
 
 def editor(request):
     return render(request, 'schema_editor/dist/index.html', {"config": config})
+
 
 def get_dictionary(code):
     if code is None:
@@ -124,7 +120,7 @@ def get_dictionary(code):
         if len(d):
             return d[0]
         else:
-            d=Dictionary.objects.first()
+            d = Dictionary.objects.first()
             if d is not None:
                 return d
 
@@ -156,6 +152,10 @@ def logo(request, code):
     r = get_dictionary(code)
     return JsonResponse({"result": r.logo})
 
+def get_authentication_class():
+    if settings.DEBUG:
+        return[TokenAuthentication, SessionAuthentication]
+    return [TokenAuthentication]
 
 def mapillary_callback(request):
     j = {"result": "FAIL"}
@@ -256,6 +256,7 @@ def maps(request, geometry, mapfile, layer, z, x, y):
         geometry=geometry,
         layer=layer
     )
+    print( "%s/%s" % (config.MAPSERVER, path,))
     return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
 
 
@@ -320,6 +321,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
     filter_class = filters.DriverRecordFilter
     queryset = DriverRecord.objects.all()
 
+    authentication_classes=get_authentication_class()
     # Filter out everything except details for read-only users
     def get_serializer_class(self):
         # check if parameter details_only is set to true, and if so, use details-only serializer
@@ -593,91 +595,100 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         record_type_id = request.query_params.get('record_type', None)
         if not record_type_id:
             raise ParseError(detail="The 'record_type' parameter is required")
-        cost_config = (RecordCostConfig.objects.filter(record_type_id=record_type_id)
-                       .order_by('-created').first())
-        if not cost_config:
-            return Response({'record_type': 'No cost configuration found for this record type.'},
-                            status=status.HTTP_404_NOT_FOUND)
-        schema = RecordType.objects.get(pk=record_type_id).get_current_schema()
-        path = cost_config.path
-        multiple = self._is_multiple(schema, path)
-        table_name = re.sub("\\s*", "", path[0])
-        table_name = f"driver{table_name}"
-        path[0] = table_name
-        numeric=False
-        if table_name in schema.schema['definitions']:
-            if path[2] in schema.schema['definitions'][table_name]['properties']:
-                numeric = schema.schema['definitions'][table_name]['properties'][path[2]]['type'] == "number"
-        if numeric:
-            counts_queryset = self.get_filtered_queryset(request)
-            res['total_crashes'] = counts_queryset.count()
-            res = counts_queryset.annotate(
-                val=RawSQL("((data->%s->%s)::numeric)", (table_name, path[2]))
-            ).aggregate(total=Sum('val'))
-            if res['total'] is None:
-                res['total'] = 0.0
-            res['prefix'] = cost_config.cost_prefix
-            res['suffix'] = cost_config.cost_suffix
-            res['outdated_cost_config'] = False
-            return Response(res)
-
-        choices = self._get_schema_enum_choices(schema, path)
-        # `choices` may include user-entered data; to prevent users from entering column names
-        # that conflict with existing Record fields, we're going to use each choice's index as an
-        # alias instead.
-        choice_indices = {str(idx): choice for idx,
-                          choice in enumerate(choices)}
         counts_queryset = self.get_filtered_queryset(request)
         total_crashes = counts_queryset.count()
-        for idx, choice in list(choice_indices.items()):
-            filter_rule = self._make_djsonb_containment_filter(
-                path, choice, multiple)
-            # We want a column for each enum choice with a binary 1/0 indication of whether the row
-            # in question has that enum choice. This is to support checkbox fields which can have
-            # more than one selection from the enum per field. Then we're going to sum those to get
-            # aggregate counts for each enum choice.
-            choice_case = Case(When(data__jsonb=filter_rule, then=Value(1)), default=Value(0),
-                               output_field=IntegerField())
-            annotate_params = dict()
-            annotate_params[idx] = choice_case
-            counts_queryset = counts_queryset.annotate(**annotate_params)
-        output_data = {'prefix': cost_config.cost_prefix,
-                       'suffix': cost_config.cost_suffix}
+        
+        output_data={'total_crashes': total_crashes, 'total':0, 'subtotals': {},
+                                'outdated_cost_config': False}
         if total_crashes < 1:  # Short-circuit if no events at all
-            output_data.update({'total': 0, 'subtotals': {choice: 0 for choice in choices},
-                                'outdated_cost_config': False})
             return Response(output_data)
-        # Do the summation
-        sum_ops = [Sum(key) for key in list(choice_indices.keys())]
-        sum_qs = counts_queryset.values(
-            *list(choice_indices.keys())).aggregate(*sum_ops)
-        # sum_qs will now look something like this: {'0__sum': 20, '1__sum': 45, ...}
-        # so now we need to slot in the corresponding label from `choices` by pulling the
-        # corresponding value out of choices_indices.
-        sums = {}
-        for key, choice_sum in list(sum_qs.items()):
-            index = key.split('_')[0]
-            choice = choice_indices[index]
-            sums[choice] = choice_sum
-        # Multiply sums by per-incident costs to get subtotal costs broken out by type
-        subtotals = dict()
-        # This is going to be extremely easy for users to break if they update a schema without
-        # updating the corresponding cost configuration; if things are out of sync, degrade
-        # gracefully by providing zeroes for keys that don't match and set a flag so that the
-        # front-end can alert users if needed.
-        found_missing_choices = False
-        for key, value in list(sums.items()):
-            try:
-                subtotals[key] = value * int(cost_config.enum_costs[key])
-            except KeyError:
-                logger.warn('Schema and RecordCostConfig out of sync; %s missing from cost config',
-                            key)
-                found_missing_choices = True
-                subtotals[key] = 0
-        total = sum(subtotals.values())
-        # Return breakdown costs and sum
-        output_data.update({'total': total, 'total_crashes': total_crashes, 'subtotals': subtotals,
-                            'outdated_cost_config': found_missing_choices})
+        for cost_config in RecordCostConfig.objects.filter(record_type_id=record_type_id).order_by('-created').all():
+
+            if not cost_config:
+                return Response({'record_type': 'No cost configuration found for this record type.'},
+                                status=status.HTTP_404_NOT_FOUND)
+            if cost_config.cost_prefix:
+                if cost_config.cost_prefix!='':
+                    output_data['prefix']=cost_config.cost_prefix
+            schema = RecordType.objects.get(pk=record_type_id).get_current_schema()
+            path = cost_config.path
+            multiple = self._is_multiple(schema, path)
+            table_name=path[0]
+            if not re.match("^driver.+", table_name):
+                table_name = re.sub("\\s*", "", path[0])
+                table_name = f"driver{table_name}"
+            numeric = False
+            if table_name in schema.schema['definitions']:
+                if path[2] in schema.schema['definitions'][table_name]['properties']:
+                    numeric = schema.schema['definitions'][table_name]['properties'][path[2]]['type'] == "integer"
+            if numeric:
+                counts_queryset = self.get_filtered_queryset(request).values("data")
+                res={}
+                annotate_params = dict()
+                res=counts_queryset.aggregate(total=Sum(RawSQL("cast(Col1->'driverCrashData'->>'Number of fatalities' as integer)",())))
+                output_data['subtotals'][path[2]]=res['total']
+                if 'Unitary cost' in cost_config.enum_costs:
+                    try:
+                        unitary_cost=int(cost_config.enum_costs['Unitary cost'])
+                        output_data['total']+=res['total']*unitary_cost
+                    except:
+                        logger.warning(f"Cost configuration is lacking Unitary Value for {path[2]}")
+                    
+            else:
+                choices = self._get_schema_enum_choices(schema, path)
+                # `choices` may include user-entered data; to prevent users from entering column names
+                # that conflict with existing Record fields, we're going to use each choice's index as an
+                # alias instead.
+                choice_indices = {str(idx): choice for idx,
+                                choice in enumerate(choices)}
+                
+                for idx, choice in list(choice_indices.items()):
+                    filter_rule = self._make_djsonb_containment_filter(
+                        path, choice, multiple)
+                    # We want a column for each enum choice with a binary 1/0 indication of whether the row
+                    # in question has that enum choice. This is to support checkbox fields which can have
+                    # more than one selection from the enum per field. Then we're going to sum those to get
+                    # aggregate counts for each enum choice.
+                    choice_case = Case(When(data__jsonb=filter_rule, then=Value(1)), default=Value(0),
+                                    output_field=IntegerField())
+                    annotate_params = dict()
+                    annotate_params[idx] = choice_case
+                    counts_queryset = counts_queryset.annotate(**annotate_params)
+                # Do the summation
+                sum_ops = [Sum(key) for key in list(choice_indices.keys())]
+                sum_qs = counts_queryset.values(
+                    *list(choice_indices.keys())).aggregate(*sum_ops)
+                # sum_qs will now look something like this: {'0__sum': 20, '1__sum': 45, ...}
+                # so now we need to slot in the corresponding label from `choices` by pulling the
+                # corresponding value out of choices_indices.
+                sums = {}
+                for key, choice_sum in list(sum_qs.items()):
+                    index = key.split('_')[0]
+                    choice = choice_indices[index]
+                    sums[choice] = choice_sum
+                # Multiply sums by per-incident costs to get subtotal costs broken out by type
+                # This is going to be extremely easy for users to break if they update a schema without
+                # updating the corresponding cost configuration; if things are out of sync, degrade
+                # gracefully by providing zeroes for keys that don't match and set a flag so that the
+                # front-end can alert users if needed.
+                found_missing_choices = False
+                total=0
+                for key, value in list(sums.items()):
+                    try:
+                        output_data['subtotals'][key] = value
+                        total+=output_data['subtotals'][key]* int(cost_config.enum_costs[key])
+                    except KeyError:
+                        logger.warn('Schema and RecordCostConfig out of sync; %s missing from cost config',
+                                    key)
+                        found_missing_choices = True
+                        output_data['subtotals'][key] = 0
+                    except ValueError:
+                        logger.warning(f"{key} is not a valid integer")
+                
+                # Return breakdown costs and sum
+                output_data['total']+=total
+                output_data['outdated_cost_config']= found_missing_choices
+                
         return Response(output_data)
 
     @action(methods=['get'], detail=False)
@@ -934,6 +945,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         # the complete query is set to the mapfile
         query_sql = 'SELECT "grout_boundarypolygon"."geom","grout_boundarypolygon"."uuid", count(*) as c FROM "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\'  LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") WHERE {where} GROUP BY "grout_boundarypolygon"."geom","grout_boundarypolygon"."uuid"'.format(
             where=where)
+        print(query_sql)
 
         # execute the small query
         cursor.execute('SELECT "grout_boundarypolygon"."uuid", case when c.c is null then 0 else c.c end, \
@@ -1708,6 +1720,7 @@ class DriverRecordAuditLogViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminAndReadOnly,)
     filter_class = filters.RecordAuditLogFilter
     pagination_class = None
+    authentication_classes=get_authentication_class()
 
     def list(self, request, *args, **kwargs):
         """Validate filter params"""
@@ -1755,15 +1768,18 @@ def start_jar_build(schema_uuid):
 # override grout views to set permissions and trigger model jar builds
 class DriverBoundaryPolygonViewSet(BoundaryPolygonViewSet):
     permission_classes = (IsAdminOrReadOnly,)
+    authentication_classes=get_authentication_class()
 
 
 class DriverRecordTypeViewSet(RecordTypeViewSet):
     permission_classes = (IsAdminOrReadOnly,)
+    authentication_classes=get_authentication_class()
 
 
 class DriverRecordSchemaViewSet(RecordSchemaViewSet):
     permission_classes = (IsAdminOrReadOnly,)
-
+    authentication_classes=get_authentication_class()
+    
     # Filter out everything except details for read-only users
     def get_serializer_class(self):
         # if is_admin_or_writer(self.request.user):
@@ -1786,7 +1802,8 @@ class DriverRecordSchemaViewSet(RecordSchemaViewSet):
 
 class DriverBoundaryViewSet(BoundaryViewSet):
     permission_classes = (IsAdminOrReadOnly,)
-
+    authentication_classes=get_authentication_class()
+    
     @action(detail=False, methods=['GET'], name='Get Geographics')
     def list_names(self, request):
         lang = self.request.query_params.get('lang',  'en')
@@ -1823,7 +1840,7 @@ class DriverRecordDuplicateViewSet(viewsets.ModelViewSet):
     serializer_class = RecordDuplicateSerializer
     permission_classes = (ReadersReadWritersWrite,)
     filter_class = filters.RecordDuplicateFilter
-
+    authentication_classes=get_authentication_class()
     @action(detail=True, methods=['patch'])
     def resolve(self, request, pk=None):
         duplicate = self.queryset.get(pk=pk)
@@ -1857,16 +1874,17 @@ class DriverRecordDuplicateViewSet(viewsets.ModelViewSet):
 class DriverRecordCostConfigViewSet(viewsets.ModelViewSet):
     queryset = RecordCostConfig.objects.all()
     serializer_class = RecordCostConfigSerializer
+    authentication_classes=get_authentication_class()
     filter_fields = ('record_type', )
 
 
 class RecordCsvExportViewSet(viewsets.ViewSet):
     """A view for interacting with CSV export jobs
-
+    
     Since these jobs are not model-backed, we won't use any of the standard DRF mixins
     """
     permissions_classes = (IsAdminOrReadOnly,)
-
+    authentication_classes=get_authentication_class()
     def retrieve(self, request, pk=None):
         """Return the status of the celery task with query_params['taskid']"""
         # N.B. Celery will never return an error if a task_id doesn't correspond to a
@@ -1926,7 +1944,7 @@ class AndroidSchemaModelsViewSet(viewsets.ViewSet):
     permissions_classes = (IsAuthenticated,)
     renderer_classes = [JarFileRenderer] + \
         api_settings.DEFAULT_RENDERER_CLASSES
-
+    authentication_classes=get_authentication_class()
     def finalize_response(self, request, response, *args, **kwargs):
         response = super(AndroidSchemaModelsViewSet, self).finalize_response(
             request, response, *args, **kwargs)
@@ -1986,6 +2004,7 @@ class AttachmentViewSet(viewsets.ViewSet):
     permissions_classes = (IsAuthenticated,)
     serializer_class = AttachmentSerializer
     queryset = Attachment.objects.all()
+    authentication_classes = get_authentication_class()
 
     def list(self, request):
         queryset = Attachment.objects.all()
@@ -1997,13 +2016,13 @@ class AttachmentViewSet(viewsets.ViewSet):
         a = Attachment(uuid=request.data.get("uuid"),
                        file=request.data.get("file"))
         a.save()
-        return JsonResponse({"uuid": a.uuid}, status=200)
+        return JsonResponse({"uuid": a.uuid, "url": a.file.url}, status=200)
 
 
 class DictionaryViewSet(viewsets.ViewSet):
     serializer_class = DictionarySerializer
     queryset = Dictionary.objects.all()
-
+    authentication_classes = get_authentication_class()
     def retrieve(self, request, pk=None):
         if pk is None:
             pk = config.DEFAULT_LANGUAGE
@@ -2041,28 +2060,31 @@ def escwa_unique_id(request, code):
                     geom__contains=r.geom).first()
                 if country:
                     records = list(filter(lambda x: fieldname in x.data[tablename], Record.objects.filter(
-                        geom__within=country.geom).order_by(RawSQL(f"data->'{tablename}'->'{fieldname}'",[]))))
+                        geom__within=country.geom).order_by(RawSQL(f"data->'{tablename}'->'{fieldname}'", []))))
                     if use_boundary:
-                        boundaries="__".join(map(lambda x: str(re.sub("\s","_", x.data[x.boundary.display_field])), BoundaryPolygon.objects.filter(geom__contains=r.geom, boundary__display_field__isnull=False).order_by('boundary__order')))
-                        if len(records)>0:
-                            v=re.search("\\d+$", records[len(records)-1].data[tablename][fieldname])
+                        boundaries = "__".join(map(lambda x: str(re.sub("\s", "_", x.data[x.boundary.display_field])), BoundaryPolygon.objects.filter(
+                            geom__contains=r.geom, boundary__display_field__isnull=False).order_by('boundary__order')))
+                        if len(records) > 0:
+                            v = re.search(
+                                "\\d+$", records[len(records)-1].data[tablename][fieldname])
                             if v is not None:
-                                num=str(int('0'+v[0])+1)
+                                num = str(int('0'+v[0])+1)
                             else:
-                                num="1"
-                            value=f"{boundaries}__{num.zfill(9)}"
+                                num = "1"
+                            value = f"{boundaries}__{num.zfill(9)}"
                         else:
-                            value=f"{boundaries}__000000001"
-                        r.data[tablename][fieldname]=value
+                            value = f"{boundaries}__000000001"
+                        r.data[tablename][fieldname] = value
                         r.save()
                     else:
                         i = 0
                         if len(records) > 0:
-                            v=re.search("\\d+$", records[len(records)-1].data[tablename][fieldname])
+                            v = re.search(
+                                "\\d+$", records[len(records)-1].data[tablename][fieldname])
                             if v is not None:
-                                num=str(int('0'+v[0])+1)
+                                num = str(int('0'+v[0])+1)
                             else:
-                                num="1"
+                                num = "1"
                             r.data[tablename][fieldname] = num
                         else:
                             if country.data['en'] == 'Lebanon':

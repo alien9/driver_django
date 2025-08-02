@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y \
     libgeos-dev \
     libspatialindex-dev \
     gdal-bin \
-    postgis
-
+    postgis \
+    libsqlite3-mod-spatialite
 RUN ["gdal-config", "--version"]
 
 RUN mkdir -p /opt/app

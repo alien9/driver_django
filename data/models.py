@@ -7,7 +7,7 @@ from django import forms
 from django.db import models
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.auth.models import User
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.contrib.gis.db import models as g
 from grout.models import GroutModel, Record, RecordType, RecordSchema, BoundaryPolygon
 from django.db.models.signals import pre_save, post_save

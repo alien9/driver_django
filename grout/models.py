@@ -4,7 +4,7 @@ import shutil
 import uuid
 import logging
 from django.db import connection
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.contrib.gis.db import models
 from django.contrib.gis.gdal import DataSource as GDALDataSource
@@ -142,6 +142,7 @@ class Record(GroutModel):
     archived = models.BooleanField(default=False)
     occurred_from = models.DateTimeField(null=True, blank=True)
     occurred_to = models.DateTimeField(null=True, blank=True)
+    timezone=models.CharField(max_length=20, blank=True, null=True)
     geom = models.GeometryField(
         srid=settings.GROUT['SRID'], null=True, blank=True)
     location_text = models.CharField(max_length=200, null=True, blank=True)

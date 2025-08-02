@@ -35,6 +35,8 @@ export class InputFieldComponent implements OnInit {
   public fontFamily = document.body.style.fontFamily
   public value: any = ""
   fileFieldId: any;
+  minDate = { year: 1900, month: 1, day: 1 };
+  maxDate = { year: 2000, month: 1, day: 1 };
   previousBounds: string;
   constructor(private translateService: TranslateService, private recordService: RecordService
   ) { }
@@ -158,9 +160,8 @@ export class InputFieldComponent implements OnInit {
     this.setFileChanged.emit({ "event": e, "table": table, "field": field, "index": index })
   }
   uploadAttachment(e: any, table: any, field: string, index: number) {
-    console.log("uploading a file:")
     this.recordService.uploadAttachment(e, uuid.v4()).pipe(first()).subscribe(data => {
-      console.log(data)
+      this.fieldChanged.emit({ "event": { "srcElement": { "value": data['url'] } }, "table": table, "field": field, "index": index })
     })
   }
   getIllustra(i) {
@@ -186,7 +187,7 @@ export class InputFieldComponent implements OnInit {
       this.value = d['result']
       this.data[this.tableName][this.fieldName] = this.value
     })
-  } 
+  }
   getUniqueIdBoundary() {
     if (!this.record_uuid) return
     this.recordService.getUniqueIdBoundary(this.record_uuid, this.tableName, this.fieldName).pipe(first()).subscribe((d) => {
@@ -194,6 +195,24 @@ export class InputFieldComponent implements OnInit {
       this.data[this.tableName][this.fieldName] = this.value
     })
   }
-
-
+  getMaxDate(v) {
+    if (this.prop.value.yearsFuture) {
+      let d = new Date()
+      if (v!="") d = new Date(v)
+      return { day:d.getDate(), month: d.getMonth()+1, year: d.getFullYear() + parseInt(this.prop.value.yearsFuture) }
+    }
+  }
+  getMinDate(v) {
+    if (this.prop.value.yearsPast) {
+      let d = new Date()
+      if (v!="") d = new Date(v)
+      return { day:d.getDate(), month: d.getMonth(), year: d.getFullYear() - parseInt(this.prop.value.yearsPast) }
+    }
+  }
+  getMaxLength(){
+    if(this.prop && this.prop["value"] && this.prop["value"]["length"]){
+      return this.prop["value"]["length"]
+    }
+    return 148
+  }
 }

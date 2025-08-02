@@ -116,7 +116,7 @@ export class LoginComponent implements OnInit {
                         this.entering.emit(null)
                         this.loading = false;
                         this.router.navigateByUrl('/')
-                        localStorage.setItem("password", sha256(this.f.password.value))
+                        localStorage.setItem("password", sha256(this.f.password.value).toString())
                     }
 
                 }, error: err => {

@@ -7,13 +7,21 @@
                 <input [(ngModel)]="record['occurred_from']" type="hidden">
                 <div class="small-map" *ngIf="k.value.details">
                     <div class="input-map" leaflet [leafletLayers]=layers [leafletLayersControl]="layersControl"
-                    (leafletViewReset)="viewReset($event)"
-                        (map)=setMap($event) [leafletOptions]="options" (leafletMapReady)=mapReady($event) (leafletLeftClick)="scrollTop($event)"></div>
+                        (leafletViewReset)="viewReset($event)" (map)=setMap($event) [leafletOptions]="options"
+                        (leafletMapReady)=mapReady($event) (leafletLeftClick)="scrollTop($event)"></div>
                 </div>
                 <h6 class="card-subtitle mb-2 p-2 text-muted" [innerHTML]="k.value.description|unbreak|translate"
                     *ngIf="editing"></h6>
                 <ul class="list-group list-group-flush" *ngIf="!k.value.multiple">
                     <span *ngIf="k.value.details">
+                        <li class="list-group-item">
+                            <span>{{'Location'|translate}}</span>: <span
+                                *ngIf="!editing">{{record["location_text"]}}</span>
+                            <input class="form-control" *ngIf="editing" [(ngModel)]="record['location_text']"
+                                [ngbTypeahead]="geocode" [inputFormatter]="geoInputFormatter"
+                                (selectItem)="selectGeocodedOption($event)" [resultFormatter]="geoResultFormatter">
+                            <small *ngIf="geocoding" class="form-text text-muted">{{'searching'|translate}}...</small>
+                        </li>
                         <li class="list-group-item">
                             <span>{{'Latitude'|translate}}</span>: <span
                                 *ngIf="!editing">{{record['geom'].coordinates[1]}}</span>
@@ -25,27 +33,26 @@
                             <input class="form-control" *ngIf="editing" [(ngModel)]="record['geom'].coordinates[0]">
                         </li>
                         <li class="list-group-item">
-                            <span>{{'Location'|translate}}</span>: <span
-                                *ngIf="!editing">{{record["location_text"]}}</span>
-                            <input class="form-control" *ngIf="editing" [(ngModel)]="record['location_text']"
-                                [ngbTypeahead]="geocode" [inputFormatter]="geoInputFormatter"
-                                (selectItem)="selectGeocodedOption($event)" [resultFormatter]="geoResultFormatter">
-                            <small *ngIf="geocoding" class="form-text text-muted">{{'searching'|translate}}...</small>
-                        </li>
-                        <li class="list-group-item">
                             <input class="form-control" type=hidden placeholder="yyyy-mm-dd" name="occurred_date"
                                 [(ngModel)]="occurred_date_ngb" ngbDatepicker #df="ngbDatepicker"
-                                (dateSelect)="setDate($event)">
+                                (dateSelect)="setDate($event)" [maxDate]="today">
                             <span>{{'Date and time'|translate}}</span>:
-                            <span *ngIf=!editing>{{record["occurred_from"]|localizedDate:'dd/MM/yyyy':locale }}
-                                {{record["occurred_from"]|localizedDate:'shortTime':locale }}</span>
+                            <span *ngIf=!editing>{{record["occurred_from"]|localizedDate:'dd/MM/yyyy':locale:timezone }}
+                                {{record["occurred_from"]|localizedDate:'shortTime':locale:timezone }} &nbsp; {{timezone}}</span>
                             <span *ngIf=editing>
                                 <a href="#"
-                                    (click)=df.toggle()>{{record["occurred_from"]|localizedDate:'dd/MM/yyyy':locale
+                                    (click)=df.toggle()>{{record["occurred_from"]|localizedDate:'dd/MM/yyyy':locale:timezone
                                     }}</a>
-                                <span dir="ltr"><ngb-timepicker [(ngModel)]="occurred_time" [spinners]=false [meridian]=false
-                                    *ngIf=editing (change)=setDate($event)></ngb-timepicker></span>
+                                <span dir="ltr"><ngb-timepicker [(ngModel)]="occurred_time" [spinners]=false
+                                        [meridian]=false *ngIf=editing (change)=setDate($event)></ngb-timepicker></span>
+
                             </span>
+                        </li>
+                        <li class="list-group-item" *ngIf=editing>
+                            <span>{{'Time zone'|translate}}</span>:
+                            <span>
+                                <input class="form-control" [value]="timezone" [ngbTypeahead]="getTimeZones"
+                                    class="w-auto" (change)="setTimeZone($event)"></span>
                         </li>
                         <li class="list-group-item" *ngIf="config['OPENWEATHER_RAPID_KEY']">
                             <span>{{'Weather'|translate}}</span>: <span
@@ -61,7 +68,7 @@
                         <li class="list-group-item" *ngFor="let b of selectedBoundaries">
                             <span>{{b.label}}</span>: <span>{{b.value}}</span>
                         </li>
-                        <li class="list-group-item"  *ngIf="config['SHOW_LIGHT_CONDITIONS']">
+                        <li class="list-group-item" *ngIf="config['SHOW_LIGHT_CONDITIONS']">
                             <!--possible values are {{'night'|translate}}{{'dawn'|translate}}{{'day'|translate}}{{'dusk'|translate}}-->
                             <span>{{'Light'|translate}}</span>: <span
                                 *ngIf="!editing">{{record["light"]|translate}}</span>
@@ -80,7 +87,8 @@
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item"
                             *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key|display|orderBy">
-                            <div>{{f.key|translate}}: <span *ngIf="editing && isRequired(k.key,f.key)">*</span></div>
+                            <div>{{f.key|translate}}: <span *ngIf="editing && isRequired(k.key,f.key)">*</span>
+                                <span *ngIf="f.value.fieldType=='counter'">{{getItemCount(k.key, f.key, f.value)}}</span></div>
                             <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="-1" [editing]="editing"
                                 [prop]="f" (setFieldCheckFieldChanged)="setCheckField($event)" [data]="record['data']"
                                 [locale]="locale" [canvasmode]="canvasmode"
@@ -101,17 +109,20 @@
                         <div class="card" *ngFor="let kk of record['data'][k.key]; let i = index">
                             <div class="card-body">
                                 <accordion-group [isOpen]="accordionOpenedItem==i" (isOpenChange)="setAccordionOpen(i)">
-                                    <div  accordion-heading>
+                                    <div accordion-heading>
                                         <button *ngIf=editing type="button" class="btn btn-light top-float-right"
                                             (click)="removeElement(k.key, i)"> -
                                         </button>
-                                        <h5 class="card-title" (click)="setAccordionOpen(null)">{{k.value.title|translate}}: {{i+1}} <!--{{record['data'][k.key][i]|referenceName:k.key:schema}}--></h5>
+                                        <h5 class="card-title" (click)="setAccordionOpen(null)">
+                                            {{k.value.title|translate}}: {{i+1}}
+                                            {{record['data'][k.key][i]|referenceName:k.key:schema}}</h5>
                                     </div>
                                     <ul class="list-group list-group-flush">
                                         <li class="list-group-item"
                                             *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key:i|display|orderBy">
-                                            <div><span *ngIf="!isUntitled(k.key,f.key)">{{f.key|translate}}:</span><span *ngIf="editing && isRequired(k.key,f.key)">*</span></div>
-                                            <img  [src]="f.value.illustration" *ngIf="f.value.isIllustrated" class="pic">
+                                            <div><span *ngIf="!isUntitled(k.key,f.key)">{{f.key|translate}}:</span><span
+                                                    *ngIf="editing && isRequired(k.key,f.key)">*</span></div>
+                                            <img [src]="f.value.illustration" *ngIf="f.value.isIllustrated" class="pic">
                                             <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="i"
                                                 [editing]="editing" [prop]="f"
                                                 (setFieldCheckFieldChanged)="setCheckField($event)"
@@ -121,8 +132,8 @@
                                                 (fieldChanged)="setFieldValue($event)"
                                                 [autocomplete_terms]="autocomplete_terms"
                                                 (startDrawing)="startDrawingCanvas($event, canvasmode)"
-                                                (turnOnAutoComplete)="setAutocompleteTerms($event)"
-                                                [schema]="schema" [record_uuid]="record['uuid']"></app-input-field>
+                                                (turnOnAutoComplete)="setAutocompleteTerms($event)" [schema]="schema"
+                                                [record_uuid]="record['uuid']"></app-input-field>
                                         </li>
 
                                     </ul>
@@ -140,12 +151,12 @@
 <div class="modal-footer input">
     <button type="button" class="btn btn-dark" (click)="previousNavItem()"
         *ngIf="!isFirstNavItem">{{'Previous'|translate}}</button>
-        <button type="button" class="btn btn-dark" (click)="deleteRecord(modal)"
+    <button type="button" class="btn btn-dark" (click)="deleteRecord(modal)"
         *ngIf="editing">{{'Delete'|translate}}</button>
     <button type="button" class="btn btn-dark" (click)="saveRecord(modal)" *ngIf="editing">{{'Save'|translate}}</button>
     <button type="button" class="btn btn-light" (click)="closeModal(modal)">{{'Close'|translate}}</button>
     <button type="button" class="btn btn-dark" (click)="nextNavItem()"
-    *ngIf="!isLastNavItem">{{'Next'|translate}}</button>
+        *ngIf="!isLastNavItem">{{'Next'|translate}}</button>
 
 </div>
 

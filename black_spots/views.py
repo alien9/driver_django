@@ -285,7 +285,7 @@ class GPKGRenderer(renderers.BaseRenderer):
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         fn=f"/tmp/roads_{uuid.uuid4()}.gpkg"
-        fn=os.path.join(settings.CELERY_EXPORTS_FILE_PATH, f"roadmap_{data['uuid']}.gpkg")
+        fn=os.path.join("zip", f"roadmap_{data['uuid']}.gpkg")
         if not os.path.isfile(fn):
             pass
         with open(fn, 'rb') as fh:
@@ -340,7 +340,7 @@ BBOX={x0},{y0},{x1},{y1}&WIDTH=1000&HEIGHT=1000&format=image/png"
 
     @action(methods=['get'], detail=True)
     def forward(self, request, pk=None):
-        ix = open_dir("indexdir/{road}".format(road=pk))
+        ix = open_dir("indexdir/roads")
         searcher = ix.searcher()
         parser = QueryParser("name", schema=ix.schema)
         parser.add_plugin(FuzzyTermPlugin())

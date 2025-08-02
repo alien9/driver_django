@@ -17,7 +17,7 @@ class GenerateViewsetQuery(object):
         return query_str.decode('utf-8')
 
     def generate_mapserver_query_sql(self, request):
-        qset = self.get_super_queryset().values('uuid', 'geom', 'location_text', 'occurred_from' )
+        qset = self.get_super_queryset().values('uuid', 'geom', 'location_text', 'occurred_from', 'timezone' )
         # apply filters
         # get sql for the query that should be run
         for backend in list(self.filter_backends):

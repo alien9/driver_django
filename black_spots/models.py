@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.gis.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from grout.models import GroutModel, Imported
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import JSONField
@@ -38,6 +38,7 @@ class RoadMap(Imported):
         self.status = self.StatusTypes.PROCESSING
         self.save()
         logging.info("starting")
+        temp_dir=None
         try:
             logging.info("extracting the shapefile")
             temp_dir = extract_zip_to_temp_dir(self.source_file)
@@ -100,8 +101,9 @@ def post_create(sender, instance, created, **kwargs):
 def post_save_roadmap(sender, instance, created, **kwargs):
     from data.tasks import generate_roads_index
     from black_spots.tasks import generate_roadmap
-    generate_roads_index.delay(instance.uuid)
-    #generate_roadmap.delay(instance.uuid)
+    generate_roadmap.delay(instance.uuid, True)
+    #generate_roads_index.delay(instance.uuid)
+    
     
 
 class Road(GroutModel):

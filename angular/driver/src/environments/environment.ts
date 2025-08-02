@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  api: "http://localhost:8009",
+  api: "",
   center: [-16.5, -68.15],
   zoom: 12
 };

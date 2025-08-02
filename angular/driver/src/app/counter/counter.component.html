@@ -40,7 +40,7 @@
         </div>
         <div *ngIf="subtotals" class="filter-details" (click)="flipTotals()">
             <div *ngFor="let v of counts['subtotals'] | keyvalue">
-                {{v.key|translate}}: {{v.value|localcurrency:config['CURRENCY']:language}}
+                {{v.key|translate}}: {{v.value}}
             </div>
         </div>
     </div>

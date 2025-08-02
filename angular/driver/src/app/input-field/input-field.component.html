@@ -17,7 +17,7 @@
         </span>
 
         <span
-            *ngIf="prop.value.format!='datetime' && prop.value.format!='textarea' && prop.value.fieldType!='reference' && !(prop.value.format=='checkbox' || prop.value.displayType=='checkbox')  && prop.type!='array' && prop.value.fieldType!='image'">
+            *ngIf="prop.value.format!='datetime' && prop.value.format!='textarea' && prop.value.fieldType!='reference' && !(prop.value.format=='checkbox' || prop.value.displayType=='checkbox')  && prop.type!='array' && prop.value.fieldType!='image' && prop.value.fieldType!='counter'">
             {{data|dict_dump:tableName:index:fieldName|format:prop|translate}}
         </span>
 
@@ -30,6 +30,11 @@
             *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format=='textarea'"></textarea>
 
         <img crossorigin="anonymous" [src]="getValue()" class="pic" *ngIf="prop.value.imageSource">
+
+        <span *ngIf="prop.value['fieldType']=='file'">
+            <a [href]="getValue()" target="_new">{{getValue()}}</a>
+        </span>
+
     </span>
     <span *ngIf="editing">
         <span *ngIf="prop.value.fieldType=='image' &&  ['canvas','map'].indexOf(prop.value.imageSource)>-1">
@@ -45,8 +50,8 @@
         </span>
 
         <span *ngIf="prop.value.format=='datetime'">
-            <input class="form-control" type=hidden placeholder="yyyy-mm-dd" value="value|localizedDate:'yyyy-MM-dd'"
-                ngbDatepicker #df="ngbDatepicker" (dateSelect)="setDateField($event, tableName, fieldName, index)">
+            <input class="form-control" placeholder="yyyy-mm-dd" type="hidden" [value]="value|localizedDate:'yyyy-MM-dd':locale"
+                ngbDatepicker #df="ngbDatepicker" (dateSelect)="setDateField($event, tableName, fieldName, index)" [maxDate]="getMaxDate(value)" [minDate]="getMinDate(value)">
 
             <a href="#" (click)=df.toggle() *ngIf="getValue()" [id]="getFieldId()">
                 {{getValue()|localizedDate:'dd/MM/yyyy':locale}}
@@ -72,10 +77,10 @@
 
         <span *ngIf="prop.value['fieldType']=='file'">
             <input class="form-control" type="file"
-                (change)="uploadAttachment($event, data[tableName],fieldName, index)" capture="environment">
+                (change)="uploadAttachment($event, tableName,fieldName, index)" capture="environment">
             <input type="text" [id]="getImageFieldId()" [value]="getValue()"
                 style="display:block; width:1px;height:1px; border-style: none;" (change)="setFieldValue($event)">
-
+            <a [href]="getValue()" target="_new">{{getValue()}}</a>
         </span>
 
         <div *ngIf="prop.value.displayType=='checkbox' || prop.value.format=='checkbox'">
@@ -136,7 +141,7 @@
             autocomplete="off" (focus)="setFieldAutoCompleteTerms($event, prop.value.enum, prop.value.extra)">
 
         <input class="form-control" type="text" [value]="getValue()" (change)="setFieldValue($event)"
-            [id]="getFieldId()"
+            [id]="getFieldId()" [maxLength]="getMaxLength()"
             *ngIf="prop.value.fieldType=='text' && prop.value.type=='string' && prop.value.format!='datetime' && prop.value.format!='time' && prop.value.format!='suggest' && prop.value.format!='textarea'">
 
         <input class="form-control" type="text" [value]="getValue()" [id]="getFieldId()" readonly="readonly"
@@ -165,4 +170,5 @@
 
     <span *ngIf="!editing && prop.value.format=='datetime' && getValue()">
         {{data|dict_dump:tableName:null:fieldName|localizedDate:'dd/MM/yyyy':locale}}</span>
+    
 </div>

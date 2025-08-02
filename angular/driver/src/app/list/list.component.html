@@ -9,8 +9,8 @@
             </tr>
         </thead>
         <tbody>
-            <tr *ngFor=" let r of recordList?recordList[ 'results']:[] ">
-                <th scope="row "><a href="#" (click)="view(r.uuid)">{{r.occurred_from|date:"medium"}}</a></th>
+            <tr *ngFor=" let r of recordList?recordList['results']:[] ">
+                <th scope="row "><a href="#" (click)="view(r.uuid)">{{r.occurred_from|date:"medium":r.timezone}}</a></th>
                 <td>{{r.location_text|firstpart}}</td>
                 <td *ngIf="field && r.data">{{r.data[table]?r.data[table][field]:" "}}</td>
             </tr>

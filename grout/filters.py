@@ -21,7 +21,8 @@ from grout import models
 from grout.models import Boundary, BoundaryPolygon, Record, RecordType
 from grout.exceptions import QueryParameterException, DATETIME_FORMAT_ERROR
 from django.contrib.gis.db.models.functions import Centroid
-
+import logging
+logger = logging.getLogger(__name__)
 # Map custom fields to CharField so that django-filter knows how to handle them.
 FILTER_OVERRIDES = {
     JSONField: {
@@ -78,6 +79,7 @@ class RecordFilter(GeoFilterSet):
 
     def filter_polygon_id(self, queryset, field_name, poly_uuid):
         """ Method filter for containment within the polygon specified by poly_uuid"""
+        logger.debug(f"CREaTING FILTER POLYGON ID **************************************************************    {poly_uuid}   &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
         if not poly_uuid:
             return queryset
         rrg = re.compile(
@@ -85,7 +87,7 @@ class RecordFilter(GeoFilterSet):
         if not rrg.match(poly_uuid):
             return queryset
         try:
-            return queryset.extra(where=["st_contains((SELECT geom as g FROM grout_boundarypolygon WHERE uuid='{q}'),geom)='t'".format(q=poly_uuid)])
+            return queryset.extra(where=["st_contains((SELECT geom as g FROM grout_boundarypolygon WHERE uuid='{q}'),grout_record.geom)='t'".format(q=poly_uuid)])
         except ValueError as e:
             raise ParseError(e)
         except BoundaryPolygon.DoesNotExist as e:

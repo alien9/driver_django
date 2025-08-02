@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker-compose up -d
+docker compose up -d
 if [[ ! -d "zip" ]]; then
      mkdir zip
 fi
@@ -31,17 +31,17 @@ fi
 if [ -d "static" ]; then
      sudo rm -rf static/*
 fi
-
+echo "backend is ${BACKEND}"
 if [ "${USE_LOCALHOST}" != "1" ]; then
 echo "export const environment = {
   production: false,
-  api: '',
+  api: '${BACKEND}',
 };
 " >angular/driver/src/environments/environment.dev.ts
 else
      rm angular/driver/src/environments/environment.dev.ts -f
-
 fi
+STATIC_ROOT=$(pwd)/static/
 
 if [ $SUPRESS_WEB_DEPLOY ]; then # with development web server
      export FRONTEND="    location / {
@@ -86,20 +86,26 @@ if [ $SUPRESS_WEB_DEPLOY ]; then # with development web server
     "
 else
      export FRONTEND="    location / {
-        alias STATIC_ROOT/static/web/; #ALPHA_ROOT
-        try_files $uri /index.html =404;
+     autoindex on;
+        alias $STATIC_ROOT; #FRONTEND
+        try_files \$uri \$uri/ =404;
     }
     location /login {
-        alias STATIC_ROOT/static/web/; #FRONTEND
-        try_files $uri $uri/ =404;
+        alias $STATIC_ROOT; #FRONTEND
+        try_files \$uri \$uri/ =404;
     }
+    location /static/{
+        alias $STATIC_ROOT; #FRONTEND
+        try_files \$uri \$uri/ =404;
+    }
+
     location /favicon.ico {
-        alias STATIC_ROOT/static/web/favicon.ico; #FAVICON
+        alias $STATIC_ROOT/static/web/favicon.ico; #FAVICON
     }"
+
 fi
 echo $FRONTEND
 
-STATIC_ROOT=$(pwd)/angular/driver/dist/driver
 #if [[ ! -f driver-${CONTAINER_NAME}.conf ]]; then
 cp driver.conf driver-${CONTAINER_NAME}.conf
 #fi
@@ -135,7 +141,7 @@ if [ "${EXISTE_DJANGO}" != "" ]; then
 #               * ) echo "Please answer yes or no.";;
 #          esac
 #     done
-     docker-compose up -d
+     docker compose up -d
      #docker cp "driver-django-${CONTAINER_NAME}":/opt/web/dist static/
 fi
 
@@ -153,3 +159,5 @@ sudo ln -s "$(pwd)/driver-${CONTAINER_NAME}.conf" "/etc/nginx/sites-enabled/driv
 sudo systemctl restart nginx
 
 #docker-compose restart driver-nginx 
+
+echo "http://$HOST_NAME is ready"

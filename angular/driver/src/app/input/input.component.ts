@@ -17,10 +17,8 @@ import { Observable } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, tap, switchMap } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
 import "leaflet.vectorgrid";
-import { DYNAMIC_TYPE } from '@angular/compiler';
 import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
-import { $0 } from 'node_modules_backup/@angular/compiler/src/chars';
 
 @Component({
   selector: 'app-input',
@@ -39,6 +37,7 @@ export class InputComponent implements OnInit {
   @Output() reloadRecords = new EventEmitter<object>()
   @Output() filterExpand = new EventEmitter<Date>()
   @Output() storeRecord = new EventEmitter<object>()
+  @Output() stopEditRecord = new EventEmitter<boolean>()
   @Output() refreshLocalRecords = new EventEmitter<boolean>()
   @Input() boundaries: any
   @ViewChild("nav") nav;
@@ -58,6 +57,8 @@ export class InputComponent implements OnInit {
   longitude: number
   occurred_date_ngb: NgbDateStruct
   occurred_time: any
+  timezone: string = "null"
+
   weatherValues = [
     '',
     'clear-day',
@@ -94,6 +95,427 @@ export class InputComponent implements OnInit {
   roadmapsLayer: any;
   previousBounds: string;
   direction: string;
+  saving: boolean = false;
+  today: object;
+  TIMEZONES = [
+    "Africa/Abidjan",
+    "Africa/Accra",
+    "Africa/Addis_Ababa",
+    "Africa/Algiers",
+    "Africa/Asmera",
+    "Africa/Bamako",
+    "Africa/Bangui",
+    "Africa/Banjul",
+    "Africa/Bissau",
+    "Africa/Blantyre",
+    "Africa/Brazzaville",
+    "Africa/Bujumbura",
+    "Africa/Cairo",
+    "Africa/Casablanca",
+    "Africa/Ceuta",
+    "Africa/Conakry",
+    "Africa/Dakar",
+    "Africa/Dar_es_Salaam",
+    "Africa/Djibouti",
+    "Africa/Douala",
+    "Africa/El_Aaiun",
+    "Africa/Freetown",
+    "Africa/Gaborone",
+    "Africa/Harare",
+    "Africa/Johannesburg",
+    "Africa/Juba",
+    "Africa/Kampala",
+    "Africa/Khartoum",
+    "Africa/Kigali",
+    "Africa/Kinshasa",
+    "Africa/Lagos",
+    "Africa/Libreville",
+    "Africa/Lome",
+    "Africa/Luanda",
+    "Africa/Lubumbashi",
+    "Africa/Lusaka",
+    "Africa/Malabo",
+    "Africa/Maputo",
+    "Africa/Maseru",
+    "Africa/Mbabane",
+    "Africa/Mogadishu",
+    "Africa/Monrovia",
+    "Africa/Nairobi",
+    "Africa/Ndjamena",
+    "Africa/Niamey",
+    "Africa/Nouakchott",
+    "Africa/Ouagadougou",
+    "Africa/Porto-Novo",
+    "Africa/Sao_Tome",
+    "Africa/Tripoli",
+    "Africa/Tunis",
+    "Africa/Windhoek",
+    "America/Adak",
+    "America/Anchorage",
+    "America/Anguilla",
+    "America/Antigua",
+    "America/Araguaina",
+    "America/Argentina/La_Rioja",
+    "America/Argentina/Rio_Gallegos",
+    "America/Argentina/Salta",
+    "America/Argentina/San_Juan",
+    "America/Argentina/San_Luis",
+    "America/Argentina/Tucuman",
+    "America/Argentina/Ushuaia",
+    "America/Aruba",
+    "America/Asuncion",
+    "America/Bahia",
+    "America/Bahia_Banderas",
+    "America/Barbados",
+    "America/Belem",
+    "America/Belize",
+    "America/Blanc-Sablon",
+    "America/Boa_Vista",
+    "America/Bogota",
+    "America/Boise",
+    "America/Buenos_Aires",
+    "America/Cambridge_Bay",
+    "America/Campo_Grande",
+    "America/Cancun",
+    "America/Caracas",
+    "America/Catamarca",
+    "America/Cayenne",
+    "America/Cayman",
+    "America/Chicago",
+    "America/Chihuahua",
+    "America/Ciudad_Juarez",
+    "America/Coral_Harbour",
+    "America/Cordoba",
+    "America/Costa_Rica",
+    "America/Creston",
+    "America/Cuiaba",
+    "America/Curacao",
+    "America/Danmarkshavn",
+    "America/Dawson",
+    "America/Dawson_Creek",
+    "America/Denver",
+    "America/Detroit",
+    "America/Dominica",
+    "America/Edmonton",
+    "America/Eirunepe",
+    "America/El_Salvador",
+    "America/Fort_Nelson",
+    "America/Fortaleza",
+    "America/Glace_Bay",
+    "America/Godthab",
+    "America/Goose_Bay",
+    "America/Grand_Turk",
+    "America/Grenada",
+    "America/Guadeloupe",
+    "America/Guatemala",
+    "America/Guayaquil",
+    "America/Guyana",
+    "America/Halifax",
+    "America/Havana",
+    "America/Hermosillo",
+    "America/Indiana/Knox",
+    "America/Indiana/Marengo",
+    "America/Indiana/Petersburg",
+    "America/Indiana/Tell_City",
+    "America/Indiana/Vevay",
+    "America/Indiana/Vincennes",
+    "America/Indiana/Winamac",
+    "America/Indianapolis",
+    "America/Inuvik",
+    "America/Iqaluit",
+    "America/Jamaica",
+    "America/Jujuy",
+    "America/Juneau",
+    "America/Kentucky/Monticello",
+    "America/Kralendijk",
+    "America/La_Paz",
+    "America/Lima",
+    "America/Los_Angeles",
+    "America/Louisville",
+    "America/Lower_Princes",
+    "America/Maceio",
+    "America/Managua",
+    "America/Manaus",
+    "America/Marigot",
+    "America/Martinique",
+    "America/Matamoros",
+    "America/Mazatlan",
+    "America/Mendoza",
+    "America/Menominee",
+    "America/Merida",
+    "America/Metlakatla",
+    "America/Mexico_City",
+    "America/Miquelon",
+    "America/Moncton",
+    "America/Monterrey",
+    "America/Montevideo",
+    "America/Montserrat",
+    "America/Nassau",
+    "America/New_York",
+    "America/Nome",
+    "America/Noronha",
+    "America/North_Dakota/Beulah",
+    "America/North_Dakota/Center",
+    "America/North_Dakota/New_Salem",
+    "America/Ojinaga",
+    "America/Panama",
+    "America/Paramaribo",
+    "America/Phoenix",
+    "America/Port-au-Prince",
+    "America/Port_of_Spain",
+    "America/Porto_Velho",
+    "America/Puerto_Rico",
+    "America/Punta_Arenas",
+    "America/Rankin_Inlet",
+    "America/Recife",
+    "America/Regina",
+    "America/Resolute",
+    "America/Rio_Branco",
+    "America/Santarem",
+    "America/Santiago",
+    "America/Santo_Domingo",
+    "America/Sao_Paulo",
+    "America/Scoresbysund",
+    "America/Sitka",
+    "America/St_Barthelemy",
+    "America/St_Johns",
+    "America/St_Kitts",
+    "America/St_Lucia",
+    "America/St_Thomas",
+    "America/St_Vincent",
+    "America/Swift_Current",
+    "America/Tegucigalpa",
+    "America/Thule",
+    "America/Tijuana",
+    "America/Toronto",
+    "America/Tortola",
+    "America/Vancouver",
+    "America/Whitehorse",
+    "America/Winnipeg",
+    "America/Yakutat",
+    "Antarctica/Casey",
+    "Antarctica/Davis",
+    "Antarctica/DumontDUrville",
+    "Antarctica/Macquarie",
+    "Antarctica/Mawson",
+    "Antarctica/McMurdo",
+    "Antarctica/Palmer",
+    "Antarctica/Rothera",
+    "Antarctica/Syowa",
+    "Antarctica/Troll",
+    "Antarctica/Vostok",
+    "Arctic/Longyearbyen",
+    "Asia/Aden",
+    "Asia/Almaty",
+    "Asia/Amman",
+    "Asia/Anadyr",
+    "Asia/Aqtau",
+    "Asia/Aqtobe",
+    "Asia/Ashgabat",
+    "Asia/Atyrau",
+    "Asia/Baghdad",
+    "Asia/Bahrain",
+    "Asia/Baku",
+    "Asia/Bangkok",
+    "Asia/Barnaul",
+    "Asia/Beirut",
+    "Asia/Bishkek",
+    "Asia/Brunei",
+    "Asia/Calcutta",
+    "Asia/Chita",
+    "Asia/Colombo",
+    "Asia/Damascus",
+    "Asia/Dhaka",
+    "Asia/Dili",
+    "Asia/Dubai",
+    "Asia/Dushanbe",
+    "Asia/Famagusta",
+    "Asia/Gaza",
+    "Asia/Hebron",
+    "Asia/Hong_Kong",
+    "Asia/Hovd",
+    "Asia/Irkutsk",
+    "Asia/Jakarta",
+    "Asia/Jayapura",
+    "Asia/Jerusalem",
+    "Asia/Kabul",
+    "Asia/Kamchatka",
+    "Asia/Karachi",
+    "Asia/Katmandu",
+    "Asia/Khandyga",
+    "Asia/Krasnoyarsk",
+    "Asia/Kuala_Lumpur",
+    "Asia/Kuching",
+    "Asia/Kuwait",
+    "Asia/Macau",
+    "Asia/Magadan",
+    "Asia/Makassar",
+    "Asia/Manila",
+    "Asia/Muscat",
+    "Asia/Nicosia",
+    "Asia/Novokuznetsk",
+    "Asia/Novosibirsk",
+    "Asia/Omsk",
+    "Asia/Oral",
+    "Asia/Phnom_Penh",
+    "Asia/Pontianak",
+    "Asia/Pyongyang",
+    "Asia/Qatar",
+    "Asia/Qostanay",
+    "Asia/Qyzylorda",
+    "Asia/Rangoon",
+    "Asia/Riyadh",
+    "Asia/Saigon",
+    "Asia/Sakhalin",
+    "Asia/Samarkand",
+    "Asia/Seoul",
+    "Asia/Shanghai",
+    "Asia/Singapore",
+    "Asia/Srednekolymsk",
+    "Asia/Taipei",
+    "Asia/Tashkent",
+    "Asia/Tbilisi",
+    "Asia/Tehran",
+    "Asia/Thimphu",
+    "Asia/Tokyo",
+    "Asia/Tomsk",
+    "Asia/Ulaanbaatar",
+    "Asia/Urumqi",
+    "Asia/Ust-Nera",
+    "Asia/Vientiane",
+    "Asia/Vladivostok",
+    "Asia/Yakutsk",
+    "Asia/Yekaterinburg",
+    "Asia/Yerevan",
+    "Atlantic/Azores",
+    "Atlantic/Bermuda",
+    "Atlantic/Canary",
+    "Atlantic/Cape_Verde",
+    "Atlantic/Faeroe",
+    "Atlantic/Madeira",
+    "Atlantic/Reykjavik",
+    "Atlantic/South_Georgia",
+    "Atlantic/St_Helena",
+    "Atlantic/Stanley",
+    "Australia/Adelaide",
+    "Australia/Brisbane",
+    "Australia/Broken_Hill",
+    "Australia/Darwin",
+    "Australia/Eucla",
+    "Australia/Hobart",
+    "Australia/Lindeman",
+    "Australia/Lord_Howe",
+    "Australia/Melbourne",
+    "Australia/Perth",
+    "Australia/Sydney",
+    "Europe/Amsterdam",
+    "Europe/Andorra",
+    "Europe/Astrakhan",
+    "Europe/Athens",
+    "Europe/Belgrade",
+    "Europe/Berlin",
+    "Europe/Bratislava",
+    "Europe/Brussels",
+    "Europe/Bucharest",
+    "Europe/Budapest",
+    "Europe/Busingen",
+    "Europe/Chisinau",
+    "Europe/Copenhagen",
+    "Europe/Dublin",
+    "Europe/Gibraltar",
+    "Europe/Guernsey",
+    "Europe/Helsinki",
+    "Europe/Isle_of_Man",
+    "Europe/Istanbul",
+    "Europe/Jersey",
+    "Europe/Kaliningrad",
+    "Europe/Kiev",
+    "Europe/Kirov",
+    "Europe/Lisbon",
+    "Europe/Ljubljana",
+    "Europe/London",
+    "Europe/Luxembourg",
+    "Europe/Madrid",
+    "Europe/Malta",
+    "Europe/Mariehamn",
+    "Europe/Minsk",
+    "Europe/Monaco",
+    "Europe/Moscow",
+    "Europe/Oslo",
+    "Europe/Paris",
+    "Europe/Podgorica",
+    "Europe/Prague",
+    "Europe/Riga",
+    "Europe/Rome",
+    "Europe/Samara",
+    "Europe/San_Marino",
+    "Europe/Sarajevo",
+    "Europe/Saratov",
+    "Europe/Simferopol",
+    "Europe/Skopje",
+    "Europe/Sofia",
+    "Europe/Stockholm",
+    "Europe/Tallinn",
+    "Europe/Tirane",
+    "Europe/Ulyanovsk",
+    "Europe/Vaduz",
+    "Europe/Vatican",
+    "Europe/Vienna",
+    "Europe/Vilnius",
+    "Europe/Volgograd",
+    "Europe/Warsaw",
+    "Europe/Zagreb",
+    "Europe/Zurich",
+    "Indian/Antananarivo",
+    "Indian/Chagos",
+    "Indian/Christmas",
+    "Indian/Cocos",
+    "Indian/Comoro",
+    "Indian/Kerguelen",
+    "Indian/Mahe",
+    "Indian/Maldives",
+    "Indian/Mauritius",
+    "Indian/Mayotte",
+    "Indian/Reunion",
+    "Pacific/Apia",
+    "Pacific/Auckland",
+    "Pacific/Bougainville",
+    "Pacific/Chatham",
+    "Pacific/Easter",
+    "Pacific/Efate",
+    "Pacific/Enderbury",
+    "Pacific/Fakaofo",
+    "Pacific/Fiji",
+    "Pacific/Funafuti",
+    "Pacific/Galapagos",
+    "Pacific/Gambier",
+    "Pacific/Guadalcanal",
+    "Pacific/Guam",
+    "Pacific/Honolulu",
+    "Pacific/Kiritimati",
+    "Pacific/Kosrae",
+    "Pacific/Kwajalein",
+    "Pacific/Majuro",
+    "Pacific/Marquesas",
+    "Pacific/Midway",
+    "Pacific/Nauru",
+    "Pacific/Niue",
+    "Pacific/Norfolk",
+    "Pacific/Noumea",
+    "Pacific/Pago_Pago",
+    "Pacific/Palau",
+    "Pacific/Pitcairn",
+    "Pacific/Ponape",
+    "Pacific/Port_Moresby",
+    "Pacific/Rarotonga",
+    "Pacific/Saipan",
+    "Pacific/Tahiti",
+    "Pacific/Tarawa",
+    "Pacific/Tongatapu",
+    "Pacific/Truk",
+    "Pacific/Wake",
+    "Pacific/Wallis"
+  ]
   constructor(
     private webService: WebService,
     private zone: NgZone,
@@ -105,7 +527,6 @@ export class InputComponent implements OnInit {
 
   ) { }
   formatAddress(address: any) {
-    console.log("formatting address")
     let lt = []
     if (address && address['address']) {
       if (address['address']['road']) lt.push(address['address']['road'])
@@ -117,6 +538,10 @@ export class InputComponent implements OnInit {
     return lt.join(", ")
   }
   ngOnInit(): void {
+    let d = new Date()
+    this.timezone = this.record['timezone']
+    if (!this.timezone || (this.timezone == "")) this.timezone = this.config['TIMEZONE']
+    this.today = { day: d.getDate(), month: d.getMonth() + 1, year: d.getFullYear() }
     this.schema = this.recordSchema['schema']
     this.direction = getLocaleDirection(localStorage.getItem("Language"))
     const defs = Object.keys(this.schema['definitions']).sort((a, b) => this.schema['definitions'][a].propertyOrder - this.schema['definitions'][b].propertyOrder)
@@ -176,8 +601,8 @@ export class InputComponent implements OnInit {
 
     this.occurred_date_ngb = this.asNgbDateStruct(du)
     this.occurred_time = {
-      hour: parseInt(du.toLocaleTimeString('en', { hour: '2-digit', hour12: false })),
-      minute: parseInt(du.toLocaleTimeString('en', { minute: '2-digit' })),
+      hour: parseInt(du.toLocaleTimeString('en', { timeZone: this.timezone, hour: '2-digit', hour12: false })),
+      minute: parseInt(du.toLocaleTimeString('en', { timeZone: this.timezone, minute: '2-digit' })),
       second: 0
     }
     let c = this.record['geom'].coordinates
@@ -270,6 +695,23 @@ export class InputComponent implements OnInit {
       if (this.recordSchema['schema'].definitions[k]) {
         if (!this.recordSchema['schema'].definitions[k].multiple) {
           change = [this.record['data'][k]]
+          Object.keys(this.recordSchema['schema'].definitions[k].properties).forEach((ko) => {
+            if (this.recordSchema['schema'].definitions[k].properties[ko].fieldType == 'counter') {
+              let fu = this.recordSchema['schema'].definitions[k].properties[ko]
+              let cn = "0"
+              if (fu.counted && this.record['data'][fu.counted]) {
+                if (fu.countedFilter && fu.countedFilterRegex) {
+                  cn = this.record['data'][fu.counted].filter((kk) => {
+                    if (kk[fu.countedFilter] && kk[fu.countedFilter].match(new RegExp(fu.countedFilterRegex)))
+                      return true
+                  }).length.toString()
+                } else {
+                  cn = Object.keys(this.record['data'][fu.counted]).length.toString()
+                }
+              }
+              this.record['data'][k][ko] = cn
+            }
+          })
         }
         for (let i = 0; i < change.length; i++) {
           Object.keys(this.recordSchema['schema'].definitions[k].properties).forEach((l) => {
@@ -308,9 +750,8 @@ export class InputComponent implements OnInit {
   validateRecord(): boolean {
     let v = true
     const isRequired = this.translateService.instant('is required');
-    if(typeof this.record['location_text']=='object'){
-      console.log(this.record['location_text'])
-      this.record['location_text']=this.formatAddress(this.record['location_text'])
+    if (typeof this.record['location_text'] == 'object') {
+      this.record['location_text'] = this.formatAddress(this.record['location_text'])
     }
     Object.keys(this.recordSchema["schema"].definitions).sort((a, b) => this.recordSchema["schema"].definitions[a]["propertyOrder"] - this.recordSchema["schema"].definitions[b]["propertyOrder"]).forEach((kk) => {
       if (this.recordSchema["schema"].definitions[kk].required) {
@@ -402,18 +843,22 @@ export class InputComponent implements OnInit {
 
   }
   saveRecord(modal: any) {
+    if (this.saving) return
+    this.saving = true
     this.setDate(null)
     this.spinner.show()
     this.cleanup()
     if (!this.validateRecord()) {
       this.spinner.hide()
+      this.saving = false
       return
     }
     this.recordService.upload(this.record).pipe(first()).subscribe({
       next: data => {
+        this.stopEditRecord.emit(true)
         this.filterExpand.emit(this.record['occurred_from'])
         this.reloadRecords.emit(this.record)
-        modal.dismiss()
+        this.saving = false
         this.spinner.hide()
       }, error: err => {
         let message = err["error"]
@@ -425,8 +870,9 @@ export class InputComponent implements OnInit {
           let mess = m.match(/Schema validation failed for (.+): '(.+)' is a required property/)
           if (mess && mess.length == 3) {
             alert(`${this.translateService.instant("Schema validation failed for")} ${this.translateService.instant(mess[1])}: ${this.translateService.instant(mess[2])} ${this.translateService.instant("is a required property")}`)
-          } else
+          } else {
             alert(message["data"])
+          }
         }
         else if ("occurred_from" in message) {
           alert(message["occurred_from"])
@@ -442,6 +888,7 @@ export class InputComponent implements OnInit {
           this.spinner.hide()
         }
         this.spinner.hide()
+        this.saving = false
       }
     })
   }
@@ -586,13 +1033,15 @@ export class InputComponent implements OnInit {
     }
   }
   setDate(e: any) {
-    let d = new Date()
-    d.setFullYear(this.occurred_date_ngb['year'], this.occurred_date_ngb['month'] - 1, this.occurred_date_ngb['day'])
-    d.setHours(this.occurred_time.hour)
-    d.setMinutes(this.occurred_time.minute)
-    d.setSeconds(0)
+    this.timezone = this.getTimeZone()
+    const datestring = `${this.occurred_date_ngb['year']}-${(this.occurred_date_ngb['month']).toString().padStart(2, '0')}-\
+${this.occurred_date_ngb['day'].toString().padStart(2, '0')}\
+T${this.occurred_time.hour.toString().padStart(2, '0')}:${this.occurred_time.minute.toString().padStart(2, '0')}:00\
+${this.getOffset(this.getTimeZone())}:00`
+    let d = new Date(datestring)
     this.record['occurred_from'] = d
     this.record['occurred_to'] = d
+    this.record['timezone'] = this.timezone
   }
   search: OperatorFunction<string, readonly string[]> = (text$: Observable<string>) =>
     text$.pipe(
@@ -1022,6 +1471,48 @@ export class InputComponent implements OnInit {
       const gsjs = L.geoJson(JSON.parse(lines), { style: { weight: "8", "opacity": 0.5, color: "#ff3400" } })
       window['showLocalRoads'](gsjs)
     }
+  }
+  getTimeZone() {
+    return this.timezone || this.config['TIMEZONE']
+  }
+  setTimeZone(event) {
+    this.timezone = event.srcElement.value
+  }
+  getTimeZones = (text$: Observable<string>) =>
+    text$.pipe(
+      debounceTime(200), // Wait 200ms after the last keystroke before considering the term
+      distinctUntilChanged(), // Only emit when the current value is different from the last
+      map(term => term === '' ? this.TIMEZONES : this.TIMEZONES.filter(v => v.toLowerCase().indexOf(term.toLowerCase()) > -1).slice(0, 10))
+    );
+
+  formatter = (result: string) => result // Example formatter
+  getOffset = (timeZone) => {
+    const timeZoneName = Intl.DateTimeFormat("ia", {
+      timeZoneName: "short",
+      timeZone,
+    })
+      .formatToParts()
+      .find((i) => i.type === "timeZoneName").value;
+    const offset = timeZoneName.slice(3).replace(/([+-])(\d)$/, "$10$2");
+    if (!offset) return '+00';
+    return offset;
+  };
+  getItemCount(table, fld, field) {
+    let count = "0"
+    if (field.counted) {
+      if (this.record['data'] && this.record['data'][field.counted]) {
+        if (field.countedFilter && field.countedFilterRegex) {
+          count = this.record['data'][field.counted].filter((k) => {
+            if (k[field.countedFilter] && k[field.countedFilter].match(new RegExp(field.countedFilterRegex)))
+              return true
+          }).length.toString()
+        } else {
+          count = this.record['data'][field.counted].length.toString()
+        }
+      }
+    }
+    this.record['data'][table][fld] = count
+    return count
   }
 
 }

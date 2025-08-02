@@ -74,7 +74,7 @@ MAP
         CONNECTIONTYPE  POSTGIS
         CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
         UTFITEM   "record_ptr_id"
-        UTFDATA   "{\"uuid\":\"[record_ptr_id]\",\"occurred_from\":\"[occurred_from]\"}"
+        UTFDATA   "{\"uuid\":\"[record_ptr_id]\",\"occurred_from\":\"[occurred_from]\",\"timezone\":\"[timezone]\"}"
         PROCESSING "KERNELDENSITY_RADIUS=10"
         
         TYPE POINT
@@ -99,7 +99,7 @@ MAP
         CONNECTIONTYPE  POSTGIS
         CONNECTION      "host={{connection}} dbname={{dbname}} user={{username}} password={{password}}"
         UTFITEM   "record_ptr_id"
-        UTFDATA   "{\"uuid\":\"[record_ptr_id]\",\"occurred_from\":\"[occurred_from]\", \"location_text\":\"[location_text]\"}"
+        UTFDATA   "{\"uuid\":\"[record_ptr_id]\",\"occurred_from\":\"[occurred_from]\", \"location_text\":\"[location_text]\",\"timezone\":\"[timezone]\"}"
         PROCESSING "KERNELDENSITY_RADIUS=10"
         
         TYPE POINT
@@ -110,10 +110,10 @@ MAP
             STYLE
                 OUTLINECOLOR 100 0 160
                 WIDTH 2
-                SIZE 6
+                SIZE 9
                 COLOR 200 0 100
                 OPACITY 50
-                OFFSET 3 3
+                OFFSET 4 4
                 SYMBOL "circlef"
             END
         END

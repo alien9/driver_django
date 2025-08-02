@@ -1,4 +1,15 @@
 <div class="jsoneditor-container" *ngIf="dict">
+    <style type="text/css">
+        .properties>div{
+           display:none; 
+        }
+        .properties>div.name, .properties>div.positioncontrols{
+            display:block !important;
+        }
+        .expanded>div{
+            display: block !important;
+        }
+    </style>
     <span><a href="#" (click)="setMode('code')" class="code">Code</a></span> /
     <span><a href="#" (click)="setMode('tree', $event)" class="tree">Tree</a></span>
     <textarea [hidden]="mode!='code'" class="raw" name="schema" (ngModelChange)="load($event)" [(ngModel)]=dict_json>
@@ -46,7 +57,6 @@
                 Description: <br>
                 <textarea class="note" [(ngModel)]="dict.definitions[item.key].description" (change)=save()></textarea>
             </div>
-
             <div class="denomination">Denomination:<br>
                 <div class="field" *ngIf="dict.definitions[item.key].denominations">{{
                     dict.definitions[item.key].denominations.join(' / ')}}</div>
@@ -60,11 +70,7 @@
             </div>
             <div class="props">
                 <div *ngFor="let pair of dict.definitions[item.key].properties | sortedhash; let j=index"
-                    class="properties">
-                    <div>
-                        {{j+1}}. <input [value]="pair.key"
-                            (change)="renamekey(dict.definitions[item.key], pair.key, $event)">
-                    </div>
+                    class="properties" (click)="expandProp($event)">
                     <div class="positioncontrols">
                         <a href="javascript:void(0);"
                             (click)="deleteField(dict.definitions[item.key], pair.key, this)">⨯</a>
@@ -89,6 +95,10 @@
                         <a href="javascript:void(0);"
                             (click)="moveFieldToIndex(dict.definitions[item.key], pair.key)">#</a>
                     </div>
+                    <div class="name">
+                        {{j+1}}. <input [value]="pair.key"
+                            (change)="renamekey(dict.definitions[item.key], pair.key, $event)">
+                    </div>
                     <div>
                         <label>Searchable <input type="checkbox" [(ngModel)]="pair.value.isSearchable"
                                 (focus)="setActive(null)" (change)=save()></label>
@@ -106,7 +116,7 @@
                                 (focus)="setActive(null)" (change)="setUntitled(pair.key, item.key, $event)"></label>
                     </div>
 
-                    <div>Type:{{pair.value.options}}
+                    <div>Type:
                         <select [compareWith]="compareByOptionId" (focus)="setActive(null)"
                             (change)="setFieldType(item.key,pair.key, $event)">
                             <option [ngStyle]="{'font-family':fontFamily}" *ngFor="let item of fieldtypes"
@@ -142,7 +152,47 @@
                                 [ngValue]="item.key" [selected]="item.key==pair.value.watch.target">{{item.value.title}}
                             </option>
                         </select>
+                        <span *ngIf="pair.value.fieldType==='counter'">
+                            Item:
+                            <select (change)="setCountable(item.key, pair.key, $event)">
+                                <option></option>
+                                <option *ngFor="let obj of getCountables(item.key)" [value]="obj.key"
+                                    [ngValue]="obj.key" [selected]="obj.key==pair.value.counted">
+                                    {{obj.title}}
+                                </option>
+                            </select>
+                            <span *ngIf="pair.value.counted">
+                                <br>Filter:
+                                <select (change)="setCountableFilter(item.key, pair.key, $event)">
+                                    <option></option>
+                                    <option [value]="fld" *ngFor="let fld of getCountedFields(pair.value.counted)"
+                                        [selected]="fld==pair.value.countedFilter">
+                                        {{fld}}
+                                    </option>
+                                </select>
+                                <span *ngIf="pair.value.countedFilter">
+                                    <input type="text" [value]="pair.value.countedFilterRegex||''"
+                                        (change)="setCountedFilterRegex(item.key, pair.key, $event)">
+                                </span>
+                            </span>
+                        </span>
                     </div>
+
+                    <div *ngIf="pair.value.format=='datetime'">
+                        Years Before:
+                        <input type="number" (change)="setPropertyValue(pair.value,'yearsPast', $event)"
+                            [value]="pair.value.yearsPast" size="4" maxlength="4">
+                        Years After:
+                        <input type="number" (change)="setPropertyValue(pair.value,'yearsFuture', $event)"
+                            [value]="pair.value.yearsFuture" size="4" maxlength="4">
+                    </div>
+
+                    <div *ngIf="pair.value.fieldType==='text' && pair.value.format!='datetime'">
+                        Length:
+                        <input type="number" (change)="setLength(pair.value, $event)" [value]="pair.value.length"
+                            size="4" maxlength="4">
+                    </div>
+
                     <div *ngIf="pair.value.format==='suggest'">
                         Extra:
                         <input type="text" [(ngModel)]="pair.value.extra" (focus)="setActive(null)"
@@ -208,9 +258,10 @@
                             *ngFor="let a of pair.value.illustrations; let kks = index">
                             <input type="text" [value]="a" (change)="setIllustration(item.key,pair.key,kks,$event)">
                         </span></div>
-                    <div *ngIf="isIllustrated(item.key, pair.key)">Illustration: 
-                            <input type="text" [value]="dict.definitions[item.key].properties[pair.key].illustration || ''" (change)="setIllustrationField(item.key,pair.key,$event)">
-                        </div>
+                    <div *ngIf="isIllustrated(item.key, pair.key)">Illustration:
+                        <input type="text" [value]="dict.definitions[item.key].properties[pair.key].illustration || ''"
+                            (change)="setIllustrationField(item.key,pair.key,$event)">
+                    </div>
                     <div>
                         Condition: <select (focus)="setActive(null)"
                             (change)="setCondition(pair.value, item.key, pair.key, $event)">
@@ -225,7 +276,8 @@
                             <option value="==" [selected]="pair.value.conditionComparison=='=='">==</option>
                         </select>
 
-                        <select *ngIf="pair.value.condition && dict.definitions[item.key].properties[pair.value.condition]"
+                        <select
+                            *ngIf="pair.value.condition && dict.definitions[item.key].properties[pair.value.condition]"
                             (change)="setPropertyValue(pair.value, 'conditionValue', $event)">
                             <option></option>
                             <option *ngFor="let vlw of dict.definitions[item.key].properties[pair.value.condition].enum"
