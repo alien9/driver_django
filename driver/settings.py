@@ -659,7 +659,8 @@ DEFAULT_FROM_EMAIL = os.environ.get(
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', None)
 # ADMIN_TWO_FACTOR_NAME = os.getenv('APP_NAME', 'AIRSO-Mahdar')
 SESSION_COOKIE_AGE = os.getenv('SESSION_COOKIE_AGE', 1200)
-
+SESSION_EXPIRE_AT_BROWSER_CLOSE=True
+SESSION_SAVE_EVERY_REQUEST=True
 # start rich
 
 customColorPalette = [
