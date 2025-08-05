@@ -16,7 +16,6 @@ from django.utils import timezone
 import hashlib
 import datetime
 import random
-from oauth2client import client, crypt
 from django.urls import reverse
 
 from rest_framework import status, viewsets
@@ -132,7 +131,7 @@ def validate_oauth_token(token):
             return Response({'token': token.key, 'user': token.user_id})
         else:
             return JsonResponse({'error': 'This login is not valid in this application'}, status=status.HTTP_403_FORBIDDEN)
-    except crypt.AppIdentityError:
+    except Exception:
         return JsonResponse({'error': 'Invalid token'}, status=status.HTTP_403_FORBIDDEN)
 
 
