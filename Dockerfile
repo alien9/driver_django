@@ -24,7 +24,6 @@ COPY data /opt/app/data
 COPY driver /opt/app/driver
 COPY driver_auth /opt/app/driver_auth
 COPY grout /opt/app/grout
-COPY vida /opt/app/vida
 COPY locale /opt/app/locale
 COPY templates /opt/app/templates
 COPY user_filters /opt/app/user_filters

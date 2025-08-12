@@ -1,6 +1,5 @@
 from constance import config
 from django.conf.urls.static import static
-from vida.client import login_irap, getdataset, getlat_lon, fatalitydata
 from django.conf.urls.i18n import i18n_patterns
 from user_filters import views as filt_views
 from driver_auth import views as auth_views
@@ -87,11 +86,6 @@ urlpatterns = [
     re_path(r'^download/(?P<filename>[^\/]*)$', data_views.download),
     re_path('tiles/', data_views.proxy),
     re_path('mapserver/', data_views.mapserver),
-    # re_path('segments/', data_views.segment_sets),
-    re_path('api/irap-login/', login_irap),
-    re_path('api/irap-getdataset/', getdataset),
-    re_path('api/irap-getlat_lon/', getlat_lon),
-    re_path('api/irap-fatalitydata/', fatalitydata),
     re_path(r'^get_config/', auth_views.get_config),
     re_path(r'^signup/', auth_views.signup),
     re_path(r'^photologue/', include('photologue.urls', namespace='photologue')),

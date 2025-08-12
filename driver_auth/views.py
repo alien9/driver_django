@@ -254,7 +254,7 @@ def user_create(request):
 @csrf_exempt
 def signup(request):
     if request.POST:
-        nop
+        pass
     else:
         form = CaptchaSignupForm()
         r = HttpResponse(form.as_p())

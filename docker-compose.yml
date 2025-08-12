@@ -116,5 +116,5 @@ services:
     ports:
       - 4222:4200
       - 9876:9876
-    profiles:
-      - ${GROUTEDITOR}
+    #profiles:
+    #  - ${GROUTEDITOR}

@@ -155,7 +155,6 @@ MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -181,6 +180,8 @@ if DEBUG:
         # Until an alternative is available, we have to trust DEBUG=True is safety enough
         'SHOW_TOOLBAR_CALLBACK': lambda request: True
     }
+else:
+    MIDDLEWARE += ('django.middleware.csrf.CsrfViewMiddleware',)
 
 
 ROOT_URLCONF = 'driver.urls'
@@ -628,9 +629,6 @@ CONSTANCE_CONFIG = {
     'MAPILLARY_TOKEN': ("", _("Mapillary token")),
     'MAPILLARY_EXPIRES': ("", _("Mapillary expiry date")),
     'NOMINATIM': ("", _("Nominatim key")),
-    'IRAP_AUTH_ID': ("", _("iRAP Auth ID")),
-    'IRAP_API_KEY': ("", _("iRAP API key")),
-    'IRAP_PRIVATE_KEY': ("", _("iRAP Private key")),
     'OPENWEATHER_RAPID_KEY': ((os.getenv('OPENWEATHER_RAPID_KEY', '')), _("Open Weather API")),
     'CURRENCY': ((os.getenv('CURRENCY', '')), _("Currency")),
     'IDLE_TIMEOUT': ((os.getenv('IDLE_TIMEOUT', '')), _("Idle Timeout")),
@@ -659,8 +657,8 @@ DEFAULT_FROM_EMAIL = os.environ.get(
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', None)
 # ADMIN_TWO_FACTOR_NAME = os.getenv('APP_NAME', 'AIRSO-Mahdar')
 SESSION_COOKIE_AGE = os.getenv('SESSION_COOKIE_AGE', 1200)
-SESSION_EXPIRE_AT_BROWSER_CLOSE=True
-SESSION_SAVE_EVERY_REQUEST=True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_SAVE_EVERY_REQUEST = True
 # start rich
 
 customColorPalette = [
