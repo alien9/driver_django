@@ -4,6 +4,6 @@
 <fieldset class="module aligned {{ fieldset.classes }}">
   <textarea style="display:none" name="{{ widget.name }}_loader" {% include "django/forms/widgets/attrs.html"  %}>
 {% if widget.value %}{{ widget.value }}{% endif %}</textarea>
-<app-jsoneditor textarea_id="{{widget.attrs|get_item:"id"}}" textarea_name="{{widget.name}}"></app-jsoneditor>
-<script src="{% static "dist/grouteditor/browser/polyfills-B6TNHZQ6.js" %} type=""module"></script><script src="{% static "dist/grouteditor/browser/main-QQZDHCSN.js" %} type=""module"></script>
+<app-grouteditor textarea_id="{{widget.attrs|get_item:"id"}}" textarea="{{widget.attrs|get_item:"id"}}" textarea_name="{{widget.name}}"></app-grouteditor>
+<script src="{% static "dist/grouteditor/browser/polyfills-B6TNHZQ6.js" %}" type="module"></script><script src="{% static "dist/grouteditor/browser/main-QAPEHLLQ.js" %}" type="module"></script>
 </fieldset>

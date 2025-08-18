@@ -12,6 +12,40 @@ from django.urls import re_path
 from django.urls import include, path, re_path
 from django.contrib import admin
 
+from django.contrib import admin
+from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.contrib.auth.views import redirect_to_login
+from django.http import HttpResponseRedirect
+from django.shortcuts import resolve_url
+from django.urls import include, path, reverse
+from django.utils.http import url_has_allowed_host_and_scheme
+
+from two_factor.admin import AdminSiteOTPRequired, AdminSiteOTPRequiredMixin
+from two_factor.urls import urlpatterns as tf_urls
+
+class CustomAdminSiteOTPRequired(AdminSiteOTPRequired):
+    def login(self, request, extra_context=None):
+        redirect_to = request.POST.get(
+            REDIRECT_FIELD_NAME, request.GET.get(REDIRECT_FIELD_NAME)
+        )
+        if request.method == "GET" and super(
+            AdminSiteOTPRequiredMixin, self
+        ).has_permission(request):
+            if request.user.is_verified():
+                index_path = reverse("admin:index", current_app=self.name)
+            else:
+                index_path = reverse("two_factor:setup", current_app=self.name)
+            return HttpResponseRedirect(index_path)
+
+        if not redirect_to or not url_has_allowed_host_and_scheme(
+            url=redirect_to, allowed_hosts=[request.get_host()]
+        ):
+            redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
+
+        return redirect_to_login(redirect_to)
+
+
+admin.site.__class__ = CustomAdminSiteOTPRequired
 admin.autodiscover()
 admin.site.enable_nav_sidebar = False
 
@@ -50,7 +84,8 @@ urlpatterns = i18n_patterns(
 
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
-    #re_path('^', include('django.contrib.auth.urls')),
+    path("", include(tf_urls)),
+    path('accounts/', include('django.contrib.auth.urls')),
     re_path(r'^api/', include(router.urls)),
     re_path(r'^api/create-user/', auth_views.user_create),
     re_path(r'^editor/$', data_views.editor),
@@ -117,8 +152,11 @@ urlpatterns += [
 urlpatterns += [
     path('two_factor/', include(('admin_two_factor.urls', 'admin_two_factor'), namespace='two_factor')),
 ]
-
+#urlpatterns += [
+# path('', include(tf_urls)),
+#]
 admin.site.site_header = os.getenv("SITE_HEADER", f"{config.APP_NAME} Administration")
 admin.site.site_title = os.getenv("SITE_TITLE", f"{config.APP_NAME} Administration")
 admin.site.index_title = os.getenv("SITE_INDEX", f"{config.APP_NAME} Admin Start")
+
 

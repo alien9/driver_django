@@ -8,12 +8,6 @@ class GroutEditorWidget(forms.Widget):
   class Media:
     css = {'all': ('jsoneditor.css',)}
     js = (
-#      'dist/grouteditor/main.js',
-#      'dist/grouteditor/polyfills.js',
-#      'dist/grouteditor/styles.js',
-#      'dist/grouteditor/runtime.js',
-#      'dist/grouteditor/vendor.js',
-#      'dist/grouteditor/main.js',
     )
   template_name = 'grouteditor.html'
 

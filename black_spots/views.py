@@ -358,15 +358,3 @@ BBOX={x0},{y0},{x1},{y1}&WIDTH=1000&HEIGHT=1000&format=image/png"
         match = regex.match(uuid)
         return bool(match)
 
-    @action(methods=['get'], detail=True)
-    def reverse(self, request, pk=None):
-        if not valid_uuid(pk):
-            return JsonResponse({"status": "Not Valid Road", "result": []})
-        if not 'lat' in request.query_params or not 'lon' in request.query_params:
-            return JsonResponse({"status": "Not Valid LatLng", "result": []})
-        
-        query = f"SELECT r.uuid,r.created ,r.modified, r.roadmap_id,r.data, r.name, r.geom \
-  FROM black_spots_road r where r.roadmap_id='{pk}' \
-    ORDER BY r.geom <-> ST_SetSRID(ST_MakePoint({str(float(request.query_params['lon']))},{str(float(request.query_params['lat']))}),4326) limit 1"
-        knn = Road.objects.raw(query)[0]
-        return JsonResponse({"status": "OK", "result": []})

@@ -108,7 +108,14 @@ else:
 # Application definition
 
 INSTALLED_APPS = (
-    'admin_two_factor.apps.TwoStepVerificationConfig',
+    'django_otp',
+    'django_otp.plugins.otp_static',
+    'django_otp.plugins.otp_totp',
+    # 'django_otp.plugins.otp_email',  # <- if you want email capability.
+    'two_factor',
+    # 'two_factor.plugins.phonenumber', # <- if you want phone number capability.
+    # 'two_factor.plugins.email',  # <- if you want email capability.
+    # 'two_factor.plugins.yubikey',  # <- for yubikey capability.
 
     'grout',
     'django.contrib.auth',
@@ -156,14 +163,18 @@ MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # 'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
-    # 'django_otp.middleware.OTPMiddleware',
 )
+
+LOGIN_URL = 'two_factor:login'
+LOGIN_REDIRECT_URL = 'two_factor:profile'
+
 if DEBUG:
     # Perform set up for Django Debug Toolbar
     INSTALLED_APPS += (
@@ -186,16 +197,15 @@ else:
 
 ROOT_URLCONF = 'driver.urls'
 
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-)
-
+# TEMPLATE_LOADERS = (
+#    'django.template.loaders.filesystem.Loader',
+#    'django.template.loaders.app_directories.Loader',
+# )
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [os.path.join(BASE_DIR, 'templates'), PHOTOLOGUE_APP_DIR],
-        'APP_DIRS': False,
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -203,10 +213,10 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
-            'loaders': [
-                'django.template.loaders.app_directories.Loader',
-                'django.template.loaders.filesystem.Loader',
-            ],
+            # 'loaders': [
+            #    'django.template.loaders.app_directories.Loader',
+            #    'django.template.loaders.filesystem.Loader',
+            # ],
 
         },
     },
@@ -268,11 +278,11 @@ BLACKSPOT_RECORD_TYPE_LABEL = os.environ.get(
 STATIC_URL = os.environ.get('STATIC_URL', '/static/')
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/opt/app/static/')
 
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'templates/dist'),
-    os.path.join(BASE_DIR, 'templates/schema_editor/dist'),
-    os.path.join(BASE_DIR, 'web'),
-)
+# STATICFILES_DIRS = (
+# os.path.join(BASE_DIR, 'templates/dist'),
+# os.path.join(BASE_DIR, 'templates/schema_editor/dist'),
+# os.path.join(BASE_DIR, 'web'),
+# )
 
 # Media files (uploaded via API)
 # https://docs.djangoproject.com/en/1.8/topics/files/
