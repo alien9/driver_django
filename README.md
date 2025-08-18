@@ -2,13 +2,13 @@ This project is deployed with docker containers.
 
 ## Environment
 
-You must define the constant values in the `.env` file. A template `.env.sample` is provided, and it contains the keys and values needed for DRIVER to run.
+You must define the constant values in the `.env` file. A template `.env.sample` is provided, and it contains the keys and values needed for MAHDAR to run.
 
 In the project directory, you can run:
 
 `docker-compose up -d`
 
-There are 5 containers running as daemons in order to make DRIVER available.
+There are 5 containers running as daemons in order to make MAHDAR available.
 The nginx server is set up at the host in the standard mode. 
 
 
@@ -26,7 +26,7 @@ Postgresql
 
 Python 3.8.5; PostgreSQL 9.4; GDAL 2.4.1; PostGIS 2.5; node v12.22.12; npm 6.14.16
 
-## AngularJS front-end
+## Angular front-end
 
 ./angular/driver
 
@@ -75,20 +75,13 @@ The .env must conytain the following parameters:
 `
 HOST_NAME=<domain_name>
 PROTOCOL=https # for ssl 
-STATIC_ROOT=<absolute_path_where_you_placed_the_files>
-CLIENTID=<google_client_id>
-CLIENT_SECRET=<google_client_secret>
 TIMEZONE=America/La_Paz
 NOMINATIM=<nominatim_key>
 PRIMARYLABEL=<label_record_type>
 SECONDARYLABEL=<intervention_name>
 COUNTRY_CODE=<country_code>
-CENTER_LATITUDE=<latitude>
-CENTER_LONGITUDE=<longitude>
-ZOOM=11
 LANGUAGES='[{id: "pt-br", label:"Português", rtl: !1},{id: "es",label: "Español", rtl: !1},{id: "en-us", label: "English", rtl: !1}]'
 DATABASE_PASSWORD=<database_password>
-DRIVER_ADMIN_PASSWORD=<admin_password>
 CONTAINER_NAME=<container_name>
 DATABASE_NAME=<database_name>
 DATABASE_USERNAME=<database_username>
