@@ -93,7 +93,6 @@ export class MapComponent implements OnInit {
     this.setDrawing.emit(false)
   }
   onMapReady(e: any) {
-    console.log("this is the map ready, should happend once!!!")
     this.map.emit(e)
     e.on('overlayadd', e => {
     })

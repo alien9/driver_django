@@ -6,8 +6,8 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class DisplayPipe implements PipeTransform {
     transform(items: any[]): any {
-        return items.filter((a) => {
+        return (items)?items.filter((a) => {
             return a.key!="_localId"
-        })
+        }):[]
     }
 }

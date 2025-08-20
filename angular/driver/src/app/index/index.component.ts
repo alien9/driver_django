@@ -38,7 +38,7 @@ export class IndexComponent implements OnInit {
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
     if (event.key && event.key == 'Escape') {
-      this.navbar.inserting = false
+      if(this.navbar)this.navbar.inserting = false
       this.listening = false
       $('.leaflet-container').css('cursor', 'grab');
     }
@@ -147,15 +147,14 @@ export class IndexComponent implements OnInit {
       if (data['DEFAULT_LANGUAGE']?.length) {
         let current = localStorage.getItem("Language") || navigator.language
         let langs = data['LANGUAGES'] || []
-        if (langs.map((k) => k.code).indexOf(current) < 0) {
-          this.setLanguage(data['DEFAULT_LANGUAGE'])
-        }
+        //if (langs.map((k) => k.code).indexOf(current) < 0) {
+        //  this.setLanguage(data['DEFAULT_LANGUAGE'])
+        //}
       }
       this.locale = localStorage.getItem("Language")
       if (this.route.snapshot.queryParamMap.get('language') && (this.route.snapshot.queryParamMap.get('language') != this.locale)) {
         if (this.config['LANGUAGES'] && (this.config['LANGUAGES'].map((k) => k.code).indexOf(this.route.snapshot.queryParamMap.get('language')) >= 0)) {
           localStorage.setItem("Language", this.route.snapshot.queryParamMap.get('language'))
-          let lang = this.route.snapshot.queryParamMap.get('language')
           this.locale = this.route.snapshot.queryParamMap.get('language')
           localStorage.setItem("Language", this.locale)
           this.router.navigateByUrl('/').finally(() => {

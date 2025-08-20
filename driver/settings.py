@@ -77,7 +77,7 @@ if os.getenv('LANGUAGES', None):
         'en': 'English',
         'en-gb': 'English',
         'lo': 'Laotian',
-        'pt-br': 'Brazilian Portuguese',
+        'pt-BR': 'Brazilian Portuguese',
         'es': 'Spanish',
         'fr': 'French',
         'zh-hans': 'Simplified Chinese',
@@ -99,7 +99,7 @@ else:
     LANGUAGES = [
         ('en-gb', _('English')),
         ('lo', _('Laotian')),
-        ('pt-br', _('Brazilian Portuguese')),
+        ('pt-BR', _('Brazilian Portuguese')),
         ('es', _('Spanish')),
         ('fr', _('French')),
         ('zh-hans', _('Simplified Chinese')),
