@@ -13,16 +13,25 @@ export class ConditionPipe implements PipeTransform {
       data = args[0][args[1]]
     }
     return value.filter((k: any) => {
+      console.log(k)
       if (k.value.condition) {
-        if (data[k.value.condition]) {
-          if (k.value.conditionRegex && k.value.conditionRegex.length) {
-            const rex = new RegExp(k.value.conditionRegex)
-            if (Array.isArray(data[k.value.condition])) {
-              return data[k.value.condition].map((o) => o.match(rex)).filter((j) => !!j).length > 0
-            }
-            return data[k.value.condition].match(new RegExp(k.value.conditionRegex))
+        if (data[k.value.condition] && k.value.conditionValue && k.value.conditionValue.length) {
+          console.log("condition", data[k.value.condition])
+          console.log(data[k.value.condition])
+
+          console.log(typeof k.value.conditionValue)
+
+          console.log(typeof data[k.value.condition])
+          if ((typeof data[k.value.condition]) == 'string')
+            return k.value.conditionValue.indexOf(data[k.value.condition]) >= 0
+          if ((typeof data[k.value.condition]) == 'object') {
+            let r: boolean = false
+            Array.from(data[k.value.condition]).forEach((u) => {
+              if (k.value.conditionValue.indexOf(u) >= 0)
+                r = true
+            })
+            return r
           }
-          return data[k.value.condition] == k.value.conditionValue
         } else {
           return false
         }

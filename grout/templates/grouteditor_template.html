@@ -5,5 +5,5 @@
   <textarea style="display:none" name="{{ widget.name }}_loader" {% include "django/forms/widgets/attrs.html"  %}>
 {% if widget.value %}{{ widget.value }}{% endif %}</textarea>
 <app-grouteditor textarea_id="{{widget.attrs|get_item:"id"}}" textarea="{{widget.attrs|get_item:"id"}}" textarea_name="{{widget.name}}"></app-grouteditor>
-<script src="{% static "dist/grouteditor/browser/polyfills-B6TNHZQ6.js" %}" type="module"></script><script src="{% static "dist/grouteditor/browser/main-G2WPDSMR.js" %}" type="module"></script>
+<script src="{% static "dist/grouteditor/runtime.js" %}" defer></script><script src="{% static "dist/grouteditor/polyfills.js" %}" defer></script><script src="{% static "dist/grouteditor/styles.js" %}" defer></script><script src="{% static "dist/grouteditor/vendor.js" %}" defer></script><script src="{% static "dist/grouteditor/main.js" %}" defer></script>
 </fieldset>

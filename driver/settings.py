@@ -42,17 +42,21 @@ PRODUCTION = not DEVELOP and not STAGING
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # os.environ['DJANGO_SECRET_KEY']
-SECRET_KEY = 'sfdgljfkghdjkgfhjkghdskljhgljhsdjkghfgjklhdgjklshjkhg'
+SECRET_KEY =  os.environ.get('SECRET_KEY', None)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DEVELOP
 TESTING = 'test' in sys.argv
 
-ALLOWED_HOSTS = ['*']
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS=[os.environ.get('HOST_NAME','*'), 'localhost']
+    CSRF_TRUSTED_ORIGINS=ALLOWED_HOSTS
+
 # TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 CORS_ALLOW_ALL_ORIGINS = DEBUG
-
 # CORS_ALLOW_CREDENTIALS = True
 # CORS_ALLOW_METHODS = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
 
@@ -77,7 +81,7 @@ if os.getenv('LANGUAGES', None):
         'en': 'English',
         'en-gb': 'English',
         'lo': 'Laotian',
-        'pt-br': 'Brazilian Portuguese',
+        'pt-BR': 'Brazilian Portuguese',
         'es': 'Spanish',
         'fr': 'French',
         'zh-hans': 'Simplified Chinese',
@@ -99,7 +103,7 @@ else:
     LANGUAGES = [
         ('en-gb', _('English')),
         ('lo', _('Laotian')),
-        ('pt-br', _('Brazilian Portuguese')),
+        ('pt-BR', _('Brazilian Portuguese')),
         ('es', _('Spanish')),
         ('fr', _('French')),
         ('zh-hans', _('Simplified Chinese')),

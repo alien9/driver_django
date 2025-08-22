@@ -152,11 +152,7 @@ urlpatterns += [
 urlpatterns += [
     path('two_factor/', include(('admin_two_factor.urls', 'admin_two_factor'), namespace='two_factor')),
 ]
-#urlpatterns += [
-# path('', include(tf_urls)),
-#]
-admin.site.site_header = os.getenv("SITE_HEADER", f"{config.APP_NAME} Administration")
-admin.site.site_title = os.getenv("SITE_TITLE", f"{config.APP_NAME} Administration")
-admin.site.index_title = os.getenv("SITE_INDEX", f"{config.APP_NAME} Admin Start")
 
-
+admin.site.site_header = f'{os.getenv("APP_NAME")} Administration'
+admin.site.site_title = f'{os.getenv("APP_NAME")} Administration'
+admin.site.index_title = f'{os.getenv("APP_NAME")} Administration'
