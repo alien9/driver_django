@@ -27,5 +27,6 @@ class GenerateViewsetQuery(object):
         sql, params = qset.query.sql_with_params()
         # get properly escaped string representation of the query
         query_str = cursor.mogrify(sql, params)
+        print("GENERATED QTHE QUERYYYYY", query_str)
         cursor.close()
         return query_str.decode('utf-8')

@@ -14,7 +14,7 @@ from constance import config
 from django.forms import ModelForm
 from django.forms.widgets import TextInput
 from django.contrib.auth.models import User
-from data.models import Irap
+#from data.models import Irap
 from django.contrib.auth.admin import UserAdmin
 from ordered_model.admin import OrderedModelAdmin
 from django_ckeditor_5.widgets import CKEditor5Widget
@@ -191,8 +191,8 @@ class RoadMapAdmin(admin.ModelAdmin):
         return actions
 
 
-class IrapInline(admin.StackedInline):
-    model = Irap
+#class IrapInline(admin.StackedInline):
+#    model = Irap
 
 
 class BlackSpotSetForm(ModelForm):
@@ -214,14 +214,6 @@ class BlackSpotSetAdmin(admin.ModelAdmin):
     class Meta:
         model = BlackSpotSet
         fields = '__all__'
-
-
-#class UserAdminDriver(UserAdmin):
-#    inlines = UserAdmin.inlines + [IrapInline]
-
-
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
 
 admin.site.register(RecordSchema, RecordSchemaAdmin)
 admin.site.register(RecordType, RecordTypeAdmin)

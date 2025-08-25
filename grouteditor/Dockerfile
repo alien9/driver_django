@@ -1,4 +1,4 @@
-FROM node:12-buster
+FROM node:20-bullseye
 
 WORKDIR /opt/driver/
 COPY src /opt/driver/src
@@ -9,6 +9,7 @@ COPY package.json /opt/driver/
 COPY tsconfig.app.json /opt/driver/
 COPY tsconfig.json /opt/driver/
 COPY tsconfig.spec.json /opt/driver/
+COPY tsconfig.base.json /opt/driver/
 COPY tslint.json /opt/driver/
 COPY tsconfig.base.json /opt/driver/
 

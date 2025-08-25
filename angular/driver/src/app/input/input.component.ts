@@ -18,7 +18,7 @@ import { catchError, debounceTime, distinctUntilChanged, map, tap, switchMap } f
 import { TranslateService } from '@ngx-translate/core';
 import "leaflet.vectorgrid";
 import "leaflet.locatecontrol";
-import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
+//import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 
 @Component({
   selector: 'app-input',
