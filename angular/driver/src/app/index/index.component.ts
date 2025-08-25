@@ -12,12 +12,11 @@ import { getLocaleDirection } from '@angular/common';
 import { NgxSpinnerService } from "ngx-spinner";
 import { NavbarComponent } from '../navbar/navbar.component'
 import { ChartsComponent } from '../charts/charts.component';
-import { IrapPopupComponent } from '../irap-popup/irap-popup.component';
 import writeXlsxFile from 'write-excel-file'
 import { TranslateService } from '@ngx-translate/core';
 import * as uuid from 'uuid';
 import "leaflet.locatecontrol";
-import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
+//import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 import sha256 from 'crypto-js/sha256';
 import { Title } from "@angular/platform-browser";
 import { DatePipe } from '@angular/common';
@@ -29,7 +28,6 @@ import { DatePipe } from '@angular/common';
 })
 export class IndexComponent implements OnInit {
   @ViewChild('blocker') blockerDialog;
-  iRapBounds: L.LatLngBounds;
   about_content: string;
   screenTimeout: any;
   lockTimeout: any;
@@ -82,13 +80,11 @@ export class IndexComponent implements OnInit {
   private isDrawing: boolean = false
   private lastState: string
   public mapillary_id: string
-  public irapDataset;
   public localRecordIndex = -1
   supportsLocalDate: boolean
   roadmap_uuid: string
   listPage: number = 1
   listening: boolean = false
-  hasIrap: boolean
   locale: string
   weekdays: object
   reportFilters: object[]
@@ -101,21 +97,11 @@ export class IndexComponent implements OnInit {
     "theme": []
   }
 
-  private irapColor = [
-    '#000000',
-    '#ff0000',
-    '#ff9900',
-    '#ffaa00',
-    '#ffff44',
-    '#009900',
-  ]
   theme: object = {}
   segment: object = {}
   @ViewChild(NavbarComponent) navbar!: NavbarComponent;
   @ViewChild(ChartsComponent) charts!: ChartsComponent;
   popContent: any
-  iRapData: object
-  iraplayer: object = { when: 'after', what: 'pedestrian' }
   localRecords: any[] = JSON.parse(localStorage.getItem("records") || "[]")
   constructor(
     private recordService: RecordService,
@@ -249,11 +235,6 @@ export class IndexComponent implements OnInit {
     const mapillary_auth: string = this.route.snapshot.queryParamMap.get('code');
     if (mapillary_auth) {
       localStorage.setItem('mapillary_auth', mapillary_auth)
-    }
-    this.iRapData = (this.config['IRAP_KEYS']) ? { "data": this.config['IRAP_KEYS'], "settings": this.config['IRAP_SETTINGS'] } : null
-    if (localStorage.getItem("irapDataset")) {
-      this.irapDataset = JSON.parse(localStorage.getItem("irapDataset"))
-      if (!this.irapDataset['selected']) this.irapDataset['selected'] = {}
     }
 
     this.weekdays = {}
@@ -1113,109 +1094,7 @@ export class IndexComponent implements OnInit {
     m.dismiss('Cross click')
     this.mapillary_id = null
   }
-  setIrap(e: object) {
-    if (e['iRap']) {
-      this.iRapData = e['iRap']
-    }
-    if (e['user']) {
-      this.config['IRAP_KEYS'] = e['user']['data']
-      this.config['IRAP_SETTINGS'] = e['user']['settings']
-      localStorage.setItem('config', JSON.stringify(this.config))
-    }
-    if (e['dataset']) {
-      this.irapDataset = e['dataset']
-      if (!this.irapDataset['selected']) this.irapDataset['selected'] = {}
-      localStorage.setItem('irapDataset', JSON.stringify(this.irapDataset))
-    }
-    if (e['layer']) {
-      if (e['layer']['data'] && e['layer']['data']['startdata']) {
-        this.iraplayer['data'] = e['layer']['data']['startdata']
-        this.drawIrap()
-        this.hasIrap = true
-        this.iraplayer['title'] = this.irapDataset['data'].map(ds => {
-          return { 'name': ds['name'], 'dataset_data': ds['dataset_data'].filter(dsd => this.irapDataset['selected'][dsd['id']]) }
-        }).filter(ds => ds['dataset_data'].length)
-      }
-    }
-  }
-  removeIrapLayer() {
-    if (this.layersControl.overlays['iRap']) {
-      this.map.removeLayer(this.layersControl.overlays['iRap'])
-      delete this.layersControl.overlays['iRap']
-    }
-  }
-  iRapCenter(e) {
-    if (this.iRapBounds) {
-      this.map.fitBounds(this.iRapBounds)
-    }
-  }
-  drawIrap(what = null) {
-    this.removeIrapLayer()
-    if (what) {
-      this.iraplayer['what'] = what // which road user is this
-    } else {
-      if (!this.iraplayer['what']) this.iraplayer['what'] = 'car'
-    }
-    let bds
-    let lg = L.layerGroup(this.iraplayer['data'].map(seg => {
-      let l = L.polyline([[seg.latitude, seg.longitude], [seg.latitude_to, seg.longitude_to]], { location_id: seg['location_id'], dataset_id: seg['dataset_id'], color: this.irapColor[parseInt(seg[`${this.iraplayer['what']}_star_${this.iraplayer['when']}`]) - 1] })
-      if (!bds) bds = l.getBounds()
-      else {
-        bds.extend(l.getBounds())
-      }
-      l.on('click', e => {
-        let yl = e.sourceTarget
-        let component = this.resolver.resolveComponentFactory(IrapPopupComponent).create(this.injector);
-        component.changeDetectorRef.detectChanges();
-        L.popup({ minWidth: 600, maxHeight: 420 })
-          .setLatLng(e.latlng)
-          .setContent(component.location.nativeElement)
-          .openOn(this.map);
-        this.zone.run(() => {
-          let b = {
-            language_code: this.locale,
-            dataset_id: yl.options['dataset_id']
-          }
-          let l = yl.getLatLngs()
-          b["latitude"] = l[0]['lat']
-          b["longitude"] = l[0]['lng']
-          component.instance.loading = true
-          component.changeDetectorRef.detectChanges()
-          this.recordService.getIRapFatalityData({ "body": b }).pipe(first()).subscribe(data => {
-            component.instance.roadName = data['data']['road_name']
-            component.instance.inspectionDate = data['data']['road_survey_date']
-            component.instance.rating = {
-              'pedestrian': Math.round(data['data']['pedestrian_star_rating_star']),
-              'bicycle': Math.round(data['data']['bicycle_star_rating_star']),
-              'car': Math.round(data['data']['car_star_rating_star']),
-              'motorcycle': Math.round(data['data']['motorcycle_star_rating_star']),
-            }
-            component.instance.fe = {
-              'pedestrian': data['data']['pedestrian_fe'],
-              'bicycle': data['data']['bicycle_fe'],
-              'car': data['data']['car_fe'],
-              'motorcycle': data['data']['motorcycle_fe'],
-            }
-            component.instance.roadFeatures = data['data'].road_features
-            component.instance.loading = false
 
-
-            component.changeDetectorRef.detectChanges()
-          })
-        })
-      })
-      return l
-    }))
-    this.iRapBounds = bds
-    this.layersControl.overlays['iRap'] = lg
-    this.map.addLayer(lg)
-    if (!what)
-      this.iRapCenter(null)
-  }
-  removeIrap() {
-    this.hasIrap = false
-    this.removeIrapLayer()
-  }
   reloadRecords(e: any) {
     if (this.localRecordIndex > -1) {
       if (this.localRecords && this.localRecords.length > this.localRecordIndex) {

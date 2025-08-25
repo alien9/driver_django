@@ -29,7 +29,7 @@ from django.db.models import (
     FilteredRelation,
     Case,
     CharField,
-    Count,
+    Count,Min,Max,
     DateTimeField,
     IntegerField,
     OuterRef,
@@ -72,7 +72,7 @@ from driver_auth.permissions import (IsAdminOrReadOnly,
                                      IsAdminAndReadOnly,
                                      is_admin_or_writer)
 from data.tasks import export_csv, generate_blackspots
-from data.models import DriverRecord, SegmentSet, Dictionary, Attachment
+from data.models import DriverRecord, SegmentSet, Dictionary, RecordSegment, Attachment
 from black_spots.models import BlackSpotSet
 from data.localization.date_utils import (
     hijri_day_range,
@@ -93,7 +93,6 @@ from driver import mixins
 from functools import reduce
 from django.shortcuts import render
 from django.db.models.expressions import RawSQL
-from django.views.decorators.csrf import csrf_exempt
 from proxy.views import proxy_view
 
 
@@ -184,18 +183,14 @@ def mapillary_callback(request):
     return JsonResponse(j)
 
 
-@csrf_exempt
 def proxy(request):
     remoteurl = "%s:5000%s" % (config.WINDSHAFT, request.path,)
     return proxy_view(request, remoteurl)
 
 
-@csrf_exempt
 def mapserver(request):
     return proxy_view(request, "http://%s%s" % (config.MAPSERVER, request.path,))
 
-
-@csrf_exempt
 def legend(request, layer, mapfile):
     if layer == 'theme':
         path = "?map=/etc/mapserver/theme_{mapfile}.map&VERSION=1.1.1&LAYERS=theme&mode=legend".format(
@@ -208,8 +203,6 @@ def legend(request, layer, mapfile):
         )
         return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
 
-
-@csrf_exempt
 def grid(request, geometry, mapfile, layer, z, x, y):
     num_sq = math.pow(2, int(z))
     size_sq = 40075016.68557849/num_sq
@@ -239,7 +232,6 @@ def grid(request, geometry, mapfile, layer, z, x, y):
     return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
 
 
-@csrf_exempt
 def maps(request, geometry, mapfile, layer, z, x, y):
     if geometry == 'boundary' and not os.path.exists("./mapserver/boundary_%s.map" % (mapfile)):
         b = Boundary.objects.get(pk=mapfile)
@@ -367,6 +359,8 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         """Return the queryset with the filter backends applied. Handy for aggregations."""
         queryset = self.get_queryset()
         for backend in list(self.filter_backends):
+            print("GETTETETETETE FILTETETETETETETE")
+            print(backend)
             queryset = backend().filter_queryset(request, queryset, self)
         return queryset
 
@@ -826,16 +820,8 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         fq = cursor.mogrify(sql, params).decode('utf-8')
         display_field = b.roadmap.get_display_field() or 'Label field not defined'
         where = re.search('WHERE (.*)$', fq).group(1)
-        query_sql = "select r.id, count(*) as c, r.name, r.geom \
-         from data_recordsegment r\
-            join data_driverrecord_segment dr on dr.recordsegment_id =r.id\
-             join data_driverrecord drs on dr.driverrecord_id=drs.record_ptr_id\
-             join grout_record on grout_record.uuid=dr.driverrecord_id \
-             LEFT JOIN grout_recordschema ON (grout_record.schema_id = grout_recordschema.uuid) \
-             where r.size={size} and {where} group by r.id, r.geom, r.name".format(where=where, display_field=display_field, size=b.size)
-        # the complete query is set to the mapfile
-        # execute the small query
-        cursor.execute(query_sql)
+        dru=(RecordSegment.objects.filter(size=b.size).annotate(total=Count('driverrecord'))).values('total').distinct().order_by('total')
+
 
         query_sql = "select r.id, count(*) as c, r.name, r.geom \
          from data_recordsegment r\
@@ -845,16 +831,12 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
              LEFT JOIN grout_recordschema ON (grout_record.schema_id = grout_recordschema.uuid) \
              where st_intersects(!BOX!, r.geom) AND st_intersects(!BOX!, grout_record.geom) AND r.size={size} and {where} group by r.id, r.geom, r.name".format(where=where, display_field=display_field, size=b.size)
 
-        sample = list(set(map(lambda x: x[1], [r for r in cursor.fetchall()])))
-        # sample=sorted([r for r in cursor.fetchall()], key=lambda a: a[1])
-
-        i = 0
+        sample = dru.count()
         classes = []
-        sample.sort()
-        while i < len(sample):
-            min = sample[i]
-            max = sample[i]
-            opacity = round(100*i/len(sample))
+        for w in dru:
+            min = w['total']
+            max = w['total']
+            opacity = round(100.0*w['total']/sample)
             cl = {
                 'min': min,
                 'max': max,
@@ -863,7 +845,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 'opacity': opacity
             }
             classes.append(cl)
-            i += 1
         classes_legend = []
         if len(classes) <= 5:
             classes_legend = list(classes)
@@ -926,7 +907,13 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         if b.color is not None:
             h = b.color.lstrip('#')
             color = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
-
+        qset = BoundaryPolygon.objects.filter(
+            boundary_id=tables_boundary).values('uuid', 'geom', 'data')
+        samp=[]
+        for bu in qset:
+            fq = self.get_filtered_queryset(request).filter(geom__within=bu['geom']).count()
+            samp.append([bu['uuid'], fq, bu['data'].get(b.get_display_field())])
+        
         qset = BoundaryPolygon.objects.filter(
             boundary_id=tables_boundary).values('uuid', 'geom')
         cursor = connection.cursor().cursor
@@ -936,28 +923,21 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
 
         sql, params = qset.query.sql_with_params()
         gq = cursor.mogrify(sql, params).decode('utf-8')
-        where = reduce((lambda a, b: "%s AND %s" % (a, b)),
-                       map(
-            lambda x: re.search('WHERE (.*)$', x).group(1),
-            [fq, gq]
-        )
-        )
+        wheres=[]
+        m=re.search('WHERE (.*)$', fq)
+        if m is not None:
+            wheres.append(m.group(1))
+        m=re.search('WHERE (.*)$', gq)
+        if m is not None:
+            wheres.append(m.group(1))
+        where = " AND ".join(wheres)
+        
         # the complete query is set to the mapfile
         query_sql = 'SELECT "grout_boundarypolygon"."geom","grout_boundarypolygon"."uuid", count(*) as c FROM "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\'  LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") WHERE {where} GROUP BY "grout_boundarypolygon"."geom","grout_boundarypolygon"."uuid"'.format(
             where=where)
-        print(query_sql)
 
-        # execute the small query
-        cursor.execute('SELECT "grout_boundarypolygon"."uuid", case when c.c is null then 0 else c.c end, \
-            "grout_boundarypolygon".data->\'{display_field}\' from "grout_boundarypolygon"\
-                left join (SELECT "grout_boundarypolygon"."uuid", count(*) as c, "grout_boundarypolygon".data->\'{display_field}\' as name \
-                    FROM  "grout_boundarypolygon" LEFT JOIN "grout_record" on st_contains("grout_boundarypolygon"."geom", "grout_record"."geom")=\'t\' \
-                        LEFT JOIN "data_driverrecord" ON ("data_driverrecord"."record_ptr_id" = "grout_record"."uuid") \
-                            LEFT JOIN "grout_recordschema" ON ("grout_record"."schema_id" = "grout_recordschema"."uuid") \
-                                WHERE {where} GROUP BY "grout_boundarypolygon"."uuid") c on c.uuid="grout_boundarypolygon"."uuid" \
-                                    WHERE "grout_boundarypolygon"."boundary_id" = \'{boundary_id}\''.format(
-            where=where, display_field=b.get_display_field() or language, boundary_id=tables_boundary))
-        sample = sorted([r for r in cursor.fetchall()], key=lambda a: a[1])
+        sample = sorted(samp, key=lambda a: a[1])
+        print(sample)
         chunk = (len(sample)-1)/5.0
         i = 0
         classes = []
@@ -1997,7 +1977,6 @@ def get_config(request):
         }
         },
         status=status.HTTP_200_OK)
-
 
 class AttachmentViewSet(viewsets.ViewSet):
     parser_classes = (MultiPartParser,)

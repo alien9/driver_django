@@ -6,6 +6,7 @@ from fiona.crs import from_epsg
 from django.http import HttpResponse, Http404
 from shapely.geometry import mapping,MultiPolygon
 from shapely import wkt
+from django.template.loader import render_to_string
 
 from rest_framework import viewsets, mixins, status, serializers, renderers
 from rest_framework.decorators import action
@@ -118,24 +119,24 @@ class RecordViewSet(viewsets.ModelViewSet):
         if occurred_min and occurred_max:
             # Parse both dates in order to compare them.
             try:
-                min_date = parse(occurred_max)
+                min_date = parse(occurred_min)
             except ValueError:
                 # The parser could not parse the date string, so raise an error.
                 raise exceptions.QueryParameterException('occurred_max',
                                                          exceptions.DATETIME_FORMAT_ERROR)
-
             try:
                 max_date = parse(occurred_max)
+                print(max_date)
             except ValueError:
                 raise exceptions.QueryParameterException('occurred_max',
                                                          exceptions.DATETIME_FORMAT_ERROR)
-
             if occurred_min > occurred_max:
                 messages = {
                     'occurred_min': exceptions.MIN_DATE_RANGE_FILTER_ERROR,
                     'occurred_max': exceptions.MAX_DATE_RANGE_FILTER_ERROR
                 }
                 raise serializers.ValidationError(messages)
+            self.queryset=self.queryset.filter(occurred_from__lt=occurred_max, occurred_from__gt=occurred_min)
         return self.queryset
 
 

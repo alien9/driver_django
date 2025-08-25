@@ -3,7 +3,7 @@
     (boundaryChange)=setBoundary($event) (boundaryPolygonChange)=setBoundaryPolygon($event) [boundary]=boundary
     [boundaryPolygons]=boundaryPolygons [boundaryPolygon]=boundaryPolygon (filterChange)=setFilter($event)
     (stateChange)=selectState($event) (reportChange)=setReport($event) [stateSelected]=state (goBack)=goBack($event)
-    (iRapChange)=setIrap($event) [iRapData]=iRapData [irapDataset]=irapDataset (newRecord)=startRecord($event)
+    (newRecord)=startRecord($event)
     [inserting]=listening (startDownload)=download($event) [canWrite]="canWrite"
     (startGeography)="startGeometry(geoviewpoint)" (aboutCaller)="about(aboutview)">
 </app-navbar>
@@ -20,7 +20,7 @@
 
 <app-legend [config]="config" [legends]=legends [subtitles]=subtitles
     *ngIf="showLegend && (legends.length||subtitles.length)"></app-legend>
-<app-counter (iRapCenterChange)="iRapCenter($event)" (iRapChange)="drawIrap($event)" [irapLayer]=iraplayer
+<app-counter 
     [config]="config" [counts]=counts [filter]="filter" [fields]="filterAsText"
     *ngIf="showCounter && counts && state=='Map'"></app-counter>
 

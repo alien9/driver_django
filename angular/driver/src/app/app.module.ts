@@ -31,7 +31,6 @@ import { FilterAsTextPipe } from './report/filterAsText.pipe'
 
 import { DictDumpPipe } from './navbar/dict_dump.pipe'
 
-import { ByPassSecurityPipe } from './irap-popup/sanitize.pipe'
 import { FirstPipe } from './list/first.pipe'
 import { RelatedPipe } from './input/related.pipe'
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
@@ -65,7 +64,6 @@ import localeAr from '@angular/common/locales/ar';
 import localeFa from '@angular/common/locales/fa';
 import { NgxSpinnerModule } from "ngx-spinner";
 import { ChartsComponent } from './charts/charts.component';
-import { IrapPopupComponent } from './irap-popup/irap-popup.component';
 import { AuthService } from './auth.service'
 import { map } from 'rxjs/operators';
 import { DuplicateComponent } from './duplicate/duplicate.component';
@@ -175,7 +173,6 @@ switch (lang) {
     InputComponent,
     LoginComponent,
     NavbarComponent,
-    ByPassSecurityPipe,
     LocalCurrencyPipe,
     OrderedFieldsPipe,
     FormatTimePipe,
@@ -196,7 +193,6 @@ switch (lang) {
     IndexComponent,
     ReportComponent,
     ChartsComponent,
-    IrapPopupComponent,
     DuplicateComponent,
     LegendComponent,
     CounterComponent,
@@ -241,4 +237,3 @@ switch (lang) {
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AppModule { }
-
