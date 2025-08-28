@@ -84,7 +84,7 @@ services:
       - DJANGO_SETTINGS_MODULE=driver.settings_dev
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    entrypoint: ["celery", "-A", "driver", "worker", "--queue=taskworker", "--loglevel=info", "--concurrency=4"]
+    entrypoint: ["celery", "-A","driver", "worker", "--loglevel=info", "--concurrency=4", "-E", "--queues=taskworker"]
     container_name: driver-celery-${CONTAINER_NAME}
     image: alien9/driver-django
         

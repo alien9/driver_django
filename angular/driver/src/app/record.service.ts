@@ -143,7 +143,7 @@ export class RecordService {
     return axios.get(this.getBackend() + '/api/records/toddow/', { headers: this.getAxiosHeaders(), params: params })
   }
 
-  getTileKey(o: Object, q: any): Observable<any[]> {
+  getTileKey(o: Object, q: any): Promise<any> {
     var parameters = {
       archived: false,
       details_only: true,
@@ -158,7 +158,7 @@ export class RecordService {
       }
 
     }
-    return this.http.get<any[]>(this.getBackend() + '/api/records/?' + Utils.toQueryString(parameters), { headers: this.getHeaders() })
+    return axios.get(this.getBackend() + '/api/records/?' + Utils.toQueryString(parameters), { headers: this.getAxiosHeaders() })
   }
   getBoundaries(): Observable<any[]> {
     return this.http.get<any[]>(this.getBackend() + '/api/boundaries/?limit=all', { headers: this.getHeaders() })

@@ -9,12 +9,14 @@ from shapely import wkt
 from django.template.loader import render_to_string
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.gdal.error import GDALException
+from django.contrib.gis.db.models.functions import Centroid
 
 from rest_framework import viewsets, mixins, status, serializers, renderers
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
-from rest_framework.exceptions import ParseError
+from rest_framework.exceptions import ParseError, NotFound
+
 from rest_framework_gis.filters import InBBoxFilter
 from django.http import JsonResponse
 from django.db import connection
@@ -81,6 +83,26 @@ class GPKGRenderer(renderers.BaseRenderer):
 
 class BoundaryPolygonViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
+        print("getting polygons queryset")
+        queryset=BoundaryPolygon.objects.all()
+        value=self.request.query_params.get('filter', None)
+        if not value:
+            return queryset
+        rrg = re.compile(
+            '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}', re.I)
+        if not rrg.match(value):
+            return queryset
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "select st_ashexewkb(ST_SimplifyVW(gb.geom, st_area(gb.geom)/10000)) from grout_boundarypolygon gb where gb.uuid = %s", [value])
+                row = cursor.fetchone()
+            return queryset.annotate(c=Centroid("geom")).filter(c__within=row[0])
+        except ValueError as e:
+            raise ParseError(e)
+        except BoundaryPolygon.DoesNotExist as e:
+            raise NotFound(e)
         return BoundaryPolygon.objects.all()        
 
     queryset = BoundaryPolygon.objects.all()

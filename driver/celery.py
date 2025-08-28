@@ -11,6 +11,7 @@ from django.conf import settings
 app = Celery('driver')
 
 app.config_from_object('django.conf:settings')
+app.conf.result_backend = 'redis://172.17.0.1:6379/0'
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 

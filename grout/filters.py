@@ -222,8 +222,6 @@ class BoundaryPolygonFilter(GeoFilterSet):
         e.g. /api/boundarypolygons/?boundary=44a51b83-470f-4e3d-b71b-e3770ec79772
 
         """
-        print("filter by boundary")
-
         return queryset.filter(boundary=value)
     
     def filter_by_location(self, queryset, field_name, value):
@@ -234,7 +232,7 @@ class BoundaryPolygonFilter(GeoFilterSet):
     
     class Meta:
         model = BoundaryPolygon
-        fields = ['data', 'boundary']
+        fields = ['data', 'boundary', 'filter']
         filter_overrides = FILTER_OVERRIDES
 
 

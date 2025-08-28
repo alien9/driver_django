@@ -1879,12 +1879,14 @@ class RecordCsvExportViewSet(viewsets.ViewSet):
         filterkey is the same as the "tilekey" that we pass to Windshaft; it must be requested
         from the Records endpoint using tilekey=true
         """
+        print("EXPORTING CSV NOWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWw")
         filter_key = request.data.get('tilekey', None)
         if not filter_key:
             return Response({'errors': {'tilekey': 'This parameter is required'}},
                             status=status.HTTP_400_BAD_REQUEST)
 
         task = export_csv.delay(filter_key, request.user.pk)
+        print(task)
         return Response({'success': True, 'taskid': task.id}, status=status.HTTP_201_CREATED)
 
     # TODO: If we switch to a Django/ORM database backend, we can subclass AbortableTask
