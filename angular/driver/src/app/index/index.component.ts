@@ -38,7 +38,7 @@ export class IndexComponent implements OnInit {
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
     if (event.key && event.key == 'Escape') {
-      if(this.navbar)this.navbar.inserting = false
+      if (this.navbar) this.navbar.inserting = false
       this.listening = false
       $('.leaflet-container').css('cursor', 'grab');
     }
@@ -119,6 +119,10 @@ export class IndexComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const oneYearFromNow = new Date();
+    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+    const crsftoken = Array.from(document.getElementsByTagName("input")).filter((fl) => fl.getAttribute("name") == "csrfmiddlewaretoken").map((f) => f.value).pop()
+    if (crsftoken) document.cookie = `csrftoken=${crsftoken}; expires=${oneYearFromNow.toUTCString()}`
     if (this.route.snapshot.queryParamMap.get('language')) {
       let lang = this.route.snapshot.queryParamMap.get('language')
       this.locale = this.route.snapshot.queryParamMap.get('language')
@@ -135,7 +139,7 @@ export class IndexComponent implements OnInit {
     this.locale = localStorage.getItem("Language") || navigator.language
     localStorage.setItem("Language", this.locale)
     let du = (new Date()).toLocaleDateString(this.locale)
-    document.getElementsByTagName('html')[0].setAttribute("dir",getLocaleDirection(this.locale))
+    document.getElementsByTagName('html')[0].setAttribute("dir", getLocaleDirection(this.locale))
     this.supportsLocalDate = !du.match(/^Invalid/)
     if (window['android']) {
       this.showLegend = false
@@ -163,34 +167,33 @@ export class IndexComponent implements OnInit {
         }
       }
 
-      this.recordService.getRecordType().subscribe({
-        next: rata => {
-          if (rata['results']) {
-            let schema_uuid;
-            for (let i = 0; i < rata['results']?.length; i++) {
-              if (rata['results'][i]['label'] == data['PRIMARY_LABEL']) {
-                schema_uuid = rata['results'][i]['current_schema'];
-                this.recordtype_uuid = rata['results'][i]['uuid']
-                this.config['PRIMARY_LABEL_PLURAL'] = rata['results'][i]['plural_label']
-              };
-            }
-            if (schema_uuid) {
-              this.recordService.getRecordSchema(schema_uuid).subscribe(
-                sata => {
-                  localStorage.setItem('record_schema', JSON.stringify(sata));
-                  this.recordSchema = sata
-                  this.afterInit()
-                }
-              )
-            } else {
-              alert("record schema not found for " + data['PRIMARY_LABEL']);
-            }
-          } else {
-            alert(data['PRIMARY_LABEL'] + " record type not found")
+      this.recordService.getRecordType().then(recordTypeData => {
+        const rata=recordTypeData['data']
+        if (rata['results']) {
+          let schema_uuid;
+          for (let i = 0; i < rata['results']?.length; i++) {
+            if (rata['results'][i]['label'] == data['PRIMARY_LABEL']) {
+              schema_uuid = rata['results'][i]['current_schema'];
+              this.recordtype_uuid = rata['results'][i]['uuid']
+              this.config['PRIMARY_LABEL_PLURAL'] = rata['results'][i]['plural_label']
+            };
           }
-        }, error: err => {
-          this.router.navigateByUrl('/login')
+          if (schema_uuid) {
+            this.recordService.getRecordSchema(schema_uuid).then(
+              sata => {
+                localStorage.setItem('record_schema', JSON.stringify(sata.data));
+                this.recordSchema = sata.data
+                this.afterInit()
+              }
+            )
+          } else {
+            alert("record schema not found for " + data['PRIMARY_LABEL']);
+          }
+        } else {
+          alert(data['PRIMARY_LABEL'] + " record type not found")
         }
+      }).catch(err => {
+        this.router.navigateByUrl('/login')
       })
     })
   }
@@ -624,8 +627,9 @@ export class IndexComponent implements OnInit {
       }
     }
     if (!this.filter) {
-      this.recordService.getRecords({ 'uuid': this.recordSchema['record_type'] }, { 'filter': { 'limit': 1 } }).pipe(first()).subscribe({
-        next: data => {
+      this.recordService.getRecords({ 'uuid': this.recordSchema['record_type'] }, { 'filter': { 'limit': 1 } }).then(
+        next => {
+          const data=next.data
           if (!this.counts) this.counts = {}
           this.counts["total_crashes"] = data["count"]
           // set filter: last 3 months from latest found data
@@ -653,7 +657,7 @@ export class IndexComponent implements OnInit {
           }
           this.loadRecords(true)
         }
-      })
+      )
     } else {
       this.loadRecords(true)
       this.refreshList()
@@ -682,8 +686,9 @@ export class IndexComponent implements OnInit {
     this.counts = { 'total': null, 'total_crashes': null, 'subtotals': [] }
     this.recordService.getMapFileKey({ 'uuid': this.recordSchema["record_type"] }, {
       filter: this.filter
-    }).pipe(first()).subscribe(
-      data => {
+    }).then(
+      du => {
+        const data=du.data
         this.ready = true
         this.spinner.hide()
         let ts = (new Date()).getTime()
@@ -710,9 +715,9 @@ export class IndexComponent implements OnInit {
           if (e.data) {
             if (this.isDrawing) return
             let du = new Date(Date.parse(e.data['occurred_from']))
-            let timezone=e.data['timezone']||this.config['TIMEZONE']
+            let timezone = e.data['timezone'] || this.config['TIMEZONE']
             let t = $("#record-popup-content").html()
-              .replace(/-date-/, `${this.toLocaleDateString(du,timezone)} ${this.toLocaleTimeString(du, timezone).replace(/:00$/, '')}`)
+              .replace(/-date-/, `${this.toLocaleDateString(du, timezone)} ${this.toLocaleTimeString(du, timezone).replace(/:00$/, '')}`)
               .replace(/-location-/, e.data['location_text'])
               .replace(/-uuid-/, e.data['uuid'])
             new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
@@ -761,12 +766,12 @@ export class IndexComponent implements OnInit {
         }).pipe(first()).subscribe({
           next: data => {
             this.counts = data
-            
+
           }, error: err => {
-            this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"], 'limit': 1 }, { filter: this.filter }).pipe(first()).subscribe(
+            this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"], 'limit': 1 }, { filter: this.filter }).then(
               data => {
                 this.counts = {
-                  "total_crashes": data["count"]
+                  "total_crashes": data.data["count"]
                 }
               }
             )
@@ -775,19 +780,19 @@ export class IndexComponent implements OnInit {
         })
       })
   }
-  toLocaleDateString(d: Date, timezone:string) {
-    return (this.supportsLocalDate) ? d.toLocaleDateString(this.locale, {timeZone:timezone}) : d.toLocaleDateString()
+  toLocaleDateString(d: Date, timezone: string) {
+    return (this.supportsLocalDate) ? d.toLocaleDateString(this.locale, { timeZone: timezone }) : d.toLocaleDateString()
 
   }
-  toLocaleTimeString(d: Date, timezone:string) {
-    return (this.supportsLocalDate) ? d.toLocaleTimeString(this.locale, {timeZone:timezone}) : d.toLocaleTimeString()
+  toLocaleTimeString(d: Date, timezone: string) {
+    return (this.supportsLocalDate) ? d.toLocaleTimeString(this.locale, { timeZone: timezone }) : d.toLocaleTimeString()
   }
   getRoadMap() {
-    if(this.gettingRoadMap) return
-    this.gettingRoadMap=true
+    if (this.gettingRoadMap) return
+    this.gettingRoadMap = true
     this.recordService.getRoadMap().pipe(first()).subscribe({
       next: data => {
-        this.gettingRoadMap=false
+        this.gettingRoadMap = false
         if (data['result'])
           this.roadmap_uuid = data['result'][0]['uuid']
       }
@@ -803,10 +808,10 @@ export class IndexComponent implements OnInit {
       } else {
         delete this.filter['offset']
       }
-      this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"] }, { filter: this.filter }).pipe(first()).subscribe(
+      this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"] }, { filter: this.filter }).then(
         data => {
           this.spinner.hide()
-          this.recordList = data
+          this.recordList = data.data
         }
       )
     }
@@ -973,12 +978,14 @@ export class IndexComponent implements OnInit {
       if (window['android']) {
         aft(JSON.parse(window['android'].getBoundaryPolygons(this.boundary.uuid)))
       } else {
+        console.log("downloading geometries")
         this.recordService.getBoundaryPolygons(boundary).subscribe(aft)
       }
     } else {
       if (boundary) {
         this.geoloading = true
-        this.recordService.getFilteredBoundaryPolygons(boundary, filter).subscribe((res) => {
+        this.recordService.getFilteredBoundaryPolygons(boundary, filter).then((r) => {
+          const res=r.data
           this.boundaryPolygonsObject[boundary.uuid] = res["results"].sort((u, v) => (this.getBoundaryPolygonLabel(u, order, true) > this.getBoundaryPolygonLabel(v, order, true)) ? 1 : -1)
           if (res["results"].length > 0) {
             this.geoloading = false
@@ -996,7 +1003,7 @@ export class IndexComponent implements OnInit {
   }
   getBoundaryPolygonLabel(b: any, i: number, padded: boolean) {
     let l = b.data[localStorage.getItem("Language")] || b.data[this.boundaries[i].display_field]
-    if(!l){
+    if (!l) {
       return ""
     }
     if (!padded) return l;
@@ -1011,9 +1018,9 @@ export class IndexComponent implements OnInit {
     this.editing = false
     if (!this.record_uuid) this.record_uuid = $("#record-uuid").val().toString()
     if (this.record_uuid) {
-      this.recordService.getRecord(this.record_uuid).pipe(first()).subscribe(
+      this.recordService.getRecord(this.record_uuid).then(
         data => {
-          this.record = data
+          this.record = data.data
           this.modalService.open(content, { size: 'lg', animation: false, keyboard: false, backdrop: "static" });
         })
       this.record_uuid = null
@@ -1048,8 +1055,8 @@ export class IndexComponent implements OnInit {
       }
     }
   }
-  endEditRecord(e:any){
-    this.editing=false
+  endEditRecord(e: any) {
+    this.editing = false
   }
   editRecord() {
     this.editing = true
@@ -1194,8 +1201,8 @@ export class IndexComponent implements OnInit {
   }
   about(a: any) {
     this.modalService.open(a, { size: 'lg', animation: false, keyboard: false, backdrop: "static" });
-    this.recordService.getAbout(this.locale).subscribe((d) => {
-      this.about_content = d["result"]
+    this.recordService.getAbout(this.locale).then((d) => {
+      this.about_content = d.data["result"]
     })
 
   }

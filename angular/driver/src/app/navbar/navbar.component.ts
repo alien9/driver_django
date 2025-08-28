@@ -156,13 +156,7 @@ export class NavbarComponent implements OnInit {
   startGeometry() {
     this.startGeography.emit()
   }
-  startIrap(content: any) {
-    this.modalService.open(content, {});
-    //if (this.iRap) {
-    this.spinner.show()
-    this.loadIrapDataset()
-    //}
-  }
+ 
   asNgbDateStruct(date: Date) {
     return { day: date.getDate(), month: date.getMonth() + 1, year: date.getFullYear() }
   }
@@ -490,8 +484,9 @@ export class NavbarComponent implements OnInit {
 
   resetFilter() {
     localStorage.removeItem("current_filter")
-    this.recordService.getRecords({ 'uuid': this.recordSchema['record_type'] }, { 'filter': { 'limit': 1 } }).pipe(first()).subscribe({
-      next: data => {
+    this.recordService.getRecords({ 'uuid': this.recordSchema['record_type'] }, { 'filter': { 'limit': 1 } }).then(
+      next => {
+const data=next.data
         // set filter: last 3 months from latest found data
         if (data['results'] && data['results'].length) {
           let di = new Date(data['results'][0].occurred_from)
@@ -510,7 +505,7 @@ export class NavbarComponent implements OnInit {
           this.loadFilter()
         }
       }
-    })
+    )
   }
   searchIrap(event) {
     let tu = this.irapDataset["data"].filter(k => k.name === this.iRapSearchTerm).pop()
@@ -524,87 +519,7 @@ export class NavbarComponent implements OnInit {
     this.goBack.emit('Reports')
     modal.close('Go Back')
   }
-  iRapLogin(irapModal) {
-    this.spinner.show()
-    this.recordService.iRapLogin({
-      "format": "json",
-      "body":
-      {
-        "username": this.irap_email,
-        "password": this.irap_password
-      }
-    }).pipe(first()).subscribe({
-      next: data => {
-        this.iRapChange.emit({ iRap: data })
-        this.iRapData = data['data']
-        this.loadIrapDataset()
-      }, error: err => {
-        console.log(err)
-        if (err['error'] && err['error']['message']) {
-          this.irap_err = err['error']['message']
-        } else {
-          if (err['message']) this.irap_err = err['message']
-          else this.irap_err = 'Unknown error' // never should get here
-        }
-        this.spinner.hide()
-      }
-    })
-  }
-  loadIrapDataset() {
-    if (this.irapDataset) {
-      this.spinner.hide()
-      return
-    }
-    this.recordService.getIRapDataset({ "body": this.iRapData }).pipe(first()).subscribe({
-      next: data => {
-        this.iRapChange.emit({ dataset: data, iRap: this.iRapData })
-        this.spinner.hide()
-      },
-      error: err => {
-        this.iRapChange.emit({ user: null })
-        this.spinner.hide()
-      }
-    })
-  }
-  applyIrap(modal) {
-    this.spinner.show()
-    let b = {}
-    b['dataset_id'] = Object.keys(this.irapDataset['selected']).filter(k => this.irapDataset['selected'][k])
-    this.iRapChange.emit({ dataset: this.irapDataset, iRap: this.iRapData }) // save selection
-    this.recordService.getIRapData({ "body": b }).pipe(first()).subscribe({
-      next: data => {
-        this.iRapChange.emit({ layer: data, iRap: this.iRapData })
-        this.spinner.hide()
-        modal.close('ok')
-      },
-      error: err => {
-        this.iRapChange.emit({ user: null })
-        this.spinner.hide()
-        modal.close('error')
-      }
-    })
-  }
-  hasSelection(w: any) {
-    let h = {}
-    w.map(k => k['id']).forEach(element => {
-      h[element] = true
-    });
-    let hasSelected = false
-    if (this.irapDataset['selected']) {
-      Object.keys(this.irapDataset['selected']).filter(l => this.irapDataset['selected'][l]).forEach(k => {
-        if (h[k]) {
-          hasSelected = true
-        }
-      })
-    }
-    if (hasSelected)
-      return "has-selected"
-    else
-      return ""
-  }
-  resetIrap() {
-    this.irapDataset['selected'] = []
-  }
+ 
   createRecord(e: any) {
     this.newRecord.emit(this.inserting)
     $('.leaflet-container').css('cursor', (this.inserting) ? 'crosshair' : 'grab');

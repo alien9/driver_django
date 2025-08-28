@@ -3,6 +3,8 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
 import Utils from '../assets/utils';
+import axios from 'axios';
+import {AxiosResponse} from 'axios';
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +18,14 @@ export class RecordService {
     return null
   }
 
+  getAxiosHeaders():object{
+    let h = {
+      'Content-Type': 'application/json'
+    }
+    let t = this.getTokenFromCookie()
+    if (t) h['Authorization'] = `Token ${this.getTokenFromCookie()}`
+    return h
+  }
   getHeaders(): HttpHeaders {
     let h = {
       'Content-Type': 'application/json'
@@ -27,10 +37,8 @@ export class RecordService {
 
   getSpecialHeaders(): HttpHeaders {
     return new HttpHeaders({
-
       'Accept': 'application/json, text/plain, */*',
       "Content-Type": "application/json",
-
     })
   }
   getBlobHeaders(): HttpHeaders {
@@ -45,6 +53,9 @@ export class RecordService {
 
   getBackend(): string {
     return (localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')).replace(/\/\?.*$/, '')
+  }
+  getAPI(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.getBackend()}/api/`, { headers: this.getHeaders() })
   }
   getUniqueId(record_uuid, table: string, field: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.getBackend()}/api/escwa_unique_id/${record_uuid}/?table_name=${table}&field_name=${field}`, { headers: this.getHeaders() })
@@ -61,17 +72,17 @@ export class RecordService {
   getSiteLogo(lang: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.getBackend()}/dictionary/logo/${lang}/`, { headers: this.getHeaders() })
   }
-  getRecordType(): Observable<any[]> {
-    return this.http.get<any[]>(this.getBackend() + '/api/recordtypes/?active=True', { headers: this.getHeaders() })
+  getRecordType(): Promise<any> {
+    return axios.get(this.getBackend() + '/api/recordtypes/?active=True', {headers:this.getAxiosHeaders()})
   }
-  getRecord(s: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.getBackend()}/api/records/${s}/`, { headers: this.getHeaders() })
+  getRecord(s: string): Promise<any> {
+    return axios.get(`${this.getBackend()}/api/records/${s}/`, { headers: this.getAxiosHeaders() })
   }
-  getAbout(lang: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.getBackend()}/about/${lang}/`, { headers: this.getHeaders() })
+  getAbout(lang: string): Promise<any> {
+    return axios.get(`${this.getBackend()}/about/${lang}/`, { headers: this.getAxiosHeaders() })
   }
-  getRecordSchema(s: string): Observable<any[]> {
-    return this.http.get<any[]>(this.getBackend() + '/api/recordschemas/' + s + '/', { headers: this.getHeaders() })
+  getRecordSchema(s: string): Promise<any> {
+    return axios.get(this.getBackend() + '/api/recordschemas/' + s + '/', {headers:this.getAxiosHeaders()})
   }
   upload(obj: Object): Observable<any[]> {
     if (obj['uuid']) {
@@ -86,13 +97,12 @@ export class RecordService {
     let t = this.getTokenFromCookie()
     if (t) head['Authorization'] = `Token ${t}`
     const formData = new FormData()
-    console.log(obj["srcElement"].files[0])
     formData.append("file", obj["srcElement"].files[0], obj["srcElement"].files[0].name)
     formData.append("uuid", uuid)
     formData.append("csrfmiddlewaretoken", t)
     return this.http.post<any[]>(this.getBackend() + '/api/files/', formData, { headers: new HttpHeaders(head), reportProgress: true })
   }
-  getRecords(o: Object, q: any): Observable<any[]> {
+  getRecords(o: Object, q: any): Promise<any> {
     let params = new HttpParams()
       .set('archived', 'false')
       .set('details_only', 'false')
@@ -106,27 +116,21 @@ export class RecordService {
         }
       }
     }
-    return this.http.get<any[]>(this.getBackend() + '/api/records/', { headers: this.getHeaders(), params: params })
+    return axios.get<any[]>(this.getBackend() + '/api/records/', { headers: this.getAxiosHeaders(), params: params })
   }
-  getMapFileKey(o: Object, q: any): Observable<any[]> {
-    let params = new HttpParams()
-      .set('archived', 'false')
-      .set('details_only', 'true')
-      .set('limit', '50')
-      .set('record_type', o['uuid'])
-      .set('mapfile', 'true')
-      .set('active', 'true')
 
+  getMapFileKey(o: Object, q: any): Promise<any> {
+    const parameters={'archived': 'false', 'details_only': 'true', 'limit': '50', 'record_type': o['uuid'], 'mapfile': 'true', 'active': 'true'}
     if (q) {
       if (q.filter) {
         for (var k in q.filter) {
-          if (q.filter[k]) params = params.set(k, q.filter[k])
+          if (q.filter[k]) parameters[k]=q.filter[k]
         }
       }
     }
-    return this.http.get<any[]>(this.getBackend() + '/api/records/', { headers: this.getHeaders(), params: params })
+    return axios.get(this.getBackend() + '/api/records/', { headers: this.getAxiosHeaders(), params: parameters })
   }
-  getToddow(filter: any): Observable<any[]> {
+  getToddow(filter: any): Promise<any> {
     let params = new HttpParams()
       .set('archived', 'false')
       .set('details_only', 'true')
@@ -136,7 +140,7 @@ export class RecordService {
       if (filter[k]) params = params.set(k, filter[k])
     }
     //http://192.168.1.101:8000/api/records/toddow/?archived=False&details_only=True&occurred_max=2021-11-13T01:59:59.999Z&occurred_min=2011-08-04T03:00:00.000Z&polygon_id=60b09207-2d82-49a8-92fc-b80f1fdc67ae&record_type=264a5cb5-6f2c-4817-ae1b-226f5e779ac9
-    return this.http.get<any[]>(this.getBackend() + '/api/records/toddow/', { headers: this.getHeaders(), params: params })
+    return axios.get(this.getBackend() + '/api/records/toddow/', { headers: this.getAxiosHeaders(), params: params })
   }
 
   getTileKey(o: Object, q: any): Observable<any[]> {
@@ -168,8 +172,8 @@ export class RecordService {
     }
 
   }
-  getFilteredBoundaryPolygons(boundary: any, filter: string) {
-    return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/?active=True&boundary=${boundary.uuid}&limit=all&nogeom=true&filter=${filter}`, { headers: this.getHeaders() })
+  getFilteredBoundaryPolygons(boundary: any, filter: string): Promise<AxiosResponse<any, any>>{
+    return axios.get(`${this.getBackend()}/api/boundarypolygons/?active=True&boundary=${boundary.uuid}&limit=all&nogeom=true&filter=${filter}`, { headers: this.getAxiosHeaders() })
   }
   getBoundaryPolygon(b: string) {
     return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/${b}/`, { headers: this.getHeaders() })
@@ -207,18 +211,6 @@ export class RecordService {
       params = params.set(k, q[k])
     })
     return this.http.get<any[]>(`${this.getBackend()}/api/records/quantiles/`, { headers: this.getHeaders(), params: params })
-  }
-  iRapLogin(data) {
-    return this.http.post(`${this.getBackend()}/api/irap-login/`, data, { headers: this.getHeaders() });
-  }
-  getIRapDataset(data: object) {
-    return this.http.post(`${this.getBackend()}/api/irap-getdataset/`, data, { headers: this.getHeaders() });
-  }
-  getIRapData(data: object) {
-    return this.http.post(`${this.getBackend()}/api/irap-getlat_lon/`, data, { headers: this.getHeaders() });
-  }
-  getIRapFatalityData(data: object) {
-    return this.http.post(`${this.getBackend()}/api/irap-fatalitydata/`, data, { headers: this.getHeaders() });
   }
   getBoundaryMapfile(o: Object, q: any): Observable<any[]> {
     let params = new HttpParams()

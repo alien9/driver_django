@@ -99,12 +99,7 @@ from proxy.views import proxy_view
 logger = logging.getLogger(__name__)
 
 def index(request):
-    return render(request, 'dist/index.html', {"config": config})
-
-
-def editor(request):
-    return render(request, 'schema_editor/dist/index.html', {"config": config})
-
+    return render(request, 'index.html')
 
 def get_dictionary(code):
     if code is None:
@@ -126,9 +121,6 @@ def get_dictionary(code):
 
 def dictionary(request, code):
     r = get_dictionary(code)
-
-    if settings.GOOGLE_OAUTH_CLIENT_ID:
-        r["GOOGLE_OAUTH_CLIENT_ID"] = settings.GOOGLE_OAUTH_CLIENT_ID
     return JsonResponse(r.content)
 
 
@@ -248,7 +240,6 @@ def maps(request, geometry, mapfile, layer, z, x, y):
         geometry=geometry,
         layer=layer
     )
-    print( "%s/%s" % (config.MAPSERVER, path,))
     return proxy_view(request, "%s/%s" % (config.MAPSERVER, path,))
 
 
@@ -359,8 +350,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         """Return the queryset with the filter backends applied. Handy for aggregations."""
         queryset = self.get_queryset()
         for backend in list(self.filter_backends):
-            print("GETTETETETETE FILTETETETETETETE")
-            print(backend)
             queryset = backend().filter_queryset(request, queryset, self)
         return queryset
 
@@ -787,7 +776,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             boundaries = BoundaryPolygon.objects.filter(
                 boundary=tables_boundary)
         else:
-            boundaries = None
+            boundaries = None 
 
         # Assemble crosstabs either once or multiple times if there are boundaries
         response = dict(tables=[], table_labels=dict(), row_labels=row_labels,
@@ -937,7 +926,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             where=where)
 
         sample = sorted(samp, key=lambda a: a[1])
-        print(sample)
         chunk = (len(sample)-1)/5.0
         i = 0
         classes = []
@@ -1017,12 +1005,12 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 row_ids = [
                     str(label['key'])
                     for label in row_labels
-                    if rd['row_{}'.format(label['key'])] > 0
+                    if rd[re.sub(" ","_",'row_{}'.format(label['key']))] > 0
                 ]
                 col_ids = [
                     str(label['key'])
                     for label in col_labels
-                    if rd['col_{}'.format(label['key'])] > 0
+                    if rd[re.sub(" ","_",'col_{}'.format(label['key']))] > 0
                 ]
                 # Each object has row_* and col_* fields, where a value > 0 indicates presence.
                 # Increment the counter for each combination.
@@ -1042,10 +1030,9 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                 single_label = 'row'
                 multi_prefix = 'col'
             multi_labels = [
-                '{}_{}'.format(multi_prefix, str(label['key']))
+                '{}_{}'.format(multi_prefix, re.sub(" ", "_", str(label['key'])))
                 for label in multi_labels
             ]
-
             # Perform a sum on each of the 'multi' columns, storing the data in a sum_* field
             annotated_qs = (
                 annotated_qs.values(single_label, *multi_labels)
@@ -1619,9 +1606,9 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                         ", (path[0], pattern)
                     )
             else:
-                expression = "data__%s__%s__contains" % (path[0], path[2])
-                annotations['{}_{}'.format(annotation_id, choice)] = Case(
-                    When(**{expression: choice}, then=Value(1)),
+                expression="data__%s__contains" % (path[0],)
+                annotations[re.sub(" ", "_",'{}_{}'.format(annotation_id, choice))] = Case(
+                    When(**{expression: {path[2]:choice}}, then=Value(1)),
                     output_field=IntegerField(), default=Value(0)
                 )
         return (True, labels, queryset.annotate(**annotations))

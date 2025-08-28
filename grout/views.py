@@ -1,5 +1,5 @@
 from collections import OrderedDict
-import logging, fiona, uuid, os, shapely
+import logging, fiona, uuid, os, re
 from django.db import IntegrityError
 from dateutil.parser import parse
 from fiona.crs import from_epsg
@@ -7,6 +7,8 @@ from django.http import HttpResponse, Http404
 from shapely.geometry import mapping,MultiPolygon
 from shapely import wkt
 from django.template.loader import render_to_string
+from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.gdal.error import GDALException
 
 from rest_framework import viewsets, mixins, status, serializers, renderers
 from rest_framework.decorators import action
@@ -48,7 +50,6 @@ class GPKGRenderer(renderers.BaseRenderer):
     render_style = 'binary'
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
-        print(data)
         fn=f"/tmp/boundary_{uuid.uuid4()}.gpkg"
         if os.path.isfile(fn):
             os.remove(fn)
@@ -90,6 +91,7 @@ class BoundaryPolygonViewSet(viewsets.ModelViewSet):
     jsonb_filter_field = 'data'
     geometry_filter_field = 'filter'
     filter_backends = (InBBoxFilter, JsonBFilterBackend, DjangoFilterBackend)
+    filterset_fields = ['boundary']
 
     def get_serializer_class(self):
         if 'nogeom' in self.request.query_params and self.request.query_params['nogeom']:
@@ -108,7 +110,6 @@ class RecordViewSet(viewsets.ModelViewSet):
     bbox_filter_field = 'geom'
     jsonb_filter_field = 'data'
     filter_backends = (InBBoxFilter, JsonBFilterBackend, DjangoFilterBackend)
-
     def get_queryset(self):
         """
         Validate the input parameters before returning the queryset.
@@ -126,7 +127,6 @@ class RecordViewSet(viewsets.ModelViewSet):
                                                          exceptions.DATETIME_FORMAT_ERROR)
             try:
                 max_date = parse(occurred_max)
-                print(max_date)
             except ValueError:
                 raise exceptions.QueryParameterException('occurred_max',
                                                          exceptions.DATETIME_FORMAT_ERROR)
@@ -137,6 +137,27 @@ class RecordViewSet(viewsets.ModelViewSet):
                 }
                 raise serializers.ValidationError(messages)
             self.queryset=self.queryset.filter(occurred_from__lt=occurred_max, occurred_from__gt=occurred_min)
+        polygon_id=self.request.query_params.get('polygon_id', None)
+        if polygon_id is not None:
+            rrg = re.compile(
+                '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}', re.I)
+            if rrg.match(polygon_id):
+                self.queryset=self.queryset.extra(where=["st_contains((SELECT geom as g FROM grout_boundarypolygon WHERE uuid='{q}'),grout_record.geom)='t'".format(q=polygon_id)])
+        
+        geojson=self.request.query_params.get('polygon', None)
+        if geojson is not None:
+            try:
+                poly = GEOSGeometry(geojson)
+            except GDALException as e:
+                pass
+
+            # In practically all cases, Django's GEOSGeometry object will throw a
+            # GDALException when it attempts to parse an invalid GeoJSON object.
+            # However, the docs reccommend using the `valid` and `valid_reason`
+            # attributes to check the validity of the input geometries. Support
+            # both validity checks here.
+            if poly.valid:
+                self.queryset=self.queryset.filter(geom__intersects=poly)
         return self.queryset
 
 

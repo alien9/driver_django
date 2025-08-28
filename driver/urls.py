@@ -88,7 +88,6 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     re_path(r'^api/', include(router.urls)),
     re_path(r'^api/create-user/', auth_views.user_create),
-    re_path(r'^editor/$', data_views.editor),
     re_path(r'^maps/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w\s]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).png/$', data_views.maps),
     re_path(r'^grid/(?P<geometry>[-\w]*)/(?P<mapfile>[-\w]*)/(?P<layer>[-\w]*)/(?P<z>\d*)/(?P<x>\d*)/(?P<y>\d*).json/$', data_views.grid),
     re_path(r'^legend/(?P<layer>[-\w]*)/(?P<mapfile>[-\w]*)/$', data_views.legend),
@@ -125,6 +124,7 @@ urlpatterns = [
     re_path(r'^signup/', auth_views.signup),
     re_path(r'^photologue/', include('photologue.urls', namespace='photologue')),
     re_path(r'^api/escwa_unique_id/(?P<code>[-\w]*)/$', data_views.escwa_unique_id),
+    re_path(r'^$|^login', data_views.index),
 ]
 
 # i18n for django-admin
@@ -151,7 +151,8 @@ urlpatterns += [
 
 urlpatterns += [
     path('two_factor/', include(('admin_two_factor.urls', 'admin_two_factor'), namespace='two_factor')),
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
 
 admin.site.site_header = f'{os.getenv("APP_NAME")} Administration'
 admin.site.site_title = f'{os.getenv("APP_NAME")} Administration'

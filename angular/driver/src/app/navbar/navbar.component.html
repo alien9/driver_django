@@ -37,12 +37,6 @@
                         <li>
                             <a class="dropdown-item" href="#" (click)=qrCode(qrcode)>{{'Android code' | translate}}</a>
                         </li>
-                        <li *ngIf="config['IRAP_AUTH_ID']">
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li *ngIf="config['IRAP_AUTH_ID']">
-                            <a class="dropdown-item" (click)="startIrap(vida)" href="#">ViDA</a>
-                        </li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
@@ -316,81 +310,6 @@
         <button type="button" class="btn btn-light" [disabled]="!reportHeaders[ 'row'] || !reportHeaders[ 'col']"
             (click)="applyReport(modal)">{{'Apply'|translate}}</button>
         <button type="button" class="btn btn-light" (click)="cancelReport(modal)">{{'Close'|translate}}</button>
-    </div>
-</ng-template>
-
-<ng-template #vida let-modal>
-    <div class="irap">
-        <div class="modal-header">
-            <h4 class="modal-title">iRap ViDA</h4>
-            <button type="button" class="close" aria-label="Close" (click)="modal.dismiss( 'Cross click')">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-
-        <div *ngIf="irapDataset" class="modal-body">
-            <label for="typeahead-basic">Search for a project:</label>
-            <input id="typeahead-basic" (change)="searchIrap($event)" type="search" class="form-control"
-                [(ngModel)]="iRapSearchTerm" [ngbTypeahead]="searchIrapLayer" />
-        </div>
-        <div class="modal-body irap-list">
-            <div class="card" style=" max-width:300px;margin:auto;background-color:black;" *ngIf="!irapDataset">
-                <div class="card-body">
-                    <div class="text-center">
-                        <form>
-                            <img src="https://sso.irap.org/img/iRAP_logo_200x79.png" style="margin-bottom:5%"
-                                width="100px">
-                            <label class="sr-only" for="email">Email</label>
-                            <input autofocus="" class="form-control" [ngModelOptions]="{standalone: true}"
-                                id="emailaddress" placeholder="Email" required="" type="email" [(ngModel)]="irap_email"
-                                ng-reflect-model="jvelasquez@worldbank.org">
-                            <label class="sr-only" for="password">Password</label>
-                            <input autofocus="" class="form-control" [ngModelOptions]="{standalone: true}" id="password"
-                                placeholder="Password" required="" type="password" ng-reflect-model="Admin@123"
-                                [(ngModel)]=irap_password>
-                            <div class="mt-3">
-                                <button class="btn btn-md btn-primary btn-block"
-                                    style="background-color: white;color: black;" (click)=iRapLogin(vida)>
-                                    {{'Sign In'|translate}}
-                                </button>
-                            </div>
-                            <div class="row" style="margin-top:5%;">
-                                <label class="w-50 float-left">
-                                    <a href="https://sso.irap.org/register?broker_id=8" style="color: orange;"
-                                        target="_blank">{{'Register'|translate}}</a>
-                                </label>
-                                <label class="w-50 float-left">
-                                    <a href="https://sso.irap.org/forgotten_password?broker_id=8" style="color: orange;"
-                                        target="_blank" ng-reflect-translate="">
-                                        {{'Forgot Password'|translate}}
-                                    </a>
-                                </label>
-                            </div>
-                            <div class="row" style="color:orangered">{{irap_err}}</div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <div *ngIf="irapDataset">
-                <ngb-accordion #acc="ngbAccordion" activeIds="ngb-panel-irap" [closeOthers]="true">
-                    <ngb-panel [title]="d['name']" *ngFor="let d of irapDataset[ 'data']; let i=index"
-                        id="accordion-irap-{{d.id}}" [cardClass]="hasSelection(d[ 'dataset_data'])">
-                        <ng-template ngbPanelContent>
-                            <div class="input-group" *ngFor="let de of d[ 'dataset_data']; let j=index">
-                                <label><input type="checkbox" [(ngModel)]="irapDataset[ 'selected'][de[ 'id']]">
-                                    {{de['name']}}</label>
-                            </div>
-                        </ng-template>
-                    </ngb-panel>
-                </ngb-accordion>
-            </div>
-        </div>
-        <div class="modal-footer" *ngIf="irapDataset">
-            <button type="button" class="btn btn-light" (click)="resetIrap()">{{'Reset'|translate}}</button>
-            <button type="button" class="btn btn-light" (click)="applyIrap(modal)">{{'Apply'|translate}}</button>
-            <button type="button" class="btn btn-light" (click)="modal.close( 'cancel')">{{'Close'|translate}}</button>
-        </div>
     </div>
 </ng-template>
 
