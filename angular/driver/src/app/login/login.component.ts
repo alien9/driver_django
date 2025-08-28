@@ -55,7 +55,6 @@ export class LoginComponent implements OnInit {
     }
 
     ngOnInit() {
-        document.cookie = 'csrftoken=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
         document.cookie = 'sessionid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
         let c = this.getCookie('AuthService.token')
         if (c) {
@@ -64,6 +63,7 @@ export class LoginComponent implements OnInit {
         }
         const backend=this.recordService.getBackend()
         const lang=localStorage.getItem("Language")
+
         this.recordService.getSiteHeader(lang).pipe(first()).subscribe(data => {
             this.headerHTML=data["result"]
             setTimeout(()=>$("#site-header-div img").attr("style", "max-width:100%"), 0)

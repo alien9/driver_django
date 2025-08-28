@@ -92,8 +92,9 @@ export class ChartsComponent implements OnInit, OnChanges {
         let hours: string[] = Array.from(Array(24).keys()).map(l => l.toString())
         let dow = Array.from(Array(7).keys()).map(k => k.toString())
 
-        this.recordService.getToddow(this.filter).pipe(first()).subscribe({
-          next: data => {
+        this.recordService.getToddow(this.filter).then(
+          next => {
+            const data = next.data
             this.spinner.hide()
             let max = data.map(k => k.count).reduce(function (a, b) {
               return Math.max(a, b);
@@ -135,28 +136,24 @@ export class ChartsComponent implements OnInit, OnChanges {
               .domain([0, max])
             svg.selectAll()
               .data(data, function (d) {
-                return d.count
+                return d['count']
               })
               .enter()
               .append("rect")
               .attr("x", function (d) {
-                return x(parseInt(d.tod).toString())
+                return x(parseInt(d['tod']).toString())
               })
               .attr("y", function (d) {
-                return y((parseInt(d.dow) - 1).toString())
+                return y((parseInt(d['dow']) - 1).toString())
               })
               .attr("width", x.bandwidth())
               .attr("height", y.bandwidth())
               .style("fill", function (d) {
-                return `#${Math.round(colors(d.count)).toString(16)}`
+                return `#${Math.round(colors(d['count'])).toString(16)}`
               }).on('mouseover', function (d, i) {
-                $("#record_count_tip").html(i.count)
+                $("#record_count_tip").html(i['count'])
               })
-          }, error: err => {
-            console.log(err)
-            this.spinner.hide()
           }
-        }
         )
         break;
       case 2: // bar graph over time
@@ -215,7 +212,7 @@ export class ChartsComponent implements OnInit, OnChanges {
               let h = []
               let m = 0
               let totals = {}
-              Object.entries(data['tables'][0].data).forEach(k => {
+              Object.entries(data['tables'][0].data).filter(k=>Object.keys(k[1]).length>0).forEach(k => {
                 let sum = Object.values(k[1]).reduce((a, b) => a + b)
                 if (sum > m) m = sum
                 k[1]['group'] = k[0]
@@ -630,8 +627,8 @@ export class ChartsComponent implements OnInit, OnChanges {
     }
 
   }
-  getIntervalStyle(){
-    if(this.direction=='rtl')
+  getIntervalStyle() {
+    if (this.direction == 'rtl')
       return "direction: ltr;text-align:right;"
     return ""
   }

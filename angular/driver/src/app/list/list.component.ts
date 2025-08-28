@@ -41,9 +41,9 @@ export class ListComponent implements OnInit {
   loadRecords() {
     if (this.boundary_polygon_uuid) this.filter["polygon_id"] = this.boundary_polygon_uuid
     //if (!this.recordList) {
-    this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"] }, { filter: this.filter }).pipe(first()).subscribe(
+    this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"] }, { filter: this.filter }).then(
       data => {
-        this.recordList = data
+        this.recordList = data.data
         this.spinner.hide();
       })
     //}

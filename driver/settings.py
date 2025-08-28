@@ -52,7 +52,7 @@ if DEBUG:
     ALLOWED_HOSTS = ['*']
 else:
     ALLOWED_HOSTS=[os.environ.get('HOST_NAME','*'), 'localhost']
-    CSRF_TRUSTED_ORIGINS=ALLOWED_HOSTS
+    CSRF_TRUSTED_ORIGINS=[f"{os.environ.get('PROTOCOL','http')}://{os.environ.get('HOST_NAME','*')}"]
 
 # TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
 CORS_ORIGIN_ALLOW_ALL = DEBUG
@@ -195,13 +195,13 @@ if DEBUG:
         # Until an alternative is available, we have to trust DEBUG=True is safety enough
         'SHOW_TOOLBAR_CALLBACK': lambda request: True
     }
-else:
-    MIDDLEWARE += ('django.middleware.csrf.CsrfViewMiddleware',)
+#else:
+#    MIDDLEWARE += ('django.middleware.csrf.CsrfViewMiddleware',)
 
-
+MIDDLEWARE += ('django.middleware.csrf.CsrfViewMiddleware',)
 ROOT_URLCONF = 'driver.urls'
 
-# TEMPLATE_LOADERS = (
+# TEMPLATE_LOADERS = (static_
 #    'django.template.loaders.filesystem.Loader',
 #    'django.template.loaders.app_directories.Loader',
 # )
@@ -280,13 +280,15 @@ BLACKSPOT_RECORD_TYPE_LABEL = os.environ.get(
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = os.environ.get('STATIC_URL', '/static/')
-STATIC_ROOT = os.environ.get('STATIC_ROOT', '/opt/app/static/')
+STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/')
 
-# STATICFILES_DIRS = (
+#STATICFILES_DIRS = (
+#    os.path.join(BASE_DIR, 'static'),
 # os.path.join(BASE_DIR, 'templates/dist'),
 # os.path.join(BASE_DIR, 'templates/schema_editor/dist'),
 # os.path.join(BASE_DIR, 'web'),
-# )
+#
+#)
 
 # Media files (uploaded via API)
 # https://docs.djangoproject.com/en/1.8/topics/files/

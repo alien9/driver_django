@@ -34,7 +34,7 @@ FILTER_OVERRIDES = {
 }
 
 
-class RecordFilter(GeoFilterSet):
+class RecordFilter(django_filters.rest_framework.FilterSet,GeoFilterSet ):
 
     # Custom filter definitions.
     record_type = django_filters.Filter(
@@ -141,7 +141,7 @@ class RecordFilter(GeoFilterSet):
 
     class Meta:
         model = Record
-        fields = ['archived']
+        fields = ('archived', 'polygon_id',)
         filter_overrides = FILTER_OVERRIDES
 
 
@@ -222,6 +222,7 @@ class BoundaryPolygonFilter(GeoFilterSet):
         e.g. /api/boundarypolygons/?boundary=44a51b83-470f-4e3d-b71b-e3770ec79772
 
         """
+        print("filter by boundary")
 
         return queryset.filter(boundary=value)
     

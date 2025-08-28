@@ -1,8 +1,8 @@
-FROM python:3.8-buster
+FROM python:3.11-trixie
 
 RUN set -ex && \
     apt-get update && \
-    apt-get install -y --no-install-recommends libgdal-dev
+    apt-get install -y --no-install-recommends libgdal-dev python3-numpy
 
 RUN apt-get update && apt-get install -y \    
     gettext \
