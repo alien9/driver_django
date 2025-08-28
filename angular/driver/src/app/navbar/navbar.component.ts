@@ -117,9 +117,9 @@ export class NavbarComponent implements OnInit {
     if (!this.qrvalue.length) this.qrvalue = window.document.location.href.replace(/\/$/, '')
     this.qrvalue = `${this.qrvalue}/static/driver.apk?language=${localStorage.getItem("Language")}`
     this.logoHTML = this.config["APP_NAME"]
-    this.recordService.getSiteLogo(localStorage.getItem("Language")).pipe(first()).subscribe((g) => {
-      if (g['result'] && (g['result'].length > 3)) {
-        this.logoHTML = g['result'].replace(/<\/?p>/g, "")
+    this.recordService.getSiteLogo(localStorage.getItem("Language")).then((g) => {
+      if (g.data && g.data['result'] && (g.data['result'].length > 3)) {
+        this.logoHTML = g.data['result'].replace(/<\/?p>/g, "")
       }
     })
   }
@@ -146,17 +146,15 @@ export class NavbarComponent implements OnInit {
 
   startFilters(content: any) {
     this.modalService.open(content, { size: 'lg' });
-    this.recordService.getSavedFilters({ limit: 50 }).pipe(first()).subscribe({
-      next: data => {
-        this.savedFilters = data['results']
-        this.spinner.hide()
-      }
+    this.recordService.getSavedFilters({ limit: 50 }).then(next => {
+      this.savedFilters = next.data['results']
+      this.spinner.hide()
     })
   }
   startGeometry() {
     this.startGeography.emit()
   }
- 
+
   asNgbDateStruct(date: Date) {
     return { day: date.getDate(), month: date.getMonth() + 1, year: date.getFullYear() }
   }
@@ -286,8 +284,8 @@ export class NavbarComponent implements OnInit {
     this.authService.logout()
   }
   collectCsv(task: string) {
-    this.recordService.getCsv(task).pipe(first()).subscribe(d => {
-      console.log(d)
+    this.recordService.getCsv(task).then(du => {
+      const d = du.data
       if (d['status'] != "SUCCESS") {
         if (d['status'] == 'FAILURE') {
           this.downloading = false
@@ -315,9 +313,9 @@ export class NavbarComponent implements OnInit {
         this.recordService.getTileKey({ 'uuid': this.recordSchema["record_type"] }, {
           filter: this.filter
         }).then(t => {
-          this.recordService.postCsv(t.data['tilekey']).pipe(first()).subscribe(data => {
-            if (data['success']) {
-              setTimeout(() => this.collectCsv(data['taskid']), 1000)
+          this.recordService.postCsv(t.data['tilekey']).then(data => {
+            if (data.data['success']) {
+              setTimeout(() => this.collectCsv(data.data['taskid']), 1000)
             }
           })
 
@@ -409,10 +407,10 @@ export class NavbarComponent implements OnInit {
     if (this.reportParameters && path['col'] && path['row']) {
       if (!this.reportParameters['relate']) this.reportParameters['relate'] = ""
       this.spinner.show()
-      this.recordService.getCrossTabs(this.recordSchema["record_type"], this.reportParameters).pipe(first()).subscribe(
+      this.recordService.getCrossTabs(this.recordSchema["record_type"], this.reportParameters).then(
         crosstabs => {
           this.reportChange.emit({
-            crosstabs: crosstabs,
+            crosstabs: crosstabs.data,
             path: path,
             parameters: this.reportParameters
           })
@@ -446,12 +444,10 @@ export class NavbarComponent implements OnInit {
     //this.applyFilter(m)
   }
   loadSavedFilters() {
-    this.recordService.getSavedFilters({ limit: 50 }).pipe(first()).subscribe({
-      next: data => {
-        this.savedFilters = data['results']
-        this.spinner.hide()
-        this.filtering = false
-      }
+    this.recordService.getSavedFilters({ limit: 50 }).then(next => {
+      this.savedFilters = next.data['results']
+      this.spinner.hide()
+      this.filtering = false
     })
   }
   saveFilter(m: any) {
@@ -464,29 +460,24 @@ export class NavbarComponent implements OnInit {
         p[`${k}#${j}`] = this.filterObject[k][j]
       })
     })
-    this.recordService.saveFilter({ 'label': this.filterLabel, filter_json: p }).pipe(first()).subscribe({
-      next: data => {
-        this.loadSavedFilters()
-      }, error: err => {
-        console.log(err)
-      }
+    this.recordService.saveFilter({ 'label': this.filterLabel, filter_json: p }).then(data => {
+      this.loadSavedFilters()
     })
   }
 
   deleteFilter(fu: object) {
     this.filtering = true
-    this.recordService.deleteFilter(fu['uuid']).pipe(first()).subscribe({
-      next: data => {
+    this.recordService.deleteFilter(fu['uuid']).then(
+      data => {
         this.loadSavedFilters()
-      }
-    })
+      })
   }
 
   resetFilter() {
     localStorage.removeItem("current_filter")
     this.recordService.getRecords({ 'uuid': this.recordSchema['record_type'] }, { 'filter': { 'limit': 1 } }).then(
       next => {
-const data=next.data
+        const data = next.data
         // set filter: last 3 months from latest found data
         if (data['results'] && data['results'].length) {
           let di = new Date(data['results'][0].occurred_from)
@@ -519,7 +510,7 @@ const data=next.data
     this.goBack.emit('Reports')
     modal.close('Go Back')
   }
- 
+
   createRecord(e: any) {
     this.newRecord.emit(this.inserting)
     $('.leaflet-container').css('cursor', (this.inserting) ? 'crosshair' : 'grab');
@@ -531,13 +522,13 @@ const data=next.data
     this.aboutCaller.emit()
   }
   getLangPosition() {
-    if(getLocaleDirection(localStorage.getItem("Language"))=='rtl')
+    if (getLocaleDirection(localStorage.getItem("Language")) == 'rtl')
       return "dropdown-menu dropdown-menu-start"
     else return "dropdown-menu dropdown-menu-end"
   }
-  getCheckBoxClass(){
-    if(getLocaleDirection(localStorage.getItem("Language"))=='rtl')
+  getCheckBoxClass() {
+    if (getLocaleDirection(localStorage.getItem("Language")) == 'rtl')
       return "ordinary"
-    else return "form-check"    
+    else return "form-check"
   }
 }

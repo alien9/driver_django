@@ -168,154 +168,154 @@ export class ChartsComponent implements OnInit, OnChanges {
           parameters['row_period_type'] = this.barChart['interval']
           parameters['col_choices_path'] = this.barChart['field']
           parameters['relate'] = this.barChart['field'] // the total count of related
-          this.recordService.getCrossTabs(this.recordSchema['record_type'], parameters).pipe(first()).subscribe({
-            next: data => {
-              let obliterate = {}
-              let intervals = []
-              Object.entries(data["tables"][0].data).forEach((interval) => {
-                intervals.push(interval[0])
-                Object.entries(interval[1]).forEach((k) => {
-                  if (!obliterate[k[0]]) obliterate[k[0]] = k[1]
-                  else obliterate[k[0]] += k[1]
+          this.recordService.getCrossTabs(this.recordSchema['record_type'], parameters).then(next => {
+            const data = next.data
+            let obliterate = {}
+            let intervals = []
+            Object.entries(data["tables"][0].data).forEach((interval) => {
+              intervals.push(interval[0])
+              Object.entries(interval[1]).forEach((k) => {
+                if (!obliterate[k[0]]) obliterate[k[0]] = k[1]
+                else obliterate[k[0]] += k[1]
+              })
+            })
+            Object.entries(obliterate).forEach((o) => {
+              if (o[1] == 0) {
+                intervals.forEach((t) => {
+                  delete data["tables"][0].data[t][o[0]]
                 })
-              })
-              Object.entries(obliterate).forEach((o) => {
-                if (o[1] == 0) {
-                  intervals.forEach((t) => {
-                    delete data["tables"][0].data[t][o[0]]
-                  })
-                }
-              });
-              data["col_labels"] = data["col_labels"].filter((q) => {
-                return obliterate[q.key] > 0
-              })
-              while (data["row_labels"].length > 0 && !data["tables"][0].data[data["row_labels"][0].key]) {
-                data["row_labels"].shift()
               }
-              while (data["row_labels"].length > 0 && !data["tables"][0].data[data["row_labels"][data["row_labels"].length - 1].key]) {
-                data["row_labels"].pop()
-              }
-              let hue = 0
-              let s = 0.65
-              let l = 0.5
-              let colorRange = []
-              while (colorRange.length < data["col_labels"].length) {
-                colorRange.push(this.rgbToHex(this.hslToRgb(hue, s, l)))
-                hue += 0.375
-                hue = hue % 1
-                s *= 0.95
-                l += ((1 - l) * .05)
-              }
-              this.palette = colorRange
+            });
+            data["col_labels"] = data["col_labels"].filter((q) => {
+              return obliterate[q.key] > 0
+            })
+            while (data["row_labels"].length > 0 && !data["tables"][0].data[data["row_labels"][0].key]) {
+              data["row_labels"].shift()
+            }
+            while (data["row_labels"].length > 0 && !data["tables"][0].data[data["row_labels"][data["row_labels"].length - 1].key]) {
+              data["row_labels"].pop()
+            }
+            let hue = 0
+            let s = 0.65
+            let l = 0.5
+            let colorRange = []
+            while (colorRange.length < data["col_labels"].length) {
+              colorRange.push(this.rgbToHex(this.hslToRgb(hue, s, l)))
+              hue += 0.375
+              hue = hue % 1
+              s *= 0.95
+              l += ((1 - l) * .05)
+            }
+            this.palette = colorRange
 
-              this.spinner.hide()
-              let h = []
-              let m = 0
-              let totals = {}
-              Object.entries(data['tables'][0].data).filter(k=>Object.keys(k[1]).length>0).forEach(k => {
-                let sum = Object.values(k[1]).reduce((a, b) => a + b)
-                if (sum > m) m = sum
-                k[1]['group'] = k[0]
-                if (k[0] != "None")
-                  h.push(k[1])
-                Object.entries(k[1]).forEach(l => {
-                  totals[l[0]] = ((totals[l[0]]) ? totals[l[0]] : 0) + l[1]
-                })
+            this.spinner.hide()
+            let h = []
+            let m = 0
+            let totals = {}
+            Object.entries(data['tables'][0].data).filter(k => Object.keys(k[1]).length > 0).forEach(k => {
+              let sum = Object.values(k[1]).reduce((a, b) => a + b)
+              if (sum > m) m = sum
+              k[1]['group'] = k[0]
+              if (k[0] != "None")
+                h.push(k[1])
+              Object.entries(k[1]).forEach(l => {
+                totals[l[0]] = ((totals[l[0]]) ? totals[l[0]] : 0) + l[1]
               })
-              let domain: any = 100
-              let t = Object.entries(data['tables'][0]['row_totals']).filter(rt => rt[0] != "None").map(rt => rt[1]).sort()
-              if (t.length) {
-                domain = t.pop()
-              }
-              let subgroups = data['col_labels'].map(k => k.key).sort((a, b) => totals[b] - totals[a]) // field value
-              let groups = data['row_labels'].map(k => k.key) //interval
-              const margin_bar = { top: 10, right: 30, bottom: 20, left: 50 },
-                width_bar = (h.length * 100) - margin_bar.left - margin_bar.right,
-                height_bar = 400 - margin_bar.top - margin_bar.bottom;
-              d3.select("#interval").select("svg").remove()
-              const svg_bar = d3.select("#interval")
-                .append("svg")
-                .attr("width", width_bar + margin_bar.left + margin_bar.right)
-                .attr("height", height_bar + margin_bar.top + margin_bar.bottom)
-                .append("g")
-                .attr("transform", `translate(${margin_bar.left},${margin_bar.top})`);
-              let x = d3.scaleBand()
-                .domain(groups)
-                .range([0, width_bar])
-                .padding(0.2)
-              svg_bar.append("g")
-                .attr("transform", `translate(0, ${height_bar})`)
-                .call(d3.axisBottom(x).tickSizeOuter(0).tickFormat(hg => {
-                  if (parameters['row_period_type'] == 'day_of_week') {
-                    return this.weekdays[parseInt(hg) - 1]
+            })
+            let domain: any = 100
+            let t = Object.entries(data['tables'][0]['row_totals']).filter(rt => rt[0] != "None").map(rt => rt[1]).sort()
+            if (t.length) {
+              domain = t.pop()
+            }
+            let subgroups = data['col_labels'].map(k => k.key).sort((a, b) => totals[b] - totals[a]) // field value
+            let groups = data['row_labels'].map(k => k.key) //interval
+            const margin_bar = { top: 10, right: 30, bottom: 20, left: 50 },
+              width_bar = (h.length * 100) - margin_bar.left - margin_bar.right,
+              height_bar = 400 - margin_bar.top - margin_bar.bottom;
+            d3.select("#interval").select("svg").remove()
+            const svg_bar = d3.select("#interval")
+              .append("svg")
+              .attr("width", width_bar + margin_bar.left + margin_bar.right)
+              .attr("height", height_bar + margin_bar.top + margin_bar.bottom)
+              .append("g")
+              .attr("transform", `translate(${margin_bar.left},${margin_bar.top})`);
+            let x = d3.scaleBand()
+              .domain(groups)
+              .range([0, width_bar])
+              .padding(0.2)
+            svg_bar.append("g")
+              .attr("transform", `translate(0, ${height_bar})`)
+              .call(d3.axisBottom(x).tickSizeOuter(0).tickFormat(hg => {
+                if (parameters['row_period_type'] == 'day_of_week') {
+                  return this.weekdays[parseInt(hg) - 1]
+                } else {
+                  if (parameters['row_period_type'] == 'month') {
+                    let my = hg.match(/\((\d+), (\d+)\)/)
+                    return `${this.monthnames[my[2]]} ${my[1]}`
                   } else {
-                    if (parameters['row_period_type'] == 'month') {
+                    if (parameters['row_period_type'] == 'week') {
                       let my = hg.match(/\((\d+), (\d+)\)/)
-                      return `${this.monthnames[my[2]]} ${my[1]}`
+                      return `${my[2]} / ${my[1]}`
                     } else {
-                      if (parameters['row_period_type'] == 'week') {
-                        let my = hg.match(/\((\d+), (\d+)\)/)
-                        return `${my[2]} / ${my[1]}`
-                      } else {
-                        if (parameters['row_period_type'] == 'day') {
-                          let myd = hg.match(/\((\d+), (\d+), (\d+)\)/)
-                          let d = new Date(parseInt(myd[1]), parseInt(myd[2]) - 1, parseInt(myd[3]))
-                          return d.toLocaleDateString(this.locale)
-                        }
+                      if (parameters['row_period_type'] == 'day') {
+                        let myd = hg.match(/\((\d+), (\d+), (\d+)\)/)
+                        let d = new Date(parseInt(myd[1]), parseInt(myd[2]) - 1, parseInt(myd[3]))
+                        return d.toLocaleDateString(this.locale)
                       }
                     }
-                    return hg
                   }
-                }));
-              let y = d3.scaleLinear()
-                .domain([0, domain])
-                .range([height_bar, 0]);
-              svg_bar.append("g")
-                .call(d3.axisLeft(y));
-              const color = d3.scaleOrdinal()
-                .domain(subgroups)
-                .range(this.palette.map(p => parseInt(p, 16)))
-              //stack the data? --> stack per subgroup
-              const stackedData = d3.stack()
-                .keys(subgroups)
-                (h)
+                  return hg
+                }
+              }));
+            let y = d3.scaleLinear()
+              .domain([0, domain])
+              .range([height_bar, 0]);
+            svg_bar.append("g")
+              .call(d3.axisLeft(y));
+            const color = d3.scaleOrdinal()
+              .domain(subgroups)
+              .range(this.palette.map(p => parseInt(p, 16)))
+            //stack the data? --> stack per subgroup
+            const stackedData = d3.stack()
+              .keys(subgroups)
+              (h)
 
-              svg_bar.append("g")
-                .selectAll("g")
-                // Enter in the stack data = loop key per key = group per group
-                .data(stackedData)
-                .join("g")
-                .attr("fill", d => `#${Math.round(parseFloat(color(d.key).toString())).toString(16)}`)
-                .selectAll("rect")
-                // enter a second time = loop subgroup per subgroup to add all rectangles
-                .data(d => d)
-                .join("rect")
-                .attr("x", d => x(d.data.group.toString()))
-                .attr("y", d => y(d[1]))
-                .attr("height", d => y(d[0]) - y(d[1]))
-                .attr("width", x.bandwidth())
-              d3.select("#interval_legend").select("svg").remove()
-              const svg_bar_legend = d3.select("#interval_legend")
-                .append("svg")
-                .attr("width", 500)
-                .attr("height", 100 * subgroups.length)
-                .append("g")
-              svg_bar_legend.selectAll("mydots").data(subgroups).enter().append("circle")
-                .attr("cx", (this.direction == 'rtl') ? 450 : 100)
-                .attr("cy", function (d, i) { return 13 + i * 25 })
-                .attr("r", 7)
-                .style("fill", d => `#${Math.round(parseFloat(color(d.toString()).toString())).toString(16)}`)
-              svg_bar_legend.selectAll("mydots").data(subgroups).enter().append("text")
-                .attr("x", (this.direction == 'rtl') ? 430 : 120)
-                .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
-                .text(function (d) { return ts.instant(d.toString()) })
-                .attr("text-anchor", "left")
-                .style("alignment-baseline", "middle")
+            svg_bar.append("g")
+              .selectAll("g")
+              // Enter in the stack data = loop key per key = group per group
+              .data(stackedData)
+              .join("g")
+              .attr("fill", d => `#${Math.round(parseFloat(color(d.key).toString())).toString(16)}`)
+              .selectAll("rect")
+              // enter a second time = loop subgroup per subgroup to add all rectangles
+              .data(d => d)
+              .join("rect")
+              .attr("x", d => x(d.data.group.toString()))
+              .attr("y", d => y(d[1]))
+              .attr("height", d => y(d[0]) - y(d[1]))
+              .attr("width", x.bandwidth())
+            d3.select("#interval_legend").select("svg").remove()
+            const svg_bar_legend = d3.select("#interval_legend")
+              .append("svg")
+              .attr("width", 500)
+              .attr("height", 100 * subgroups.length)
+              .append("g")
+            svg_bar_legend.selectAll("mydots").data(subgroups).enter().append("circle")
+              .attr("cx", (this.direction == 'rtl') ? 450 : 100)
+              .attr("cy", function (d, i) { return 13 + i * 25 })
+              .attr("r", 7)
+              .style("fill", d => `#${Math.round(parseFloat(color(d.toString()).toString())).toString(16)}`)
+            svg_bar_legend.selectAll("mydots").data(subgroups).enter().append("text")
+              .attr("x", (this.direction == 'rtl') ? 430 : 120)
+              .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
+              .text(function (d) { return ts.instant(d.toString()) })
+              .attr("text-anchor", "left")
+              .style("alignment-baseline", "middle")
 
-            }, error: err => {
-              console.log(err)
-              this.spinner.hide()
-            }
+
+          }).catch(err => {
+            console.log(err)
+            this.spinner.hide()
           })
         }
         break
@@ -332,127 +332,127 @@ export class ChartsComponent implements OnInit, OnChanges {
         parameters_pizza['row_period_type'] = 'all'
         parameters_pizza['col_choices_path'] = this.barChart['field']
         parameters_pizza['relate'] = this.barChart['field'] // the total count of related
-        this.recordService.getCrossTabs(this.recordSchema['record_type'], parameters_pizza).pipe(first()).subscribe({
-          next: data => {
-            $("#pizza").html('')
-            this.spinner.hide()
-            let h = []
-            let m = 0
-            var p_data: SimpleDataModel[] = Object.entries(data['tables'][0].data["0"]).filter((k => k[1] != '0'))
-              .map(k => { return { "name": ts.instant(k[0]), "value": k[1].toString() } }).sort((a, b) => { return (parseInt(a.value) > parseInt(b.value)) ? 1 : -1 })
-            let enablePolylines = false
-            let isPercentage = false
-            var radius = Math.min(p_width_bar, p_height_bar) / 2 - p_margin_bar.top
-            var svg = d3
-              .select("#pizza")
-              .append("svg")
-              .attr("viewBox", `0 0 ${p_width_bar} ${p_height_bar}`)
-              .append("g")
-              .attr(
-                "transform",
-                "translate(" + p_width_bar / 2 + "," + p_height_bar / 2 + ")"
-              );
-            const pie = d3.pie<any>().value((d: any) => Number(d.value));
-            const data_ready = pie(p_data);
+        this.recordService.getCrossTabs(this.recordSchema['record_type'], parameters_pizza).then(next => {
+          const data = next.data
+          $("#pizza").html('')
+          this.spinner.hide()
+          let h = []
+          let m = 0
+          var p_data: SimpleDataModel[] = Object.entries(data['tables'][0].data["0"]).filter((k => k[1] != '0'))
+            .map(k => { return { "name": ts.instant(k[0]), "value": k[1].toString() } }).sort((a, b) => { return (parseInt(a.value) > parseInt(b.value)) ? 1 : -1 })
+          let enablePolylines = false
+          let isPercentage = false
+          var radius = Math.min(p_width_bar, p_height_bar) / 2 - p_margin_bar.top
+          var svg = d3
+            .select("#pizza")
+            .append("svg")
+            .attr("viewBox", `0 0 ${p_width_bar} ${p_height_bar}`)
+            .append("g")
+            .attr(
+              "transform",
+              "translate(" + p_width_bar / 2 + "," + p_height_bar / 2 + ")"
+            );
+          const pie = d3.pie<any>().value((d: any) => Number(d.value));
+          const data_ready = pie(p_data);
 
-            let hue = 0
-            let s = 0.65
-            let l = 0.5
-            let colorRange = []
-            while (colorRange.length < p_data.length) {
-              colorRange.push(this.rgbToHex(this.hslToRgb(hue, s, l)))
-              hue += 0.375
-              hue = hue % 1
-              s *= 0.95
-              l += ((1 - l) * .05)
-            }
-            colorRange.reverse()
-            this.palette = colorRange
-            let outerArc = d3
-              .arc()
-              .innerRadius(radius * 0.9)
-              .outerRadius(radius * 0.9)
-            let arc = d3
-              .arc()
-              .innerRadius(radius * 0.5)
-              .outerRadius(radius * 0.8);
-            let colors = d3
-              .scaleOrdinal()
-              .domain(p_data.map(d => d.value.toString()))
-              .range(
-                this.palette.map(p => `#${p}`)
-              )
-            let ark: any = d3
-              .arc()
-              .innerRadius(0)
-              .outerRadius(radius)
-
-            svg
-              .selectAll("pieces")
-              .data(data_ready)
-              .enter()
-              .append("path")
-              .attr(
-                "d",
-                ark
-              )
-              //.attr("fill", (d, i) => (d.data.color ? d.data.color : colors(i.toString())))
-              .attr("fill", (d, i) => {
-                console.log(d)
-                console.log(i)
-                return colors(d.data.name).toString()
-              })
-              .attr("stroke", "#ffffff")
-              .style("stroke-width", "1px")
-            /*
-                        const labelLocation = d3
-                          .arc()
-                          .innerRadius(radius / 2)
-                          .outerRadius(radius);
-                        svg
-                          .selectAll("pieces")
-                          .data(pie(p_data))
-                          .enter()
-                          .append("text")
-                          .text(d => {
-                            if (
-                              ((d.endAngle - d.startAngle) / (2 * Math.PI)) * 100 > 5 ||
-                              enablePolylines
-                            ) {
-                              return (
-                                d.data.name +
-                                " (" +
-                                d.data.value +
-                                (isPercentage ? "%" : "") +
-                                ")"
-                              );
-                            }
-                          })
-                          .attr("transform", d => { let e: any = d; return "translate(" + labelLocation.centroid(e) + ")" })
-                          .style("text-anchor", "middle")
-                          .style("font-size", 22)
-                          .attr("fill", "#333333");*/
-            d3.select("#pizza_legend").select("svg").remove()
-            const svg_bar_legend = d3.select("#pizza_legend")
-              .append("svg")
-              .attr("width", 500)
-              .attr("height", 100 * p_data.length)
-              .append("g")
-            svg_bar_legend.selectAll("mydots").data(p_data).enter().append("circle")
-              .attr("cx", (this.direction == 'rtl') ? 450 : 100)
-              .attr("cy", function (d, i) { return 13 + i * 25 })
-              .attr("r", 7)
-              .style("fill", d => colors(d.name).toString())
-            svg_bar_legend.selectAll("mydots").data(p_data).enter().append("text")
-              .attr("x", (this.direction == 'rtl') ? 430 : 120)
-              .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
-              .text(function (d) { return ts.instant(d.name.toString()) })
-              .attr("text-anchor", "left")
-              .style("alignment-baseline", "middle")
-          }, error: err => {
-            console.log(err)
-            this.spinner.hide()
+          let hue = 0
+          let s = 0.65
+          let l = 0.5
+          let colorRange = []
+          while (colorRange.length < p_data.length) {
+            colorRange.push(this.rgbToHex(this.hslToRgb(hue, s, l)))
+            hue += 0.375
+            hue = hue % 1
+            s *= 0.95
+            l += ((1 - l) * .05)
           }
+          colorRange.reverse()
+          this.palette = colorRange
+          let outerArc = d3
+            .arc()
+            .innerRadius(radius * 0.9)
+            .outerRadius(radius * 0.9)
+          let arc = d3
+            .arc()
+            .innerRadius(radius * 0.5)
+            .outerRadius(radius * 0.8);
+          let colors = d3
+            .scaleOrdinal()
+            .domain(p_data.map(d => d.value.toString()))
+            .range(
+              this.palette.map(p => `#${p}`)
+            )
+          let ark: any = d3
+            .arc()
+            .innerRadius(0)
+            .outerRadius(radius)
+
+          svg
+            .selectAll("pieces")
+            .data(data_ready)
+            .enter()
+            .append("path")
+            .attr(
+              "d",
+              ark
+            )
+            //.attr("fill", (d, i) => (d.data.color ? d.data.color : colors(i.toString())))
+            .attr("fill", (d, i) => {
+              console.log(d)
+              console.log(i)
+              return colors(d.data.name).toString()
+            })
+            .attr("stroke", "#ffffff")
+            .style("stroke-width", "1px")
+          /*
+                      const labelLocation = d3
+                        .arc()
+                        .innerRadius(radius / 2)
+                        .outerRadius(radius);
+                      svg
+                        .selectAll("pieces")
+                        .data(pie(p_data))
+                        .enter()
+                        .append("text")
+                        .text(d => {
+                          if (
+                            ((d.endAngle - d.startAngle) / (2 * Math.PI)) * 100 > 5 ||
+                            enablePolylines
+                          ) {
+                            return (
+                              d.data.name +
+                              " (" +
+                              d.data.value +
+                              (isPercentage ? "%" : "") +
+                              ")"
+                            );
+                          }
+                        })
+                        .attr("transform", d => { let e: any = d; return "translate(" + labelLocation.centroid(e) + ")" })
+                        .style("text-anchor", "middle")
+                        .style("font-size", 22)
+                        .attr("fill", "#333333");*/
+          d3.select("#pizza_legend").select("svg").remove()
+          const svg_bar_legend = d3.select("#pizza_legend")
+            .append("svg")
+            .attr("width", 500)
+            .attr("height", 100 * p_data.length)
+            .append("g")
+          svg_bar_legend.selectAll("mydots").data(p_data).enter().append("circle")
+            .attr("cx", (this.direction == 'rtl') ? 450 : 100)
+            .attr("cy", function (d, i) { return 13 + i * 25 })
+            .attr("r", 7)
+            .style("fill", d => colors(d.name).toString())
+          svg_bar_legend.selectAll("mydots").data(p_data).enter().append("text")
+            .attr("x", (this.direction == 'rtl') ? 430 : 120)
+            .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
+            .text(function (d) { return ts.instant(d.name.toString()) })
+            .attr("text-anchor", "left")
+            .style("alignment-baseline", "middle")
+
+        }).catch(err => {
+          console.log(err)
+          this.spinner.hide()
         })
         break;
       case 4: // treemap
@@ -475,154 +475,154 @@ export class ChartsComponent implements OnInit, OnChanges {
 
 
 
-        this.recordService.getCrossTabs(this.recordSchema['record_type'], parameters_treemap).pipe(first()).subscribe({
-          next: data => {
-            $("#treemap").html('')
-            var svg = d3.select("#treemap")
-              .append("svg")
-              .attr("width", t_width_bar + t_margin_bar.left + t_margin_bar.right)
-              .attr("height", t_height_bar + t_margin_bar.top + t_margin_bar.bottom)
-              .append("g")
-              .attr("transform",
-                `translate(${t_margin_bar.left}, ${t_margin_bar.top})`);
-            let du = []
-            if (this.barChart['parent_field']) {
-              Object.entries(data['tables'][0]['data']).forEach(col => {
-                du.push({
-                  'name': col[0],
-                  'parent': 'all',
-                  'value': ''
-                })
-                Object.entries(col[1]).forEach(row => {
-                  if (row[1] > 0) {
-                    du.push({
-                      'name': row[0],
-                      'value': row[1],
-                      'parent': col[0]
-                    })
-                  }
-                })
-              }
-
-              )
-            } else {
-              du = Object.entries(data['tables'][0]['data'][0]).filter(k => {
-                return k[1] as number > 0
-              }).map(k => {
-                return {
-                  'name': ts.instant(k[0]),
-                  'value': k[1],
-                  'parent': 'all'
+        this.recordService.getCrossTabs(this.recordSchema['record_type'], parameters_treemap).then(next => {
+          const data = next.data
+          $("#treemap").html('')
+          var svg = d3.select("#treemap")
+            .append("svg")
+            .attr("width", t_width_bar + t_margin_bar.left + t_margin_bar.right)
+            .attr("height", t_height_bar + t_margin_bar.top + t_margin_bar.bottom)
+            .append("g")
+            .attr("transform",
+              `translate(${t_margin_bar.left}, ${t_margin_bar.top})`);
+          let du = []
+          if (this.barChart['parent_field']) {
+            Object.entries(data['tables'][0]['data']).forEach(col => {
+              du.push({
+                'name': col[0],
+                'parent': 'all',
+                'value': ''
+              })
+              Object.entries(col[1]).forEach(row => {
+                if (row[1] > 0) {
+                  du.push({
+                    'name': row[0],
+                    'value': row[1],
+                    'parent': col[0]
+                  })
                 }
               })
             }
-            du.push({ 'name': 'all', 'parent': '', 'value': '' })
 
-            // prepare a color scale
-            const color = d3.scaleOrdinal()
-              .domain(["boss1", "boss2", "boss3"])
-              .range(["#FDFBED",
-                "#f6edb1",
-                "#f7da22",
-                "#ecbe1d",
-                "#e77124",
-                "#d54927",
-                "#cf3a27",
-                "#a33936",
-                "#7f182a",
-                "#68101a",
-              ])
-
-            // And a opacity scale
-            const opacity = d3.scaleLinear()
-              .domain([10, 30])
-              .range([.5, 1])
-            const root = d3.stratify()
-              .id(function (d) {
-                return ts.instant(d["name"]);
-              })   // Name of the entity (column name is name in csv)
-              .parentId(function (d) {
-                return d['parent'];
-              })   // Name of the parent (column name is parent in csv)
-              (du);
-            root.sum(function (d) { return +d['value'] })   // Compute the numeric value for each entity
-
-            // Then d3.treemap computes the position of each element of the hierarchy
-            // The coordinates are added to the root object above
-            d3.treemap()
-              .size([t_width_bar, t_height_bar])
-              .paddingTop(28)
-              .paddingRight(7)
-              .paddingInner(3)
-              (root);
-
-            // use this information to add rectangles:
-            svg
-              .selectAll("rect")
-              .data(root.leaves())
-              .join("rect")
-              .attr('x', function (d) { return d['x0']; })
-              .attr('y', function (d) { return d['y0']; })
-              .attr('width', function (d) { return d['x1'] - d['x0']; })
-              .attr('height', function (d) { return d['y1'] - d['y0']; })
-              .attr("fill", d => `${color(d.data['name'])}`)
-              .style("stroke", "black")
-              ;
-
-
-            // and to add the text labels
-            /* svg
-              .selectAll("text")
-              .data(root.leaves())
-              .join("text")
-              .attr("x", function (d) { return d['x0'] + 10 })    // +10 to adjust position (more right)
-              .attr("y", function (d) { return d['y0'] + 20 })    // +20 to adjust position (lower)
-              .text(function (d) { return d.data['name'] })
-              .attr("font-size", "15px")
-              .attr("fill", "#ccc")
-
-            // Add title for the 3 groups
-            if (this.barChart['parent_field']) {
-              svg
-                .selectAll("titles")
-                .data(root.descendants().filter(function (d) { return d.depth == 1 }))
-                .enter()
-                .append("text")
-                .attr("x", function (d) { return d['x0'] })
-                .attr("y", function (d) { return d['y0'] + 21 })
-                .text(function (d) { return d.data['name'] })
-                .attr("font-size", "19px")
-                .attr("fill", d => `${color(d.data['name'])}`)
-            }*/
-            d3.select("#treemap_legend").select("svg").remove()
-            const keys = root.descendants().map((e) => e.data['name']).filter((e) => e != 'all');
-
-            console.log(keys)
-            const svg_bar_legend = d3.select("#treemap_legend")
-              .append("svg")
-              .attr("width", 500)
-              .attr("height", 100 * keys.length)
-              .append("g")
-            svg_bar_legend.selectAll("mydots").data(keys).enter().append("circle")
-              .attr("cx", (this.direction == 'rtl') ? 450 : 100)
-              .attr("cy", function (d, i) { return 13 + i * 25 })
-              .attr("r", 7)
-              .style("fill", d => {
-                return color(d).toString()
-              })
-            svg_bar_legend.selectAll("mydots").data(keys).enter().append("text")
-              .attr("x", (this.direction == 'rtl') ? 430 : 120)
-              .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
-              .text(function (d) {
-                return ts.instant(d)
-              })
-              .attr("text-anchor", "left")
-              .style("alignment-baseline", "middle")
-            this.spinner.hide()
-          }, error: err => {
-            console.log(err)
-            this.spinner.hide()
+            )
+          } else {
+            du = Object.entries(data['tables'][0]['data'][0]).filter(k => {
+              return k[1] as number > 0
+            }).map(k => {
+              return {
+                'name': ts.instant(k[0]),
+                'value': k[1],
+                'parent': 'all'
+              }
+            })
           }
+          du.push({ 'name': 'all', 'parent': '', 'value': '' })
+
+          // prepare a color scale
+          const color = d3.scaleOrdinal()
+            .domain(["boss1", "boss2", "boss3"])
+            .range(["#FDFBED",
+              "#f6edb1",
+              "#f7da22",
+              "#ecbe1d",
+              "#e77124",
+              "#d54927",
+              "#cf3a27",
+              "#a33936",
+              "#7f182a",
+              "#68101a",
+            ])
+
+          // And a opacity scale
+          const opacity = d3.scaleLinear()
+            .domain([10, 30])
+            .range([.5, 1])
+          const root = d3.stratify()
+            .id(function (d) {
+              return ts.instant(d["name"]);
+            })   // Name of the entity (column name is name in csv)
+            .parentId(function (d) {
+              return d['parent'];
+            })   // Name of the parent (column name is parent in csv)
+            (du);
+          root.sum(function (d) { return +d['value'] })   // Compute the numeric value for each entity
+
+          // Then d3.treemap computes the position of each element of the hierarchy
+          // The coordinates are added to the root object above
+          d3.treemap()
+            .size([t_width_bar, t_height_bar])
+            .paddingTop(28)
+            .paddingRight(7)
+            .paddingInner(3)
+            (root);
+
+          // use this information to add rectangles:
+          svg
+            .selectAll("rect")
+            .data(root.leaves())
+            .join("rect")
+            .attr('x', function (d) { return d['x0']; })
+            .attr('y', function (d) { return d['y0']; })
+            .attr('width', function (d) { return d['x1'] - d['x0']; })
+            .attr('height', function (d) { return d['y1'] - d['y0']; })
+            .attr("fill", d => `${color(d.data['name'])}`)
+            .style("stroke", "black")
+            ;
+
+
+          // and to add the text labels
+          /* svg
+            .selectAll("text")
+            .data(root.leaves())
+            .join("text")
+            .attr("x", function (d) { return d['x0'] + 10 })    // +10 to adjust position (more right)
+            .attr("y", function (d) { return d['y0'] + 20 })    // +20 to adjust position (lower)
+            .text(function (d) { return d.data['name'] })
+            .attr("font-size", "15px")
+            .attr("fill", "#ccc")
+  
+          // Add title for the 3 groups
+          if (this.barChart['parent_field']) {
+            svg
+              .selectAll("titles")
+              .data(root.descendants().filter(function (d) { return d.depth == 1 }))
+              .enter()
+              .append("text")
+              .attr("x", function (d) { return d['x0'] })
+              .attr("y", function (d) { return d['y0'] + 21 })
+              .text(function (d) { return d.data['name'] })
+              .attr("font-size", "19px")
+              .attr("fill", d => `${color(d.data['name'])}`)
+          }*/
+          d3.select("#treemap_legend").select("svg").remove()
+          const keys = root.descendants().map((e) => e.data['name']).filter((e) => e != 'all');
+
+          console.log(keys)
+          const svg_bar_legend = d3.select("#treemap_legend")
+            .append("svg")
+            .attr("width", 500)
+            .attr("height", 100 * keys.length)
+            .append("g")
+          svg_bar_legend.selectAll("mydots").data(keys).enter().append("circle")
+            .attr("cx", (this.direction == 'rtl') ? 450 : 100)
+            .attr("cy", function (d, i) { return 13 + i * 25 })
+            .attr("r", 7)
+            .style("fill", d => {
+              return color(d).toString()
+            })
+          svg_bar_legend.selectAll("mydots").data(keys).enter().append("text")
+            .attr("x", (this.direction == 'rtl') ? 430 : 120)
+            .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
+            .text(function (d) {
+              return ts.instant(d)
+            })
+            .attr("text-anchor", "left")
+            .style("alignment-baseline", "middle")
+          this.spinner.hide()
+
+        }).catch(err => {
+          console.log(err)
+          this.spinner.hide()
         })
     }
 

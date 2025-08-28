@@ -160,8 +160,8 @@ export class InputFieldComponent implements OnInit {
     this.setFileChanged.emit({ "event": e, "table": table, "field": field, "index": index })
   }
   uploadAttachment(e: any, table: any, field: string, index: number) {
-    this.recordService.uploadAttachment(e, uuid.v4()).pipe(first()).subscribe(data => {
-      this.fieldChanged.emit({ "event": { "srcElement": { "value": data['url'] } }, "table": table, "field": field, "index": index })
+    this.recordService.uploadAttachment(e, uuid.v4()).then(data => {
+      this.fieldChanged.emit({ "event": { "srcElement": { "value": data.data['url'] } }, "table": table, "field": field, "index": index })
     })
   }
   getIllustra(i) {
@@ -183,15 +183,15 @@ export class InputFieldComponent implements OnInit {
   }
   getUniqueId() {
     if (!this.record_uuid) return
-    this.recordService.getUniqueId(this.record_uuid, this.tableName, this.fieldName).pipe(first()).subscribe((d) => {
-      this.value = d['result']
+    this.recordService.getUniqueId(this.record_uuid, this.tableName, this.fieldName).then((d) => {
+      this.value = d.data['result']
       this.data[this.tableName][this.fieldName] = this.value
     })
   }
   getUniqueIdBoundary() {
     if (!this.record_uuid) return
-    this.recordService.getUniqueIdBoundary(this.record_uuid, this.tableName, this.fieldName).pipe(first()).subscribe((d) => {
-      this.value = d['result']
+    this.recordService.getUniqueIdBoundary(this.record_uuid, this.tableName, this.fieldName).then((d) => {
+      this.value = d.data['result']
       this.data[this.tableName][this.fieldName] = this.value
     })
   }

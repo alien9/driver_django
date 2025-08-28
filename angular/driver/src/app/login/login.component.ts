@@ -61,16 +61,16 @@ export class LoginComponent implements OnInit {
             this.setCookie('AuthService.token', '/', -1)
             this.authenticationService.logout()
         }
-        const backend=this.recordService.getBackend()
-        const lang=localStorage.getItem("Language")
+        const backend = this.recordService.getBackend()
+        const lang = localStorage.getItem("Language")
 
-        this.recordService.getSiteHeader(lang).pipe(first()).subscribe(data => {
-            this.headerHTML=data["result"]
-            setTimeout(()=>$("#site-header-div img").attr("style", "max-width:100%"), 0)
+        this.recordService.getSiteHeader(lang).then(data => {
+            this.headerHTML = data.data["result"]
+            setTimeout(() => $("#site-header-div img").attr("style", "max-width:100%"), 0)
         })
-        this.recordService.getSiteFooter(lang).pipe(first()).subscribe(data => {
-            this.footerHTML=data["result"]
-            setTimeout(()=>$("#site-footer-div img").attr("style", "max-width:100%"), 0)
+        this.recordService.getSiteFooter(lang).then(data => {
+            this.footerHTML = data.data["result"]
+            setTimeout(() => $("#site-footer-div img").attr("style", "max-width:100%"), 0)
         })
 
         this.loginForm = this.formBuilder.group({
@@ -103,30 +103,29 @@ export class LoginComponent implements OnInit {
         this.loading = true;
         this.errorMessage = null;
         this.authenticationService.login(this.f.username.value, this.f.password.value)
-            .pipe(first())
-            .subscribe({
-                next: data => {
-                    if (data.hasOwnProperty('token')) {
-                        this.setCookie('AuthService.canWrite', data["groups_name"].indexOf('admin') > 0 || data["groups_name"].indexOf('analyst') > 0);
-                        this.setCookie('AuthService.token', data['token'])
-                        this.setCookie('AuthService.userId', data['user'])
-                        this.setCookie('AuthService.isAdmin', data["groups_name"].indexOf('admin') > 0)
-                        localStorage.setItem('token', data['token']);
-                        localStorage.setItem('config', JSON.stringify(data['config']));
-                        this.entering.emit(null)
-                        this.loading = false;
-                        this.router.navigateByUrl('/')
-                        localStorage.setItem("password", sha256(this.f.password.value).toString())
-                    }
-
-                }, error: err => {
+            .then(d => {
+                const data=d.data
+                if (data.hasOwnProperty('token')) {
+                    this.setCookie('AuthService.canWrite', data["groups_name"].indexOf('admin') > 0 || data["groups_name"].indexOf('analyst') > 0);
+                    this.setCookie('AuthService.token', data['token'])
+                    this.setCookie('AuthService.userId', data['user'])
+                    this.setCookie('AuthService.isAdmin', data["groups_name"].indexOf('admin') > 0)
+                    localStorage.setItem('token', data['token']);
+                    localStorage.setItem('config', JSON.stringify(data['config']));
+                    this.entering.emit(null)
                     this.loading = false;
-                    if (err.error && err.error['non_field_errors']) {
-                        this.errorMessage = err.error['non_field_errors'][0]
-                    } else {
-                        this.errorMessage = err.message
-                    }
-                }, complete: () => console.log('HTTP request completed.')
+                    this.router.navigateByUrl('/')
+                    localStorage.setItem("password", sha256(this.f.password.value).toString())
+                }
+
+            }).catch(err => {
+                this.loading = false;
+                if (err.error && err.error['non_field_errors']) {
+                    this.errorMessage = err.error['non_field_errors'][0]
+                } else {
+                    this.errorMessage = err.message
+                }
             })
+
     }
 }

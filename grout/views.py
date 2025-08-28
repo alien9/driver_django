@@ -83,7 +83,6 @@ class GPKGRenderer(renderers.BaseRenderer):
 
 class BoundaryPolygonViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
-        print("getting polygons queryset")
         queryset=BoundaryPolygon.objects.all()
         value=self.request.query_params.get('filter', None)
         if not value:

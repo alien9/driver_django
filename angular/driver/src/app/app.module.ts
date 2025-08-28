@@ -78,25 +78,6 @@ import { AccordionModule } from 'ngx-bootstrap/accordion';
 import { ReferenceNamePipe } from './reference-name.pipe';
 import { UnbreakPipe } from './unbreak.pipe'
 
-const socialConfigFactory = (restService: AuthService) => {
-  return restService.getGoogleClientId().pipe(map(config => {
-    let providers = [];
-
-    if (config['clientId'].length > 0) {
-      providers.push({
-        id: GoogleLoginProvider.PROVIDER_ID,
-        provider: new GoogleLoginProvider(
-          config['clientId']
-        ),
-      });
-    }
-
-    return {
-      autoLogin: false,
-      providers: providers,
-    } as SocialAuthServiceConfig;
-  })).toPromise();
-};
 registerLocaleData(localePt);
 registerLocaleData(localeFa);
 registerLocaleData(localeEs);
@@ -105,9 +86,14 @@ registerLocaleData(localeEn);
 registerLocaleData(localeLo);
 registerLocaleData(localeAr);
 export function HttpLoaderFactory(httpClient: HttpClient) {
-  let b = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
+  const path=Array.from(document.getElementsByTagName('script')).map(s=>s.src).filter(s=>s.match(/main-es5/)).pop()
+  let c='.'
+  if(path && path.length){
+    c=path.match(/\w+:\/\/[^\/]+(.*)\/main/)[1]
+  }
+  const b = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
   return new MultiTranslateHttpLoader(httpClient, [
-    { prefix: "./assets/i18n/", suffix: ".json" },
+    { prefix: `${c}/assets/i18n/`, suffix: ".json" },
     { prefix: `${b}/dictionary/`, suffix: "/" },
   ]);
 }
@@ -133,11 +119,6 @@ const icons = {
 let lang = localStorage.getItem("Language") || "en"
 
 let providers: any[] = [
-  {
-    provide: 'SocialAuthServiceConfig',
-    useFactory: socialConfigFactory,
-    deps: [AuthService]
-  }
 ]
 switch (lang) {
   case 'pt-BR':

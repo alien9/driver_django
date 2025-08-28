@@ -592,8 +592,8 @@ export class InputComponent implements OnInit {
     }
 
     if (this.record['geom'].coordinates && !this.record['location_text']) {
-      this.webService.getReverse(this.record['geom'].coordinates[1], this.record['geom'].coordinates[0]).pipe(first()).subscribe(address => {
-        this.record['location_text'] = this.formatAddress(address)
+      this.webService.getReverse(this.record['geom'].coordinates[1], this.record['geom'].coordinates[0]).then(address => {
+        this.record['location_text'] = this.formatAddress(address.data)
       })
     }
 
@@ -610,12 +610,14 @@ export class InputComponent implements OnInit {
     this.setMarker(latlng)
     if (!this.record['weather'] && (this.config['OPENWEATHER_RAPID_KEY']) && this.config['OPENWEATHER_RAPID_KEY'].length) {
       this.webService.getHistoryWeather({ lat: c[1], lon: c[0], appid: this.config['OPENWEATHER_RAPID_KEY'] })
-        .pipe(first()).subscribe(weatherData => {
+        .then(d => {
+          let weatherData=d.data
           if (weatherData['current'] && weatherData['current']['weather'] && weatherData['current']['weather'].length)
             this.record['weather'] = weatherData['current']['weather']['description']
         })
     }
-    this.recordService.getBoundaryPolygons(null, `${c[0]} ${c[1]}`).subscribe((d) => {
+    this.recordService.getBoundaryPolygons(null, `${c[0]} ${c[1]}`).then((data) => {
+      const d = data.data
       let h = {}
       d['results'].forEach((l) => {
         h[l.boundary] = l.data
@@ -657,11 +659,10 @@ export class InputComponent implements OnInit {
     }
     if (!mapillary && this.config['MAPILLARY_TOKEN']) {
       let c = this.record['geom'].coordinates
-      this.webService.getMapillaryImages(this.config['MAPILLARY_TOKEN'], `${c[0] - 0.005},${c[1] - 0.0015},${c[0] + 0.005},${c[1] + 0.0015}`).pipe(first()).subscribe(imagery => {
-        //this.record['mapillary'] = JSON.stringify(imagery)
+      this.webService.getMapillaryImages(this.config['MAPILLARY_TOKEN'], `${c[0] - 0.005},${c[1] - 0.0015},${c[0] + 0.005},${c[1] + 0.0015}`).then(imagery => {
         this.layersControl.overlays['Mapillary'] = L.layerGroup()
         this.options.layers.push(this.layersControl.overlays['Mapillary'])
-        this.loadMapillary(imagery)
+        this.loadMapillary(imagery.data)
       })
     }
   }
@@ -853,44 +854,44 @@ export class InputComponent implements OnInit {
       this.saving = false
       return
     }
-    this.recordService.upload(this.record).pipe(first()).subscribe({
-      next: data => {
-        this.stopEditRecord.emit(true)
-        this.filterExpand.emit(this.record['occurred_from'])
-        this.reloadRecords.emit(this.record)
-        this.saving = false
-        this.spinner.hide()
-      }, error: err => {
-        let message = err["error"]
-        if ("detail" in message) {
-          alert(message["detail"])
-        }
-        else if ("data" in message) {
-          let m = message["data"]
-          let mess = m.match(/Schema validation failed for (.+): '(.+)' is a required property/)
-          if (mess && mess.length == 3) {
-            alert(`${this.translateService.instant("Schema validation failed for")} ${this.translateService.instant(mess[1])}: ${this.translateService.instant(mess[2])} ${this.translateService.instant("is a required property")}`)
-          } else {
-            alert(message["data"])
-          }
-        }
-        else if ("occurred_from" in message) {
-          alert(message["occurred_from"])
-        }
-        else {
-          let records = JSON.parse(localStorage.getItem("records") || "[]")
-          records = records.filter((o) => o['uuid'] != this.record['uuid'])
-          records.push(this.record)
-          localStorage.setItem("records", JSON.stringify(records))
-          this.storeRecord.emit(records)
-          alert(this.translateService.instant('Record was stored in the device'))
-          modal.dismiss()
-          this.spinner.hide()
-        }
-        this.spinner.hide()
-        this.saving = false
+    this.recordService.upload(this.record).then(next => {
+      const data = next.data
+      this.stopEditRecord.emit(true)
+      this.filterExpand.emit(this.record['occurred_from'])
+      this.reloadRecords.emit(this.record)
+      this.saving = false
+      this.spinner.hide()
+    }).catch(err => {
+      let message = err["error"]
+      if ("detail" in message) {
+        alert(message["detail"])
       }
+      else if ("data" in message) {
+        let m = message["data"]
+        let mess = m.match(/Schema validation failed for (.+): '(.+)' is a required property/)
+        if (mess && mess.length == 3) {
+          alert(`${this.translateService.instant("Schema validation failed for")} ${this.translateService.instant(mess[1])}: ${this.translateService.instant(mess[2])} ${this.translateService.instant("is a required property")}`)
+        } else {
+          alert(message["data"])
+        }
+      }
+      else if ("occurred_from" in message) {
+        alert(message["occurred_from"])
+      }
+      else {
+        let records = JSON.parse(localStorage.getItem("records") || "[]")
+        records = records.filter((o) => o['uuid'] != this.record['uuid'])
+        records.push(this.record)
+        localStorage.setItem("records", JSON.stringify(records))
+        this.storeRecord.emit(records)
+        alert(this.translateService.instant('Record was stored in the device'))
+        modal.dismiss()
+        this.spinner.hide()
+      }
+      this.spinner.hide()
+      this.saving = false
     })
+
   }
   deleteRecord(modal: any) {
     this.setDate(null)
@@ -898,17 +899,17 @@ export class InputComponent implements OnInit {
     this.spinner.show()
     this.record['archived'] = true
     if (this.record['uuid']) {
-      this.recordService.upload(this.record).pipe(first()).subscribe({
-        next: data => {
-          this.reloadRecords.emit(this.record)
-          modal.dismiss()
-          this.spinner.hide()
+      this.recordService.upload(this.record).then(next => {
+        const data = next.data
+        this.reloadRecords.emit(this.record)
+        modal.dismiss()
+        this.spinner.hide()
 
-        }, error: err => {
-          console.log(err)
-          this.spinner.hide()
-        }
+      }).catch(err => {
+        console.log(err)
+        this.spinner.hide()
       })
+
     } else {
       this.refreshLocalRecords.emit(true)
       modal.dismiss()
@@ -942,7 +943,8 @@ export class InputComponent implements OnInit {
         }
       } else {
         this.zone.run(() => {
-          this.webService.getReverse(e.target.getLatLng().lat, e.target.getLatLng().lng).pipe(first()).subscribe(address => {
+          this.webService.getReverse(e.target.getLatLng().lat, e.target.getLatLng().lng).then(d => {
+            const address=d.data
             if (address && address['address']) {
               let lt = []
               if (address['address']['road']) lt.push(address['address']['road'])
@@ -1236,8 +1238,8 @@ ${this.getOffset(this.getTimeZone())}:00`
     let terms = e.words
     let extra = e.extra
     if (extra) {
-      this.recordService.getNames(extra, localStorage.getItem("Language")).pipe(first()).subscribe((d) => {
-        this.autocomplete_terms = d["result"]
+      this.recordService.getNames(extra, localStorage.getItem("Language")).then((d) => {
+        this.autocomplete_terms = d.data["result"]
       })
     } else {
       this.autocomplete_terms = []

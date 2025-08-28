@@ -18,13 +18,13 @@ export class DuplicateComponent implements OnInit {
   duplicatePage: number = 1
   map: L.Map[] = []
   backend: string
-  @Input() locale:string
+  @Input() locale: string
   layersControl: any
   options: any
   layers: any
   record: any // the registry being evaluated
-  keys: string[]=['record','duplicate_record']
-  markers:object[]
+  keys: string[] = ['record', 'duplicate_record']
+  markers: object[]
   constructor(
     private spinner: NgxSpinnerService,
     private recordService: RecordService,
@@ -36,14 +36,11 @@ export class DuplicateComponent implements OnInit {
   }
   loadDuplicates() {
     this.spinner.show()
-    this.recordService.getDuplicates(this.recordTypeUuid, (this.duplicatePage - 1) * 50).pipe(first()).subscribe({
-      next: data => {
-        this.duplicates = data
-        this.spinner.hide()
-      },
-      error: err => {
-        this.spinner.hide()
-      }
+    this.recordService.getDuplicates(this.recordTypeUuid, (this.duplicatePage - 1) * 50).then(data => {
+      this.duplicates = data.data
+      this.spinner.hide()
+    }).catch(err => {
+      this.spinner.hide()
     })
   }
   view(r: object, modal: any) {
@@ -56,8 +53,8 @@ export class DuplicateComponent implements OnInit {
     this.loadDuplicates()
   }
   showMap() {
-    let latlng = [this.record['record'],this.record['duplicate_record']].map(r => r['geom'].coordinates).map(c => new L.latLng([c[1], c[0]]))
-    this.markers = latlng.map(l=>L.marker(l, {
+    let latlng = [this.record['record'], this.record['duplicate_record']].map(r => r['geom'].coordinates).map(c => new L.latLng([c[1], c[0]]))
+    this.markers = latlng.map(l => L.marker(l, {
       icon: L.icon({
         iconSize: [25, 45],
         iconAnchor: [13, 45],
@@ -74,22 +71,24 @@ export class DuplicateComponent implements OnInit {
       L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {})
     ]
     this.backend = localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')
-    this.layersControl = this.keys.map((k, i)=>{ return {
-      baseLayers: {
-        'Open Street Map': osm[i][0],
-        'Satellite Map': sat[i]
-      },
-      overlays: {
+    this.layersControl = this.keys.map((k, i) => {
+      return {
+        baseLayers: {
+          'Open Street Map': osm[i][0],
+          'Satellite Map': sat[i]
+        },
+        overlays: {
+        }
       }
-    }})
-    
-    this.layers=osm
-    
+    })
+
+    this.layers = osm
+
     this.options = [{
       layers: [osm[0][0], sat[0]],
       zoom: 17,
       center: latlng[0]
-    },{
+    }, {
       layers: [osm[1][0], sat[1]],
       zoom: 17,
       center: latlng[1]
@@ -102,26 +101,28 @@ export class DuplicateComponent implements OnInit {
       e.invalidateSize();
     }, 10);
   }
-  useRecord(m, k){
+  useRecord(m, k) {
     this.spinner.show()
     m.dismiss()
-    this.recordService.resolveDuplicate(this.record['uuid'], this.record[k]['uuid']).pipe(first()).subscribe({next:data=>{
+    this.recordService.resolveDuplicate(this.record['uuid'], this.record[k]['uuid']).then(data => {
       this.loadDuplicates()
-    },error:err=>{
+    }).catch(err => {
       console.log(err)
-    }})
+    })
   }
-  useBoth(m){
+  useBoth(m) {
     this.spinner.show()
     m.dismiss()
-    this.recordService.resolveDuplicate(this.record['uuid'], null).pipe(first()).subscribe({next:data=>{
+    this.recordService.resolveDuplicate(this.record['uuid'], null).then(data => {
+
       this.loadDuplicates()
-    },error:err=>{
+    }).catch(err => {
       console.log(err)
       this.spinner.hide()
-    }})
-  } 
-  modifyRecord(uuid, data){
+    })
+
+  }
+  modifyRecord(uuid, data) {
 
   }
 }
