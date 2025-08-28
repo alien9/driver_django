@@ -145,7 +145,8 @@ export class IndexComponent implements OnInit {
       this.showLegend = false
       this.showCounter = false
     }
-    this.recordService.getConfig().pipe(first()).subscribe(data => {
+    this.recordService.getConfig().then(da => {
+      const data=da.data
       this.config = data
       this.titleService.setTitle(this.config["APP_NAME"]);
       if (data['DEFAULT_LANGUAGE']?.length) {
@@ -168,7 +169,7 @@ export class IndexComponent implements OnInit {
       }
 
       this.recordService.getRecordType().then(recordTypeData => {
-        const rata=recordTypeData['data']
+        const rata = recordTypeData['data']
         if (rata['results']) {
           let schema_uuid;
           for (let i = 0; i < rata['results']?.length; i++) {
@@ -314,56 +315,51 @@ export class IndexComponent implements OnInit {
       layers: this.layers
     }
 
-    this.recordService.getCritical().pipe(first()).subscribe({
-      next: critical_data => {
-        if (critical_data['results']) {
-          critical_data['results'].forEach(rs => {
+    this.recordService.getCritical().then(next => {
+      const critical_data = next.data
+      if (critical_data['results']) {
+        critical_data['results'].forEach(rs => {
 
-            let gl = utfGrid(`${this.backend}/grid/critical/${rs['uuid']}/segments/{z}/{x}/{y}.json/`, {
-              resolution: 4,
-              pointerCursor: true,
-              mouseInterval: 66
-            })
-            gl.on('mouseover', (e) => {
-              if (e.data) {
-                $('.leaflet-grab').css('cursor', 'pointer')
-              }
-              else {
-                this.zone.run(() => {
-                  $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
-                })
-              }
-            });
-            gl.on('mouseout', (e) => {
+          let gl = utfGrid(`${this.backend}/grid/critical/${rs['uuid']}/segments/{z}/{x}/{y}.json/`, {
+            resolution: 4,
+            pointerCursor: true,
+            mouseInterval: 66
+          })
+          gl.on('mouseover', (e) => {
+            if (e.data) {
+              $('.leaflet-grab').css('cursor', 'pointer')
+            }
+            else {
               this.zone.run(() => {
                 $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
               })
-            });
-            gl.on('add', (e: any) => {
-              this.zone.run(() => {
-                this.addSegment(rs['uuid'], rs['title'])
-                this.loading['segment'].push(rs['uuid'])
-                $('.leaflet-grab').css('cursor', 'progress')
-              })
+            }
+          });
+          gl.on('mouseout', (e) => {
+            this.zone.run(() => {
+              $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
             })
-            this.layersControl.overlays[this.translateService.instant(rs["title"])] = new L.LayerGroup([
-              gl
-            ])
+          });
+          gl.on('add', (e: any) => {
+            this.zone.run(() => {
+              this.addSegment(rs['uuid'], rs['title'])
+              this.loading['segment'].push(rs['uuid'])
+              $('.leaflet-grab').css('cursor', 'progress')
+            })
           })
-        }
-        if (window['android']) {
-          this.afterBoundaries(JSON.parse(window['android'].getBoundaries()))
-        } else {
-          this.recordService.getBoundaries().pipe(first()).subscribe({
-            next: this.afterBoundaries
-          })
-        }
-      },
-      error: err => {
-        console.log("Error: " + err.status)
-        if (err.status == 403)
-          this.router.navigateByUrl('/login')
+          this.layersControl.overlays[this.translateService.instant(rs["title"])] = new L.LayerGroup([
+            gl
+          ])
+        })
       }
+      if (window['android']) {
+        this.afterBoundaries(JSON.parse(window['android'].getBoundaries()))
+      } else {
+        this.recordService.getBoundaries().then(
+          next => this.afterBoundaries(next.data)
+        )
+      }
+
     })
   }
 
@@ -437,70 +433,70 @@ export class IndexComponent implements OnInit {
     let f = JSON.parse(JSON.stringify(this.filter || {}))
     f['critical'] = uuid
     let d = (new Date()).getTime()
-    this.recordService.getSegmentQuantiles(this.recordtype_uuid, f).pipe(first()).subscribe({
-      next: data => {
-        let gl = utfGrid(`${this.backend}/grid/critical/${data['mapfile']}/critical/{z}/{x}/{y}.json/?ts=${d}`, {
-          resolution: 4,
-          pointerCursor: true,
-          mouseInterval: 66
-        })
-        gl.on('mouseover', (e) => {
-          if (e.data) {
-            $('.leaflet-grab').css('cursor', 'pointer')
-            this.zone.run(() => {
-              let t = e.data['name'].replace(/^"|"$|^null$/g, "")
-              if (e.data['num_records']) t = `${t} (${e.data['num_records']})`
-              let m = this.map
-              this.map.eachLayer(function (layer) {
-                if (layer.options.pane === "tooltipPane") layer.removeFrom(m);
-              });
-              e.sourceTarget.bindTooltip(t, { sticky: true, permanent: false });
-            })
-          }
-          else {
-            this.zone.run(() => {
-              $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
-            })
-          }
-        });
-        gl.on('mouseout', (e) => {
+    this.recordService.getSegmentQuantiles(this.recordtype_uuid, f).then(next => {
+      const data = next.data
+      let gl = utfGrid(`${this.backend}/grid/critical/${data['mapfile']}/critical/{z}/{x}/{y}.json/?ts=${d}`, {
+        resolution: 4,
+        pointerCursor: true,
+        mouseInterval: 66
+      })
+      gl.on('mouseover', (e) => {
+        if (e.data) {
+          $('.leaflet-grab').css('cursor', 'pointer')
+          this.zone.run(() => {
+            let t = e.data['name'].replace(/^"|"$|^null$/g, "")
+            if (e.data['num_records']) t = `${t} (${e.data['num_records']})`
+            let m = this.map
+            this.map.eachLayer(function (layer) {
+              if (layer.options.pane === "tooltipPane") layer.removeFrom(m);
+            });
+            e.sourceTarget.bindTooltip(t, { sticky: true, permanent: false });
+          })
+        }
+        else {
           this.zone.run(() => {
             $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
           })
-        });
-        gl.on('remove', (e) => {
-          this.zone.run(() => {
-            delete this.segment[uuid]
-            this.setLegends()
-          })
-        });
-        gl.on('add', (e) => {
-          this.zone.run(() => {
-            // add to the legends as well
-            this.segment[uuid] = { 'label': label, 'data': {}, 'mapfile': data['mapfile'] }
-            this.setLegends()
-            this.loading['segment'] = this.loading['segment'].filter(jt => jt != uuid)
-            if (!this.loading['segment'].length && !this.loading['theme'].length)
-              $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
-          })
-        });
-
-        gl.on('click', (e: any) => {
-          if (!e.data) return
-          let t = this.popContent.innerHTML
-            .replace(/-total-/, e.data.num_records)
-            .replace(/-name-/, e.data.name)
-          //            .replace(/-cost-/, e.data.cost)
-          new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
-        })
-        let l = L.tileLayer(`${this.backend}/maps/critical/${data['mapfile']}/critical/{z}/{x}/{y}.png?ts=${d}`, {})
-        while (this.layersControl.overlays[label].getLayers().length > 0) {
-          this.layersControl.overlays[label].removeLayer(this.layersControl.overlays[label].getLayers()[0])
         }
-        this.layersControl.overlays[label].addLayer(gl)
-        this.layersControl.overlays[label].addLayer(l)
-        this.layersControl.overlays[label].setZIndex(999)
-      }, error: err => console.log(err)
+      });
+      gl.on('mouseout', (e) => {
+        this.zone.run(() => {
+          $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
+        })
+      });
+      gl.on('remove', (e) => {
+        this.zone.run(() => {
+          delete this.segment[uuid]
+          this.setLegends()
+        })
+      });
+      gl.on('add', (e) => {
+        this.zone.run(() => {
+          // add to the legends as well
+          this.segment[uuid] = { 'label': label, 'data': {}, 'mapfile': data['mapfile'] }
+          this.setLegends()
+          this.loading['segment'] = this.loading['segment'].filter(jt => jt != uuid)
+          if (!this.loading['segment'].length && !this.loading['theme'].length)
+            $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
+        })
+      });
+
+      gl.on('click', (e: any) => {
+        if (!e.data) return
+        let t = this.popContent.innerHTML
+          .replace(/-total-/, e.data.num_records)
+          .replace(/-name-/, e.data.name)
+        //            .replace(/-cost-/, e.data.cost)
+        new L.Popup().setLatLng(e.latlng).setContent(t).openOn(this.map)
+      })
+      let l = L.tileLayer(`${this.backend}/maps/critical/${data['mapfile']}/critical/{z}/{x}/{y}.png?ts=${d}`, {})
+      while (this.layersControl.overlays[label].getLayers().length > 0) {
+        this.layersControl.overlays[label].removeLayer(this.layersControl.overlays[label].getLayers()[0])
+      }
+      this.layersControl.overlays[label].addLayer(gl)
+      this.layersControl.overlays[label].addLayer(l)
+      this.layersControl.overlays[label].setZIndex(999)
+
     })
   }
   addThematic(uuid, l) {
@@ -508,27 +504,27 @@ export class IndexComponent implements OnInit {
     let f = JSON.parse(JSON.stringify(this.filter || {}))
     f['aggregation_boundary'] = uuid
     let d = (new Date()).getTime()
-    this.recordService.getQuantiles(this.recordtype_uuid, f).pipe(first()).subscribe({
-      next: data => {
-        let l = L.tileLayer(`${this.backend}/maps/theme/${data['mapfile']}/theme%20border/{z}/{x}/{y}.png?ts=${d}`, {})
-        if (this.layersControl.overlays[label].getLayers().length > 1) {
-          this.layersControl.overlays[label].removeLayer(this.layersControl.overlays[label].getLayers()[1])
-        }
-        l.on('add', (e) => {
-          this.zone.run(() => {
-            this.loading['theme'] = this.loading['theme'].filter(jt => jt != uuid)
-            if (!this.loading['segment'].length && !this.loading['theme'].length)
-              $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
-          })
+    this.recordService.getQuantiles(this.recordtype_uuid, f).then(next => {
+      const data = next.data
+      let l = L.tileLayer(`${this.backend}/maps/theme/${data['mapfile']}/theme%20border/{z}/{x}/{y}.png?ts=${d}`, {})
+      if (this.layersControl.overlays[label].getLayers().length > 1) {
+        this.layersControl.overlays[label].removeLayer(this.layersControl.overlays[label].getLayers()[1])
+      }
+      l.on('add', (e) => {
+        this.zone.run(() => {
+          this.loading['theme'] = this.loading['theme'].filter(jt => jt != uuid)
+          if (!this.loading['segment'].length && !this.loading['theme'].length)
+            $('.leaflet-grab').css('cursor', (this.listening) ? 'crosshair' : 'grab')
         })
-        this.layersControl.overlays[label].addLayer(l)
-        this.layersControl.overlays[label].setZIndex(999)
-        this.theme[uuid] = { 'label': label, 'data': {}, 'mapfile': data['mapfile'] }
-        data['sample'].forEach(k => {
-          this.theme[uuid]['data'][k[0]] = { 'label': k[2], 'data': k[1] }
-        })
-        this.setLegends()
-      }, error: err => console.log(err)
+      })
+      this.layersControl.overlays[label].addLayer(l)
+      this.layersControl.overlays[label].setZIndex(999)
+      this.theme[uuid] = { 'label': label, 'data': {}, 'mapfile': data['mapfile'] }
+      data['sample'].forEach(k => {
+        this.theme[uuid]['data'][k[0]] = { 'label': k[2], 'data': k[1] }
+      })
+      this.setLegends()
+
     })
   }
   selectState(s: string) {
@@ -567,8 +563,8 @@ export class IndexComponent implements OnInit {
       if (window['android']) {
         afterGetBoundaryPolygons(JSON.parse(window['android'].getBoundaryPolygons(this.boundary.uuid)))
       } else {
-        this.recordService.getBoundaryPolygons(this.boundary).pipe(first()).subscribe(
-          afterGetBoundaryPolygons)
+        this.recordService.getBoundaryPolygons(this.boundary).then(
+          p => afterGetBoundaryPolygons(p.data))
       }
     }
   }
@@ -591,7 +587,7 @@ export class IndexComponent implements OnInit {
       if (window['android']) {
         afterGetBoundaryPolygon(JSON.parse(window['android'].getBoundaryPolygon(b.uuid, boundary_uuid)))
       } else {
-        this.recordService.getBoundaryPolygon(b.uuid).subscribe(afterGetBoundaryPolygon)
+        this.recordService.getBoundaryPolygon(b.uuid).then(d => afterGetBoundaryPolygon(d.data))
       }
     }
 
@@ -629,7 +625,7 @@ export class IndexComponent implements OnInit {
     if (!this.filter) {
       this.recordService.getRecords({ 'uuid': this.recordSchema['record_type'] }, { 'filter': { 'limit': 1 } }).then(
         next => {
-          const data=next.data
+          const data = next.data
           if (!this.counts) this.counts = {}
           this.counts["total_crashes"] = data["count"]
           // set filter: last 3 months from latest found data
@@ -664,10 +660,10 @@ export class IndexComponent implements OnInit {
     }
   }
   loadCritical() {
-    this.recordService.getCritical().pipe(first()).subscribe(
+    this.recordService.getCritical().then(
       critical_data => {
-        if (critical_data['results']) {
-          critical_data['results'].forEach(rs => {
+        if (critical_data.data['results']) {
+          critical_data.data['results'].forEach(rs => {
             let gl = utfGrid(`${this.backend}/grid/critical/${rs['uuid']}/critical/{z}/{x}/{y}.json/`, {
               resolution: 4,
               pointerCursor: true,
@@ -688,7 +684,7 @@ export class IndexComponent implements OnInit {
       filter: this.filter
     }).then(
       du => {
-        const data=du.data
+        const data = du.data
         this.ready = true
         this.spinner.hide()
         let ts = (new Date()).getTime()
@@ -763,20 +759,18 @@ export class IndexComponent implements OnInit {
         this.getRoadMap()
         this.recordService.getRecordCosts({ 'uuid': this.recordSchema["record_type"] }, {
           filter: this.filter
-        }).pipe(first()).subscribe({
-          next: data => {
-            this.counts = data
-
-          }, error: err => {
-            this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"], 'limit': 1 }, { filter: this.filter }).then(
-              data => {
-                this.counts = {
-                  "total_crashes": data.data["count"]
-                }
+        }).then(data => {
+          this.counts = data.data
+        }).catch(err => {
+          this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"], 'limit': 1 }, { filter: this.filter }).then(
+            data => {
+              this.counts = {
+                "total_crashes": data.data["count"]
               }
-            )
-            console.log(err)
-          }
+            }
+          )
+          console.log(err)
+
         })
       })
   }
@@ -790,12 +784,12 @@ export class IndexComponent implements OnInit {
   getRoadMap() {
     if (this.gettingRoadMap) return
     this.gettingRoadMap = true
-    this.recordService.getRoadMap().pipe(first()).subscribe({
-      next: data => {
-        this.gettingRoadMap = false
-        if (data['result'])
-          this.roadmap_uuid = data['result'][0]['uuid']
-      }
+    this.recordService.getRoadMap().then(next => {
+      const data = next.data
+      this.gettingRoadMap = false
+      if (data['result'])
+        this.roadmap_uuid = data['result'][0]['uuid']
+
     })
   }
   refreshList() {
@@ -979,13 +973,13 @@ export class IndexComponent implements OnInit {
         aft(JSON.parse(window['android'].getBoundaryPolygons(this.boundary.uuid)))
       } else {
         console.log("downloading geometries")
-        this.recordService.getBoundaryPolygons(boundary).subscribe(aft)
+        this.recordService.getBoundaryPolygons(boundary).then((k) => aft(k.data))
       }
     } else {
       if (boundary) {
         this.geoloading = true
         this.recordService.getFilteredBoundaryPolygons(boundary, filter).then((r) => {
-          const res=r.data
+          const res = r.data
           this.boundaryPolygonsObject[boundary.uuid] = res["results"].sort((u, v) => (this.getBoundaryPolygonLabel(u, order, true) > this.getBoundaryPolygonLabel(v, order, true)) ? 1 : -1)
           if (res["results"].length > 0) {
             this.geoloading = false

@@ -1,24 +1,21 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
 import Utils from '../assets/utils';
 import axios from 'axios';
-import {AxiosResponse} from 'axios';
+import { AxiosResponse } from 'axios';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RecordService {
-  constructor(private http: HttpClient) { }
-
   getTokenFromCookie() {
     let g = document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")
     if ((g.length > 0) && (g[0].length > 1)) return g[0][1]
     return null
   }
 
-  getAxiosHeaders():object{
+  getAxiosHeaders(): object {
     let h = {
       'Content-Type': 'application/json'
     }
@@ -26,54 +23,47 @@ export class RecordService {
     if (t) h['Authorization'] = `Token ${this.getTokenFromCookie()}`
     return h
   }
-  getHeaders(): HttpHeaders {
-    let h = {
-      'Content-Type': 'application/json'
-    }
-    let t = this.getTokenFromCookie()
-    if (t) h['Authorization'] = `Token ${this.getTokenFromCookie()}`
-    return new HttpHeaders(h)
-  }
 
-  getSpecialHeaders(): HttpHeaders {
-    return new HttpHeaders({
+  getAxiosSpecialHeaders(): any {
+    return {
       'Accept': 'application/json, text/plain, */*',
       "Content-Type": "application/json",
-    })
+    }
   }
-  getBlobHeaders(): HttpHeaders {
-    return new HttpHeaders({
+
+  getBlobAxiosHeaders(): any {
+    return {
       'Content-Type': 'application/octet-stream',
       'Authorization': 'Token ' + (document.cookie.split(/; /).map(k => k.split(/=/)).filter(k => k[0] == "AuthService.token")[0][1])
-    })
+    }
   }
-  getNames(url: string, lang: string): Observable<any[]> {
-    return this.http.get<any[]>(`${url}?lang=${lang}`, { headers: this.getHeaders() })
+  getNames(url: string, lang: string): Promise<any> {
+    return axios.get(`${url}?lang=${lang}`, { headers: this.getAxiosHeaders() })
   }
 
   getBackend(): string {
     return (localStorage.getItem("backend") || (('api' in environment) ? environment.api : '')).replace(/\/\?.*$/, '')
   }
-  getAPI(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.getBackend()}/api/`, { headers: this.getHeaders() })
+  getAPI(): Promise<any> {
+    return axios.get(`${this.getBackend()}/api/`, { headers: this.getAxiosHeaders() })
   }
-  getUniqueId(record_uuid, table: string, field: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.getBackend()}/api/escwa_unique_id/${record_uuid}/?table_name=${table}&field_name=${field}`, { headers: this.getHeaders() })
+  getUniqueId(record_uuid, table: string, field: string): Promise<any> {
+    return axios.get(`${this.getBackend()}/api/escwa_unique_id/${record_uuid}/?table_name=${table}&field_name=${field}`, { headers: this.getAxiosHeaders() })
   }
-  getUniqueIdBoundary(record_uuid, table: string, field: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.getBackend()}/api/escwa_unique_id/${record_uuid}/?table_name=${table}&field_name=${field}&boundary=1`, { headers: this.getHeaders() })
+  getUniqueIdBoundary(record_uuid, table: string, field: string): Promise<any> {
+    return axios.get(`${this.getBackend()}/api/escwa_unique_id/${record_uuid}/?table_name=${table}&field_name=${field}&boundary=1`, { headers: this.getAxiosHeaders() })
   }
-  getSiteHeader(lang: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.getBackend()}/dictionary/header/${lang}/`, { headers: this.getSpecialHeaders() })
+  getSiteHeader(lang: string): Promise<any> {
+    return axios.get(`${this.getBackend()}/dictionary/header/${lang}/`, { headers: this.getAxiosSpecialHeaders() })
   }
-  getSiteFooter(lang: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.getBackend()}/dictionary/footer/${lang}/`, { headers: this.getSpecialHeaders() })
+  getSiteFooter(lang: string): Promise<any> {
+    return axios.get(`${this.getBackend()}/dictionary/footer/${lang}/`, { headers: this.getAxiosSpecialHeaders() })
   }
-  getSiteLogo(lang: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.getBackend()}/dictionary/logo/${lang}/`, { headers: this.getHeaders() })
+  getSiteLogo(lang: string): Promise<any> {
+    return axios.get(`${this.getBackend()}/dictionary/logo/${lang}/`, { headers: this.getAxiosHeaders() })
   }
   getRecordType(): Promise<any> {
-    return axios.get(this.getBackend() + '/api/recordtypes/?active=True', {headers:this.getAxiosHeaders()})
+    return axios.get(this.getBackend() + '/api/recordtypes/?active=True', { headers: this.getAxiosHeaders() })
   }
   getRecord(s: string): Promise<any> {
     return axios.get(`${this.getBackend()}/api/records/${s}/`, { headers: this.getAxiosHeaders() })
@@ -82,16 +72,16 @@ export class RecordService {
     return axios.get(`${this.getBackend()}/about/${lang}/`, { headers: this.getAxiosHeaders() })
   }
   getRecordSchema(s: string): Promise<any> {
-    return axios.get(this.getBackend() + '/api/recordschemas/' + s + '/', {headers:this.getAxiosHeaders()})
+    return axios.get(this.getBackend() + '/api/recordschemas/' + s + '/', { headers: this.getAxiosHeaders() })
   }
-  upload(obj: Object): Observable<any[]> {
+  upload(obj: Object): Promise<any> {
     if (obj['uuid']) {
-      return this.http.patch<any[]>(`${this.getBackend()}/api/records/${obj['uuid']}/`, obj, { headers: this.getHeaders() })
+      return axios.patch(`${this.getBackend()}/api/records/${obj['uuid']}/`, obj, { headers: this.getAxiosHeaders() })
     } else {
-      return this.http.post<any[]>(this.getBackend() + '/api/records/', obj, { headers: this.getHeaders() })
+      return axios.post(this.getBackend() + '/api/records/', obj, { headers: this.getAxiosHeaders() })
     }
   }
-  uploadAttachment(obj: Object, uuid: string): Observable<any[]> {
+  uploadAttachment(obj: Object, uuid: string): Promise<any> {
     const head = {}
     head["Accept"] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7'
     let t = this.getTokenFromCookie()
@@ -100,19 +90,20 @@ export class RecordService {
     formData.append("file", obj["srcElement"].files[0], obj["srcElement"].files[0].name)
     formData.append("uuid", uuid)
     formData.append("csrfmiddlewaretoken", t)
-    return this.http.post<any[]>(this.getBackend() + '/api/files/', formData, { headers: new HttpHeaders(head), reportProgress: true })
+    return axios.post(this.getBackend() + '/api/files/', formData, { headers: head })
   }
   getRecords(o: Object, q: any): Promise<any> {
-    let params = new HttpParams()
-      .set('archived', 'false')
-      .set('details_only', 'false')
-      .set('limit', o['limit'] ? o['limit'] : '50')
-      .set('record_type', o['uuid'])
-      .set('active', 'true')
+    let params = {
+      'archived': 'false',
+      'details_only': 'false',
+      'limit': o['limit'] ? o['limit'] : '50',
+      'record_type': o['uuid'],
+      'active': 'true'
+    }
     if (q) {
       if (q.filter) {
-        for (var k in q.filter) {
-          if (q.filter[k]) params = params.set(k, q.filter[k])
+        for (var k in Object.keys(q.filter)) {
+          if (q.filter[k]) params[k] = q.filter[k]
         }
       }
     }
@@ -120,24 +111,25 @@ export class RecordService {
   }
 
   getMapFileKey(o: Object, q: any): Promise<any> {
-    const parameters={'archived': 'false', 'details_only': 'true', 'limit': '50', 'record_type': o['uuid'], 'mapfile': 'true', 'active': 'true'}
+    const parameters = { 'archived': 'false', 'details_only': 'true', 'limit': '50', 'record_type': o['uuid'], 'mapfile': 'true', 'active': 'true' }
     if (q) {
       if (q.filter) {
-        for (var k in q.filter) {
-          if (q.filter[k]) parameters[k]=q.filter[k]
+        for (var k in Object.keys(q.filter)) {
+          if (q.filter[k]) parameters[k] = q.filter[k]
         }
       }
     }
     return axios.get(this.getBackend() + '/api/records/', { headers: this.getAxiosHeaders(), params: parameters })
   }
   getToddow(filter: any): Promise<any> {
-    let params = new HttpParams()
-      .set('archived', 'false')
-      .set('details_only', 'true')
-      .set('limit', '50')
-      .set('active', 'true')
-    for (var k in filter) {
-      if (filter[k]) params = params.set(k, filter[k])
+    let params = {
+      'archived': 'false',
+      'details_only': 'true',
+      'limit': '50',
+      'active': 'true'
+    }
+    for (var k in Object.keys(filter)) {
+      if (filter[k]) params = params[k] = filter[k]
     }
     //http://192.168.1.101:8000/api/records/toddow/?archived=False&details_only=True&occurred_max=2021-11-13T01:59:59.999Z&occurred_min=2011-08-04T03:00:00.000Z&polygon_id=60b09207-2d82-49a8-92fc-b80f1fdc67ae&record_type=264a5cb5-6f2c-4817-ae1b-226f5e779ac9
     return axios.get(this.getBackend() + '/api/records/toddow/', { headers: this.getAxiosHeaders(), params: params })
@@ -153,149 +145,160 @@ export class RecordService {
       active: true
     }
     if (q) {
-      for (var k in q) {
+      for (var k in Object.keys(q)) {
         parameters[k] = q[k];
       }
 
     }
     return axios.get(this.getBackend() + '/api/records/?' + Utils.toQueryString(parameters), { headers: this.getAxiosHeaders() })
   }
-  getBoundaries(): Observable<any[]> {
-    return this.http.get<any[]>(this.getBackend() + '/api/boundaries/?limit=all', { headers: this.getHeaders() })
+  getBoundaries(): Promise<any> {
+    return axios.get(this.getBackend() + '/api/boundaries/?limit=all', { headers: this.getAxiosHeaders() })
   }
-  getBoundaryPolygons(boundary: any, location: string = null) {
+  getBoundaryPolygons(boundary: any, location: string = null): Promise<any> {
     if (boundary) {
-      return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/?active=True&boundary=${boundary.uuid}&limit=all&nogeom=true`, { headers: this.getHeaders() })
+      return axios.get(`${this.getBackend()}/api/boundarypolygons/?active=True&boundary=${boundary.uuid}&limit=all&nogeom=true`, { headers: this.getAxiosHeaders() })
     }
     if (location) {
-      return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/?active=True&location=${location}&limit=all&nogeom=true`, { headers: this.getHeaders() })
+      return axios.get(`${this.getBackend()}/api/boundarypolygons/?active=True&location=${location}&limit=all&nogeom=true`, { headers: this.getAxiosHeaders() })
     }
 
   }
-  getFilteredBoundaryPolygons(boundary: any, filter: string): Promise<AxiosResponse<any, any>>{
+  getFilteredBoundaryPolygons(boundary: any, filter: string): Promise<AxiosResponse<any, any>> {
     return axios.get(`${this.getBackend()}/api/boundarypolygons/?active=True&boundary=${boundary.uuid}&limit=all&nogeom=true&filter=${filter}`, { headers: this.getAxiosHeaders() })
   }
-  getBoundaryPolygon(b: string) {
-    return this.http.get<any[]>(`${this.getBackend()}/api/boundarypolygons/${b}/`, { headers: this.getHeaders() })
+  getBoundaryPolygon(b: string): Promise<any> {
+    return axios.get(`${this.getBackend()}/api/boundarypolygons/${b}/`, { headers: this.getAxiosHeaders() })
   }
-  getCritical() {
-    return this.http.get<any[]>(`${this.getBackend()}/api/blackspotsets/`, { headers: this.getHeaders() })
+  getCritical(): Promise<any> {
+    return axios.get(`${this.getBackend()}/api/blackspotsets/`, { headers: this.getAxiosHeaders() })
   }
-  getCrossTabs(o: string, q: object): Observable<object> {
-    let params = new HttpParams()
-      .set('archived', 'False')
-      .set('record_type', o)
-      .set('calendar', 'gregorian')
+  getCrossTabs(o: string, q: object): Promise<any> {
+    let params = {
+      'archived': 'False',
+      'record_type': o,
+      'calendar': 'gregorian'
+    }
     Object.keys(q).forEach(k => {
-      params = params.set(k, q[k])
+      params[k] = q[k]
     })
-    return this.http.get<any[]>(`${this.getBackend()}/api/records/crosstabs/`, { headers: this.getHeaders(), params: params })
+    return axios(`${this.getBackend()}/api/records/crosstabs/`, { headers: this.getAxiosHeaders(), params: params })
   }
-  getQuantiles(o: string, q: object) {
-    let params = new HttpParams()
-      .set('archived', 'False')
-      .set('record_type', o)
-      .set('calendar', 'gregorian')
-      .set('language', localStorage.getItem("Language") || 'en-gb')
+  getQuantiles(o: string, q: object): Promise<any> {
+    let params = {
+      'archived': 'False',
+      'record_type': o,
+      'calendar': 'gregorian',
+      'language': localStorage.getItem("Language") || 'en-gb'
+    }
     Object.keys(q).forEach(k => {
-      params = params.set(k, q[k])
+      params = params[k] = q[k]
     })
-    return this.http.get<any[]>(`${this.getBackend()}/api/records/quantiles/`, { headers: this.getHeaders(), params: params })
+    return axios.get(`${this.getBackend()}/api/records/quantiles/`, { headers: this.getAxiosHeaders(), params: params })
   }
-  getSegmentQuantiles(o: string, q: object) {
-    let params = new HttpParams()
-      .set('archived', 'False')
-      .set('record_type', o)
-      .set('calendar', 'gregorian')
+  getSegmentQuantiles(o: string, q: object): Promise<any> {
+    let params = {
+      'archived': 'False',
+      'record_type': o,
+      'calendar': 'gregorian',
+      'language': localStorage.getItem("Language") || 'en-gb'
+    }
     Object.keys(q).forEach(k => {
-      params = params.set(k, q[k])
+      params = params[k] = q[k]
     })
-    return this.http.get<any[]>(`${this.getBackend()}/api/records/quantiles/`, { headers: this.getHeaders(), params: params })
+    return axios.get(`${this.getBackend()}/api/records/quantiles/`, { headers: this.getAxiosHeaders(), params: params })
   }
-  getBoundaryMapfile(o: Object, q: any): Observable<any[]> {
-    let params = new HttpParams()
-      .set('archived', 'false')
-      .set('active', 'true')
-      .set('theme', true)
+  getBoundaryMapfile(o: Object, q: any): Promise<any> {
+    let params = {
+      'archived': 'false',
+      'active': 'true',
+      'theme': true
+    }
     if (q) {
       if (q.filter) {
-        for (var k in q.filter) {
-          if (q.filter[k]) params = params.set(k, q.filter[k])
+        for (var k in Object.keys(q.filter)) {
+          if (q.filter[k]) params = params[k] = q.filter[k]
         }
       }
     }
-    return this.http.get<any[]>(`${this.getBackend()}/api/records/?${Utils.toQueryString(q)}`, { headers: this.getHeaders() })
+    return axios.get(`${this.getBackend()}/api/records/?${Utils.toQueryString(q)}`, { headers: this.getAxiosHeaders() })
   }
-  getSavedFilters(q: any): Observable<any[]> {
-    return this.http.get<any[]>(`${this.getBackend()}/api/userfilters/?${Utils.toQueryString(q)}`, { headers: this.getHeaders() })
+  getSavedFilters(q: any): Promise<any> {
+    return axios.get(`${this.getBackend()}/api/userfilters/?${Utils.toQueryString(q)}`, { headers: this.getAxiosHeaders() })
   }
-  saveFilter(data: any): Observable<object> {
-    return this.http.post(`${this.getBackend()}/api/userfilters/`, data, { headers: this.getHeaders() })
+  saveFilter(data: any): Promise<any> {
+    return axios.post(`${this.getBackend()}/api/userfilters/`, data, { headers: this.getAxiosHeaders() })
   }
-  deleteFilter(fud: string) {
-    return this.http.delete(`${this.getBackend()}/api/userfilters/${fud}/`, { headers: this.getHeaders() })
+  deleteFilter(fud: string): Promise<any> {
+    return axios.delete(`${this.getBackend()}/api/userfilters/${fud}/`, { headers: this.getAxiosHeaders() })
   }
-  getConfig(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.getBackend()}/get_config/`, { headers: this.getSpecialHeaders() })
+  getConfig(): Promise<any> {
+    return axios.get(`${this.getBackend()}/get_config/`, { headers: this.getAxiosSpecialHeaders() })
   }
-  getDuplicates(r, page): Observable<any[]> {
+  getDuplicates(r, page): Promise<any> {
     let q = {
       record_type: r,
       offset: page,
       limit: 50,
       resolved: 'False'
     }
-    return this.http.get<any[]>(`${this.getBackend()}/api/duplicates/?${Utils.toQueryString(q)}`, { headers: this.getHeaders() })
+    return axios.get(`${this.getBackend()}/api/duplicates/?${Utils.toQueryString(q)}`, { headers: this.getAxiosHeaders() })
   }
-  resolveDuplicate(uuid: string, record_uuid: string) {
+  resolveDuplicate(uuid: string, record_uuid: string): Promise<any> {
     let params = {
       'uuid': uuid
     }
     if (record_uuid) params['recordUUID'] = record_uuid
     let q = { limit: 'all', resolved: 'False' }
-    return this.http.patch(`${this.getBackend()}/api/duplicates/${uuid}/resolve/?${Utils.toQueryString(q)}`, params, { headers: this.getHeaders() })
+    return axios.patch(`${this.getBackend()}/api/duplicates/${uuid}/resolve/?${Utils.toQueryString(q)}`, params, { headers: this.getAxiosHeaders() })
   }
-  postCsv(tilekey: string) {
+  postCsv(tilekey: string): Promise<any> {
     let data = { "tilekey": tilekey }
-    return this.http.post(`${this.getBackend()}/api/csv-export/`, data, { headers: this.getHeaders() })
+    return axios.post(`${this.getBackend()}/api/csv-export/`, data, { headers: this.getAxiosHeaders() })
   }
-  getCsv(tilekey: string) {
-    return this.http.get<any[]>(`${this.getBackend()}/api/csv-export/${tilekey}/`, { headers: this.getHeaders() })
+  getCsv(tilekey: string): Promise<any> {
+    return axios.get(`${this.getBackend()}/api/csv-export/${tilekey}/`, { headers: this.getAxiosHeaders() })
   }
-  getRecordCosts(o: Object, q: any): Observable<any[]> {
-    let params = new HttpParams()
-      .set('archived', 'false')
-      .set('details_only', 'true')
-      .set('record_type', o['uuid'])
-      .set('active', 'true')
+  getRecordCosts(o: Object, q: any): Promise<any> {
+    let params = {
+      'archived': 'false',
+      'details_only': 'true',
+      'record_type': o['uuid'],
+      'active': 'true'
+    }
     if (q) {
       if (q.filter) {
-        for (var k in q.filter) {
-          if (q.filter[k]) params = params.set(k, q.filter[k])
+        for (var k in Object.keys(q.filter)) {
+          if (q.filter[k]) params = params[k] = q.filter[k]
         }
       }
     }
-    return this.http.get<any[]>(this.getBackend() + '/api/records/costs/', { headers: this.getHeaders(), params: params })
+    return axios.get(this.getBackend() + '/api/records/costs/', { headers: this.getAxiosHeaders(), params: params })
   }
-  getRoadMap() {
-    return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/`, { headers: this.getHeaders() })
+  getRoadMap(): Promise<any> {
+    return axios.get(`${this.getBackend()}/api/roadmaps/`, { headers: this.getAxiosHeaders() })
   }
-  getRoadMapByCords(params: any) {
-    return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/ab06162a-8ccd-4cc6-a3b4-ec097bfbc8dc/map/?latlong=${params.latlng[1]},${params.latlng[0]}`, { headers: this.getBlobHeaders() },)
+  getRoadMapByCords(params: any): Promise<any> {
+    return axios.get(`${this.getBackend()}/api/roadmaps/ab06162a-8ccd-4cc6-a3b4-ec097bfbc8dc/map/?latlong=${params.latlng[1]},${params.latlng[0]}`, { headers: this.getBlobAxiosHeaders() },)
   }
   getForward(roadmap: string, params: object): Observable<any> {
-    if (window['android']) { 
-      return new Observable((subscriber)=>{
-        const roads=window['android'].getRoadsByName(params['term'],params['bbox'])
+    if (window['android']) {
+      return new Observable((subscriber) => {
+        const roads = window['android'].getRoadsByName(params['term'], params['bbox'])
         subscriber.next(JSON.parse(roads))
       })
     }
     else {
-      return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/${roadmap}/forward/?limit=15&q=${params['term']}&viewBox=${params['bbox']}`, { headers: this.getHeaders() })
+      let e = null
+      return new Observable((subscriber) => {
+        axios.get(`${this.getBackend()}/api/roadmaps/${roadmap}/forward/?limit=15&q=${params['term']}&viewBox=${params['bbox']}`, { headers: this.getAxiosHeaders() }).then(d => {
+          subscriber.next(d.data)
+        })
+      })
     }
   }
-  getReverse(roadmap: string, lat: string, lng: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.getBackend()}/api/roadmaps/${roadmap}/reverse/?lat=${lat}&lon=${lng}&format=json`, { headers: this.getHeaders() })
+  getReverse(roadmap: string, lat: string, lng: string): Promise<any> {
+    return axios.get(`${this.getBackend()}/api/roadmaps/${roadmap}/reverse/?lat=${lat}&lon=${lng}&format=json`, { headers: this.getAxiosHeaders() })
   }
   getPosition(): Promise<any> {
     return new Promise((resolve, reject) => {

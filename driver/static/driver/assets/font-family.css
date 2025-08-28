@@ -1,0 +1,7 @@
+@font-face {
+  font-family: "Phetsarath";
+  src:
+    local("Phetsarath"),
+    url("fonts/Phetsarath-Regular.woff") format("woff"),
+    url("fonts/Phetsarath-Bold.woff") format("woff");
+}
