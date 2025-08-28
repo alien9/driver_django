@@ -314,8 +314,8 @@ export class NavbarComponent implements OnInit {
         setTimeout('$("#navbarDropdown")[0].click()', 200)
         this.recordService.getTileKey({ 'uuid': this.recordSchema["record_type"] }, {
           filter: this.filter
-        }).pipe(first()).subscribe(t => {
-          this.recordService.postCsv(t['tilekey']).pipe(first()).subscribe(data => {
+        }).then(t => {
+          this.recordService.postCsv(t.data['tilekey']).pipe(first()).subscribe(data => {
             if (data['success']) {
               setTimeout(() => this.collectCsv(data['taskid']), 1000)
             }

@@ -453,8 +453,12 @@ CACHES = {
 }
 
 # Celery
+CELERY_BROKER_URL = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
 BROKER_URL = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
-CELERY_RESULT_BACKEND = 'redis://{}:{}/1'.format(REDIS_HOST, REDIS_PORT)
+broker_url = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
+result_backend = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
+backend_url = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
+CELERY_RESULT_BACKEND = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_RESULT_SERIALIZER = 'json'
