@@ -102,9 +102,9 @@ export class RecordService {
     }
     if (q) {
       if (q.filter) {
-        for (var k in Object.keys(q.filter)) {
+        Object.keys(q.filter).forEach(k => {
           if (q.filter[k]) params[k] = q.filter[k]
-        }
+        })
       }
     }
     return axios.get<any[]>(this.getBackend() + '/api/records/', { headers: this.getAxiosHeaders(), params: params })
@@ -114,9 +114,9 @@ export class RecordService {
     const parameters = { 'archived': 'false', 'details_only': 'true', 'limit': '50', 'record_type': o['uuid'], 'mapfile': 'true', 'active': 'true' }
     if (q) {
       if (q.filter) {
-        for (var k in Object.keys(q.filter)) {
+        Object.keys(q.filter).forEach(k => {
           if (q.filter[k]) parameters[k] = q.filter[k]
-        }
+        })
       }
     }
     return axios.get(this.getBackend() + '/api/records/', { headers: this.getAxiosHeaders(), params: parameters })
@@ -128,9 +128,9 @@ export class RecordService {
       'limit': '50',
       'active': 'true'
     }
-    for (var k in Object.keys(filter)) {
-      if (filter[k]) params = params[k] = filter[k]
-    }
+    Object.keys(filter).forEach(k => {
+      if (filter[k]) params[k] = filter[k]
+    })
     //http://192.168.1.101:8000/api/records/toddow/?archived=False&details_only=True&occurred_max=2021-11-13T01:59:59.999Z&occurred_min=2011-08-04T03:00:00.000Z&polygon_id=60b09207-2d82-49a8-92fc-b80f1fdc67ae&record_type=264a5cb5-6f2c-4817-ae1b-226f5e779ac9
     return axios.get(this.getBackend() + '/api/records/toddow/', { headers: this.getAxiosHeaders(), params: params })
   }
@@ -145,9 +145,9 @@ export class RecordService {
       active: true
     }
     if (q) {
-      for (var k in Object.keys(q)) {
+      Object.keys(q).forEach(k => {
         parameters[k] = q[k];
-      }
+      })
 
     }
     return axios.get(this.getBackend() + '/api/records/?' + Utils.toQueryString(parameters), { headers: this.getAxiosHeaders() })
@@ -216,9 +216,9 @@ export class RecordService {
     }
     if (q) {
       if (q.filter) {
-        for (var k in Object.keys(q.filter)) {
-          if (q.filter[k]) params = params[k] = q.filter[k]
-        }
+        Object.keys(q.filter).forEach(k => {
+          if (q.filter[k]) params[k] = q.filter[k]
+        })
       }
     }
     return axios.get(`${this.getBackend()}/api/records/?${Utils.toQueryString(q)}`, { headers: this.getAxiosHeaders() })
@@ -268,9 +268,9 @@ export class RecordService {
     }
     if (q) {
       if (q.filter) {
-        for (var k in Object.keys(q.filter)) {
-          if (q.filter[k]) params = params[k] = q.filter[k]
-        }
+        Object.keys(q.filter).forEach(k => {
+          if (q.filter[k]) params[k] = q.filter[k]
+        })
       }
     }
     return axios.get(this.getBackend() + '/api/records/costs/', { headers: this.getAxiosHeaders(), params: params })

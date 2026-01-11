@@ -14,7 +14,7 @@ class GenerateViewsetQuery(object):
         # get properly escaped string representation of the query
         query_str = cursor.mogrify(sql, params)
         cursor.close()
-        return query_str.decode('utf-8')
+        return query_str.decode('utf-8', errors='replace')
 
     def generate_mapserver_query_sql(self, request):
         qset = self.get_super_queryset().values('uuid', 'geom', 'location_text', 'occurred_from', 'timezone' )
@@ -27,6 +27,5 @@ class GenerateViewsetQuery(object):
         sql, params = qset.query.sql_with_params()
         # get properly escaped string representation of the query
         query_str = cursor.mogrify(sql, params)
-        print("GENERATED QTHE QUERYYYYY", query_str)
         cursor.close()
-        return query_str.decode('utf-8')
+        return query_str.decode('utf-8', errors='replace')

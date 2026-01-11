@@ -428,10 +428,11 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
 
                 query_sql = self.generate_mapserver_query_sql(request)
 
-                query_sql = query_sql.replace('::bytea', '::geometry')
+                query_sql = query_sql.replace('"geom"::bytea', '"geom"::geometry')
                 query_sql = query_sql.replace('\'\\x', '\'')
+                logger.warning("MAPSERVER PRE-SQL: %s" % query_sql)
                 query_sql = query_sql.replace('"', '\\"')
-
+                logger.warning("MAPSERVER SQL: %s" % query_sql)
                 if 'records_mapfile' in request.session:
                     tile_token = request.session['records_mapfile']
                 else:
