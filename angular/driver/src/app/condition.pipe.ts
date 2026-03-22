@@ -16,12 +16,6 @@ export class ConditionPipe implements PipeTransform {
       console.log(k)
       if (k.value.condition) {
         if (data[k.value.condition] && k.value.conditionValue && k.value.conditionValue.length) {
-          console.log("condition", data[k.value.condition])
-          console.log(data[k.value.condition])
-
-          console.log(typeof k.value.conditionValue)
-
-          console.log(typeof data[k.value.condition])
           if ((typeof data[k.value.condition]) == 'string')
             return k.value.conditionValue.indexOf(data[k.value.condition]) >= 0
           if ((typeof data[k.value.condition]) == 'object') {

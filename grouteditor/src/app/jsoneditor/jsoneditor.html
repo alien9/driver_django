@@ -129,6 +129,18 @@
                                     (change)="setUntitled(pair.key, item.key, $event)"></label>
                         </div>
 
+                        <div *ngIf="pair.value.fieldType=='text' && (pair.value.format=='date')">
+                            <label>Age <input type="checkbox" [checked]="isAge(item.key, pair.key)"
+                                    (focus)="setActive(null,null)"
+                                    (change)="setAge(pair.key, item.key, $event)"></label>
+                        </div>
+
+                        <div>
+                            <label>Hidden <input type="checkbox" [checked]="isHidden(item.key, pair.key)"
+                                    (focus)="setActive(null,null)"
+                                    (change)="setHidden(pair.key, item.key, $event)"></label>
+                        </div>
+
 
                         <div>Type:
                             <select (focus)="setActive(null,null)" (change)="setFieldType(item.key,pair.key, $event)">
@@ -191,7 +203,7 @@
                             </span>
                         </div>
 
-                        <div *ngIf="pair.value.format=='datetime'">
+                        <div *ngIf="pair.value.format=='datetime' || pair.value.format=='date'">
                             Years Before:
                             <input type="number" (change)="setPropertyValue(pair.value,'yearsPast', $event)"
                                 [value]="pair.value.yearsPast" size="4" maxlength="4">

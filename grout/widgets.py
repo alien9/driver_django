@@ -6,7 +6,7 @@ from django import forms
 
 class GroutEditorWidget(forms.Widget):
   class Media:
-    css = {'all': ('jsoneditor.css',)}
+    css = {}
     js = (
     )
   template_name = 'grouteditor.html'

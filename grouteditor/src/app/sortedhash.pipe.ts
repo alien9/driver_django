@@ -6,7 +6,6 @@ import { Pipe, PipeTransform } from '@angular/core';
 export class SortedhashPipe implements PipeTransform {
 
   transform(value: any, ...args: any[]): any {
-    console.log("sorting the hash")
     let keys = [];
     for (let key in value) {
       if (value[key].options && value[key].options.hidden == true) {
@@ -32,7 +31,6 @@ export class SortedhashPipe implements PipeTransform {
       }
       return 0;
     })
-    console.log("aaaaaaaaaaaaa")
     return keys.map(k => ({ key: k, value: value[k] }));
   }
 

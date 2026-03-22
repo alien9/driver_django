@@ -2,7 +2,6 @@ from rest_framework_gis.filters import GeometryFilter
 import json
 import re
 import django_filters
-
 from django.contrib.gis.geos import GEOSGeometry
 from dateutil.parser import parse
 
@@ -225,14 +224,12 @@ class BoundaryPolygonFilter(GeoFilterSet):
         return queryset.filter(boundary=value)
     
     def filter_by_location(self, queryset, field_name, value):
-        import logging
-        logger = logging.getLogger(__name__)
         pnt=GEOSGeometry(f"SRID=4326;POINT({value})")
         return queryset.filter(geom__contains=pnt)
     
     class Meta:
         model = BoundaryPolygon
-        fields = ['data', 'boundary', 'filter']
+        fields = ['data', 'boundary', 'filter', 'location']
         filter_overrides = FILTER_OVERRIDES
 
 

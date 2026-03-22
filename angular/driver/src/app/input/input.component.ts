@@ -811,6 +811,28 @@ export class InputComponent implements OnInit {
             }
           }
         })
+        let agedFields = Object.keys(this.recordSchema["schema"].definitions[kk].properties).filter((pk) => {
+          return this.recordSchema["schema"].definitions[kk].properties[pk].age
+        })
+        if(agedFields.length) {
+          const today=new Date(this.record['occurred_from'])
+          const ranges=this.recordSchema["schema"].definitions[kk].properties["Age"]["enum"].map((po)=>{
+            return {interval:po.match(/\d+/g).map(o=>parseInt(o)), key:po}
+          })
+          agedFields.forEach((fu)=>{
+            this.record['data'][kk].forEach(element => {
+              const born=new Date(element[fu])
+              const ageDiff = today.getFullYear() - born.getFullYear() - (today < new Date(today.getFullYear(), born.getMonth(), born.getDate()) ? 1 : 0)
+              ranges.forEach(range => {
+                if (ageDiff >= range.interval[0]) {
+                  if((range.interval.length<2)||(ageDiff <= range.interval[1])) {
+                    element["Age"] = range.key
+                  }
+                }
+              })
+            });
+          })
+        }
       }
     })
     return v
@@ -820,6 +842,9 @@ export class InputComponent implements OnInit {
   }
   isUntitled(table, field) {
     return this.recordSchema["schema"].definitions[table].properties[field].isUntitled
+  }
+  isHidden(table, field) {
+    return this.recordSchema["schema"].definitions[table].properties[field].isHidden
   }
   getDenominations(t, idx) {
     const names = []
@@ -863,10 +888,10 @@ export class InputComponent implements OnInit {
       this.spinner.hide()
     }).catch(err => {
       let message = err["error"]
-      if ("detail" in message) {
+      if (message && ("detail" in message)) {
         alert(message["detail"])
       }
-      else if ("data" in message) {
+      else if (message && ("data" in message)) {
         let m = message["data"]
         let mess = m.match(/Schema validation failed for (.+): '(.+)' is a required property/)
         if (mess && mess.length == 3) {
@@ -875,7 +900,7 @@ export class InputComponent implements OnInit {
           alert(message["data"])
         }
       }
-      else if ("occurred_from" in message) {
+      else if (message && ("occurred_from" in message)) {
         alert(message["occurred_from"])
       }
       else {

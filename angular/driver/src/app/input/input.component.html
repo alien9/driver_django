@@ -1,5 +1,5 @@
 <div class="modal-body" id="modal-body input" (keypress)="submit($event,modal)">
-    <ul ngbNav #nav="ngbNav" class="nav-tabs" (navChange)=tabChange($event)>
+    <ul ngbNav #nav="ngbNav" class="nav-tabs" (navChange)=tabChange($event) [destroyOnHide]="false">
         <li [ngbNavItem]="k.key" *ngFor="let k of schema['definitions']|keyvalue|orderBy">
             <a ngbNavLink *ngIf="!k.value.multiple">{{k.value.title|translate}}</a>
             <a ngbNavLink *ngIf="k.value.multiple">{{k.value.plural_title|translate}}</a>
@@ -22,6 +22,7 @@
                                 (selectItem)="selectGeocodedOption($event)" [resultFormatter]="geoResultFormatter">
                             <small *ngIf="geocoding" class="form-text text-muted">{{'searching'|translate}}...</small>
                         </li>
+
                         <li class="list-group-item">
                             <span>{{'Latitude'|translate}}</span>: <span
                                 *ngIf="!editing">{{record['geom'].coordinates[1]}}</span>
@@ -38,7 +39,8 @@
                                 (dateSelect)="setDate($event)" [maxDate]="today">
                             <span>{{'Date and time'|translate}}</span>:
                             <span *ngIf=!editing>{{record["occurred_from"]|localizedDate:'dd/MM/yyyy':locale:timezone }}
-                                {{record["occurred_from"]|localizedDate:'shortTime':locale:timezone }} &nbsp; {{timezone}}</span>
+                                {{record["occurred_from"]|localizedDate:'shortTime':locale:timezone }} &nbsp;
+                                {{timezone}}</span>
                             <span *ngIf=editing>
                                 <a href="#"
                                     (click)=df.toggle()>{{record["occurred_from"]|localizedDate:'dd/MM/yyyy':locale:timezone
@@ -88,7 +90,9 @@
                         <li class="list-group-item"
                             *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key|display|orderBy">
                             <div>{{f.key|translate}}: <span *ngIf="editing && isRequired(k.key,f.key)">*</span>
-                                <span *ngIf="f.value.fieldType=='counter'">{{getItemCount(k.key, f.key, f.value)}}</span></div>
+                                <span *ngIf="f.value.fieldType=='counter'">{{getItemCount(k.key, f.key,
+                                    f.value)}}</span>
+                            </div>
                             <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="-1" [editing]="editing"
                                 [prop]="f" (setFieldCheckFieldChanged)="setCheckField($event)" [data]="record['data']"
                                 [locale]="locale" [canvasmode]="canvasmode"
@@ -105,20 +109,24 @@
 
                     <button *ngIf=editing type="button" class="btn btn-light float-right" (click)="addElement(k.key)"> +
                     </button>
-                    <accordion [closeOthers]="true">
+                    <accordion>
                         <div class="card" *ngFor="let kk of record['data'][k.key]; let i = index">
                             <div class="card-body">
-                                <accordion-group [isOpen]="accordionOpenedItem==i" (isOpenChange)="setAccordionOpen(i)">
+
+                                <accordion-group [isOpen]="accordionOpenedItem==i" 
+                                    class="d-print-block">
                                     <div accordion-heading>
                                         <button *ngIf=editing type="button" class="btn btn-light top-float-right"
                                             (click)="removeElement(k.key, i)"> -
                                         </button>
-                                        <h5 class="card-title" (click)="setAccordionOpen(null)">
+                                        <h5 class="card-title" (click)="setAccordionOpen(i)">
                                             {{k.value.title|translate}}: {{i+1}}
                                             {{record['data'][k.key][i]|referenceName:k.key:schema}}</h5>
                                     </div>
-                                    <ul class="list-group list-group-flush">
-                                        <li class="list-group-item"
+
+
+                                    <ul class="list-group list-group-flush d-print-block">
+                                        <li [style.display]="isHidden(k.key,f.key) ? 'none' : 'block'" class="list-group-item"
                                             *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key:i|display|orderBy">
                                             <div><span *ngIf="!isUntitled(k.key,f.key)">{{f.key|translate}}:</span><span
                                                     *ngIf="editing && isRequired(k.key,f.key)">*</span></div>
@@ -138,6 +146,17 @@
 
                                     </ul>
                                 </accordion-group>
+                                <ul class="d-print-block">
+                                    <li class="list-group-item"
+                                        *ngFor="let f of k.value.properties|keyvalue|condition:record['data']:k.key:i|display|orderBy">
+                                        <div><span *ngIf="!isUntitled(k.key,f.key)">{{f.key|translate}}:</span><span
+                                                *ngIf="editing && isRequired(k.key,f.key)">*</span></div>
+                                        <img [src]="f.value.illustration" *ngIf="f.value.isIllustrated" class="pic">
+                                        <app-input-field [fieldName]="f.key" [tableName]="k.key" [index]="i"
+                                            [editing]=false [prop]="f" [data]="record['data']" [locale]="locale"
+                                            [canvasmode]="canvasmode" [record_uuid]="record['uuid']"></app-input-field>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                     </accordion>

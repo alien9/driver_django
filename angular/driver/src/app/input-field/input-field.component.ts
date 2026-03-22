@@ -121,6 +121,27 @@ export class InputFieldComponent implements OnInit {
     }
     this.setDateFieldValueChanged.emit({ "table": table, "field": field, "index": index, "value": d })
   }
+  setDateTimeTimeField(e: any, table: string, field: string, index: number = -1, part: string = "hour") { 
+    let current = this.getValue()
+    const du = new Date(current)
+    if (part == "hour") {
+      let h = ''
+      if (e.srcElement.value.length) {
+        let hour = ((e.srcElement.value > 23) || (e.srcElement.value < 0)) ? '0' : e.srcElement.value
+        h = String(hour).padStart(2, '0');
+        du.setHours(hour)
+      }
+    }
+    else {
+      let m = ''
+      if (e.srcElement.value.length) {
+        let min = ((e.srcElement.value > 59) || (e.srcElement.value < 0)) ? '0' : e.srcElement.value
+        du.setMinutes(min)
+      }
+    }
+    this.setDateFieldValueChanged.emit({ "table": table, "field": field, "index": index, "value": du })
+  }
+
   setTimeField(e: any, table: string, field: string, index: number = -1, part: string = "hour") {
     let current = this.getValue()
     if (part == "hour") {
@@ -198,19 +219,19 @@ export class InputFieldComponent implements OnInit {
   getMaxDate(v) {
     if (this.prop.value.yearsFuture) {
       let d = new Date()
-      if (v!="") d = new Date(v)
-      return { day:d.getDate(), month: d.getMonth()+1, year: d.getFullYear() + parseInt(this.prop.value.yearsFuture) }
+      if (v != "") d = new Date(v)
+      return { day: d.getDate(), month: d.getMonth() + 1, year: d.getFullYear() + parseInt(this.prop.value.yearsFuture) }
     }
   }
   getMinDate(v) {
     if (this.prop.value.yearsPast) {
       let d = new Date()
-      if (v!="") d = new Date(v)
-      return { day:d.getDate(), month: d.getMonth(), year: d.getFullYear() - parseInt(this.prop.value.yearsPast) }
+      if (v != "") d = new Date(v)
+      return { day: d.getDate(), month: d.getMonth(), year: d.getFullYear() - parseInt(this.prop.value.yearsPast) }
     }
   }
-  getMaxLength(){
-    if(this.prop && this.prop["value"] && this.prop["value"]["length"]){
+  getMaxLength() {
+    if (this.prop && this.prop["value"] && this.prop["value"]["length"]) {
       return this.prop["value"]["length"]
     }
     return 148

@@ -85,6 +85,10 @@ class BoundaryPolygonViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset=BoundaryPolygon.objects.all()
         value=self.request.query_params.get('filter', None)
+        location=self.request.query_params.get('location', None)
+        if location is not None:
+            pnt=GEOSGeometry(f"SRID=4326;POINT({location})")
+            queryset=queryset.filter(geom__contains=pnt)
         if not value:
             return queryset
         rrg = re.compile(

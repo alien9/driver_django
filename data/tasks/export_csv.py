@@ -334,8 +334,8 @@ class RecordModelWriter(BaseRecordWriter):
                                  E.g. {'latitude': lambda geom: geom.y}
                                  If a field is not included here, it will be used directly
         """
-        logger.warning("************************************************************************************************")
-        logger.warning(csv_columns)
+        logger.debug("************************************************************************************************")
+        logger.debug(csv_columns)
         self.csv_columns = csv_columns
         self.source_fields = source_fields
         self.value_transforms = value_transforms

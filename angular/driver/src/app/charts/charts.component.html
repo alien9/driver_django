@@ -46,7 +46,9 @@
             </h5>
 
             <div id=pizza class="m-3"></div>
-            <div id="pizza_legend" class="mr-3 ml-3"></div>
+            <div id="pizza_legend" [hidden]="legendIndex!=0" class="mr-3 ml-3" (click)="incrementLegendIndex()"></div>
+            <div id="pizza_legend_percent" [hidden]="legendIndex!=1" class="mr-3 ml-3" (click)="incrementLegendIndex()"></div>
+            <div id="pizza_legend_count" [hidden]="legendIndex!=2" class="mr-3 ml-3" (click)="incrementLegendIndex()"></div>
         </ng-template>
     </li>
     <li [ngbNavItem]="4">
@@ -57,9 +59,7 @@
                     <option></option>
                     <option [ngStyle]="{'font-family':fontFamily}" [value]="field['table']+',properties,'+field['title']"
                         *ngFor="let field of reportFilters">
-                        {{field['title']|translate}}</option>
-                    <option [ngStyle]="{'font-family':fontFamily}" [value]="'boundary_id'" *ngFor="let bound of boundaries">{{bound.label|translate}}</option>
-                    
+                        {{field['title']|translate}}</option>                    
                 </select>
                 <select class="custom-select" [(ngModel)]="barChart['parent_field']" (change)=loadChart(active) style="display:none">
                     <option></option>
@@ -71,7 +71,34 @@
             </h5>
 
             <div id=treemap class="m-3"></div>
-            <div id="treemap_legend" class="mr-3 ml-3"></div>
+            <div [hidden]="legendIndex!=0" id="treemap_legend" class="mr-3 ml-3" (click)="incrementLegendIndex()"></div>
+            <div [hidden]="legendIndex!=1" id="treemap_legend_percent" class="mr-3 ml-3" (click)="incrementLegendIndex()"></div>
+            <div [hidden]="legendIndex!=2" id="treemap_legend_count" class="mr-3 ml-3" (click)="incrementLegendIndex()"></div>
+            <svg #swatchContainer></svg>
+        </ng-template>
+    </li>
+    <li [ngbNavItem]="5">
+        <a ngbNavLink>{{'Correlation'| translate}}</a>
+        <ng-template ngbNavContent>
+            <h5 class="m-3">{{'Field'|translate}}:
+                <select class="custom-select" [(ngModel)]="barChart['field']" (change)=loadChart(active)>
+                    <option></option>
+                    <option [ngStyle]="{'font-family':fontFamily}" [value]="field['table']+',properties,'+field['title']"
+                        *ngFor="let field of reportFilters">
+                        {{field['title']|translate}}</option>
+                </select>
+                x
+                <select class="custom-select" [(ngModel)]="barChart['parent_field']" (change)=loadChart(active)>
+                    <option></option>
+                    <option [ngStyle]="{'font-family':fontFamily}" [ngStyle]="{'font-family':fontFamily}"[value]="field['table']+',properties,'+field['title']"
+                        *ngFor="let field of reportFilters">
+                        {{field['title']|translate}}</option>
+                </select>
+                
+            </h5>
+
+            <div id=correlation_container class="m-3"></div>
+            <div id="correlation_legend" class="mr-3 ml-3" (click)="refreshCorrelation()"></div>
             <svg #swatchContainer></svg>
         </ng-template>
     </li>

@@ -474,6 +474,7 @@ CELERY_ROUTES = {
     'black_spots.tasks.generate_roadmap.generate_roadmap': {'queue': 'taskworker'},
     'data.tasks.remove_duplicates.remove_duplicates': {'queue': 'taskworker'},
     'data.tasks.export_csv.export_csv': {'queue': 'taskworker'},
+    'data.tasks.export_xlsx.export_xlsx': {'queue': 'taskworker'},
     'data.tasks.update_dictionaries.update_dictionaries': {'queue': 'taskworker'},
     'data.tasks.fetch_record_csv.export_records': {'queue': 'taskworker'},
     'data.tasks.geocode_records.geocode_records': {'queue': 'taskworker'},
@@ -656,6 +657,7 @@ CONSTANCE_CONFIG = {
     'APP_NAME': ((os.getenv('APP_NAME', 'DRIVER')), _("App Name")),
     'SHOW_LIGHT_CONDITIONS': ((os.getenv('SHOW_LIGHT_CONDITIONS', True)), _("Show lighting conditions")),
     'SHOW_RECORD_CREATOR': ((False), _("Show Record creator")),
+    'AGE_INTERVALS': ((os.getenv('AGE_INTERVALS', '0-18,19-35,36-50,51+')), _("Age Intervals")),
 }
 CAPTCHA_OUTPUT_FORMAT = u'%(image)s %(hidden_field)s %(text_field)s'
 ADMIN_TWO_FACTOR_NAME = os.getenv('APP_NAME', 'AIRSO-Mahdar')

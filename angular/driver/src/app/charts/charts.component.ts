@@ -15,7 +15,7 @@ export class ChartsComponent implements OnInit, OnChanges {
   @Input() filter: object
   @Input() boundary_polygon_uuid: string
   @Input() recordSchema: object
-  @Input() reportFilters: object[]
+  reportFilters: object[]
   @Input() boundaries: object[]
   @ViewChild('swatchContainer') swatchContainer: ElementRef;
 
@@ -41,6 +41,9 @@ export class ChartsComponent implements OnInit, OnChanges {
   ]
   barChartParent: any;
   direction: string;
+  legendIndex: number;
+  clt: boolean;
+  correlationData: any;
   constructor(
     private recordService: RecordService,
     private cdr: ChangeDetectorRef,
@@ -50,10 +53,26 @@ export class ChartsComponent implements OnInit, OnChanges {
   ) { }
 
   ngOnInit(): void {
+    this.legendIndex = 0
     this.barChart = { 'interval': 'year' }
     this.locale = localStorage.getItem("Language") || "en"
     this.weekdays = {}
     this.monthnames = {}
+    this.clt = false
+    let tables = Object.keys(this.recordSchema['schema']['properties'])
+      .sort((k, j) => { return this.recordSchema['schema']['properties'][k].propertyOrder - this.recordSchema['schema']['properties'][j].propertyOrder })
+    this.reportFilters = []
+    tables.forEach(t => {
+      Object.entries(this.recordSchema['schema']['definitions'][t]['properties'])
+        .sort((k, j) => { return k[1]['propertyOrder'] - j[1]['propertyOrder'] })
+        .filter(k => {
+          return k[1]['isSearchable'] && k[1]['enum']
+        })
+        .forEach(element => {
+          this.reportFilters.push({ title: element[0], table: t })
+        });
+    })
+
     let d = new Date()
     d.setDate(1)
     for (let i = 0; i < 7; i++) {
@@ -67,6 +86,14 @@ export class ChartsComponent implements OnInit, OnChanges {
     this.loadChart(1)
     this.direction = getLocaleDirection(localStorage.getItem("Language"))
   }
+  refreshCorrelation() {
+    this.clt = !this.clt
+    const correlationConfig = localStorage.getItem("correlation_config") ? JSON.parse(localStorage.getItem("correlation_config")) : {}
+    correlationConfig[`${this.barChart['field']},${this.barChart['parent_field']},${this.locale}`] = this.clt
+    localStorage.setItem("correlation_config", JSON.stringify(correlationConfig))
+    this.renderCorrelationChart(this.correlationData)
+  }
+
   ngOnChanges(changes: SimpleChanges) {
     if (this.weekdays) //already initialized
       this.loadChart(this.active)
@@ -98,7 +125,7 @@ export class ChartsComponent implements OnInit, OnChanges {
             this.spinner.hide()
             let max = data.map(k => k.count).reduce(function (a, b) {
               return Math.max(a, b);
-            })
+            }, 0)
             this.toddow = data
             d3.select("#toddow").select("svg").remove()
             const svg = d3.select("#toddow").append("svg")
@@ -119,7 +146,11 @@ export class ChartsComponent implements OnInit, OnChanges {
               .domain(dow)
               .padding(0.01);
             svg.append("g")
-              .call(d3.axisLeft(y).tickSize(0).tickFormat((t, i) => this.weekdays[t])).select(".domain").remove()
+              .attr("style", "direction: ltr;")
+              .call(d3.axisLeft(y)
+                .tickSize(0).tickFormat((t, i) => this.weekdays[t]))
+              .selectAll("text")
+              .select(".domain").remove()
             const colors = d3.scaleQuantile()
               .range([
                 parseInt("FDFBED", 16),
@@ -213,7 +244,7 @@ export class ChartsComponent implements OnInit, OnChanges {
             let m = 0
             let totals = {}
             Object.entries(data['tables'][0].data).filter(k => Object.keys(k[1]).length > 0).forEach(k => {
-              let sum = Object.values(k[1]).reduce((a, b) => a + b)
+              let sum = Object.values(k[1]).reduce((a, b) => a + b, 0)
               if (sum > m) m = sum
               k[1]['group'] = k[0]
               if (k[0] != "None")
@@ -294,24 +325,9 @@ export class ChartsComponent implements OnInit, OnChanges {
               .attr("y", d => y(d[1]))
               .attr("height", d => y(d[0]) - y(d[1]))
               .attr("width", x.bandwidth())
-            d3.select("#interval_legend").select("svg").remove()
-            const svg_bar_legend = d3.select("#interval_legend")
-              .append("svg")
-              .attr("width", 500)
-              .attr("height", 100 * subgroups.length)
-              .append("g")
-            svg_bar_legend.selectAll("mydots").data(subgroups).enter().append("circle")
-              .attr("cx", (this.direction == 'rtl') ? 450 : 100)
-              .attr("cy", function (d, i) { return 13 + i * 25 })
-              .attr("r", 7)
-              .style("fill", d => `#${Math.round(parseFloat(color(d.toString()).toString())).toString(16)}`)
-            svg_bar_legend.selectAll("mydots").data(subgroups).enter().append("text")
-              .attr("x", (this.direction == 'rtl') ? 430 : 120)
-              .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
-              .text(function (d) { return ts.instant(d.toString()) })
-              .attr("text-anchor", "left")
-              .style("alignment-baseline", "middle")
-
+            this.createIntervalLegend(subgroups, data, color, "#interval_legend", ts);
+            this.createIntervalLegend(subgroups, data, color, "#interval_legend_percent", ts);
+            this.createIntervalLegend(subgroups, data, color, "#interval_legend_count", ts);
 
           }).catch(err => {
             console.log(err)
@@ -332,14 +348,18 @@ export class ChartsComponent implements OnInit, OnChanges {
         parameters_pizza['row_period_type'] = 'all'
         parameters_pizza['col_choices_path'] = this.barChart['field']
         parameters_pizza['relate'] = this.barChart['field'] // the total count of related
+
         this.recordService.getCrossTabs(this.recordSchema['record_type'], parameters_pizza).then(next => {
           const data = next.data
+          const getColumnLabel = (k) => {
+            return data.col_labels.filter((o) => o.key == k).pop().label[0].text
+          }
           $("#pizza").html('')
           this.spinner.hide()
           let h = []
           let m = 0
           var p_data: SimpleDataModel[] = Object.entries(data['tables'][0].data["0"]).filter((k => k[1] != '0'))
-            .map(k => { return { "name": ts.instant(k[0]), "value": k[1].toString() } }).sort((a, b) => { return (parseInt(a.value) > parseInt(b.value)) ? 1 : -1 })
+            .map(k => { return { "label": getColumnLabel(k[0]), "name": ts.instant(k[0]), "value": k[1].toString() } }).sort((a, b) => { return (parseInt(a.value) > parseInt(b.value)) ? 1 : -1 })
           let enablePolylines = false
           let isPercentage = false
           var radius = Math.min(p_width_bar, p_height_bar) / 2 - p_margin_bar.top
@@ -396,60 +416,33 @@ export class ChartsComponent implements OnInit, OnChanges {
               "d",
               ark
             )
-            //.attr("fill", (d, i) => (d.data.color ? d.data.color : colors(i.toString())))
             .attr("fill", (d, i) => {
-              console.log(d)
-              console.log(i)
               return colors(d.data.name).toString()
             })
             .attr("stroke", "#ffffff")
             .style("stroke-width", "1px")
-          /*
-                      const labelLocation = d3
-                        .arc()
-                        .innerRadius(radius / 2)
-                        .outerRadius(radius);
-                      svg
-                        .selectAll("pieces")
-                        .data(pie(p_data))
-                        .enter()
-                        .append("text")
-                        .text(d => {
-                          if (
-                            ((d.endAngle - d.startAngle) / (2 * Math.PI)) * 100 > 5 ||
-                            enablePolylines
-                          ) {
-                            return (
-                              d.data.name +
-                              " (" +
-                              d.data.value +
-                              (isPercentage ? "%" : "") +
-                              ")"
-                            );
-                          }
-                        })
-                        .attr("transform", d => { let e: any = d; return "translate(" + labelLocation.centroid(e) + ")" })
-                        .style("text-anchor", "middle")
-                        .style("font-size", 22)
-                        .attr("fill", "#333333");*/
-          d3.select("#pizza_legend").select("svg").remove()
-          const svg_bar_legend = d3.select("#pizza_legend")
-            .append("svg")
-            .attr("width", 500)
-            .attr("height", 100 * p_data.length)
-            .append("g")
-          svg_bar_legend.selectAll("mydots").data(p_data).enter().append("circle")
-            .attr("cx", (this.direction == 'rtl') ? 450 : 100)
-            .attr("cy", function (d, i) { return 13 + i * 25 })
-            .attr("r", 7)
-            .style("fill", d => colors(d.name).toString())
-          svg_bar_legend.selectAll("mydots").data(p_data).enter().append("text")
-            .attr("x", (this.direction == 'rtl') ? 430 : 120)
-            .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
-            .text(function (d) { return ts.instant(d.name.toString()) })
-            .attr("text-anchor", "left")
-            .style("alignment-baseline", "middle")
-
+          Array.from(["#pizza_legend", "#pizza_legend_percent", "#pizza_legend_count"]).forEach((component, i) => {
+            d3.select(component).select("svg").remove()
+            const svg_bar_legend = d3.select(component)
+              .append("svg")
+              .attr("width", 500)
+              .attr("height", 100 * p_data.length)
+              .append("g")
+            svg_bar_legend.selectAll("mydots").data(p_data).enter().append("circle")
+              .attr("cx", (this.direction == 'rtl') ? 450 : 100)
+              .attr("cy", function (d, i) { return 13 + i * 25 })
+              .attr("r", 7)
+              .style("fill", d => colors(d.name).toString())
+            svg_bar_legend.selectAll("mydots").data(p_data).enter().append("text")
+              .attr("x", (this.direction == 'rtl') ? 430 : 120)
+              .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
+              .text(function (d) {
+                const total = data.tables[0].row_totals[0]
+                return ts.instant(d["label"].toString()) + ((i == 0) ? ` (${d["value"]})` : (i == 1) ? ` (${(100 * parseInt(d["value"]) / total).toFixed(1)}%)` : '')
+              })
+              .attr("text-anchor", "left")
+              .style("alignment-baseline", "middle")
+          })
         }).catch(err => {
           console.log(err)
           this.spinner.hide()
@@ -466,17 +459,17 @@ export class ChartsComponent implements OnInit, OnChanges {
         this.spinner.show()
 
         parameters_treemap['col_choices_path'] = this.barChart['field']
-        if (this.barChart['parent_field']) {
-          parameters_treemap['row_choices_path'] = this.barChart['parent_field']
-        } else {
-          parameters_treemap['row_period_type'] = 'all'
-        }
+        parameters_treemap['row_period_type'] = 'all'
         parameters_treemap['relate'] = this.barChart['field'] // the total count of related
-
-
 
         this.recordService.getCrossTabs(this.recordSchema['record_type'], parameters_treemap).then(next => {
           const data = next.data
+          const getTreeLabel = (r) => {
+            return data.col_labels.filter((o) => o.key == r).pop().label[0].text
+          }
+          const getTreeValue = (r) => {
+            return data.col_values.filter((o) => o.key == r).pop().value[0]
+          }
           $("#treemap").html('')
           var svg = d3.select("#treemap")
             .append("svg")
@@ -510,14 +503,13 @@ export class ChartsComponent implements OnInit, OnChanges {
               return k[1] as number > 0
             }).map(k => {
               return {
-                'name': ts.instant(k[0]),
+                'name': k[0],
                 'value': k[1],
                 'parent': 'all'
               }
             })
           }
           du.push({ 'name': 'all', 'parent': '', 'value': '' })
-
           // prepare a color scale
           const color = d3.scaleOrdinal()
             .domain(["boss1", "boss2", "boss3"])
@@ -568,62 +560,58 @@ export class ChartsComponent implements OnInit, OnChanges {
             .attr("fill", d => `${color(d.data['name'])}`)
             .style("stroke", "black")
             ;
-
-
-          // and to add the text labels
-          /* svg
-            .selectAll("text")
-            .data(root.leaves())
-            .join("text")
-            .attr("x", function (d) { return d['x0'] + 10 })    // +10 to adjust position (more right)
-            .attr("y", function (d) { return d['y0'] + 20 })    // +20 to adjust position (lower)
-            .text(function (d) { return d.data['name'] })
-            .attr("font-size", "15px")
-            .attr("fill", "#ccc")
-  
-          // Add title for the 3 groups
-          if (this.barChart['parent_field']) {
-            svg
-              .selectAll("titles")
-              .data(root.descendants().filter(function (d) { return d.depth == 1 }))
-              .enter()
-              .append("text")
-              .attr("x", function (d) { return d['x0'] })
-              .attr("y", function (d) { return d['y0'] + 21 })
-              .text(function (d) { return d.data['name'] })
-              .attr("font-size", "19px")
-              .attr("fill", d => `${color(d.data['name'])}`)
-          }*/
-          d3.select("#treemap_legend").select("svg").remove()
-          const keys = root.descendants().map((e) => e.data['name']).filter((e) => e != 'all');
-
-          console.log(keys)
-          const svg_bar_legend = d3.select("#treemap_legend")
-            .append("svg")
-            .attr("width", 500)
-            .attr("height", 100 * keys.length)
-            .append("g")
-          svg_bar_legend.selectAll("mydots").data(keys).enter().append("circle")
-            .attr("cx", (this.direction == 'rtl') ? 450 : 100)
-            .attr("cy", function (d, i) { return 13 + i * 25 })
-            .attr("r", 7)
-            .style("fill", d => {
-              return color(d).toString()
-            })
-          svg_bar_legend.selectAll("mydots").data(keys).enter().append("text")
-            .attr("x", (this.direction == 'rtl') ? 430 : 120)
-            .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
-            .text(function (d) {
-              return ts.instant(d)
-            })
-            .attr("text-anchor", "left")
-            .style("alignment-baseline", "middle")
-          this.spinner.hide()
-
+          Array.from(["#treemap_legend", "#treemap_legend_percent", "#treemap_legend_count"]).forEach((id, ind) => {
+            d3.select(id).select("svg").remove()
+            const keys = root.descendants().map((e) => e.data['name']).filter((e) => e != 'all');
+            const svg_bar_legend = d3.select(id)
+              .append("svg")
+              .attr("width", 900)
+              .attr("height", 100 * keys.length)
+              .append("g")
+            svg_bar_legend.selectAll("mydots").data(keys).enter().append("circle")
+              .attr("cx", (this.direction == 'rtl') ? 450 : 100)
+              .attr("cy", function (d, i) { return 13 + i * 25 })
+              .attr("r", 7)
+              .style("fill", d => {
+                return color(d).toString()
+              })
+            svg_bar_legend.selectAll("mydots").data(keys).enter().append("text")
+              .attr("x", (this.direction == 'rtl') ? 430 : 120)
+              .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
+              .text(function (d) {
+                const value = data.tables[0].data[0][d]
+                return ts.instant(getTreeLabel(d)) + ((ind == 0) ? ` (${value})` : (ind == 1) ? ` (${(value * 100 / data.tables[0].row_totals[0]).toFixed(1)}%)` : '')
+              })
+              .attr("text-anchor", "left")
+              .style("alignment-baseline", "middle")
+            this.spinner.hide()
+          })
         }).catch(err => {
           console.log(err)
           this.spinner.hide()
         })
+        break
+      case 5: // Correlation chart
+        let correlation_parameters = this.filter
+        if (this.barChart['interval'] && this.barChart['field']) {
+          this.spinner.show()
+          if (this.barChart['parent_field']) {
+            correlation_parameters['row_choices_path'] = this.barChart['parent_field']
+          } else {
+            correlation_parameters['row_period_type'] = 'all'
+          }
+          correlation_parameters['col_choices_path'] = this.barChart['field']
+          correlation_parameters['relate'] = this.barChart['field'] // the total count of related
+          this.recordService.getCrossTabs(this.recordSchema['record_type'], correlation_parameters).then(next => {
+            this.correlationData = next.data
+            this.renderCorrelationChart(this.correlationData);
+            this.spinner.hide()
+          }).catch(err => {
+            console.log(err)
+            this.spinner.hide()
+          })
+        }
+
     }
 
   }
@@ -666,7 +654,185 @@ export class ChartsComponent implements OnInit, OnChanges {
   rgbToHex(rgb) {
     return this.componentToHex(rgb[0]) + this.componentToHex(rgb[1]) + this.componentToHex(rgb[2]);
   }
+  incrementLegendIndex() {
+    this.legendIndex++;
+    if (this.legendIndex > 2) {
+      this.legendIndex = 0;
+    }
+  }
 
+  createIntervalLegend(subgroups: any[], data: any, color: any, component: string, ts: TranslateService) {
+    // Create legend for interval chart
+    const getLabel = (r) => {
+      return data.col_labels.filter((o) => o.key == r).pop().label[0].text
+    }
+    d3.select(component).select("svg").remove()
+    const svg_bar_legend = d3.select(component)
+      .append("svg")
+      .attr("width", 500)
+      .attr("height", 100 * subgroups.length)
+      .append("g")
+    svg_bar_legend.selectAll("mydots").data(subgroups).enter().append("circle")
+      .attr("cx", (this.direction == 'rtl') ? 450 : 100)
+      .attr("cy", function (d, i) { return 13 + i * 25 })
+      .attr("r", 7)
+      .style("fill", d => `#${Math.round(parseFloat(color(d.toString()).toString())).toString(16)}`)
+    svg_bar_legend.selectAll("mydots").data(subgroups).enter().append("text")
+      .attr("x", (this.direction == 'rtl') ? 430 : 120)
+      .attr("y", function (d, i) { return 13 + i * 25 })
+      .text(function (d) { return ts.instant(getLabel(d.toString())) })
+      .attr("text-anchor", "left")
+      .style("alignment-baseline", "middle")
+  }
+
+  renderCorrelationChart(data: any) {
+    const getCorrelationLabel = (r) => {
+      return data.col_labels.filter((o) => o.key == r)[0].label[0].text
+    }
+    let c_subgroups = data.col_labels.map(l => l.key)
+    let c_groups = data.row_labels.map(l => l.key)
+    const ts = this.translateService
+    const correlation_margin_bar = { top: 10, right: 30, bottom: 20, left: 50 }
+    const correlation_width_bar = 100 * c_groups.length + 460 - correlation_margin_bar.left - correlation_margin_bar.right
+    const correlation_height_bar = 400 - correlation_margin_bar.top - correlation_margin_bar.bottom;
+    const chartX = (this.direction == 'rtl') ? 400 : 0;
+    let corr_x = d3.scaleBand()
+      .domain(c_groups)
+      .range([0, correlation_width_bar])
+      .padding(0.2)
+    d3.select("#correlation_container").select("svg").remove()
+    const svg_cor = d3.select("#correlation_container")
+      .append("svg")
+      .attr("width", 500 + correlation_width_bar + correlation_margin_bar.left + correlation_margin_bar.right)
+      .attr("height", correlation_height_bar + correlation_margin_bar.top + correlation_margin_bar.bottom)
+      .append("g")
+      .attr("transform", `translate(${correlation_margin_bar.left},${correlation_margin_bar.top})`);
+    const correlationConfig = localStorage.getItem("correlation_config") ? JSON.parse(localStorage.getItem("correlation_config")) : {}
+    if (correlationConfig && correlationConfig[`${this.barChart['field']},${this.barChart['parent_field']},${this.locale}`] != undefined) {
+      this.clt = correlationConfig[`${this.barChart['field']},${this.barChart['parent_field']},${this.locale}`]
+    } else {
+      const maxLabelLength = data.row_labels.map((l) => l.label[0].text).reduce((a, b) => Math.max(a, b.length), 0)
+      if (maxLabelLength > 15) {
+        this.clt = false
+      } else {
+        this.clt = true
+      }
+    }
+    svg_cor.append("g")
+      .attr("transform", `translate(${chartX},${correlation_height_bar})`)
+      .call(d3.axisBottom(corr_x).tickSize(0).tickFormat((hg, i) => {
+        if (!this.clt) {
+          return `${i + 1}`;
+        } else {
+          return ts.instant(data.row_labels.filter((l) => l.key == hg).pop().label[0].text)
+        }
+      }));
+    let domain: any = 1
+    Object.keys(data.tables[0]['data']).forEach(key => {
+      const value = data.tables[0]['data'][key]
+      Object.keys(value).forEach(subKey => {
+        domain = Math.max(domain, value[subKey]) * 1.01
+      })
+    })
+    var y = d3.scaleLinear()
+      .domain([0, domain])
+      .range([correlation_height_bar, 0]);
+    svg_cor.append("g")
+      .attr("transform", `translate(${chartX},0)`)
+      .call(d3.axisLeft(y));
+
+    // Another scale for subgroup position?
+    var xSubgroup = d3.scaleBand()
+      .domain(c_subgroups)
+      .range([0, corr_x.bandwidth()])
+      .padding(0.05)
+
+    let hue = 0
+    let s = 0.65
+    let l = 0.5
+    let colorRange = []
+    while (colorRange.length < c_subgroups.length) {
+      colorRange.push(this.rgbToHex(this.hslToRgb(hue, s, l)))
+      hue += 0.375
+      hue = hue % 1
+      s *= 0.95
+      l += ((1 - l) * .05)
+    }
+    this.palette = colorRange
+    // color palette = one color per subgroup
+    var color = d3.scaleOrdinal()
+      .domain(c_subgroups)
+      .range(this.palette.map(d => `#${d}`))
+
+    let correlation_data = []
+    c_groups.forEach((gu) => {
+      let hh = { group: gu }
+      c_subgroups.forEach((cs) => {
+        hh[cs] = (data["tables"][0].data[gu]) ? data["tables"][0].data[gu][cs] || 0 : 0
+      })
+      correlation_data.push(hh)
+    })
+    svg_cor.append("g")
+      .selectAll("g")
+      // Enter in data = loop group per group
+      .data(correlation_data)
+      .enter()
+      .append("g")
+      .attr("transform", function (d) { return `translate(${chartX + corr_x(d["group"])},0)`; })
+      .selectAll("rect")
+      .data(function (d) { return c_subgroups.map(function (key) { return { key: key, value: d[key] }; }); })
+      .enter().append("rect")
+      .attr("x", function (d) {
+        return xSubgroup(d["key"]);
+      })
+      .attr("y", function (d) { return y(d["value"]); })
+      .attr("width", xSubgroup.bandwidth())
+      .attr("height", function (d) { return correlation_height_bar - y(d["value"]); })
+      .attr("fill", function (d): string { return color(d["key"]).toString(); })
+
+    // Add value labels on top of rectangles
+    svg_cor.append("g")
+      .selectAll("g")
+      .data(correlation_data)
+      .enter()
+      .append("g")
+      .attr("transform", function (d) { return `translate(${chartX + corr_x(d["group"])},0)`; })
+      .selectAll("text")
+      .data(function (d) { return c_subgroups.map(function (key) { return { key: key, value: d[key] }; }); })
+      .enter().append("text")
+      .attr("x", function (d) { return xSubgroup(d["key"]) + xSubgroup.bandwidth() / 2; })
+      .attr("y", function (d) { return y(d["value"]) - 5; })
+      .attr("text-anchor", "middle")
+      .style("font-size", "12px")
+      .text(function (d) { return d["value"] > 0 ? d["value"] : ""; })
+
+    d3.select("#correlation_legend").select("svg").remove()
+    const svg_bar_legend = d3.select("#correlation_legend")
+      .append("svg")
+      .attr("width", 900)
+      .attr("height", 100 * c_subgroups.length + 100 * c_groups.length)
+      .append("g")
+    svg_bar_legend.selectAll("mydots").data(c_subgroups).enter().append("circle")
+      .attr("cx", (this.direction == 'rtl') ? 450 : 100)
+      .attr("cy", function (d, i) { return 13 + i * 25 })
+      .attr("r", 7)
+      .style("fill", d => color(d.toString()).toString())
+    svg_bar_legend.selectAll("mydots").data(c_subgroups).enter().append("text")
+      .attr("x", (this.direction == 'rtl') ? 430 : 120)
+      .attr("y", function (d, i) { return 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
+      .text(function (d) { return ts.instant(data.col_labels.filter((l) => l.key == d.toString()).pop().label[0].text) })
+      .attr("text-anchor", "left")
+      .style("alignment-baseline", "middle")
+    if (!this.clt) {
+      let current_height = 13 + c_subgroups.length * 25
+      svg_bar_legend.selectAll("mydots").data(c_groups).enter().append("text")
+        .attr("x", (this.direction == 'rtl') ? 450 : 100)
+        .attr("y", function (d, i) { return current_height + 13 + i * 25 }) // 13 is where the first dot appears. 25 is the distance between dots
+        .text(function (d, i) { return `${1 + i} - ` + ts.instant(data.row_labels.filter((l) => l.key == d.toString()).pop().label[0].text) })
+        .attr("text-anchor", "left")
+        .style("alignment-baseline", "middle")
+    }
+  }
 }
 export interface SimpleDataModel {
   name: string;

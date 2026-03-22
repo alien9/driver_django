@@ -1,3 +1,68 @@
 a {
     text-decoration: none;
 }
+
+@media print {
+
+    #floating-commands,
+    .leaflet-control-attribution,
+    .leaflet-control-layers,
+    .leaflet-control-zoom,
+    app-counter,
+    app-legend {
+        display: none !important
+    }
+
+    .modal,
+    body,
+    ngb-modal-window {
+        overflow: visible !important;
+        position: static !important;
+        height: -webkit-fit-content !important;
+        height: -moz-fit-content !important;
+        height: fit-content !important
+    }
+
+    .leaflet-control,
+    .modal-backdrop,
+    button.btn,
+    button.close {
+        display: none
+    }
+
+    .modal-dialog {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%
+    }
+
+    .nav-pills,
+    .nav-tabs {
+        display: none !important
+    }
+
+    .tab-content .tab-pane {
+        opacity: 1 !important;
+        height: auto !important
+    }
+
+    .tab-content .tab-pane,
+    [ngbNavOutlet] .tab-pane {
+        display: block !important;
+        visibility: visible !important
+    }
+
+    [ngbNavOutlet] .tab-pane {
+        margin-bottom: 20px
+    }
+
+    .collapse {
+        display: block !important;
+        height: auto !important;
+    }
+
+    app-map {
+        display: none;
+    }
+}

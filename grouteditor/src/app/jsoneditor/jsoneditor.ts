@@ -1,7 +1,6 @@
 import { Component, OnInit, NgZone, ElementRef, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HostListener } from '@angular/core';
-import { NgSelectComponent } from '@ng-select/ng-select';
 import { CommonModule } from '@angular/common';
 import { FieldfilterPipe } from '../fieldfilter.pipe';
 import { SortedhashPipe } from '../sortedhash.pipe'
@@ -17,9 +16,9 @@ import deepEqual from 'deep-equal';
 })
 
 export class Jsoneditor implements OnInit {
-  @Input() textarea_id:string=""
+  @Input() textarea_id: string = ""
   textarea: string;
-  currentvalue:string;
+  currentvalue: string;
   field_name: string = "json-content";
 
   referables: any;
@@ -64,6 +63,8 @@ export class Jsoneditor implements OnInit {
     { id: "text", name: "Single line text" },
     { id: "textarea", name: "Paragraph text" },
     { id: "datetime", name: "Date / Time" },
+    { id: "date", name: "Date" },
+    { id: "time", name: "Time" },
     { id: "suggest", name: "Auto Complete" },
   ]
 
@@ -73,7 +74,7 @@ export class Jsoneditor implements OnInit {
     this.field_name = this.elementRef.nativeElement.getAttribute('textarea_name');
   }
   ngAfterViewInit() {
-    if (this.textarea_id && this.textarea_id!="") {
+    if (this.textarea_id && this.textarea_id != "") {
       try {
         const txt = window.document.getElementById(this.textarea_id)
         if (txt)
@@ -84,10 +85,11 @@ export class Jsoneditor implements OnInit {
     } else {
       this.set({ "properties": {} });
     }
-    this.save()  }
+    this.save()
+  }
 
   ngOnInit(): void {
-    
+
   }
   load(event: any): void {
     try {
@@ -280,7 +282,7 @@ export class Jsoneditor implements OnInit {
     this.save()
   }
   setMultiPropertyValue(a: any, i: any, event: any): void {
-    a[i] = Array.from(event.srcElement.childNodes).filter((o:any)=>o.selected).map((o:any)=>o.innerText);
+    a[i] = Array.from(event.srcElement.childNodes).filter((o: any) => o.selected).map((o: any) => o.innerText);
     this.save()
   }
   setEnumValue(t: string, f: string, i: number, event: any): void {
@@ -484,9 +486,27 @@ export class Jsoneditor implements OnInit {
   isUntitled(t: string, o: string) {
     return this.dict.definitions[t].properties[o].isUntitled
   }
+  isAge(t: string, o: string) {
+    return this.dict.definitions[t].properties[o].age
+  }
   setUntitled(o: string, t: string, event: any) {
     this.dict.definitions[t].properties[o].isUntitled = event.srcElement.checked
     this.save();
+  }
+  setAge(o: string, t: string, event: any) {
+    if (event.srcElement.checked) {
+      this.dict.definitions[t].properties[o].age = true
+    } else { delete this.dict.definitions[t].properties[o].age }
+    this.save();
+  }
+  setHidden(o: string, t: string, event: any) {
+    if (event.srcElement.checked) {
+      this.dict.definitions[t].properties[o].isHidden = true
+    } else { delete this.dict.definitions[t].properties[o].isHidden }
+    this.save();
+  }
+  isHidden(t: string, o: string) {
+    return this.dict.definitions[t].properties[o].isHidden
   }
   isIllustrated(t: string, o: string) {
     return this.dict.definitions[t].properties[o].isIllustrated
@@ -588,7 +608,6 @@ export class Jsoneditor implements OnInit {
     };
     definition.properties = h;
     this.save()
-    //this.dict = JSON.parse(JSON.stringify(this.dict))
   }
   deleteField(definition: any, fieldname: string) {
     if (confirm("Delete " + fieldname + "?")) {
@@ -826,8 +845,6 @@ export class Jsoneditor implements OnInit {
     this.fixRequired()
     const b = { "definitions": this.dict.definitions, "properties": this.dict.properties }
     this.dict_json = JSON.stringify(b) || "{}"
-    //this.dict.properties=(b&&b.properties)?JSON.parse(JSON.stringify(b.properties)):{}
-    //this.dict.definitions=(b&&b.definitions)?JSON.parse(JSON.stringify(b.definitions)):{}
   }
   setDetails(eve: any, element: any, key: string) {
     for (var k in this.dict.definitions) {

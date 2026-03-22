@@ -66,12 +66,12 @@ from grout.views import (BoundaryPolygonViewSet,
                          BoundaryViewSet)
 
 from grout.serializers import RecordSchemaSerializer
-
+from grout.filters import BoundaryPolygonFilter
 from driver_auth.permissions import (IsAdminOrReadOnly,
                                      ReadersReadWritersWrite,
                                      IsAdminAndReadOnly,
                                      is_admin_or_writer)
-from data.tasks import export_csv, generate_blackspots
+from data.tasks import export_xlsx, generate_blackspots
 from data.models import DriverRecord, SegmentSet, Dictionary, RecordSegment, Attachment
 from black_spots.models import BlackSpotSet
 from data.localization.date_utils import (
@@ -268,7 +268,7 @@ def segment_sets(request):
 
 def download(request, filename):
     file_path = os.path.join('zip', filename)
-    logger.error(file_path)
+    logger.info(f"Attempting to download file: {file_path}")
     if os.path.exists(file_path):
         with open(file_path, 'rb') as fh:
             response = HttpResponse(fh.read(), content_type="application/zip")
@@ -430,9 +430,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
 
                 query_sql = query_sql.replace('"geom"::bytea', '"geom"::geometry')
                 query_sql = query_sql.replace('\'\\x', '\'')
-                logger.warning("MAPSERVER PRE-SQL: %s" % query_sql)
                 query_sql = query_sql.replace('"', '\\"')
-                logger.warning("MAPSERVER SQL: %s" % query_sql)
                 if 'records_mapfile' in request.session:
                     tile_token = request.session['records_mapfile']
                 else:
@@ -1585,7 +1583,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
 
         choices = self._get_schema_enum_choices(schema, path)
         labels = [
-            {'key': choice, 'label': [{'text': choice, 'translate': False}]}
+            {'key': re.sub(" ", "_", choice), 'label': [{'text': choice, 'translate': False}]}
             for choice in choices
         ]
         is_array = self._is_multiple(schema, path)
@@ -1594,14 +1592,18 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             if is_array:
                 pattern = json.dumps({path[2]: choice})
                 pattern = pattern[1:len(pattern)-1]
+                logger.warning("pattern: %s", pattern)
+                logger.warning("relate: %s", relate)
                 if not relate or relate == "":
-                    annotations['{}_{}'.format(annotation_id, choice)] = RawSQL("\
+                    logger.warning("No relate specified, using default")
+                    annotations['{}_{}'.format(annotation_id, re.sub(" ", "_", choice))] = RawSQL("\
                         SELECT \
     case when \"grout_record\".\"data\"->>%s ~ %s = 't' then 1 else 0 end\
     ", (path[0], pattern)
                     )
                 else:
-                    annotations['{}_{}'.format(annotation_id, choice)] = RawSQL("\
+                    logger.warning("Relate specified: %s", relate)
+                    annotations['{}_{}'.format(annotation_id, re.sub(" ", "_", choice))] = RawSQL("\
                         SELECT \
                         -1+array_length(regexp_split_to_array(\"grout_record\".\"data\"->>%s, %s),1) as l \
                         ", (path[0], pattern)
@@ -1643,8 +1645,11 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
         # Build a JSONB filter that will catch Records that match each choice in the enum.
         choices = obj.get('enum', None)
         if not choices:
-            raise ParseError(
-                detail="The property at choices_path is missing required 'enum' field")
+            if obj.get('age', None) is not None:
+                choices = config.AGE_INTERVALS.split(",")
+            if not choices:
+                raise ParseError(
+                    detail="The property at choices_path is missing required 'enum' field")
         return choices
 
     def _make_djsonb_containment_filter(self, path, value, multiple):
@@ -1736,6 +1741,7 @@ def start_jar_build(schema_uuid):
 # override grout views to set permissions and trigger model jar builds
 class DriverBoundaryPolygonViewSet(BoundaryPolygonViewSet):
     permission_classes = (IsAdminOrReadOnly,)
+    filter_class = BoundaryPolygonFilter
     authentication_classes=get_authentication_class()
 
 
@@ -1858,7 +1864,7 @@ class RecordCsvExportViewSet(viewsets.ViewSet):
         # N.B. Celery will never return an error if a task_id doesn't correspond to a
         # real task; it will simply return a task with a status of 'PENDING' that will never
         # complete.
-        job_result = export_csv.AsyncResult(pk)
+        job_result = export_xlsx.AsyncResult(pk)
         if job_result.state in states.READY_STATES:
             if job_result.state in states.EXCEPTION_STATES:
                 e = job_result.get(propagate=False)
@@ -1880,14 +1886,13 @@ class RecordCsvExportViewSet(viewsets.ViewSet):
         filterkey is the same as the "tilekey" that we pass to Windshaft; it must be requested
         from the Records endpoint using tilekey=true
         """
-        print("EXPORTING CSV NOWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWw")
         filter_key = request.data.get('tilekey', None)
         if not filter_key:
             return Response({'errors': {'tilekey': 'This parameter is required'}},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        task = export_csv.delay(filter_key, request.user.pk)
-        print(task)
+        task = export_xlsx.delay(filter_key, request.user.pk)
+        logger.info(f"Started export_xlsx task {filter_key} user {request.user.pk}", extra={"task_id": task.id, "filter_key": filter_key, "user_id": request.user.pk})
         return Response({'success': True, 'taskid': task.id}, status=status.HTTP_201_CREATED)
 
     # TODO: If we switch to a Django/ORM database backend, we can subclass AbortableTask
@@ -1997,7 +2002,6 @@ class DictionaryViewSet(viewsets.ViewSet):
             pk = config.DEFAULT_LANGUAGE
         if pk is None:
             pk = "en"
-        logger.warn("dictionary")
         dics = Dictionary.objects.filter(language_code=pk)
         if len(dics):
             dictionary = dics.first()

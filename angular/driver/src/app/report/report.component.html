@@ -23,7 +23,7 @@
                     <th scope="col">{{report['path']['row']|translate}}</th>
                     <th scope="col" *ngFor="let col of report['crosstabs']['col_labels']; let i=index">
                         <span *ngIf="report['parameters']['col_period_type']">{{col.key|isdate:report['parameters']['col_period_type']}}</span>
-                        <span *ngIf="report['parameters']['col_choices_path']">{{col.key|translate}}</span>
+                        <span *ngIf="report['parameters']['col_choices_path']">{{col.label[0].text|translate}}</span>
                         <span *ngIf="report['parameters']['col_boundary_id']">{{report['crosstabs']['col_labels'][i].label[0].text}}</span>
                     </th>
                     <th scope="col" *ngIf="!report['relatable']">{{'Total'|translate}}</th>
@@ -32,7 +32,7 @@
             <tbody>
                 <tr *ngFor="let row of report['crosstabs']['row_labels']; let i=index">
                     <th scope="row" *ngIf="report['parameters']['row_period_type']">{{row.key|isdate:report['parameters']['row_period_type']}}</th>
-                    <th scope="row" *ngIf="report['parameters']['row_choices_path']">{{row.key|translate}}</th>
+                    <th scope="row" *ngIf="report['parameters']['row_choices_path']">{{row.label[0].text|translate}}</th>
                     <th scope="row" *ngIf="report['parameters']['row_boundary_id']">
                         {{report['crosstabs']['row_labels'][i].label[0].text}}</th>
                     <td *ngFor="let col of report['crosstabs']['col_labels']">

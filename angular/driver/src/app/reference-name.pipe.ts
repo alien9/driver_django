@@ -7,7 +7,7 @@ export class ReferenceNamePipe implements PipeTransform {
 
   transform(value: unknown, ...args: unknown[]): unknown {
     const refe=(args[0]['watch'])?args[0]['watch'].target:args[0]
-    const deno=args[1]['definitions'][refe].denominations || []
+    const deno=(args[1] && args[1]['definitions'])? args[1]['definitions'][refe].denominations || []: []
     const names=[]
     let i=0
     while(i<deno.length){

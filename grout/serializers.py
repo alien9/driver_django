@@ -78,10 +78,6 @@ class BoundaryPolygonSerializer(GeoFeatureModelSerializer):
         s=1
         if len(e)==4:
             s=abs(e[1]-e[3])+abs(e[2]-e[0])
-        
-        logger.warning("This is the tolrerance")
-        logger.warning(s)
-        
         return obj.geom.simplify(tolerance=0.001*s, preserve_topology=True)
 
     class Meta:
