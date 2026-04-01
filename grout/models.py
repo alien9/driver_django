@@ -272,26 +272,28 @@ class Record(GroutModel):
                 if 'fieldType' in self.schema.schema['definitions'][table]['properties'][field]:
                     if self.schema.schema['definitions'][table]['properties'][field]['fieldType'] == 'image':
                         if not self.schema.schema['definitions'][table]['multiple']:
-                            if field in self.data[table]:
-                                if re.match('^data:image.*', self.data[table][field]):
-                                    filename = os.path.join(
-                                        settings.MEDIA_ROOT, "record_images", f"{uuid.uuid4()}.jpg")
-                                    with open(filename, "wb") as media:
-                                        media.write(base64.decodebytes(str.encode(
-                                            re.sub('data:image.*,', '', self.data[table][field]))))
-                                        media.close()
-                                        self.data[table][field] = f"/{filename}"
-                        else:
-                            for i in range(len(self.data[table])):
-                                if field in self.data[table][i]:
-                                    if re.match('^data:image.*', self.data[table][i][field]):
+                            if table in self.data:
+                                if field in self.data[table]:
+                                    if re.match('^data:image.*', self.data[table][field]):
                                         filename = os.path.join(
                                             settings.MEDIA_ROOT, "record_images", f"{uuid.uuid4()}.jpg")
                                         with open(filename, "wb") as media:
                                             media.write(base64.decodebytes(str.encode(
-                                                re.sub('data:image.*,', '', self.data[table][i][field]))))
+                                                re.sub('data:image.*,', '', self.data[table][field]))))
                                             media.close()
-                                            self.data[table][i][field] = f"/{filename}"
+                                            self.data[table][field] = f"/{filename}"
+                        else:
+                            if table in self.data:
+                                for i in range(len(self.data[table])):
+                                    if field in self.data[table][i]:
+                                        if re.match('^data:image.*', self.data[table][i][field]):
+                                            filename = os.path.join(
+                                                settings.MEDIA_ROOT, "record_images", f"{uuid.uuid4()}.jpg")
+                                            with open(filename, "wb") as media:
+                                                media.write(base64.decodebytes(str.encode(
+                                                    re.sub('data:image.*,', '', self.data[table][i][field]))))
+                                                media.close()
+                                                self.data[table][i][field] = f"/{filename}"
 
     def save(self, *args, **kwargs):
         """

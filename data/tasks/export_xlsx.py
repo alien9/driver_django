@@ -97,7 +97,8 @@ def export_xlsx(query_key, user_id):
 def get_related_fields(schema):
     """Returns a list of related fields from the schema"""
     result=[]
-    for k in schema.schema['definitions'].keys():
+    keys = sorted(schema.schema['definitions'].keys(), key=lambda k: schema.schema['definitions'][k].get('order', 0))
+    for k in keys:
         for kk in schema.schema['definitions'][k]['properties'].keys():
             if 'fieldType' in schema.schema['definitions'][k]['properties'][kk] and schema.schema['definitions'][k]['properties'][kk]['fieldType'] == "reference":
                 result.append((k, kk, schema.schema['definitions'][k]['properties'][kk]))

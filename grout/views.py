@@ -193,6 +193,14 @@ class RecordTypeViewSet(viewsets.ModelViewSet):
     pagination_class = OptionalLimitOffsetPagination
     ordering = ('plural_label',)
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        active = self.request.query_params.get('active', None)
+        if active is not None:
+            active_bool = active.lower() == 'true'
+            queryset = queryset.filter(active=active_bool)
+        return queryset
+
 
 class SchemaViewSet(viewsets.GenericViewSet,
                     mixins.ListModelMixin,
