@@ -34,7 +34,7 @@
             <span *ngIf="counts['total_crashes']!=1">{{config['PRIMARY_LABEL_PLURAL']|translate}}</span>
         </div>
     </div>
-    <div *ngIf="counts['total']!=null" class="filter">
+    <div *ngIf="counts['total']!=null && counts['total']!=0" class="filter">
         <div *ngIf="!subtotals" class="filter-details" (click)="flipTotals()">
             {{"Social costs:"|translate}}:<br>{{counts['total']|localcurrency:config['CURRENCY']:language}}<br>
         </div>

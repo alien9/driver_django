@@ -56,7 +56,7 @@
                                 <input class="form-control" [value]="timezone" [ngbTypeahead]="getTimeZones"
                                     class="w-auto" (change)="setTimeZone($event)"></span>
                         </li>
-                        <li class="list-group-item" *ngIf="config['OPENWEATHER_RAPID_KEY']">
+                        <li class="list-group-item" *ngIf="config['SHOW_WEATHER']">
                             <span>{{'Weather'|translate}}</span>: <span
                                 *ngIf="!editing">{{record["weather"]|translate}}</span>
                             <select *ngIf="editing" class="form-select" [(ngModel)]="record['weather']">

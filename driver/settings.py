@@ -656,6 +656,7 @@ CONSTANCE_CONFIG = {
     'DEFAULT_LANGUAGE': ((os.getenv('DEFAULT_LANGUAGE', '')), _("Default Language")),
     'APP_NAME': ((os.getenv('APP_NAME', 'DRIVER')), _("App Name")),
     'SHOW_LIGHT_CONDITIONS': ((os.getenv('SHOW_LIGHT_CONDITIONS', True)), _("Show lighting conditions")),
+    'SHOW_WEATHER': ((os.getenv('SHOW_WEATHER', True)), _("Show weather conditions")),
     'SHOW_RECORD_CREATOR': ((False), _("Show Record creator")),
     'AGE_INTERVALS': ((os.getenv('AGE_INTERVALS', '0-18,19-35,36-50,51+')), _("Age Intervals")),
 }

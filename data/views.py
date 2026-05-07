@@ -13,7 +13,7 @@ import hashlib
 from constance import config
 from dateutil.parser import parse as parse_date
 from django.template.defaultfilters import date as template_date
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, schema
 from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404, redirect
 from celery import states
@@ -303,6 +303,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
     permission_classes = (ReadersReadWritersWrite,)
     filter_class = filters.DriverRecordFilter
     queryset = DriverRecord.objects.all()
+    schema={}
 
     authentication_classes=get_authentication_class()
     # Filter out everything except details for read-only users
@@ -391,7 +392,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
 
     @transaction.atomic
     def perform_update(self, serializer):
-        logging.warn("here it chgeososo")
         instance = serializer.save()
         self.add_to_audit_log(self.request, instance,
                               RecordAuditLogEntry.ActionTypes.UPDATE)
@@ -660,7 +660,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                         output_data['subtotals'][key] = value
                         total+=output_data['subtotals'][key]* int(cost_config.enum_costs[key])
                     except KeyError:
-                        logger.warn('Schema and RecordCostConfig out of sync; %s missing from cost config',
+                        logger.warning('Schema and RecordCostConfig out of sync; %s missing from cost config',
                                     key)
                         found_missing_choices = True
                         output_data['subtotals'][key] = 0
@@ -747,6 +747,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             ]
         }
         """
+        self.schema = RecordType.objects.get(pk=request.query_params.get('record_type')).get_current_schema()
         valid_row_params = set(
             ['row_period_type', 'row_boundary_id', 'row_choices_path'])
         valid_col_params = set(
@@ -789,12 +790,14 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             for poly in boundaries:
                 table = self._fill_table(
                     annotated_qs.filter(geom__within=poly.geom),
-                    row_multi, row_labels, col_multi, col_labels)
+                    row_multi, row_labels, col_multi, col_labels, request.query_params['row_choices_path'], request.query_params.get('col_choices_path'))
                 table['tablekey'] = poly.pk
                 response['tables'].append(table)
         else:
+            logger.warning("No aggregation boundary provided; returning single table with all data")
+            logger.warning(request.query_params)
             response['tables'].append(self._fill_table(
-                annotated_qs, row_multi, row_labels, col_multi, col_labels))
+                annotated_qs, row_multi, row_labels, col_multi, col_labels, request.query_params['row_choices_path'], request.query_params.get('col_choices_path')))
         return Response(response)
 
     def thematic(self, request, b):  # b is a blackspotset
@@ -978,7 +981,16 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             m.write(t)
         return Response({'query': query_sql, 'sample': sample, 'mapfile': tile_token})
 
-    def _fill_table(self, annotated_qs, row_multi, row_labels, col_multi, col_labels):
+    def find_relation(self,table1, table2):
+        for key, value in self.schema.schema['definitions'][table1]['properties'].items():
+            if 'target' in value and value['target'] == table2:
+                return key
+        for key, value in self.schema.schema['definitions'][table2]['properties'].items():
+            if 'target' in value and value['target'] == table1:
+                return key
+        return None
+
+    def _fill_table(self, annotated_qs, row_multi, row_labels, col_multi, col_labels, row_choices_path=None, col_choices_path=None):
         """ Fill a nested dictionary with the counts and compute row totals. """
 
         # The data being returned is a nested dictionary: row label -> col labels = integer count
@@ -999,23 +1011,48 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             # doesn't seem very useful, at least with the current set of data. We may even end
             # up restricting this via the front-end. But until then, it's been implemented
             # here, and it works, but is on the slow side, since it needs to manually aggregate.
-            for record in annotated_qs:
-                rd = record.__dict__
-                row_ids = [
-                    str(label['key'])
-                    for label in row_labels
-                    if rd[re.sub(" ","_",'row_{}'.format(label['key']))] > 0
-                ]
-                col_ids = [
-                    str(label['key'])
-                    for label in col_labels
-                    if rd[re.sub(" ","_",'col_{}'.format(label['key']))] > 0
-                ]
-                # Each object has row_* and col_* fields, where a value > 0 indicates presence.
-                # Increment the counter for each combination.
-                for row_id in row_ids:
-                    for col_id in col_ids:
-                        data[row_id][col_id] += 1
+            nu=0
+            if row_choices_path is not None and col_choices_path is not None:
+                row_choices_path_array=row_choices_path.split(",")
+                col_choices_path_array=col_choices_path.split(",")
+                relations={}
+                if row_choices_path_array[0] == col_choices_path_array[0]:
+                    logger.warning("Row and column choices paths have the same components; this may lead to incorrect counts since the same annotation fields will be used for both row and column labels")
+                else:
+                    related=filter(lambda x: 'target' in self.schema.schema['definitions'][row_choices_path_array[0]]['properties'][x] and self.schema.schema['definitions'][row_choices_path_array[0]]['properties'][x]['fieldType']=='reference' and self.schema.schema['definitions'][row_choices_path_array[0]]['properties'][x]['target']==col_choices_path_array[0], self.schema.schema['definitions'][row_choices_path_array[0]]['properties'].keys())
+                    logger.warning(f"Related fields between row and column choices: {list(related)}")
+                    relations[row_choices_path_array[0]]={'type':'row','related_table':col_choices_path_array[0]}
+                    logger.warning("Found hierarchical relationship between row and column choices" )
+                logger.warning("Iterating through records to fill table; this may take a while if there are many records or many labels...  ")
+                for record in annotated_qs:
+                    if row_choices_path_array[0] == col_choices_path_array[0]: #both fields elong to the same table
+                        for t in record.data[row_choices_path_array[0]]: #iterate through the table to find all the labels for both row and column
+                            if t[row_choices_path_array[2]] == t[row_choices_path_array[2]]:
+                                for row_id in row_labels:
+                                    for col_id in col_labels:
+                                        if t[col_choices_path_array[2]] == col_id['label'][0]['text'] and t[row_choices_path_array[2]] == row_id['label'][0]['text']: 
+                                            data[row_id['key']][col_id['key']] += 1                                
+                    
+                    else:
+                        rd = record.__dict__
+                        row_ids = [
+                            str(label['key'])
+                            for label in row_labels
+                            if rd[re.sub(" ","_",'row_{}'.format(label['key']))] > 0
+                        ]
+                        col_ids = [
+                            str(label['key'])
+                            for label in col_labels
+                            if rd[re.sub(" ","_",'col_{}'.format(label['key']))] > 0
+                        ]
+
+                        # Each object has row_* and col_* fields, where a value > 0 indicates presence.
+                        # Increment the counter for each combination.
+                        nu+=1
+                        for row_id in row_ids:
+                            for col_id in col_ids:
+                                data[row_id][col_id] += rd[f"col_{col_id}"]
+                logger.warning(f"Finished iterating through {nu} records to fill table")
         else:
             # Either the row or column is a 'multiple' item, but not both.
             # This is a relatively common case and is still very fast since the heavy-lifting
@@ -1592,8 +1629,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             if is_array:
                 pattern = json.dumps({path[2]: choice})
                 pattern = pattern[1:len(pattern)-1]
-                logger.warning("pattern: %s", pattern)
-                logger.warning("relate: %s", relate)
                 if not relate or relate == "":
                     logger.warning("No relate specified, using default")
                     annotations['{}_{}'.format(annotation_id, re.sub(" ", "_", choice))] = RawSQL("\

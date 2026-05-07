@@ -134,9 +134,10 @@ class DriverRecordExporter(object):
         # Make output writers for each sheet
         self.rec_writer = self.make_record_and_details_writer()
         # All non-details related info types
-        self.writers = {related: self.make_related_info_writer(related, subschema)
-                        for related, subschema in self.schema['definitions'].items()
-                        if not subschema.get('details')}
+        tables = sorted([related for related, subschema in self.schema['definitions'].items() if not subschema.get('details')], key=lambda du:self.schema['properties'][du]['propertyOrder'])
+        self.writers = {related: self.make_related_info_writer(related, self.schema['definitions'][related])
+                        for related in tables
+                        if not self.schema['definitions'][related].get('details')}
 
         self.rec_wb_dict, self.wb_dicts = self.setup_worksheets()
         self.write_headers()
@@ -192,17 +193,25 @@ class DriverRecordExporter(object):
         """Generate a Record Writer capable of writing out the non-json fields of a Record"""
         def render_date(d):
             return d.astimezone(local_tz).strftime('%Y-%m-%d %H:%M:%S')
-        
-        xlsx_columns = ['record_id', 'timezone', 'created', 'modified', 'occurred_from',
+        self.record_counter = 0
+        def count_records(_):            
+            self.record_counter += 1
+            return self.record_counter
+        xlsx_columns = ['record_id', 'count', 'timezone', 'created', 'modified', 'occurred_from',
                         'occurred_to', 'lat', 'lon', 'location_text',
                         'city', 'city_district', 'county', 'neighborhood', 'road',
-                        'state', 'weather', 'light']
+                        'state']
+        if config.SHOW_LIGHT_CONDITIONS:
+            xlsx_columns.append('light')
+        if config.SHOW_WEATHER:
+            xlsx_columns.append('weather')
         if config.SHOW_RECORD_CREATOR:
             xlsx_columns.append("created_by")
         
         # Model field from which to get data for each column
         source_fields = {
             'record_id': 'uuid',
+            'count': None,
             'timezone': None,
             'lat': 'geom',
             'lon': 'geom'
@@ -211,6 +220,7 @@ class DriverRecordExporter(object):
         # Some model fields need to be transformed before they can go into XLSX
         value_transforms = {
             'record_id': lambda uuid: str(uuid),
+            'count': lambda _: count_records(_),
             'timezone': lambda _: settings.TIME_ZONE,
             'created': render_date,
             'modified': render_date,
@@ -364,7 +374,7 @@ class RelatedInfoWriter(BaseRecordWriter):
                     self.property_transform[prop] = prop
         except KeyError:
             raise ValueError("Related info definition has no 'properties'; can't detect fields")
-        self.property_transform['_localId'] = info_name + '_id'
+        self.property_transform['_localId'] = re.sub("^driver","",info_name) + '_id'
         info_columns = [col for col in list(self.property_transform.values()) if col is not None]
         self.output_record_id = include_record_id
         if self.output_record_id:
@@ -436,27 +446,32 @@ def aggregate_xlsx(file_path, schema):
         raise ValueError(f"Base sheet '{base_name}' is missing 'record_id' column")
 
     agg_df = base_df
-    """     for table_name, field_name, field in get_related_fields(schema.schema):
-        sheet_1=sheets[table_name]
-        sheet_2=sheets[field['watch']['target']]
-        if field_name in sheet_1.columns and f"{field_name}_id" in sheet_2.columns:
-            sheet_1 = sheet_1.merge(sheet_2, left_on=field_name, right_on=f"{field_name}_id", how='outer', suffixes=("", f"_{field['watch']['target']}"))
-            sheets[table_name] = sheet_1
-        del sheets[field['watch']['target']]
-    """
     # Merge other sheets that contain record_id
     for name, df in sheets.items():
         if name == base_name or name == 'mahdar_records':
             continue
+        lefton=['record_id']
+        righton=['record_id']  
+        for col in df.columns:
+            if 'properties' in schema.schema['definitions'][name] and col in schema.schema['definitions'][name]['properties']:
+                if schema.schema['definitions'][name]['properties'][col]['fieldType'] =='reference':
+                    other_table=schema.schema['definitions'][name]['properties'][col]['watch']['target'] if 'watch' in schema.schema['definitions'][name]['properties'][col] and 'target' in schema.schema['definitions'][name]['properties'][col]['watch'] else None
+                    if other_table:
+                        righton.append(col)
+                        lefton.append(f'{re.sub("^driver","",other_table)}_id')
         if 'record_id' in df.columns:
             # Avoid duplicate column names by adding suffix with sheet name
-            agg_df = agg_df.merge(df, on='record_id', how='left', suffixes=("", f"_{name}"))
+            agg_df = agg_df.merge(df, left_on=lefton, right_on=righton, how='left', suffixes=("", f"_{name}"))
+
+    # Normalize column names in agg_df by replacing spaces with underscores
+    agg_df.columns = [col.replace(' ', '_') for col in agg_df.columns]
 
     # Write all original sheets back and add/replace mahdar_records
     with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
         for name, df in sheets.items():
             df.to_excel(writer, sheet_name=name, index=False)
         # If 'mahdar_records' already existed, this will replace it
+
         agg_df.to_excel(writer, sheet_name='mahdar_records', index=False)
 
     # Load the workbook and remove all sheets except 'mahdar_records'
