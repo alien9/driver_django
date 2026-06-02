@@ -52,11 +52,24 @@ body {
         margin-bottom: 20px
     }
     .panel-collapse, app-map{display:none !important}
+    div:has(>span>label>input[type="checkbox"]:not(:checked)) {
+        display: none;
+    }
+    div:has(>span>label>input[type="radio"]:not(:checked)) {
+        display: none;
+    }
+    div:has(>label>input[type="checkbox"]:not(:checked)) {
+        display: none;
+    }
+    div:has(>label>input[type="radio"]:not(:checked)) {
+        display: none;
+    }
 }
 @media screen {
     .d-print-block{
         display: none;
     }
+    
 }
 @import '~bootstrap/dist/css/bootstrap.min.css';
 /* Importing Bootstrap SCSS file. */

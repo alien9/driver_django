@@ -790,14 +790,13 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
             for poly in boundaries:
                 table = self._fill_table(
                     annotated_qs.filter(geom__within=poly.geom),
-                    row_multi, row_labels, col_multi, col_labels, request.query_params['row_choices_path'], request.query_params.get('col_choices_path'))
+                    row_multi, row_labels, col_multi, col_labels, request.query_params.get('row_choices_path'), request.query_params.get('col_choices_path'))
                 table['tablekey'] = poly.pk
                 response['tables'].append(table)
         else:
             logger.warning("No aggregation boundary provided; returning single table with all data")
-            logger.warning(request.query_params)
             response['tables'].append(self._fill_table(
-                annotated_qs, row_multi, row_labels, col_multi, col_labels, request.query_params['row_choices_path'], request.query_params.get('col_choices_path')))
+                annotated_qs, row_multi, row_labels, col_multi, col_labels, request.query_params.get('row_choices_path'), request.query_params.get('col_choices_path')))
         return Response(response)
 
     def thematic(self, request, b):  # b is a blackspotset
@@ -1023,7 +1022,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                     logger.warning(f"Related fields between row and column choices: {list(related)}")
                     relations[row_choices_path_array[0]]={'type':'row','related_table':col_choices_path_array[0]}
                     logger.warning("Found hierarchical relationship between row and column choices" )
-                logger.warning("Iterating through records to fill table; this may take a while if there are many records or many labels...  ")
                 for record in annotated_qs:
                     if row_choices_path_array[0] == col_choices_path_array[0]: #both fields elong to the same table
                         for t in record.data[row_choices_path_array[0]]: #iterate through the table to find all the labels for both row and column
