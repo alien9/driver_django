@@ -191,6 +191,8 @@
         <canvas id="scribble"></canvas>
     </div>
     <div class="modal-footer">
+        <button class="btn btn-light" (click)="undoDrawing(canvasmodal)"> &lt; </button>
+        <button class="btn btn-light" (click)="redoDrawing(canvasmodal)"> &gt; </button>
         <button class="btn btn-light" (click)="endDrawing(canvasmodal)">{{'Ok'|translate}}</button>
         <button class="btn btn-light" (click)="resetDrawing()">{{'Reset'|translate}}</button>
         <button class="btn btn-light" (click)="cancelDrawing(canvasmodal)">{{'Cancel'|translate}}</button>

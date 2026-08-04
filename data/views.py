@@ -991,9 +991,7 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
 
     def _fill_table(self, annotated_qs, row_multi, row_labels, col_multi, col_labels, row_choices_path=None, col_choices_path=None):
         """ Fill a nested dictionary with the counts and compute row totals. """
-
         # The data being returned is a nested dictionary: row label -> col labels = integer count
-
         data = defaultdict(lambda: defaultdict(int))
         if not row_multi and not col_multi:
             # Not in multi-mode: sum rows/columns by a simple count annotation.
@@ -1024,24 +1022,35 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                     logger.warning("Found hierarchical relationship between row and column choices" )
                 for record in annotated_qs:
                     if row_choices_path_array[0] == col_choices_path_array[0]: #both fields elong to the same table
-                        for t in record.data[row_choices_path_array[0]]: #iterate through the table to find all the labels for both row and column
-                            if t[row_choices_path_array[2]] == t[row_choices_path_array[2]]:
+                        logger.warning("the same tabele"+row_choices_path_array[0])
+                        if row_choices_path_array[0] in record.data and str(type(record.data[row_choices_path_array[0]]))=="<class 'dict'>":
+                            t=record.data[row_choices_path_array[0]]
+                            if row_choices_path_array[2] in t:
                                 for row_id in row_labels:
                                     for col_id in col_labels:
-                                        if t[col_choices_path_array[2]] == col_id['label'][0]['text'] and t[row_choices_path_array[2]] == row_id['label'][0]['text']: 
-                                            data[row_id['key']][col_id['key']] += 1                                
-                    
+                                        if col_choices_path_array[2] in t and row_choices_path_array[2] in t and t[col_choices_path_array[2]] == col_id['label'][0]['text'] and t[row_choices_path_array[2]] == row_id['label'][0]['text']: 
+                                            data[row_id['key']][col_id['key']] += 1
+                        else:
+                            
+                            if row_choices_path_array[0] in record.data:
+                                for t in record.data[row_choices_path_array[0]]: #iterate through the table to find all the labels for both row and column
+                                    if row_choices_path_array[2] in t:
+                                        for row_id in row_labels:
+                                            for col_id in col_labels:
+                                                if t[col_choices_path_array[2]] == col_id['label'][0]['text'] and t[row_choices_path_array[2]] == row_id['label'][0]['text']: 
+                                                    data[row_id['key']][col_id['key']] += 1                                
+                        
                     else:
                         rd = record.__dict__
                         row_ids = [
                             str(label['key'])
                             for label in row_labels
-                            if rd[re.sub(" ","_",'row_{}'.format(label['key']))] > 0
+                            if (rd[re.sub(" ","_",'row_{}'.format(label['key']))] or 0) > 0
                         ]
                         col_ids = [
                             str(label['key'])
                             for label in col_labels
-                            if rd[re.sub(" ","_",'col_{}'.format(label['key']))] > 0
+                            if (rd[re.sub(" ","_",'col_{}'.format(label['key']))] or 0) > 0
                         ]
 
                         # Each object has row_* and col_* fields, where a value > 0 indicates presence.
@@ -1050,7 +1059,6 @@ class DriverRecordViewSet(RecordViewSet, mixins.GenerateViewsetQuery):
                         for row_id in row_ids:
                             for col_id in col_ids:
                                 data[row_id][col_id] += rd[f"col_{col_id}"]
-                logger.warning(f"Finished iterating through {nu} records to fill table")
         else:
             # Either the row or column is a 'multiple' item, but not both.
             # This is a relatively common case and is still very fast since the heavy-lifting

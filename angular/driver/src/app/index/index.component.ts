@@ -136,7 +136,8 @@ export class IndexComponent implements OnInit {
       this.router.navigateByUrl('/login')
       return
     }
-    this.locale = localStorage.getItem("Language") || navigator.language
+    this.config = JSON.parse(localStorage.getItem("config") || "{}")
+    this.locale = localStorage.getItem("Language") || this.config['DEFAULT_LANGUAGE'] || navigator.language
     localStorage.setItem("Language", this.locale)
     let du = (new Date()).toLocaleDateString(this.locale)
     document.getElementsByTagName('html')[0].setAttribute("dir", getLocaleDirection(this.locale))
@@ -149,14 +150,7 @@ export class IndexComponent implements OnInit {
       const data=da.data
       this.config = data
       this.titleService.setTitle(this.config["APP_NAME"]);
-      if (data['DEFAULT_LANGUAGE']?.length) {
-        let current = localStorage.getItem("Language") || navigator.language
-        let langs = data['LANGUAGES'] || []
-        //if (langs.map((k) => k.code).indexOf(current) < 0) {
-        //  this.setLanguage(data['DEFAULT_LANGUAGE'])
-        //}
-      }
-      this.locale = localStorage.getItem("Language")
+      this.locale = localStorage.getItem("Language") || this.config['DEFAULT_LANGUAGE'] || navigator.language
       if (this.route.snapshot.queryParamMap.get('language') && (this.route.snapshot.queryParamMap.get('language') != this.locale)) {
         if (this.config['LANGUAGES'] && (this.config['LANGUAGES'].map((k) => k.code).indexOf(this.route.snapshot.queryParamMap.get('language')) >= 0)) {
           localStorage.setItem("Language", this.route.snapshot.queryParamMap.get('language'))
@@ -298,7 +292,7 @@ export class IndexComponent implements OnInit {
       overlays: {
       }
     }
-    if (!!window['android']) {
+    if (!!(window as any)['android']) {
       this.roadmapsLayer = new L.geoJSON()
       this.layersControl.baseLayers["Local Road Map"] = new L.LayerGroup([this.roadmapsLayer])
     }
@@ -797,10 +791,12 @@ export class IndexComponent implements OnInit {
     if (this.state == 'List') {
       this.spinner.show()
       if (this.boundary_polygon_uuid) this.filter["polygon_id"] = this.boundary_polygon_uuid
-      if (this.listPage && this.listPage > 1) {
-        this.filter['offset'] = (this.listPage - 1) * 50
-      } else {
-        delete this.filter['offset']
+      if(this.filter && 'offset' in this.filter){
+        if (this.listPage && this.listPage > 1) {
+          this.filter['offset'] = (this.listPage - 1) * 50
+        } else {
+          delete this.filter['offset']
+        }
       }
       this.recordService.getRecords({ 'uuid': this.recordSchema["record_type"] }, { filter: this.filter }).then(
         data => {

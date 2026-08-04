@@ -12,7 +12,8 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework import permissions
 from django.http import HttpResponse, Http404
 from fiona.crs import from_epsg
-from shapely.geometry import mapping,LineString
+from shapely import wkt
+from shapely.geometry import mapping,LineString, MultiLineString, MultiPolygon
 from grout.models import BoundaryPolygon
 from data.models import DriverRecord
 from black_spots.models import (
@@ -284,10 +285,28 @@ class GPKGRenderer(renderers.BaseRenderer):
     render_style = 'binary'
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
-        fn=f"/tmp/roads_{uuid.uuid4()}.gpkg"
-        fn=os.path.join("zip", f"roadmap_{data['uuid']}.gpkg")
-        if not os.path.isfile(fn):
-            pass
+        fn=f"/tmp/boundary_{uuid.uuid4()}.gpkg"
+        if os.path.isfile(fn):
+            os.remove(fn)
+        sc={}
+        for d in data['data_fields']:
+            sc[d]='str'
+        sc['uuid']='str'
+        with fiona.open(fn, 'w',
+            driver='GPKG',
+            crs=from_epsg(4326),
+            schema= {'geometry': 'MultiLineString', 'properties': sc},
+            layer_name='multilinestring'
+            ) as c:
+                for r in Road.objects.filter(roadmap_id=data['uuid']):
+                    props={}            
+                    for d in data['data_fields']:
+                        props[d]=str(r.data[d.lower()])
+                    
+                    props['uuid']=str(r.uuid) 
+                    multilinestring = MultiLineString([wkt.loads(r.geom.wkt)])
+                    c.write({'properties':props, 'geometry': mapping(multilinestring)})
+                c.close()
         with open(fn, 'rb') as fh:
             response = HttpResponse(fh.read(), content_type="application/force-download")
             response['Content-Disposition'] = 'inline; filename=roads.gpkg'

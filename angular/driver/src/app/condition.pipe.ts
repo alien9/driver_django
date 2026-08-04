@@ -13,8 +13,8 @@ export class ConditionPipe implements PipeTransform {
       data = args[0][args[1]]
     }
     return value.filter((k: any) => {
-      console.log(k)
-      if (k.value.condition) {
+      if (k.value && k.value.condition) {
+        if(!data) return false
         if (data[k.value.condition] && k.value.conditionValue && k.value.conditionValue.length) {
           if ((typeof data[k.value.condition]) == 'string')
             return k.value.conditionValue.indexOf(data[k.value.condition]) >= 0

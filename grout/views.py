@@ -162,6 +162,7 @@ class RecordViewSet(viewsets.ModelViewSet):
                 }
                 raise serializers.ValidationError(messages)
             self.queryset=self.queryset.filter(occurred_from__lt=occurred_max, occurred_from__gt=occurred_min)
+        self.queryset=self.queryset.filter(archived=False)
         polygon_id=self.request.query_params.get('polygon_id', None)
         if polygon_id is not None:
             rrg = re.compile(

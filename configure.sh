@@ -51,6 +51,8 @@ if [ $SUPRESS_WEB_DEPLOY ]; then # with development web server
         proxy_redirect     off;
         proxy_set_header   X-Real-IP        \$remote_addr;
         proxy_set_header   X-Forwarded-For  \$proxy_add_x_forwarded_for;
+        proxy_ignore_headers Cache-Control Expires;
+
     }    
     location /static/{
         proxy_pass http://$HOST_NAME:4000; #driver-django
@@ -62,6 +64,7 @@ if [ $SUPRESS_WEB_DEPLOY ]; then # with development web server
         proxy_set_header   X-Forwarded-Proto \$scheme;
         proxy_set_header   X-Real-IP        \$remote_addr;
         proxy_set_header   X-Forwarded-For  \$proxy_add_x_forwarded_for;
+        proxy_ignore_headers Cache-Control Expires;
     }
     location /media/{
         proxy_pass http://$HOST_NAME:4000; #driver-django
@@ -73,6 +76,7 @@ if [ $SUPRESS_WEB_DEPLOY ]; then # with development web server
         proxy_set_header   X-Forwarded-Proto \$scheme;
         proxy_set_header   X-Real-IP        \$remote_addr;
         proxy_set_header   X-Forwarded-For  \$proxy_add_x_forwarded_for;
+        proxy_ignore_headers Cache-Control Expires;
     }
     location /sockjs-node/ {
 
@@ -81,7 +85,7 @@ if [ $SUPRESS_WEB_DEPLOY ]; then # with development web server
           proxy_set_header Upgrade \$http_upgrade;
           proxy_set_header Connection "upgrade";
           proxy_read_timeout 86400;
-
+proxy_ignore_headers Cache-Control Expires;
      }
     "
 else
@@ -89,6 +93,7 @@ else
      autoindex on;
         alias $STATIC_ROOT; #FRONTEND
         try_files \$uri \$uri/ =404;
+        proxy_ignore_headers Cache-Control Expires;
     }
     location /login {
         alias $STATIC_ROOT; #FRONTEND
@@ -97,6 +102,7 @@ else
     location /static/{
         alias $STATIC_ROOT; #FRONTEND
         try_files \$uri \$uri/ =404;
+        proxy_ignore_headers Cache-Control Expires;
     }
 
     location /favicon.ico {

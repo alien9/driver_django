@@ -127,9 +127,9 @@ export class MapComponent implements OnInit {
     const b = eve.target.getBounds()
     const z = eve.target.getZoom()
     const currentBounds = Object.values(b.getSouthWest()).concat(Object.values(b.getNorthEast()))
-    if (this.previousBounds === JSON.stringify(currentBounds) || z < 14) {
-      return
-    }
+    //if (this.previousBounds === JSON.stringify(currentBounds) || z < 14) {
+    //  return
+    //}
     this.previousBounds = JSON.stringify(currentBounds)
     const params = {
       "lang": localStorage.getItem("Language"),

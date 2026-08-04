@@ -374,7 +374,7 @@ class RelatedInfoWriter(BaseRecordWriter):
                     self.property_transform[prop] = prop
         except KeyError:
             raise ValueError("Related info definition has no 'properties'; can't detect fields")
-        self.property_transform['_localId'] = re.sub("^driver","",info_name) + '_id'
+        self.property_transform['_localId'] = re.sub("^driver|^mahdar","",info_name) + '_id'
         info_columns = [col for col in list(self.property_transform.values()) if col is not None]
         self.output_record_id = include_record_id
         if self.output_record_id:
@@ -458,9 +458,12 @@ def aggregate_xlsx(file_path, schema):
                     other_table=schema.schema['definitions'][name]['properties'][col]['watch']['target'] if 'watch' in schema.schema['definitions'][name]['properties'][col] and 'target' in schema.schema['definitions'][name]['properties'][col]['watch'] else None
                     if other_table:
                         righton.append(col)
-                        lefton.append(f'{re.sub("^driver","",other_table)}_id')
+                        lefton.append(f'{re.sub("^driver|^mahdar","",other_table)}_id')
         if 'record_id' in df.columns:
             # Avoid duplicate column names by adding suffix with sheet name
+            logger.info(f"Merging sheet '{name}' into aggregate DataFrame with left_on={lefton} and right_on={righton}")
+            if len(righton)>1:
+                df[righton[1]] = df[righton[1]].astype(str).str.replace(r"\.0$", "", regex=True).str.strip()
             agg_df = agg_df.merge(df, left_on=lefton, right_on=righton, how='left', suffixes=("", f"_{name}"))
 
     # Normalize column names in agg_df by replacing spaces with underscores

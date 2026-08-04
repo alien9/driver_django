@@ -9,7 +9,7 @@ import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap'
 import { NgxSpinnerService } from "ngx-spinner";
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { getLocaleDirection } from '@angular/common';
-
+import { NetworkService } from '../network-service';
 import * as uuid from 'uuid';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { of, OperatorFunction } from 'rxjs';
@@ -58,7 +58,6 @@ export class InputComponent implements OnInit {
   occurred_date_ngb: NgbDateStruct
   occurred_time: any
   timezone: string = "null"
-
   weatherValues = [
     '',
     'clear-day',
@@ -516,6 +515,7 @@ export class InputComponent implements OnInit {
     "Pacific/Wake",
     "Pacific/Wallis"
   ]
+  directions: boolean[];
   constructor(
     private webService: WebService,
     private zone: NgZone,
@@ -524,6 +524,7 @@ export class InputComponent implements OnInit {
     private translateService: TranslateService,
     private readonly applicationRef: ApplicationRef,
     private modalService: NgbModal,
+    private networkService: NetworkService,
 
   ) { }
   formatAddress(address: any) {
@@ -611,7 +612,7 @@ export class InputComponent implements OnInit {
     if (!this.record['weather'] && (this.config['OPENWEATHER_RAPID_KEY']) && this.config['OPENWEATHER_RAPID_KEY'].length) {
       this.webService.getHistoryWeather({ lat: c[1], lon: c[0], appid: this.config['OPENWEATHER_RAPID_KEY'] })
         .then(d => {
-          let weatherData=d.data
+          let weatherData = d.data
           if (weatherData['current'] && weatherData['current']['weather'] && weatherData['current']['weather'].length)
             this.record['weather'] = weatherData['current']['weather']['description']
         })
@@ -814,18 +815,18 @@ export class InputComponent implements OnInit {
         let agedFields = Object.keys(this.recordSchema["schema"].definitions[kk].properties).filter((pk) => {
           return this.recordSchema["schema"].definitions[kk].properties[pk].age
         })
-        if(agedFields.length) {
-          const today=new Date(this.record['occurred_from'])
-          const ranges=this.recordSchema["schema"].definitions[kk].properties["Age"]["enum"].map((po)=>{
-            return {interval:po.match(/\d+/g).map(o=>parseInt(o)), key:po}
+        if (agedFields.length) {
+          const today = new Date(this.record['occurred_from'])
+          const ranges = this.recordSchema["schema"].definitions[kk].properties["Age"]["enum"].map((po) => {
+            return { interval: po.match(/\d+/g).map(o => parseInt(o)), key: po }
           })
-          agedFields.forEach((fu)=>{
+          agedFields.forEach((fu) => {
             this.record['data'][kk].forEach(element => {
-              const born=new Date(element[fu])
+              const born = new Date(element[fu])
               const ageDiff = today.getFullYear() - born.getFullYear() - (today < new Date(today.getFullYear(), born.getMonth(), born.getDate()) ? 1 : 0)
               ranges.forEach(range => {
                 if (ageDiff >= range.interval[0]) {
-                  if((range.interval.length<2)||(ageDiff <= range.interval[1])) {
+                  if ((range.interval.length < 2) || (ageDiff <= range.interval[1])) {
                     element["Age"] = range.key
                   }
                 }
@@ -879,45 +880,51 @@ export class InputComponent implements OnInit {
       this.saving = false
       return
     }
-    this.recordService.upload(this.record).then(next => {
-      const data = next.data
-      this.stopEditRecord.emit(true)
-      this.filterExpand.emit(this.record['occurred_from'])
-      this.reloadRecords.emit(this.record)
-      this.saving = false
-      this.spinner.hide()
-    }).catch(err => {
-      let message = err["error"]
-      if (message && ("detail" in message)) {
-        alert(message["detail"])
-      }
-      else if (message && ("data" in message)) {
-        let m = message["data"]
-        let mess = m.match(/Schema validation failed for (.+): '(.+)' is a required property/)
-        if (mess && mess.length == 3) {
-          alert(`${this.translateService.instant("Schema validation failed for")} ${this.translateService.instant(mess[1])}: ${this.translateService.instant(mess[2])} ${this.translateService.instant("is a required property")}`)
-        } else {
-          alert(message["data"])
-        }
-      }
-      else if (message && ("occurred_from" in message)) {
-        alert(message["occurred_from"])
-      }
-      else {
-        let records = JSON.parse(localStorage.getItem("records") || "[]")
-        records = records.filter((o) => o['uuid'] != this.record['uuid'])
-        records.push(this.record)
-        localStorage.setItem("records", JSON.stringify(records))
-        this.storeRecord.emit(records)
-        alert(this.translateService.instant('Record was stored in the device'))
-        modal.dismiss()
+    if (this.networkService.isOnline) {
+      this.recordService.upload(this.record).then(next => {
+        const data = next.data
+        this.stopEditRecord.emit(true)
+        this.filterExpand.emit(this.record['occurred_from'])
+        this.reloadRecords.emit(this.record)
+        this.saving = false
         this.spinner.hide()
-      }
-      this.spinner.hide()
-      this.saving = false
-    })
+      }).catch(err => {
+        let message = err["error"]
+        if (message && ("detail" in message)) {
+          alert(message["detail"])
+        }
+        else if (message && ("data" in message)) {
+          let m = message["data"]
+          let mess = m.match(/Schema validation failed for (.+): '(.+)' is a required property/)
+          if (mess && mess.length == 3) {
+            alert(`${this.translateService.instant("Schema validation failed for")} ${this.translateService.instant(mess[1])}: ${this.translateService.instant(mess[2])} ${this.translateService.instant("is a required property")}`)
+          } else {
+            alert(message["data"])
+          }
+        }
+        else if (message && ("occurred_from" in message)) {
+          alert(message["occurred_from"])
+        }
+        else {
+          this.saveLocally()
+        }
+        this.spinner.hide()
+        this.saving = false
 
+      })
+    }else{
+      this.saveLocally()
+    }
   }
+  saveLocally() {
+    let records = JSON.parse(localStorage.getItem("records") || "[]")
+    records = records.filter((o) => o['uuid'] != this.record['uuid'])
+    records.push(this.record)
+    localStorage.setItem("records", JSON.stringify(records))
+    this.storeRecord.emit(records)
+    alert(this.translateService.instant('Record was stored in the device'))
+  }
+
   deleteRecord(modal: any) {
     this.setDate(null)
     this.cleanup()
@@ -969,7 +976,7 @@ export class InputComponent implements OnInit {
       } else {
         this.zone.run(() => {
           this.webService.getReverse(e.target.getLatLng().lat, e.target.getLatLng().lng).then(d => {
-            const address=d.data
+            const address = d.data
             if (address && address['address']) {
               let lt = []
               if (address['address']['road']) lt.push(address['address']['road'])
@@ -1285,6 +1292,8 @@ ${this.getOffset(this.getTimeZone())}:00`
 
   startDraw(modal: TemplateRef<any>, definition: any, editing: boolean) {
     if (!editing) return
+    canvasStrokes = []
+    undoneStrokes = []
     $(".modal-header").hide()
     $(".modal-body").hide()
     $(".modal-footer").hide()
@@ -1374,10 +1383,14 @@ ${this.getOffset(this.getTimeZone())}:00`
       //remove the additional mouse move listener
       mousePositions = []
       canvas.removeEventListener('mousemove', onPaint);
+      const commentCanvasContext = canvas.getContext("2d");
+      canvasStrokes.push(commentCanvasContext.getImageData(0, 0, canvas.width, canvas.height))
     });
     canvas.addEventListener('touchend', function (e) {
       e.stopPropagation()
       canvas.removeEventListener('touchmove', onPaint);
+      const commentCanvasContext = canvas.getContext("2d");
+      canvasStrokes.push(commentCanvasContext.getImageData(0, 0, canvas.width, canvas.height))
     });
   }
 
@@ -1389,6 +1402,9 @@ ${this.getOffset(this.getTimeZone())}:00`
       var vRatio = canvas.height / image.height;
       var ratio = Math.min(hRatio, vRatio);
       canvas.getContext("2d").drawImage(image, 0, 0, image.width, image.height, 0, 0, image.width * ratio, image.height * ratio);
+      const commentCanvasContext = canvas.getContext("2d");
+      canvasStrokes.push(commentCanvasContext.getImageData(0, 0, canvas.width, canvas.height))
+
     };
     image.src = url
   }
@@ -1457,6 +1473,8 @@ ${this.getOffset(this.getTimeZone())}:00`
     if (this.canvas_extra) {
       this.loadImageFromUrl(this.canvas_extra)
     }
+    const commentCanvasContext = canvas.getContext("2d");
+    canvasStrokes.push(commentCanvasContext.getImageData(0, 0, canvas.width, canvas.height))
   }
   onPaint(event: any) {
     event.stopPropagation()
@@ -1474,6 +1492,26 @@ ${this.getOffset(this.getTimeZone())}:00`
     if (mousePositions.length) commentCanvasContext.lineTo(mousePositions[0]["x"], mousePositions[0]["y"])
     commentCanvasContext.closePath();
     commentCanvasContext.stroke();
+  }
+  redrawCanvas() {
+    var canvas = document.querySelector<HTMLCanvasElement>("#scribble");
+    let commentCanvasContext = canvas.getContext("2d");
+    commentCanvasContext.clearRect(0, 0, canvas.width, canvas.height);
+    canvasStrokes.forEach((stroke) => {
+      commentCanvasContext.putImageData(stroke, 0, 0);
+    });
+  }
+  undoDrawing(event) {
+    if (canvasStrokes.length > 0) {
+      undoneStrokes.push(canvasStrokes.pop());
+      this.redrawCanvas();
+    }
+  }
+  redoDrawing(event) {
+    if (undoneStrokes.length > 0) {
+      canvasStrokes.push(undoneStrokes.pop());
+      this.redrawCanvas();
+    }
   }
   submit(eve: any, modal) {
     if (eve.charCode == 13) this.saveRecord(modal)
@@ -1544,3 +1582,5 @@ ${this.getOffset(this.getTimeZone())}:00`
 
 }
 var mousePositions: Array<object> = []
+var canvasStrokes: Array<ImageData> = []
+var undoneStrokes: Array<ImageData> = []

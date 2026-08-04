@@ -1280,7 +1280,7 @@ class DriverRecordCostConfigViewSet(viewsets.ModelViewSet):
     filter_fields = ('record_type', )
 
 
-class RecordCsvExportViewSet(viewsets.ViewSet):
+class RecordCsvExportViewSet(viewsets.ViewSet, mixins.GenerateViewsetQuery):
     """A view for interacting with CSV export jobs
 
     Since these jobs are not model-backed, we won't use any of the standard DRF mixins

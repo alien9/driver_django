@@ -53,7 +53,7 @@ if DEBUG:
 else:
     ALLOWED_HOSTS=[os.environ.get('HOST_NAME','*'), 'localhost']
     CSRF_TRUSTED_ORIGINS=[f"{os.environ.get('PROTOCOL','http')}://{os.environ.get('HOST_NAME','*')}"]
-
+CSRF_COOKIE_NAME = "mahdar_admin_csrf_token"
 # TODO: Switch to CORS_ORIGIN_REGEX_WHITELIST when we have a domain in place
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 CORS_ALLOW_ALL_ORIGINS = DEBUG
@@ -633,9 +633,6 @@ CONSTANCE_ADDITIONAL_FIELDS = {
 
 CONSTANCE_CONFIG = {
     'SEGMENT_SIZE': (50, _("segment_size")),
-    'MAP_CENTER_LATITUDE': (os.getenv('CENTER_LATITUDE', -23.5), _("Latitude")),
-    'MAP_CENTER_LONGITUDE': (os.getenv('CENTER_LONGITUDE', -46.7), _("Longitude")),
-    'MAP_ZOOM': (os.getenv('ZOOM', 11), _("Zoom")),
     "PRIMARY_LABEL": (os.getenv('PRIMARYLABEL', "Sinistro"), _("Accident")),
     "SECONDARY_LABEL": (os.getenv('SECONDARYLABEL', "Intervention"), _("Intervention")),
     "WINDSHAFT": ("http://windshaft-%s" % (os.getenv("CONTAINER_NAME", 'driver')), "WindShaft"),
@@ -653,15 +650,15 @@ CONSTANCE_CONFIG = {
     'OPENWEATHER_RAPID_KEY': ((os.getenv('OPENWEATHER_RAPID_KEY', '')), _("Open Weather API")),
     'CURRENCY': ((os.getenv('CURRENCY', '')), _("Currency")),
     'IDLE_TIMEOUT': ((os.getenv('IDLE_TIMEOUT', '')), _("Idle Timeout")),
-    'DEFAULT_LANGUAGE': ((os.getenv('DEFAULT_LANGUAGE', '')), _("Default Language")),
     'APP_NAME': ((os.getenv('APP_NAME', 'DRIVER')), _("App Name")),
     'SHOW_LIGHT_CONDITIONS': ((os.getenv('SHOW_LIGHT_CONDITIONS', True)), _("Show lighting conditions")),
     'SHOW_WEATHER': ((os.getenv('SHOW_WEATHER', True)), _("Show weather conditions")),
     'SHOW_RECORD_CREATOR': ((False), _("Show Record creator")),
     'AGE_INTERVALS': ((os.getenv('AGE_INTERVALS', '0-18,19-35,36-50,51+')), _("Age Intervals")),
+    'DEFAULT_LANGUAGE': ((os.getenv('DEFAULT_LANGUAGE', 'en-gb')), _("Default Language")),
 }
 CAPTCHA_OUTPUT_FORMAT = u'%(image)s %(hidden_field)s %(text_field)s'
-ADMIN_TWO_FACTOR_NAME = os.getenv('APP_NAME', 'AIRSO-Mahdar')
+ADMIN_TWO_FACTOR_NAME = os.getenv('APP_NAME', 'Mahdar')
 
 
 EMAIL_HOST = os.environ.get("EMAIL_HOST", 'localhost')

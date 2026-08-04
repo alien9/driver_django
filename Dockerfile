@@ -34,7 +34,7 @@ COPY angular/driver/dist/driver /opt/app/web/
 COPY favicon.ico /opt/app/driver/favicon.ico
 COPY crontab /opt/app/driver/crontab
 COPY static /opt/app/static
-
+COPY app-release.apk /opt/app/static/driver.apk
 RUN pip install --no-cache-dir gunicorn
 RUN pip install --no-cache-dir -r requirements.txt
 
